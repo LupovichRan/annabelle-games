@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>המשחק של אנאבל</title>
+<style>
+  :root{
+    --bg1:#ffe9a8; --bg2:#ffc7d9; --ink:#4a2c6b; --accent:#ff7a3d; --accent2:#7c5cff; --ok:#34c47c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;}
+  body{
+    font-family:"Rubik","Varela Round","IBM Plex Sans Hebrew","Arial Rounded MT Bold","Segoe UI",Arial,sans-serif;
+    color:var(--ink);
+    background:radial-gradient(circle at 20% 15%, #fff6d6 0 12%, transparent 13%),
+               radial-gradient(circle at 85% 80%, #ffe0ee 0 10%, transparent 11%),
+               linear-gradient(135deg,var(--bg1),var(--bg2));
+    user-select:none; -webkit-user-select:none; touch-action:manipulation;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer;border:none;}
+  .screen{position:fixed;inset:0;display:none;flex-direction:column;padding:max(10px,env(safe-area-inset-top)) 14px max(10px,env(safe-area-inset-bottom));}
+  .screen.active{display:flex;}
+
+  /* ---------- top bar ---------- */
+  .iconbtn{width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 4px 0 #0002;font-size:28px;display:flex;align-items:center;justify-content:center;flex:none;transition:transform .1s;}
+  .iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0002;}
+  .corner{position:absolute;top:max(10px,env(safe-area-inset-top));inset-inline-end:14px;z-index:5;}
+
+  /* ---------- menu ---------- */
+  #menu{align-items:center;justify-content:safe center;gap:1.6vh;overflow-y:auto;}
+  .title{font-size:clamp(34px,6.5vw,66px);font-weight:900;margin:0;text-align:center;color:#fff;
+    text-shadow:0 4px 0 var(--accent),0 8px 0 #0002;letter-spacing:1px;line-height:1.1}
+  .heads{display:flex;gap:2vw;justify-content:center}
+  .heads svg{width:clamp(56px,min(10vw,11vh),100px);height:auto;animation:bob 2.4s ease-in-out infinite;}
+  .heads svg:nth-child(2){animation-delay:.3s}.heads svg:nth-child(3){animation-delay:.6s}.heads svg:nth-child(4){animation-delay:.9s}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+  .langs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .lang{padding:10px 18px;border-radius:999px;background:#fff8;font-size:20px;font-weight:700;box-shadow:0 3px 0 #0001;}
+  .lang.sel{background:#fff;box-shadow:0 0 0 4px var(--accent2),0 4px 0 #0002;}
+  .label{font-size:clamp(18px,2.6vw,24px);font-weight:800;opacity:.85;margin-top:4px}
+  .row{display:flex;gap:clamp(10px,2vw,22px);flex-wrap:wrap;justify-content:center}
+  .mode{width:clamp(150px,24vw,230px);padding:14px 10px;border-radius:26px;background:#fff9;box-shadow:0 6px 0 #0002;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:clamp(17px,2.2vw,22px);font-weight:800;transition:transform .12s}
+  .mode .pic{display:flex;align-items:center;gap:6px;height:64px}
+  .mode .pic svg{width:58px;height:58px}
+  .mode .pic .word{background:#fff;border-radius:12px;padding:8px 10px;font-size:20px;font-weight:900;box-shadow:inset 0 0 0 3px #ffd36b}
+  .mode.sel{background:#fff;box-shadow:0 0 0 5px var(--accent2),0 6px 0 #0002;transform:scale(1.04)}
+  .level{width:clamp(130px,20vw,200px);padding:14px 10px 12px;border-radius:26px;color:#fff;box-shadow:0 7px 0 #0003;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .12s}
+  .level:active{transform:translateY(4px);box-shadow:0 3px 0 #0003}
+  .level .n{font-size:clamp(40px,6vw,58px);font-weight:900;line-height:1}
+  .level .t{font-size:18px;font-weight:800}
+  .level .dots{display:grid;gap:3px;margin:4px 0}
+  .level .dots i{width:9px;height:12px;border-radius:3px;background:#fff9}
+  .level .best{font-size:16px;font-weight:700;background:#0002;border-radius:999px;padding:2px 10px;min-height:24px}
+  .level .best.empty{background:none}
+  .l6{background:linear-gradient(#5fd38d,#2fb36a)} .l10{background:linear-gradient(#ffb84d,#ff8a1f)} .l12{background:linear-gradient(#ff7aa8,#e8487f)}
+
+  /* ---------- game ---------- */
+  .bar{display:flex;align-items:center;gap:10px;height:64px;flex:none}
+  .bar .spacer{flex:1}
+  .pill{background:#fff;border-radius:999px;padding:8px 16px;font-size:clamp(17px,2.4vw,22px);font-weight:800;box-shadow:0 4px 0 #0002;white-space:nowrap}
+  .pill b{color:var(--accent);font-size:1.15em}
+  #board{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding-top:6px}
+  #grid{display:grid;gap:var(--gap,10px)}
+  .card{perspective:900px;cursor:pointer;container-type:inline-size;}
+  .inner{position:relative;width:100%;height:100%;transition:transform .45s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d;}
+  .card.up .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 #0002;overflow:hidden}
+  .back{background:var(--accent2);background-image:radial-gradient(circle at 50% 50%,#ffffff22 0 30%,transparent 31%),repeating-linear-gradient(45deg,#ffffff18 0 10px,transparent 10px 20px);border:4px solid #fff}
+  .back svg{width:46%;height:46%;opacity:.95}
+  .front{transform:rotateY(180deg);border:4px solid #fff}
+  .front svg{width:88%;height:88%}
+  .front.word{background:#fff;}
+  .front.word span{font-size:clamp(14px,17cqi,46px);font-weight:900;text-align:center;line-height:1.1;padding:6%;word-break:break-word;color:var(--ink)}
+  .card:hover:not(.up) .inner{transform:scale(1.04)}
+  .card.matched .front{box-shadow:0 0 0 5px var(--ok),0 0 22px 6px #34c47c88;}
+  .card.matched{animation:pop .6s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}70%{transform:scale(.97) rotate(2deg)}100%{transform:scale(1)}}
+  .card.wiggle .inner{animation:wig .4s ease}
+  @keyframes wig{0%,100%{transform:rotateY(180deg)}25%{transform:rotateY(180deg) rotate(-4deg)}75%{transform:rotateY(180deg) rotate(4deg)}}
+
+  /* fact toast */
+  #fact{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translate(-50%,calc(100% + 60px));visibility:hidden;pointer-events:none;width:min(92vw,720px);background:#fff;border-radius:24px;padding:12px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 0 #0002,0 0 0 5px #ffd36b;transition:transform .45s cubic-bezier(.3,1.4,.5,1);z-index:20;}
+  #fact.show{transform:translate(-50%,0);visibility:visible}
+  #fact{transition:transform .45s cubic-bezier(.3,1.4,.5,1),visibility .45s}
+  #fact svg{width:70px;height:70px;flex:none}
+  #fact .nm{font-size:22px;font-weight:900;color:var(--accent)}
+  #fact .tx{font-size:clamp(16px,2.2vw,20px);font-weight:600;line-height:1.3}
+
+  /* win */
+  #win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:2vh;background:#fff5;backdrop-filter:blur(3px);z-index:30;text-align:center;padding:20px}
+  #win.show{display:flex}
+  #win h2{font-size:clamp(36px,7vw,72px);margin:0;color:#fff;text-shadow:0 4px 0 var(--accent2),0 8px 0 #0002}
+  #win .sub{font-size:clamp(20px,3vw,30px);font-weight:800;background:#fff;border-radius:999px;padding:8px 24px;box-shadow:0 5px 0 #0002}
+  #win .rec{font-size:clamp(22px,3.4vw,34px);font-weight:900;color:#e8487f;animation:pulse 1s infinite}
+  @keyframes pulse{50%{transform:scale(1.1)}}
+  .jumpers{display:flex;gap:1.5vw;justify-content:center;flex-wrap:wrap}
+  .jumpers svg{width:clamp(56px,10vw,100px);height:auto;animation:jump .7s ease-in-out infinite alternate}
+  @keyframes jump{0%{transform:translateY(0) scale(1,1)}10%{transform:translateY(0) scale(1.1,.9)}100%{transform:translateY(-50px) scale(.95,1.05) rotate(6deg)}}
+  .big{font-size:clamp(22px,3vw,30px);font-weight:900;padding:14px 30px;border-radius:999px;color:#fff;box-shadow:0 6px 0 #0003;display:inline-flex;gap:10px;align-items:center}
+  .big:active{transform:translateY(4px);box-shadow:0 2px 0 #0003}
+  .go{background:linear-gradient(#5fd38d,#2fb36a)} .home{background:linear-gradient(#a58bff,#7c5cff)}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
+</style>
+</head>
+<body>
+
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+
+<!-- MENU -->
+<section class="screen active" id="menu">
+  <h1 class="title" id="tTitle"></h1>
+  <div class="heads" id="menuHeads"></div>
+  <div class="langs" id="langs"></div>
+  <div class="label" id="tMode"></div>
+  <div class="row" id="modes"></div>
+  <div class="label" id="tLevel"></div>
+  <div class="row" id="levels"></div>
+</section>
+
+<!-- GAME -->
+<section class="screen" id="game">
+  <div class="bar">
+    <button class="iconbtn" id="homeBtn" aria-label="menu">🏠</button>
+    <div class="pill"><span id="tMoves"></span>: <b id="moves">0</b></div>
+    <div class="pill">🏆 <span id="tBest"></span>: <b id="best">–</b></div>
+    <div class="spacer"></div>
+    <div style="width:58px"></div>
+  </div>
+  <div id="board"><div id="grid"></div></div>
+</section>
+
+<div id="fact"><div id="factPic"></div><div><div class="nm" id="factName"></div><div class="tx" id="factText"></div></div></div>
+
+<div id="win">
+  <div class="jumpers" id="jumpers"></div>
+  <h2 id="winTitle"></h2>
+  <div class="sub" id="winSub"></div>
+  <div class="rec" id="winRec"></div>
+  <div class="row">
+    <button class="big go" id="againBtn"></button>
+    <button class="big home" id="menuBtn"></button>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+"use strict";
+/* ============================================================
+   DATA: animals, names (he/fr/en), facts
+   ============================================================ */
+const ANIMALS = {
+  cat:     {fur:"#a9a9b8",dark:"#6d6d80",muzzle:"#ecebf2",eye:"#8fd16b",nose:"#f29bb0",inner:"#f7b9c8",ears:"point",pattern:"tabby",bg:"#d9f2ff",voice:"meow",
+            name:{he:"חתול",fr:"chat",en:"cat"},
+            fact:{he:"חתולים ישנים בערך 12 עד 16 שעות ביום!",fr:"Les chats dorment environ 12 à 16 heures par jour !",en:"Cats sleep about 12 to 16 hours a day!"}},
+  kitten:  {fur:"#ffb35c",dark:"#e8862d",muzzle:"#fff3e3",eye:"#6bb8ff",nose:"#ff8fab",inner:"#ffc2d1",ears:"point",pattern:"tabby",kitten:true,bg:"#ffe3f0",voice:"kitten",
+            name:{he:"חתלתול",fr:"chaton",en:"kitten"},
+            fact:{he:"גורי חתולים נולדים עם עיניים סגורות, והן נפתחות אחרי שבוע או שבועיים.",fr:"Les chatons naissent les yeux fermés : ils les ouvrent après une ou deux semaines.",en:"Kittens are born with their eyes closed. They open after about 1 to 2 weeks."}},
+  lion:    {fur:"#f2b84b",dark:"#c98a2b",muzzle:"#fbe7bf",eye:"#c98a2b",nose:"#a8574a",inner:"#e0a050",ears:"round",pattern:"none",mane:"#b4612a",bg:"#fff1c2",voice:"roar",
+            name:{he:"אריה",fr:"lion",en:"lion"},
+            fact:{he:"את שאגת האריה אפשר לשמוע ממרחק של עד 8 קילומטרים!",fr:"Le rugissement du lion s'entend jusqu'à 8 kilomètres !",en:"A lion's roar can be heard up to 8 kilometres away!"}},
+  lioness: {fur:"#e9b866",dark:"#c08a3a",muzzle:"#fbedcf",eye:"#d29a3a",nose:"#b0665a",inner:"#d9a05a",ears:"round",pattern:"none",bg:"#ffe7c7",voice:"roar2",
+            name:{he:"לביאה",fr:"lionne",en:"lioness"},
+            fact:{he:"הלביאות עושות את רוב הציד של הלהקה, ולעיתים קרובות הן צדות יחד כצוות.",fr:"Les lionnes font la plupart de la chasse, souvent en équipe.",en:"Lionesses do most of the hunting for the pride, often working as a team."}},
+  tiger:   {fur:"#ff8c2b",dark:"#2b1d14",muzzle:"#fff6ea",eye:"#f2c230",nose:"#e07a7a",inner:"#fff",ears:"round",pattern:"stripes",bg:"#e3ffd9",voice:"roar",
+            name:{he:"טיגריס",fr:"tigre",en:"tiger"},
+            fact:{he:"הטיגריס הוא החתול הגדול ביותר בעולם, ואין שני טיגריסים עם אותם פסים!",fr:"Le tigre est le plus grand des félins, et deux tigres n'ont jamais les mêmes rayures !",en:"Tigers are the biggest cats in the world, and no two tigers have the same stripes!"}},
+  leopard: {fur:"#f3c45e",dark:"#3a2a16",muzzle:"#fff5df",eye:"#9fcf5a",nose:"#d88a7a",inner:"#fff2d0",ears:"round",pattern:"rosettes",bg:"#fff6c9",voice:"growl",
+            name:{he:"נמר",fr:"léopard",en:"leopard"},
+            fact:{he:"נמרים מטפסים מצוין על עצים, ואפילו גוררים את הטרף שלהם למעלה אל הענפים.",fr:"Le léopard grimpe très bien aux arbres et y hisse même ses proies.",en:"Leopards are great climbers and even drag their prey up into the trees."}},
+  cheetah: {fur:"#f1cf7a",dark:"#2a2116",muzzle:"#fff8e6",eye:"#d9a832",nose:"#2a2116",inner:"#fff3cf",ears:"round",pattern:"spots",tears:true,bg:"#ffe9d1",voice:"chirp",
+            name:{he:"ברדלס",fr:"guépard",en:"cheetah"},
+            fact:{he:"הברדלס הוא החיה המהירה ביותר ביבשה – הוא יכול לרוץ בערך 100 קמ״ש!",fr:"Le guépard est l'animal terrestre le plus rapide : il peut courir à environ 100 km/h !",en:"The cheetah is the fastest land animal – it can sprint at about 100 km/h!"}},
+  jaguar:  {fur:"#e8a948",dark:"#2c1d10",muzzle:"#fff1d8",eye:"#e6c24a",nose:"#c46e5e",inner:"#ffe6b8",ears:"round",pattern:"jrosettes",bg:"#d6f5ef",voice:"roar2",
+            name:{he:"יגואר",fr:"jaguar",en:"jaguar"},
+            fact:{he:"יגוארים אוהבים מים, והם שחיינים מצוינים!",fr:"Le jaguar adore l'eau : c'est un excellent nageur !",en:"Jaguars love water and are excellent swimmers!"}},
+  lynx:    {fur:"#c9a27a",dark:"#7a5a3c",muzzle:"#f6ece0",eye:"#d6b04a",nose:"#c07a6a",inner:"#f1dcc4",ears:"point",tufts:true,ruff:true,pattern:"freckles",bg:"#e8e1ff",voice:"lynx",
+            name:{he:"שונר",fr:"lynx",en:"lynx"},
+            fact:{he:"לשונר יש ציציות שחורות בקצות האוזניים, וכפות רגליים גדולות ופרוותיות שעוזרות לו ללכת על שלג.",fr:"Le lynx a des pinceaux de poils noirs au bout des oreilles et de grosses pattes poilues pour marcher sur la neige.",en:"Lynxes have black tufts on their ear tips and big furry paws that work like snowshoes."}},
+  panther: {fur:"#2e2e3a",dark:"#1c1c25",muzzle:"#3b3b4a",eye:"#c6e84a",nose:"#15151c",inner:"#4a4a5c",ears:"round",pattern:"rosettes",whisker:"#e6e6f0",bg:"#ffd9e4",voice:"growl",
+            name:{he:"פנתר שחור",fr:"panthère noire",en:"black panther"},
+            fact:{he:"פנתר שחור הוא בדרך כלל נמר או יגואר עם פרווה כהה – במבט מקרוב אפשר לראות שיש לו כתמים!",fr:"Une panthère noire est en général un léopard ou un jaguar au pelage sombre : de près, on voit encore ses taches !",en:"A black panther is usually a leopard or jaguar with dark fur – up close you can still see its spots!"}},
+  snowleopard:{fur:"#dfe3e6",dark:"#4d555c",muzzle:"#f7f8f9",eye:"#9fd0c4",nose:"#c99a9a",inner:"#f3e1e1",ears:"round",pattern:"rosettes",bg:"#dcecff",voice:"purr",
+            name:{he:"נמר השלג",fr:"panthère des neiges",en:"snow leopard"},
+            fact:{he:"נמר השלג מתעטף בזנב הארוך והפרוותי שלו כמו בצעיף כדי להתחמם.",fr:"La panthère des neiges s'enroule dans sa longue queue touffue comme dans une écharpe pour avoir chaud.",en:"Snow leopards wrap their long, fluffy tails around themselves like a scarf to keep warm."}},
+  puma:    {fur:"#c99a66",dark:"#5a3e26",muzzle:"#fbf3ea",eye:"#d9b04a",nose:"#c47f73",inner:"#efd3b8",ears:"round",pattern:"puma",bg:"#f0ffd6",voice:"purr",
+            name:{he:"פומה",fr:"puma",en:"puma (cougar)"},
+            fact:{he:"לפומה יש הרבה שמות – קוגר ואריה הרים – והיא לא יכולה לשאוג, אבל היא מגרגרת כמו חתול!",fr:"Le puma a plusieurs noms (couguar, lion des montagnes). Il ne rugit pas, mais il ronronne comme un chat !",en:"The puma has many names – cougar, mountain lion – and it can't roar, but it purrs like a house cat!"}}
+};
+const KEYS = Object.keys(ANIMALS);
+
+const T = {
+  he:{dir:"rtl",title:"המשחק של אנאבל",mode:"בחרי משחק",mPics:"תמונות זהות",mNames:"חיה ושם",level:"בחרי רמה",pairs:"זוגות",
+      lv:["קל","בינוני","קשה"],moves:"מהלכים",best:"שיא",win:"כל הכבוד, אנאבל!",winSub:"סיימת ב־{n} מהלכים",rec:"שיא חדש! 🏆",again:"🔁 עוד פעם",menu:"🏠 תפריט",word:"אריה"},
+  fr:{dir:"ltr",title:"Le jeu d'Annabelle",mode:"Choisis un jeu",mPics:"Images identiques",mNames:"Animal et nom",level:"Choisis un niveau",pairs:"paires",
+      lv:["Facile","Moyen","Difficile"],moves:"Coups",best:"Record",win:"Bravo, Annabelle !",winSub:"Terminé en {n} coups",rec:"Nouveau record ! 🏆",again:"🔁 Rejouer",menu:"🏠 Menu",word:"lion"},
+  en:{dir:"ltr",title:"Annabelle's Game",mode:"Pick a game",mPics:"Matching pictures",mNames:"Animal & name",level:"Pick a level",pairs:"pairs",
+      lv:["Easy","Medium","Hard"],moves:"Moves",best:"Best",win:"Well done, Annabelle!",winSub:"Finished in {n} moves",rec:"New record! 🏆",again:"🔁 Play again",menu:"🏠 Menu",word:"lion"}
+};
+const LANGS = [["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
+const LEVELS = [6,10,12];
+
+/* ============================================================
+   SVG cat-face generator
+   ============================================================ */
+let uid = 0;
+function face(key){
+  const a = ANIMALS[key], id = "c"+(uid++);
+  const d = a.dark, k = !!a.kitten;
+  let s = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${key}">`;
+  s += `<defs><clipPath id="${id}"><ellipse cx="50" cy="57" rx="34" ry="31"/></clipPath></defs>`;
+  // mane
+  if (a.mane){
+    s += `<g fill="${a.mane}">`;
+    for (let i=0;i<18;i++){const t=i/18*Math.PI*2; s+=`<circle cx="${(50+40*Math.cos(t)).toFixed(1)}" cy="${(55+38*Math.sin(t)).toFixed(1)}" r="10"/>`;}
+    s += `<circle cx="50" cy="55" r="41"/></g><circle cx="50" cy="55" r="36" fill="#d4873a"/>`;
+  }
+  // ears
+  const earL = a.ears==="point" ? "M17 46 L21 9 L46 30 Z" : "M19 44 Q12 14 42 27 Z";
+  const inL  = a.ears==="point" ? "M23 38 L25 18 L38 30 Z" : "M24 38 Q21 22 37 29 Z";
+  const mir = p => `<g transform="translate(100 0) scale(-1 1)">${p}</g>`;
+  let ears = `<path d="${earL}" fill="${a.fur}" stroke="${d}" stroke-width="1.5" stroke-linejoin="round"/><path d="${inL}" fill="${a.inner}"/>`;
+  if (a.tufts) ears += `<path d="M21 11 L19 0" stroke="#1d1d1d" stroke-width="3.5" stroke-linecap="round"/>`;
+  if (key==="tiger"||key==="snowleopard"||key==="leopard"||key==="jaguar") ears += `<circle cx="27" cy="28" r="3" fill="#fff"/>`;
+  s += ears + mir(ears);
+  // lynx ruff
+  if (a.ruff){ const r=`<path d="M18 58 L6 80 L16 76 L14 86 L30 78 Z" fill="${a.fur}" stroke="${d}" stroke-width="1"/>`; s += r + mir(r); }
+  // head
+  s += `<ellipse cx="50" cy="57" rx="34" ry="31" fill="${a.fur}"/>`;
+  // pattern
+  s += `<g clip-path="url(#${id})">${pattern(a)}</g>`;
+  // muzzle
+  s += `<ellipse cx="50" cy="78" rx="11" ry="7" fill="${a.muzzle}"/><ellipse cx="42" cy="71" rx="10.5" ry="8" fill="${a.muzzle}"/><ellipse cx="58" cy="71" rx="10.5" ry="8" fill="${a.muzzle}"/>`;
+  if (a.pattern==="puma"){ s += `<ellipse cx="34" cy="71" rx="3" ry="5" fill="${d}" opacity=".7"/><ellipse cx="66" cy="71" rx="3" ry="5" fill="${d}" opacity=".7"/>`; }
+  if (a.tears){ const t=`<path d="M37 60 Q35 68 40 75" stroke="${d}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`; s+=t+mir(t); }
+  // eyes
+  const er = k? [9,10] : [7,7.5];
+  const eye = k
+    ? `<ellipse cx="37" cy="53" rx="${er[0]}" ry="${er[1]}" fill="${a.eye}"/><circle cx="37" cy="54" r="5.5" fill="#1b1b1b"/><circle cx="34.5" cy="50.5" r="2.6" fill="#fff"/><circle cx="39" cy="57" r="1.2" fill="#fff"/>`
+    : `<ellipse cx="37" cy="53" rx="${er[0]}" ry="${er[1]}" fill="${a.eye}" stroke="${key==="panther"?"#111":d}" stroke-width="1"/><ellipse cx="37" cy="53.5" rx="${a.ears==="point"?2.2:3.2}" ry="${a.ears==="point"?6:3.6}" fill="#1b1b1b"/><circle cx="35" cy="50.5" r="1.8" fill="#fff"/>`;
+  s += eye + mir(eye);
+  // nose & mouth
+  s += `<path d="M44.5 64 Q50 62 55.5 64 L50 70 Z" fill="${a.nose}"/>`;
+  s += `<path d="M50 70 L50 73 M50 73 Q46 77 42 74.5 M50 73 Q54 77 58 74.5" stroke="${key==="panther"?"#111":"#5a3a2a"}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  // whiskers
+  const wc = a.whisker || "#6b5a50";
+  const w = `<g stroke="${wc}" stroke-width="1.1" stroke-linecap="round" opacity=".8"><path d="M36 70 L10 65"/><path d="M36 73 L9 74"/><path d="M37 76 L12 82"/></g>`;
+  s += w + mir(w);
+  // kitten cheeks
+  if (k) s += `<ellipse cx="27" cy="66" rx="5" ry="3" fill="#ff8fab" opacity=".55"/><ellipse cx="73" cy="66" rx="5" ry="3" fill="#ff8fab" opacity=".55"/>`;
+  return s + `</svg>`;
+}
+function pattern(a){
+  const d=a.dark;
+  const spotsAt = [[38,32],[46,28],[54,30],[62,33],[42,38],[58,38],[50,36],[24,52],[20,60],[26,62],[76,52],[80,60],[74,62],[30,44],[70,44]];
+  switch(a.pattern){
+    case "stripes":
+      return `<g stroke="${d}" stroke-width="3.6" fill="none" stroke-linecap="round">
+        <path d="M50 26 L50 37"/><path d="M42 28 Q44 33 41 39"/><path d="M58 28 Q56 33 59 39"/>
+        <path d="M14 50 Q22 52 28 57"/><path d="M14 60 Q22 60 28 63"/><path d="M18 69 Q24 68 29 70"/>
+        <path d="M86 50 Q78 52 72 57"/><path d="M86 60 Q78 60 72 63"/><path d="M82 69 Q76 68 71 70"/>
+        <path d="M30 34 Q32 38 29 42"/><path d="M70 34 Q68 38 71 42"/></g>`;
+    case "tabby":
+      return `<g stroke="${d}" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85">
+        <path d="M44 28 L45 38"/><path d="M50 27 L50 39"/><path d="M56 28 L55 38"/>
+        <path d="M16 54 Q22 55 27 58"/><path d="M17 62 Q23 62 27 64"/><path d="M84 54 Q78 55 73 58"/><path d="M83 62 Q77 62 73 64"/></g>`;
+    case "spots": case "freckles":
+      return `<g fill="${d}" opacity="${a.pattern==="freckles"?.55:1}">${spotsAt.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${a.pattern==="freckles"?1.5:2}"/>`).join("")}</g>`;
+    case "rosettes":
+      return `<g fill="none" stroke="${d}" stroke-width="1.8">${spotsAt.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.8" stroke-dasharray="4 2"/>`).join("")}</g>`;
+    case "jrosettes":
+      return `<g stroke="${d}" stroke-width="2">${spotsAt.filter((_,i)=>i%2===0||i>6).map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.8" fill="none" stroke-dasharray="5 2.5"/><circle cx="${x}" cy="${y}" r="1" fill="${d}" stroke="none"/>`).join("")}</g>`;
+    default: return "";
+  }
+}
+const PAW = `<svg viewBox="0 0 100 100"><g fill="#fff"><ellipse cx="50" cy="64" rx="22" ry="18"/><ellipse cx="24" cy="40" rx="9" ry="12"/><ellipse cx="41" cy="26" rx="9" ry="12"/><ellipse cx="59" cy="26" rx="9" ry="12"/><ellipse cx="76" cy="40" rx="9" ry="12"/></g></svg>`;
+
+/* ============================================================
+   SOUND (Web Audio, all synthesized)
+   ============================================================ */
+let AC = null, muted = localStorage.getItem("annabelle-muted")==="1";
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==="suspended") AC.resume(); return AC; }
+function tone(f, t0, dur, type="sine", vol=.2, f2=null){
+  const c=ac(); if(!c||muted) return;
+  const o=c.createOscillator(), g=c.createGain(), t=c.currentTime+t0;
+  o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.05);
+}
+function noise(t0, dur, vol, filtF, q=1){
+  const c=ac(); if(!c||muted) return null;
+  const n=c.sampleRate*dur|0, b=c.createBuffer(1,n,c.sampleRate), ch=b.getChannelData(0);
+  for(let i=0;i<n;i++) ch[i]=Math.random()*2-1;
+  const src=c.createBufferSource(); src.buffer=b;
+  const f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=filtF; f.Q.value=q;
+  const g=c.createGain(), t=c.currentTime+t0;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(f).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
+  return f;
+}
+function growlOsc(t0,dur,f1,f2,vol,cut){
+  const c=ac(); if(!c||muted) return;
+  const t=c.currentTime+t0, o=c.createOscillator(), g=c.createGain(), lp=c.createBiquadFilter(), lfo=c.createOscillator(), lg=c.createGain();
+  o.type="sawtooth"; o.frequency.setValueAtTime(f1,t); o.frequency.linearRampToValueAtTime(f2,t+dur);
+  lp.type="lowpass"; lp.frequency.setValueAtTime(cut*0.5,t); lp.frequency.linearRampToValueAtTime(cut,t+dur*0.3); lp.frequency.linearRampToValueAtTime(cut*0.4,t+dur);
+  lfo.frequency.value=28; lg.gain.value=vol*0.5; lfo.connect(lg).connect(g.gain);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*0.2); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(lp).connect(g).connect(c.destination); o.start(t); lfo.start(t); o.stop(t+dur+.05); lfo.stop(t+dur+.05);
+}
+function meow(base, t0=0, dur=.5){
+  const c=ac(); if(!c||muted) return;
+  const t=c.currentTime+t0, o=c.createOscillator(), g=c.createGain(), bp=c.createBiquadFilter();
+  o.type="sawtooth"; o.frequency.setValueAtTime(base,t); o.frequency.linearRampToValueAtTime(base*1.6,t+dur*.35); o.frequency.linearRampToValueAtTime(base*.9,t+dur);
+  bp.type="bandpass"; bp.Q.value=4; bp.frequency.setValueAtTime(800,t); bp.frequency.linearRampToValueAtTime(2000,t+dur*.4); bp.frequency.linearRampToValueAtTime(900,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.06); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(bp).connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.05);
+}
+const SFX = {
+  flip(){ tone(660,0,.09,"triangle",.15,990); },
+  match(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.07,.18,"triangle",.17)); },
+  oops(){ tone(392,0,.14,"sine",.08,330); },
+  win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach((f,i)=>tone(f,.9,.8,"triangle",.08)); },
+  click(){ tone(880,0,.06,"sine",.12); },
+  voice(v){
+    switch(v){
+      case "meow":   meow(420,.25,.55); break;
+      case "kitten": meow(700,.25,.35); meow(760,.65,.3); break;
+      case "roar":   growlOsc(.25,1.1,95,60,.35,900); noise(.25,1.1,.18,700); break;
+      case "roar2":  growlOsc(.25,.9,120,80,.3,1100); noise(.25,.9,.14,900); break;
+      case "growl":  growlOsc(.25,.7,80,70,.3,600); break;
+      case "lynx":   growlOsc(.25,.5,180,150,.2,1200); meow(300,.7,.45); break;
+      case "chirp":  [0,.18,.36].forEach(d=>tone(1700,.25+d,.11,"sine",.18,2400)); break;
+      case "purr":   for(let i=0;i<10;i++) noise(.25+i*.09,.08,.22,300,3); break;
+    }
+  }
+};
+
+/* ============================================================
+   STATE / UI
+   ============================================================ */
+let lang = localStorage.getItem("annabelle-lang") || "he";
+if (!T[lang]) lang="he";
+let mode = localStorage.getItem("annabelle-mode") || "pics";
+let pairs = 6, cards = [], open = [], lock = false, moves = 0, found = 0;
+const $ = id => document.getElementById(id);
+const bestKey = (m,p)=>`annabelle-best-${m}-${p}`;
+const getBest = (m,p)=>{ const v=parseInt(localStorage.getItem(bestKey(m,p))); return isNaN(v)?null:v; };
+
+function applyLang(){
+  const t=T[lang];
+  document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
+  $("tTitle").textContent=t.title; $("tMode").textContent=t.mode; $("tLevel").textContent=t.level;
+  $("tMoves").textContent=t.moves; $("tBest").textContent=t.best;
+  $("againBtn").textContent=t.again; $("menuBtn").textContent=t.menu;
+  renderMenu();
+}
+function renderMenu(){
+  const t=T[lang];
+  $("langs").innerHTML = LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
+  $("modes").innerHTML =
+    `<button class="mode ${mode==="pics"?"sel":""}" data-mode="pics"><div class="pic">${face("tiger")}${face("tiger")}</div>${t.mPics}</button>`+
+    `<button class="mode ${mode==="names"?"sel":""}" data-mode="names"><div class="pic">${face("lion")}<span class="word">${ANIMALS.lion.name[lang]}</span></div>${t.mNames}</button>`;
+  $("levels").innerHTML = LEVELS.map((n,i)=>{
+    const b=getBest(mode,n), cols = n===6?4:n===10?5:6;
+    return `<button class="level l${n}" data-pairs="${n}"><span class="t">${t.lv[i]}</span><span class="n">${n}</span>
+      <span class="dots" style="grid-template-columns:repeat(${cols},9px)">${"<i></i>".repeat(n*2)}</span>
+      <span class="t">${t.pairs}</span><span class="best ${b===null?"empty":""}">${b!==null?"🏆 "+b:"&nbsp;"}</span></button>`;}).join("");
+}
+$("menuHeads").innerHTML = ["kitten","lion","tiger","cheetah"].map(face).join("");
+
+document.addEventListener("click", e=>{
+  const L=e.target.closest("[data-lang]"), M=e.target.closest("[data-mode]"), P=e.target.closest("[data-pairs]");
+  if(L){ lang=L.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
+  else if(M){ mode=M.dataset.mode; localStorage.setItem("annabelle-mode",mode); SFX.click(); renderMenu(); }
+  else if(P){ SFX.click(); startGame(+P.dataset.pairs); }
+});
+
+function updateMute(){ $("muteBtn").textContent = muted?"🔇":"🔊"; }
+$("muteBtn").addEventListener("click",()=>{ muted=!muted; localStorage.setItem("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); });
+updateMute();
+
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); }
+$("homeBtn").onclick = ()=>{ SFX.click(); hideFact(); show("menu"); renderMenu(); };
+$("menuBtn").onclick = ()=>{ SFX.click(); stopWin(); show("menu"); renderMenu(); };
+$("againBtn").onclick = ()=>{ SFX.click(); stopWin(); startGame(pairs); };
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function startGame(n){
+  pairs=n; moves=0; found=0; open=[]; lock=false; hideFact();
+  const chosen = shuffle(KEYS.slice()).slice(0,n);
+  const deck=[];
+  chosen.forEach(k=>{ deck.push({k,kind:"pic"}); deck.push({k,kind: mode==="names"?"word":"pic"}); });
+  shuffle(deck);
+  const g=$("grid"); g.innerHTML="";
+  cards = deck.map((c,i)=>{
+    const el=document.createElement("div");
+    el.className="card"; el.dataset.key=c.k; el.dataset.idx=i;
+    const front = c.kind==="word"
+      ? `<div class="face front word" style="background:${ANIMALS[c.k].bg}"><span dir="auto">${ANIMALS[c.k].name[lang]}</span></div>`
+      : `<div class="face front" style="background:${ANIMALS[c.k].bg}">${face(c.k)}</div>`;
+    el.innerHTML = `<div class="inner"><div class="face back">${PAW}</div>${front}</div>`;
+    el.addEventListener("pointerup", ev=>{ if(ev.pointerType==="mouse"&&ev.button!==0) return; tap(el); });
+    g.appendChild(el); return el;
+  });
+  $("moves").textContent="0";
+  const b=getBest(mode,n); $("best").textContent = b===null?"–":b;
+  show("game"); layout();
+}
+
+function layout(){
+  if(!cards.length || !$("game").classList.contains("active")) return;
+  const bd=$("board"), W=bd.clientWidth, H=bd.clientHeight-6, n=cards.length;
+  const gap = Math.max(6, Math.min(14, Math.min(W,H)*0.015)), r=0.82;
+  let best={w:0,cols:1};
+  for(let cols=1;cols<=n;cols++){
+    const rows=Math.ceil(n/cols);
+    const cw=(W-gap*(cols-1))/cols, ch=(H-gap*(rows-1))/rows;
+    const w=Math.min(cw, ch*r);
+    if(w>best.w) best={w,cols};
+  }
+  const w=Math.floor(best.w), h=Math.floor(w/r);
+  const g=$("grid"); g.style.setProperty("--gap",gap+"px");
+  g.style.gridTemplateColumns=`repeat(${best.cols}, ${w}px)`; g.style.gridAutoRows=h+"px";
+}
+window.addEventListener("resize", layout);
+window.addEventListener("orientationchange", ()=>setTimeout(layout,200));
+
+function tap(el){
+  if(lock || el.classList.contains("up")) return;
+  ac(); if(open.length===0) hideFact();
+  el.classList.add("up"); SFX.flip(); open.push(el);
+  if(open.length<2) return;
+  moves++; $("moves").textContent=moves;
+  const [a,b]=open;
+  if(a.dataset.key===b.dataset.key){
+    open=[]; found++;
+    setTimeout(()=>{ a.classList.add("matched"); b.classList.add("matched"); SFX.match(); SFX.voice(ANIMALS[a.dataset.key].voice); showFact(a.dataset.key); },250);
+    if(found===pairs) setTimeout(win, 1300);
+  } else {
+    lock=true;
+    setTimeout(()=>{ a.classList.add("wiggle"); b.classList.add("wiggle"); SFX.oops(); },450);
+    setTimeout(()=>{ a.classList.remove("up","wiggle"); b.classList.remove("up","wiggle"); open=[]; lock=false; },1050);
+  }
+}
+
+let factTimer=null;
+function showFact(k){
+  const a=ANIMALS[k];
+  $("factPic").innerHTML=face(k); $("factName").textContent=a.name[lang]; $("factText").textContent=a.fact[lang];
+  $("fact").dir=T[lang].dir; $("fact").classList.add("show");
+  clearTimeout(factTimer); factTimer=setTimeout(hideFact, 5500);
+}
+function hideFact(){ $("fact").classList.remove("show"); }
+
+
+/* ---------- win ---------- */
+function win(){
+  const t=T[lang], old=getBest(mode,pairs), rec = old===null || moves<old;
+  if(rec) localStorage.setItem(bestKey(mode,pairs), moves);
+  $("best").textContent = rec?moves:old;
+  $("winTitle").textContent=t.win; $("winSub").textContent=t.winSub.replace("{n}",moves);
+  $("winRec").textContent = rec ? t.rec : "";
+  $("jumpers").innerHTML = shuffle(KEYS.slice()).slice(0,5).map((k,i)=>face(k).replace("<svg",`<svg style="animation-delay:${i*.12}s"`)).join("");
+  hideFact(); $("win").classList.add("show"); SFX.win(); setTimeout(()=>SFX.voice("roar"),1400);
+  confetti();
+}
+let confRaf=null;
+function confetti(){
+  const cv=$("confetti"), x=cv.getContext("2d");
+  cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; x.scale(devicePixelRatio,devicePixelRatio);
+  const cols=["#ff7a3d","#7c5cff","#34c47c","#ffd23f","#ff5d8f","#3fc5ff"];
+  const P=Array.from({length:180},()=>({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight,vx:(Math.random()-.5)*2.5,vy:2+Math.random()*3,s:6+Math.random()*8,r:Math.random()*6,vr:(Math.random()-.5)*.25,c:cols[Math.random()*cols.length|0],paw:Math.random()<.15}));
+  let frames=0;
+  (function step(){
+    x.clearRect(0,0,innerWidth,innerHeight);
+    P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; if(p.y>innerHeight+20 && frames<420){p.y=-20;p.x=Math.random()*innerWidth;}
+      x.save(); x.translate(p.x,p.y); x.rotate(p.r);
+      if(p.paw){ x.font=`${p.s*2.4}px sans-serif`; x.fillText("🐾",0,0); } else { x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); }
+      x.restore(); });
+    frames++;
+    if(frames<700) confRaf=requestAnimationFrame(step); else x.clearRect(0,0,innerWidth,innerHeight);
+  })();
+}
+function stopWin(){ $("win").classList.remove("show"); cancelAnimationFrame(confRaf); const cv=$("confetti"); cv.getContext("2d").clearRect(0,0,cv.width,cv.height); }
+
+applyLang();
+</script>
+</body>
+</html>
