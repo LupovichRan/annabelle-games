@@ -445,12 +445,12 @@ function layout(){
   GY=TOPH+sh*.27; WALLT=GY-U*1.7; FLOOR=H-BOTH;
   AX=U*.9; AW=W-U*1.8; AY=GY+U*1.3; AH=Math.max(U*2,FLOOR-U*.4-AY);
   const mw=Math.min(W*.68,U*7.4);
-  MAT={x:U*.45,y:FLOOR-U*1.85,w:mw,h:U*1.35};
+  MAT={x:U*.45,y:FLOOR-U*2.35,w:mw,h:U*1.35};
   BUSH={x:W-U*1.2,y:GY+U*1.55,r:U*1.2}; BUSH2={x:U*1.0,y:GY+U*.7,r:U*.95};
   BENCH={x:W*.56,y:GY+U*.95,w:Math.min(U*3.6,W*.4)};
   BED={x:W*.3,y:AY+AH*.22}; YARN={x:W*.6,y:AY+AH*.5}; MOUSE={x:W*.38,y:AY+AH*.42};
   HOUSE={x:W-U*2.1,y:FLOOR-U*.75}; LAMP={x:W*.84,y:GY+U*.25}; TREE={x:U*1.5};
-  $("hint").style.bottom=(BOTH+8)+"px";
+  $("hint").style.bottom=(H-MAT.y+U*.75)+"px";
   placeTop();
 }
 addEventListener("resize",layout);
@@ -1117,5 +1117,102 @@ S.cats.forEach(c=>{ if(c.present&&shyLow(c)){ const h=hideSpot(c), p=fromScr(h.x
 requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1";
 
 </script>
+<style>
+#jy{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;overflow:hidden;touch-action:none;font-weight:800}
+#jy.show{display:flex}
+#jy .jbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:max(8px,env(safe-area-inset-top)) 64px 4px;z-index:3;width:100%}
+#jy .pl{background:#fff;border-radius:999px;padding:6px 12px;box-shadow:0 3px 0 #0002;font-size:16px}
+#jy .bg{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+#jy .k{position:absolute;width:64px;height:64px;font-size:44px;background:none;padding:0;z-index:2;transition:transform .15s}
+#jy .k .hb{position:absolute;top:-10px;inset-inline-end:-6px;font-size:22px}
+#jy .k.fed{transform:scale(1.2)}
+#jy .jpanel{position:relative;z-index:3;overflow:auto;margin:auto;box-sizing:border-box;max-height:calc(100dvh - 70px);background:#fff;border-radius:22px;padding:14px;box-shadow:0 6px 0 #0002;max-width:94vw;width:420px;text-align:center;display:flex;flex-direction:column;gap:9px}
+#jy .jpanel h2{margin:0;font-size:clamp(20px,6vw,28px)}
+#jy .jb{padding:11px 16px;border-radius:16px;background:#ffe3a3;font-size:17px;font-weight:800;box-shadow:0 3px 0 #0002;min-height:44px}
+#jy .jb.go{background:#34c47c;color:#fff}
+#jy .jmap{position:relative;height:150px}
+#jy .bus{position:absolute;font-size:36px;transition:left 1.6s ease-in-out,top 1.6s ease-in-out;transform:translate(-50%,-60%)}
+#jy .jdot{position:absolute;transform:translate(-50%,-50%);font-size:26px;text-align:center}
+#jy .jdot small{display:block;font-size:11px}
+#jy .jgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}#jy .jgrid.f3{grid-template-columns:repeat(3,minmax(0,1fr))}#jy .jgrid.f2{grid-template-columns:repeat(2,minmax(0,1fr))}
+#jy .jgrid button{min-width:0;overflow:hidden;background:#fff3e0;border-radius:12px;padding:3px 2px;font-size:12px;min-height:48px;box-shadow:0 2px 0 #0002}
+#jy .jgrid button.sel{box-shadow:0 0 0 3px #7c5cff}
+#jy .jgrid button.done{opacity:.45}
+#jy .jbag{position:absolute;bottom:max(12px,env(safe-area-inset-bottom));z-index:3;font-size:18px}
+@keyframes jpop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+#jy .jpop{animation:jpop .5s}
+</style>
+<div id="jy"><svg class="bg" id="jyBg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 700"></svg><div class="jbar" id="jyBar"></div><div id="jyField" style="position:absolute;inset:0;z-index:1"></div><div id="jyPanel" style="display:contents"></div></div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id), lg=()=>lang;
+const TX={he:{btn:"🚌 מסע בין הערים",goal:"האכילי {n} גורים רעבים!",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 שקית: {b} · לחצי למילוי",win:"כל הכבוד! הגורים שבעים 💛",lose:"נגמר הזמן… נסי שוב!",retry:"🔁 שוב",next:"🚌 לעיר הבאה",perk:"בחרי מתנה:",start:"▶ יוצאות לדרך!",back:"🏠 תפריט",reset:"↺ מסע חדש",adopt:"🏡 יום אימוץ!",adoptH:"בחרי גור ואז משפחה שמתאימה לו",home:"בית חדש! 💞",cert:"תעודת אימוץ 🏅",certT:"אנאבל מצאה בית ל-{n} גורים! את גיבורת החתולים!",wrong:"אולי משפחה אחרת? 🤔",rescued:"🐱 הוצלו: {n}"},
+fr:{btn:"🚌 Voyage de ville en ville",goal:"Nourris {n} chatons affamés !",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 Sac : {b} · touche pour remplir",win:"Bravo ! Les chatons sont rassasiés 💛",lose:"Temps écoulé… Réessaie !",retry:"🔁 Encore",next:"🚌 Ville suivante",perk:"Choisis un cadeau :",start:"▶ En route !",back:"🏠 Menu",reset:"↺ Nouveau voyage",adopt:"🏡 Journée d'adoption !",adoptH:"Choisis un chaton puis la famille qui lui va",home:"Nouvelle maison ! 💞",cert:"Certificat d'adoption 🏅",certT:"Annabelle a trouvé une maison pour {n} chatons ! Héroïne des chats !",wrong:"Une autre famille ? 🤔",rescued:"🐱 Sauvés : {n}"},
+en:{btn:"🚌 Town-to-town journey",goal:"Feed {n} hungry kittens!",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 Bag: {b} · tap to refill",win:"Great job! The kittens are full 💛",lose:"Time's up… try again!",retry:"🔁 Again",next:"🚌 Next town",perk:"Pick a gift:",start:"▶ Let's go!",back:"🏠 Menu",reset:"↺ New journey",adopt:"🏡 Adoption Day!",adoptH:"Pick a kitten, then the family that fits",home:"New home! 💞",cert:"Adoption certificate 🏅",certT:"Annabelle found homes for {n} kittens! A true cat hero!",wrong:"Maybe another family? 🤔",rescued:"🐱 Rescued: {n}"}};
+const TOWNS=[{n:{he:"השכונה",fr:"Le quartier",en:"Home street"},ic:"🏘️",sky:"#bfe6ff",gr:"#e9d7b0",lm:'<rect x="40" y="200" width="90" height="140" fill="#f7a8a8"/><rect x="150" y="170" width="100" height="170" fill="#ffe08a"/><rect x="270" y="210" width="90" height="130" fill="#a8d8a8"/>',goal:4,t:45},
+{n:{he:"השוק",fr:"Le marché",en:"The market"},ic:"🍎",sky:"#ffe7c2",gr:"#e8c59a",lm:'<path d="M30 260 h120 l-20 -50 h-80z" fill="#ff6b81"/><path d="M160 260 h120 l-20 -50 h-80z" fill="#34c47c"/><path d="M290 260 h100 l-20 -50 h-60z" fill="#ffc14d"/><rect x="30" y="260" width="360" height="40" fill="#b07a4a"/>',goal:5,t:45},
+{n:{he:"הנמל",fr:"Le port",en:"The harbor"},ic:"⚓",sky:"#cfefff",gr:"#d8cbb0",lm:'<rect x="0" y="250" width="400" height="90" fill="#4fa3e0"/><path d="M120 250 l60 -80 v80z" fill="#fff"/><rect x="100" y="250" width="110" height="20" fill="#b0503a"/><rect x="300" y="150" width="30" height="100" fill="#ff4d6d"/>',goal:6,t:45},
+{n:{he:"הכפר",fr:"Le village",en:"The village"},ic:"🌾",sky:"#d9f5d0",gr:"#bfe39b",lm:'<path d="M60 300 l60 -70 l60 70z" fill="#c0392b"/><rect x="75" y="300" width="90" height="50" fill="#f3d9a4"/><circle cx="300" cy="250" r="50" fill="#5cb85c"/><rect x="293" y="290" width="14" height="50" fill="#8b5a2b"/>',goal:7,t:48},
+{n:{he:"העיר הגדולה",fr:"La grande ville",en:"The big city"},ic:"🏙️",sky:"#ffd6e8",gr:"#cfcfd8",lm:'<rect x="20" y="120" width="70" height="220" fill="#7c5cff"/><rect x="100" y="80" width="80" height="260" fill="#5a7bd8"/><rect x="190" y="140" width="70" height="200" fill="#ff7a3d"/><rect x="270" y="60" width="90" height="280" fill="#4a2c6b"/>',goal:8,t:50}];
+const PERKS={bag:{e:"🎒",he:"שקית גדולה",fr:"Grand sac",en:"Big bag"},fast:{e:"👟",he:"הליכה מהירה (+זמן)",fr:"Marche rapide (+temps)",en:"Fast walking (+time)"},magnet:{e:"🧲",he:"מגנט חטיפים",fr:"Aimant à friandises",en:"Treat magnet"},dog:{e:"🐶",he:"כלב חבר עוזר",fr:"Chien copain",en:"Dog helper"}};
+const KN=[["🐱","Mitzi",0],["🐈","Pitzi",1],["😺","Luna",2],["😸","Tigi",0],["🐈‍⬛","Shadow",1],["😻","Bisli",2],["😽","Nala",0],["🙀","Ziggy",1]];
+const FAM=[{e:"👨‍👩‍👧",h:{he:"אוהב לשחק 🧶",fr:"aime jouer 🧶",en:"loves to play 🧶"}},{e:"👵",h:{he:"ישנוני 💤",fr:"endormi 💤",en:"sleepy 💤"}},{e:"👩‍🍳",h:{he:"אוהב לאכול 🐟",fr:"gourmand 🐟",en:"loves food 🐟"}}];
+const KEY="annabelle-streetcats-journey";
+let J=JSON.parse(localStorage.getItem(KEY)||"null")||{town:0,perks:[],kits:[]};
+const sv=()=>localStorage.setItem(KEY,JSON.stringify(J));
+const t=()=>TX[lg()]||TX.he, f=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
+let run=null, tick=null;
+const snd=k=>{ try{ if(typeof SFX!=="undefined"&&SFX[k]) SFX[k](); }catch(e){} };
+function open(){ ac&&ac(); $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; J.town>=TOWNS.length?adoption():mapView(false); }
+function close(){ stop(); $("jy").classList.remove("show"); }
+function stop(){ clearInterval(tick); tick=null; run=null; $("jyField").innerHTML=""; }
+function panel(h){ $("jyPanel").innerHTML=`<div class="jpanel jpop">${h}</div>`; }
+function bg(i){ const T=TOWNS[Math.min(i,4)]; $("jyBg").innerHTML=`<rect width="400" height="700" fill="${T.sky}"/>${T.lm}<rect y="340" width="400" height="360" fill="${T.gr}"/>`; }
+function bar(h){ $("jyBar").innerHTML=h; }
+function mapSvg(from,to){ const pts=TOWNS.map((_,i)=>[8+i*21,i%2?30:72]);
+  return `<div class="jmap">${TOWNS.map((T,i)=>`<div class="jdot" style="left:${pts[i][0]}%;top:${pts[i][1]}%">${i<J.town?"✅":T.ic}<small>${T.n[lg()]}</small></div>`).join("")}<div class="bus" id="jyBus" style="left:${pts[from][0]}%;top:${pts[from][1]}%">🚌🐱</div></div>`; }
+function mapView(anim){ stop(); const i=Math.min(J.town,4); bg(i); bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${f(t().rescued,{n:J.kits.length})}</span><span class="pl">${J.perks.map(p=>PERKS[p].e).join("")||"🎁"}</span>`);
+  const from=anim?Math.max(0,J.town-1):i;
+  panel(`<h2>${TOWNS[i].ic} ${TOWNS[i].n[lg()]}</h2>${mapSvg(from,i)}<div>${f(t().goal,{n:TOWNS[i].goal})}</div><button class="jb go" id="jyGo">${t().start}</button><button class="jb" id="jyR" style="font-size:13px;min-height:36px;padding:6px">${t().reset}</button>`);
+  if(anim){ snd("heart"); setTimeout(()=>{ const b=$("jyBus"); const pts=[8+i*21,i%2?30:72]; if(b){ b.style.left=pts[0]+"%"; b.style.top=pts[1]+"%"; } },80); }
+  $("jyGo").onclick=()=>play(i); $("jyR").onclick=()=>{ J={town:0,perks:[],kits:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
+function play(i){ snd("click"); const T=TOWNS[i], P=J.perks; const has=p=>P.filter(x=>x===p).length;
+  run={i,fed:0,goal:T.goal,time:T.t+has("fast")*8,bag:3+has("bag")*2,max:3+has("bag")*2,kits:[]}; $("jyPanel").innerHTML="";
+  const field=$("jyField"); field.innerHTML=`<button class="jb jbag" id="jyBag" style="left:50%;transform:translateX(-50%)"></button>`;
+  $("jyBag").onclick=()=>{ run.bag=run.max; snd("click"); hud(); };
+  const spawn=()=>{ if(!run||field.querySelectorAll(".k:not(.fed)").length>=3) return; const k=document.createElement("button"); k.className="k jpop"; const kd=KN[(Math.random()*KN.length)|0];
+    k.innerHTML=kd[0]+'<span class="hb">🍽️</span>'; const W=innerWidth,H=innerHeight; k.style.left=(10+Math.random()*(W-84))+"px"; k.style.top=(H*.42+Math.random()*(H*.4-80))+"px";
+    k.onpointerdown=e=>{ e.preventDefault(); if(k.classList.contains("fed")||!run) return; if(run.bag<=0){ $("jyBag").classList.remove("jpop"); void $("jyBag").offsetWidth; $("jyBag").classList.add("jpop"); return; }
+      run.bag--; feed(k,kd); };
+    field.appendChild(k); setTimeout(()=>{ if(k.isConnected&&!k.classList.contains("fed")) k.remove(); }, (7000-i*700)+has("magnet")*2000); };
+  const feed=(k,kd)=>{ k.classList.add("fed"); k.querySelector(".hb").textContent="💛"; snd("heart"); try{ meow(700+Math.random()*300,0,.25); }catch(e){} run.fed++; run.kits.push(kd); setTimeout(()=>k.remove(),700); hud(); if(run.fed>=run.goal) end(true); };
+  const hud=()=>{ if(!run||!$("jyBag")) return; bar(`<span class="pl">${TOWNS[i].ic} ${TOWNS[i].n[lg()]}</span><span class="pl">${f(t().fed,{a:run.fed,n:run.goal})}</span><span class="pl">${f(t().time,{t:Math.ceil(run.time)})}</span>`); $("jyBag").textContent=f(t().bag,{b:run.bag}); };
+  let acc=0, dogAcc=0; hud(); spawn();
+  tick=setInterval(()=>{ if(!run) return; if(window.__ptLocked) return; run.time-=.25; acc+=.25; dogAcc+=.25; if(acc>=Math.max(.9,1.8-i*.2)){ acc=0; spawn(); }
+    if(has("dog")&&dogAcc>=6){ dogAcc=0; const k=field.querySelector(".k:not(.fed)"); if(k){ k.querySelector(".hb").textContent="🐶"; feed(k,KN[0]); } }
+    if(run&&run.time<=0) end(false); else hud(); },250); }
+function end(win){ const r=run; stop(); if(win){ J.kits=J.kits.concat(r.kits.slice(0,2).map(k=>k[1]+":"+k[2]+":"+k[0])); J.town=r.i+1; sv(); try{ confetti(120); }catch(e){}
+    if(J.town>=TOWNS.length){ panel(`<h2>${t().win}</h2><button class="jb go" id="jyA">${t().adopt}</button>`); $("jyA").onclick=adoption; return; }
+    const keys=Object.keys(PERKS); const a=keys[(r.i*2)%4], b=keys[(r.i*2+1)%4];
+    panel(`<h2>${t().win}</h2><div>${t().perk}</div><div class="jgrid f2">${[a,b].map(p=>`<button data-p="${p}"><span style="font-size:28px">${PERKS[p].e}</span><br>${PERKS[p][lg()]}</button>`).join("")}</div>`);
+    $("jyPanel").querySelectorAll("[data-p]").forEach(el=>el.onclick=()=>{ J.perks.push(el.dataset.p); sv(); mapView(true); });
+  } else { panel(`<h2>${t().lose}</h2><button class="jb go" id="jyAg">${t().retry}</button>`); $("jyAg").onclick=()=>play(r.i); } }
+function adoption(){ stop(); bg(0); $("jyBg").innerHTML+='<text x="200" y="120" font-size="60" text-anchor="middle">🎈🏡🎈</text>';
+  bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${t().adopt}</span>`); $("jyX").onclick=close;
+  const kits=J.kits.slice(0,8); let pick=-1, done={};
+  const draw=()=>{ const n=Object.keys(done).length;
+    if(n>=kits.length){ snd("heart"); panel(`<h2>${t().cert}</h2><div style="border:4px double #ffc14d;border-radius:14px;padding:12px;font-size:17px">🏅 ${f(t().certT,{n:kits.length})}<div style="font-size:30px">${kits.map(k=>k.split(":")[2]).join("")}💞</div></div><button class="jb go" id="jyN">${t().reset}</button>`); $("jyN").onclick=()=>{ J={town:0,perks:[],kits:[]}; sv(); mapView(false); }; return; }
+    panel(`<h2>${t().adopt}</h2><div style="font-size:14px">${t().adoptH}</div><div class="jgrid">${kits.map((k,i)=>{ const [nm,tr,e]=k.split(":"); return `<button data-k="${i}" class="${pick==i?"sel":""} ${done[i]?"done":""}"><span style="font-size:22px">${done[i]?"🏠":e}</span><br>${nm} ${["🧶","💤","🐟"][tr]}</button>`; }).join("")}</div><div class="jgrid f3">${FAM.map((F,i)=>`<button data-f="${i}"><span style="font-size:26px">${F.e}</span><br>${F.h[lg()]}</button>`).join("")}</div><div id="jyMsg" style="min-height:22px"></div>`);
+    $("jyPanel").querySelectorAll("[data-k]").forEach(el=>el.onclick=()=>{ if(done[el.dataset.k]) return; pick=+el.dataset.k; snd("click"); draw(); });
+    $("jyPanel").querySelectorAll("[data-f]").forEach(el=>el.onclick=()=>{ if(pick<0) return; const tr=+kits[pick].split(":")[1]; if(tr===+el.dataset.f){ done[pick]=1; pick=-1; snd("heart"); draw(); const m=$("jyMsg"); if(m) m.textContent=t().home+" 💗💗💗"; } else $("jyMsg").textContent=t().wrong; }); };
+  draw(); }
+const btn=document.createElement("button"); btn.className="big"; btn.id="journeyBtn"; btn.style.cssText="background:#ffc14d;font-size:19px;padding:10px 18px";
+$("playBtn").after(btn); btn.onclick=()=>{ snd("click"); open(); };
+const lbl=()=>{ btn.textContent=t().btn+(J.town?` (${Math.min(J.town,5)}/5)`:""); }; lbl();
+document.addEventListener("click",e=>{ if(e.target.closest("[data-lang]")) setTimeout(lbl,0); });
+window.__jy={open,adoption,mapView,state:()=>J,set:o=>{Object.assign(J,o);sv();},win:()=>run&&(run.fed=run.goal-1,run.goal&&end(true))};
+})();
+</script>
+
 </body>
 </html>
