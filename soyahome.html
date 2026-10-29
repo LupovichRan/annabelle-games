@@ -24,6 +24,11 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 .thing{position:absolute;left:0;top:0;will-change:transform}
 #pot,#foot,#soya{pointer-events:auto}
 #pot{pointer-events:none}
+#cup,#fish,#roll{position:absolute;left:0;top:0;line-height:1;text-align:center;transition:transform .12s linear;filter:drop-shadow(0 3px 2px #0003)}
+#cup.fall{transition:transform .45s cubic-bezier(.5,0,1,1)}
+#fish,#roll{pointer-events:none}
+#cup.warn,#roll.warn,#fish.warn{animation:wob .35s ease-in-out infinite alternate}
+@keyframes wob{to{filter:drop-shadow(0 0 8px #ff4d4d)}}
 #foot{transition:transform .16s ease-out;cursor:pointer;z-index:2000}
 #foot svg,#pot svg,#soya svg{width:100%;height:100%;display:block;overflow:visible}
 #foot.bit .footInner{animation:shake .12s 6}
@@ -42,7 +47,7 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 #alert{position:absolute;left:0;top:0;z-index:3500;font-size:30px;pointer-events:none;display:none;animation:bob .35s ease-in-out infinite alternate}
 @keyframes bob{from{margin-top:0}to{margin-top:-8px}}
 #chewRing{position:absolute;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;z-index:3500;pointer-events:none;display:none;background:#fff;box-shadow:0 2px 6px #0003}
-#chewRing::after{content:"🔌";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:#fff;border-radius:50%;margin:6px}
+#chewRing::after{content:attr(data-i);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:#fff;border-radius:50%;margin:6px}
 #dark{position:absolute;inset:0;background:#0d0c1c;opacity:0;pointer-events:none;z-index:4000}
 #dark.flick{animation:flick 1.1s linear}
 @keyframes flick{0%{opacity:0}10%{opacity:.75}20%{opacity:.1}32%{opacity:.8}45%{opacity:.2}60%{opacity:.7}80%{opacity:.15}100%{opacity:0}}
@@ -93,10 +98,11 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
  <div id="stage">
   <svg id="room" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="thing" id="pot"></div>
+  <div class="thing" id="cup">🥛</div><div class="thing" id="fish">🐟</div><div class="thing" id="roll">🧻</div>
   <div class="thing" id="foot"></div>
   <div class="thing" id="soya"><div class="flip"></div></div>
   <div id="alert">❗</div>
-  <div id="chewRing"></div>
+  <div id="chewRing" data-i="🔌"></div>
   <div id="dark"></div>
   <div id="hint"></div>
  </div>
@@ -322,6 +328,8 @@ const SFX={
  chew:()=>{ noise(.06,'lowpass',1800,700,.22); noise(.05,'lowpass',1500,600,.18,.09); },
  buzz:()=>{ if(muted||!ac()) return; const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain(); o.type='sawtooth'; o.frequency.value=110;
    g.gain.setValueAtTime(0.0001,t); for(let i=0;i<8;i++){ g.gain.setValueAtTime(i%2?.02:.16,t+i*.09); } g.gain.exponentialRampToValueAtTime(.0001,t+.8); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.85); },
+ crash:()=>{ noise(.35,'highpass',3000,8000,.3,.4); [2600,3300,2100,3900].forEach((f,i)=>tone('triangle',f,f*.9,.08,.12,.42+i*.06)); tone('sine',300,90,.2,.25,.4); },
+ rustle:()=>noise(.18,'bandpass',2500,4500,.12),
  good:()=>{ tone('triangle',880,880,.1,.16); tone('triangle',1320,1320,.16,.16,.09); },
  bad:()=>{ tone('square',300,200,.2,.1); },
  win:()=>{ [523,659,784,1047].forEach((f,i)=>tone('triangle',f,f,.22,.2,i*.13)); meow(1.1,.65,.5); },
@@ -390,27 +398,34 @@ function layout(){
  const potW=Math.max(110,32*u), potH=potW*1.3, potX=W*.2+(W>H?W*.02:0), potBase=floorY+H*.1;
  const footW=Math.max(78,19*u), footH=footW*170/120, footX=W*.56;
  const S=Math.max(84,25*u), h=S*1.1;
- const sockX=W*.66, sockY=floorY-H*.05, lampX=W*.9, lampY=floorY+H*.08;
+ const RM=window.__room||0; const sockX=W*.66, sockY=floorY-H*.05, lampX=W*.9, lampY=RM===1?floorY-H*.1:RM===2?floorY+H*.03:floorY+H*.08;
  const p0={x:sockX,y:floorY+H*.015}, c={x:W*.74,y:floorY+H*.28}, p2={x:lampX,y:lampY};
  const mid={x:.25*p0.x+.5*c.x+.25*p2.x,y:.25*p0.y+.5*c.y+.25*p2.y};
  L={W,H,u,floorY,S,h,pot:{x:potX,base:potBase,w:potW,h:potH,mouth:{x:potX,y:potBase-potH*(1-166/260)}},
   foot:{x:footX,w:footW,h:footH,top:H-footH*.86,toes:{x:footX-footW*.1,y:H-footH*.86+footH*.16}},
   cable:{p0,c,p2,mid,sockX,sockY,lampX,lampY},
-  minY:floorY+H*.06, maxY:H-Math.max(20,H*.04)};
+  minY:floorY+H*.06, maxY:H-Math.max(20,H*.04), RM, table:{x:W*.47,w:Math.max(70,18*u),top:floorY-H*.035,floor:floorY+H*.05}, roll:{x:W*.12,y:H*.8}};
  potEl.style.width=potW+'px'; potEl.style.height=potH+'px'; potEl.style.transform=`translate(${potX-potW/2}px,${potBase-potH}px)`; potEl.style.zIndex=Math.round(potBase);
  footEl.style.width=footW+'px'; footEl.style.height=footH+'px';
  soyaEl.style.width=S+'px'; soyaEl.style.height=h+'px';
- drawRoom(); placeFoot(); if(G) placeSoya();
+ drawRoom(); placeThings(); placeFoot(); if(G) placeSoya();
 }
 function drawRoom(){
  const {W,H,floorY,cable:C,u}=L; const svg=$('room'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
  const winW=Math.min(W*.24,46*u), winH=Math.min(H*.2,40*u), winX=W*.4, winY=H*.05;
  const shade=Math.max(46,13*u), lh=Math.min(H*.36,62*u);
- let tiles=''; for(let i=1;i<9;i++){ const y=floorY+(H-floorY)*Math.pow(i/9,1.3); tiles+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; }
- for(let i=-6;i<=6;i++){ tiles+=`<line x1="${W/2+i*W*.09}" y1="${floorY}" x2="${W/2+i*W*.2}" y2="${H}"/>`; }
+ const RM=L.RM, RW=[['#fff4e0','#ffe6c7'],['#e9f7ef','#d6efe1'],['#efe6ff','#e2d6fb']][RM], RF=[['#c98f5a','#e0a872'],['#f4f1ea','#fbf9f4'],['#f7c9dc','#fbd9e7']][RM];
+ let tiles='';
+ if(RM===0){ for(let i=1;i<9;i++){ const y=floorY+(H-floorY)*Math.pow(i/9,1.3); tiles+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; } }
+ else if(RM===1){ const n=8; for(let r=0;r<n;r++){ const y0=floorY+(H-floorY)*Math.pow(r/n,1.3), y1=floorY+(H-floorY)*Math.pow((r+1)/n,1.3); for(let c=0;c<10;c++) if((r+c)%2) tiles+=`<rect x="${c*W/10}" y="${y0}" width="${W/10}" height="${y1-y0}" fill="#cfe9dc" stroke="none"/>`; } }
+ const T0=L.table, tl=`<g><rect x="${T0.x-T0.w/2}" y="${T0.top}" width="${T0.w}" height="${Math.max(7,H*.012)}" rx="4" fill="#a8693c"/><rect x="${T0.x-T0.w*.42}" y="${T0.top}" width="6" height="${T0.floor-T0.top}" fill="#8a5530"/><rect x="${T0.x+T0.w*.42-6}" y="${T0.top}" width="6" height="${T0.floor-T0.top}" fill="#8a5530"/></g>`;
+ let furn='';
+ if(RM===0){ furn=`<g><rect x="${W*.7}" y="${floorY-H*.1}" width="${W*.32}" height="${H*.1}" rx="14" fill="#7fb3e8"/><rect x="${W*.72}" y="${floorY-H*.135}" width="${W*.3}" height="${H*.06}" rx="12" fill="#6a9fd6"/><rect x="${W*.75}" y="${floorY-H*.12}" width="${W*.09}" height="${H*.045}" rx="8" fill="#ffb3cf"/></g>`; }
+ else if(RM===1){ const cx=W*.76, cy=C.lampY; furn=`<g><rect x="0" y="${H*.27}" width="${W}" height="${floorY-H*.27}" fill="#ffffff" opacity=".55"/><rect x="${cx}" y="${cy}" width="${W-cx}" height="${floorY-cy+H*.02}" fill="#f2d3a6" stroke="#c89b62" stroke-width="3"/><rect x="${cx-6}" y="${cy-8}" width="${W-cx+6}" height="10" rx="3" fill="#8f8f99"/><circle cx="${cx+(W-cx)*.5}" cy="${cy+(floorY-cy)*.55}" r="4" fill="#c89b62"/><text x="${C.lampX}" y="${cy-6}" font-size="${Math.max(30,8*u)}" text-anchor="middle">🫖</text><text x="${W*.92}" y="${H*.09}" font-size="${Math.max(22,6*u)}" text-anchor="middle">🕒</text><text x="${W*.78}" y="${H*.2}" font-size="${Math.max(22,6*u)}" text-anchor="middle">🍳</text></g>`; }
+ else { furn=`<g><rect x="${W*.66}" y="${floorY-H*.16}" width="${W*.34}" height="${H*.07}" rx="12" fill="#b48bff"/><rect x="${W*.64}" y="${floorY-H*.09}" width="${W*.38}" height="${H*.1}" rx="10" fill="#fff"/><rect x="${W*.64}" y="${floorY-H*.06}" width="${W*.38}" height="${H*.07}" rx="8" fill="#ff9fc4"/><rect x="${W*.68}" y="${floorY-H*.11}" width="${W*.12}" height="${H*.035}" rx="8" fill="#fff6fb" stroke="#e3c4ee"/><rect x="${C.lampX-14*u/4}" y="${C.lampY-H*.06}" width="${7*u}" height="${H*.06}" rx="4" fill="#d9a26b" stroke="#a66f3c" stroke-width="2"/><text x="${C.lampX+3}" y="${C.lampY-H*.065}" font-size="${Math.max(20,5*u)}" text-anchor="middle">📱</text><text x="${W*.92}" y="${H*.09}" font-size="${Math.max(22,6*u)}" text-anchor="middle">🌙</text></g>`; }
  svg.innerHTML=`<defs>
-  <linearGradient id="wallG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef0f3"/><stop offset="1" stop-color="#dfe2e6"/></linearGradient>
-  <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e1d6"/><stop offset="1" stop-color="#f5efe6"/></linearGradient>
+  <linearGradient id="wallG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${RW[0]}"/><stop offset="1" stop-color="${RW[1]}"/></linearGradient>
+  <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${RF[0]}"/><stop offset="1" stop-color="${RF[1]}"/></linearGradient>
   <radialGradient id="glowG"><stop offset="0" stop-color="#fff3b0" stop-opacity=".9"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/></radialGradient>
  </defs>
  <rect width="${W}" height="${floorY}" fill="url(#wallG)"/>
@@ -424,7 +439,7 @@ function drawRoom(){
   <path d="M${winX+winW+10},${winY-8} q-${winW*.16},${winH*.6} 0,${winH+16} l-${winW*.16},0 q${winW*.08},-${winH*.5} 0,-${winH+16}Z" fill="#ffb3cf"/></g>
  <g transform="translate(${W*.08} ${H*.07})"><rect width="${Math.max(44,11*u)}" height="${Math.max(36,9*u)}" rx="6" fill="#fff" stroke="#e8862d" stroke-width="5"/><text x="${Math.max(44,11*u)/2}" y="${Math.max(36,9*u)*.72}" font-size="${Math.max(22,6*u)}" text-anchor="middle">🦁</text></g>
  <rect y="${floorY}" width="${W}" height="${H-floorY}" fill="url(#floorG)"/>
- <g stroke="#d9cfc2" stroke-width="1.5">${tiles}</g>
+ <g stroke="${RM===0?'#b57c4a':'#d9cfc2'}" stroke-width="1.5">${tiles}</g>${furn}${tl}
  <rect y="${floorY-H*.012}" width="${W}" height="${H*.014}" fill="#e3e0db"/>
  <ellipse cx="${W*.46}" cy="${floorY+(H-floorY)*.55}" rx="${W*.3}" ry="${(H-floorY)*.16}" fill="#ffd0e2" stroke="#ff9fc4" stroke-width="5" stroke-dasharray="2 10" stroke-linecap="round"/>
  <ellipse cx="${W*.46}" cy="${floorY+(H-floorY)*.55}" rx="${W*.2}" ry="${(H-floorY)*.09}" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/>
@@ -432,10 +447,10 @@ function drawRoom(){
  <circle cx="${C.sockX-5}" cy="${C.sockY}" r="2.5" fill="#777"/><circle cx="${C.sockX+5}" cy="${C.sockY}" r="2.5" fill="#777"/>
  <path d="M${C.sockX},${C.sockY+6} L${C.p0.x},${C.p0.y} Q${C.c.x},${C.c.y} ${C.p2.x},${C.p2.y}" fill="none" stroke="#2e2e36" stroke-width="${Math.max(5,1.4*u)}" stroke-linecap="round"/>
  <rect x="${C.sockX-7}" y="${C.sockY-6}" width="14" height="16" rx="3" fill="#3a3a44"/>
- <circle id="lampGlow" cx="${C.lampX}" cy="${C.lampY-lh}" r="${shade*1.9}" fill="url(#glowG)"/>
+  ${RM===0?`<circle id="lampGlow" cx="${C.lampX}" cy="${C.lampY-lh}" r="${shade*1.9}" fill="url(#glowG)"/>
  <ellipse cx="${C.lampX}" cy="${C.lampY}" rx="${shade*.45}" ry="${shade*.12}" fill="#8a6d5a"/>
  <line x1="${C.lampX}" y1="${C.lampY}" x2="${C.lampX}" y2="${C.lampY-lh}" stroke="#8a6d5a" stroke-width="${Math.max(4,u)}"/>
- <path d="M${C.lampX-shade*.32},${C.lampY-lh-shade*.55} L${C.lampX+shade*.32},${C.lampY-lh-shade*.55} L${C.lampX+shade*.55},${C.lampY-lh+shade*.12} L${C.lampX-shade*.55},${C.lampY-lh+shade*.12}Z" fill="#ffd34d" stroke="#e0a520" stroke-width="3"/>`;
+ <path d="M${C.lampX-shade*.32},${C.lampY-lh-shade*.55} L${C.lampX+shade*.32},${C.lampY-lh-shade*.55} L${C.lampX+shade*.55},${C.lampY-lh+shade*.12} L${C.lampX-shade*.55},${C.lampY-lh+shade*.12}Z" fill="#ffd34d" stroke="#e0a520" stroke-width="3"/>`:''}`;
 }
 
 /* ================= Game state ================= */
@@ -444,10 +459,10 @@ let G=null, running=false, paused=false, ending=false;
 let soyaSvg=null, lastCls='';
 function newGame(){
  pebs.forEach(p=>p.el.remove()); pebs=[];
- G={t:0,score:0,miss:0,count:{peb:0,toe:0,cable:0},hist:[],next:['peb','toe','cable'],
+ G={t:0,score:0,miss:0,count:{peb:0,toe:0,cable:0,glass:0,paper:0,steal:0},hist:[],next:['peb','toe','cable'],
   s:{x:L.W*.5,y:L.floorY+(L.H-L.floorY)*.5,face:1,st:'idle',t:1.6,pose:'sit'},
   foot:{out:true,rt:0,bit:0}};
- footEl.classList.remove('bit'); $('dark').className=''; placeFoot(); setCat('sit'); placeSoya(); hud();
+ footEl.classList.remove('bit'); G.cup=0; G.cupFall=0; G.paperOut=0; clearWarn(); $('cup').classList.remove('fall'); $('fish').style.opacity=1; placeThings(); $('dark').className=''; placeFoot(); setCat('sit'); placeSoya(); hud();
 }
 function D(){ return Math.min(1,G.t/ROUND); }
 const P={
@@ -456,6 +471,7 @@ const P={
  peb:()=>lerp(8,4.8,D()),
  nPeb:()=>1+(D()>.3)+(D()>.65),
  chew:()=>lerp(4.2,2.4,D()),
+ push:()=>lerp(4,2.6,D()),
  speed:()=>lerp(46,76,D())*L.u
 };
 
@@ -464,7 +480,7 @@ function setCat(pose,extra=''){ G.s.pose=pose; const c=`soyaSvg p-${pose} ${extr
 function placeSoya(){ const s=G.s; soyaEl.style.transform=`translate(${s.x-L.S/2}px,${s.y-L.h+(s.jump||0)}px)`; soyaEl.style.zIndex=Math.round(s.y)+(s.st==='held'?5000:0);
  soyaEl.firstElementChild.style.transform=s.face<0?'scaleX(-1)':'none';
  const al=$('alert'); if(s.st==='warn'){ al.style.display='block'; al.style.transform=`translate(${s.x-12}px,${s.y-L.h*1.15}px)`; } else al.style.display='none';
- const cr=$('chewRing'); if(s.st==='chew'){ cr.style.display='block'; cr.style.transform=`translate(${s.x}px,${s.y-L.h*1.05}px)`; const f=1-s.t/s.t0; cr.style.background=`conic-gradient(#ff4d4d ${f*360}deg,#ffe0e0 0)`; } else cr.style.display='none';
+ const cr=$('chewRing'); if(s.st==='chew'||s.st==='push'){ cr.dataset.i={glass:'🥛',paper:'🧻',steal:'🐟'}[s.type]||'🔌'; cr.style.display='block'; cr.style.transform=`translate(${s.x}px,${s.y-L.h*1.05}px)`; const f=1-s.t/s.t0; cr.style.background=`conic-gradient(#ff4d4d ${f*360}deg,#ffe0e0 0)`; } else cr.style.display='none';
 }
 function placeFoot(){ const f=G?G.foot:{out:true}; footEl.style.transform=`translate(${L.foot.x-L.foot.w/2}px,${L.foot.top+(f.out?0:L.foot.h*.78)}px)`; }
 
@@ -475,10 +491,12 @@ let hintTO=0; function hint(k){ const h=$('hint'); h.textContent=T[lang][k]; h.c
 function addScore(n,x,y){ G.score+=n; pop(x,y,'+'+n); hud(); }
 function hud(){ $('score').textContent='⭐ '+G.score; $('hearts').textContent='❤️'.repeat(MAXMISS-G.miss)+'🤍'.repeat(G.miss); $('timeBar').style.width=(Math.min(1,G.t/ROUND)*100)+'%'; }
 function mistake(){ G.miss++; hud(); stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); if(G.miss>=MAXMISS){ ending=true; setTimeout(()=>finish(false),900); } }
-function randFloor(avoid){ for(let i=0;i<30;i++){ const p={x:rnd(L.W*.08,L.W*.92),y:rnd(L.minY+L.h*.3,L.maxY-L.foot.h*.2)}; if(Math.abs(p.x-L.pot.x)<L.pot.w*.6&&p.y<L.pot.base+L.h*.3) continue; if(Math.hypot(p.x-L.cable.mid.x,p.y-L.cable.mid.y)<L.W*.2) continue; if(Math.abs(p.x-L.foot.x)<L.foot.w&&p.y>L.H-L.foot.h) continue; if(avoid&&Math.hypot(p.x-avoid.x,p.y-avoid.y)<L.W*.2) continue; return p; } return {x:L.W*.35,y:(L.minY+L.maxY)/2}; }
+function randFloor(avoid){ for(let i=0;i<30;i++){ const p={x:rnd(L.W*.08,L.W*.92),y:rnd(L.minY+L.h*.3,L.maxY-L.foot.h*.2)}; if(Math.abs(p.x-L.pot.x)<L.pot.w*.6&&p.y<L.pot.base+L.h*.3) continue; if(Math.hypot(p.x-L.cable.mid.x,p.y-L.cable.mid.y)<L.W*.2) continue; if(Math.abs(p.x-L.foot.x)<L.foot.w&&p.y>L.H-L.foot.h) continue; if(avoid&&Math.hypot(p.x-avoid.x,p.y-avoid.y)<L.W*.2) continue; if(L.table&&Math.abs(p.x-L.table.x)<L.table.w*.7&&p.y<L.table.floor+L.h*.4) continue; if(L.roll&&Math.hypot(p.x-L.roll.x,p.y-L.roll.y)<L.W*.15) continue; return p; } return {x:L.W*.35,y:(L.minY+L.maxY)/2}; }
 function spot(type){
  if(type==='peb') return {x:L.pot.x+L.pot.w*.5+L.S*.35,y:L.pot.base+L.h*.12,face:-1};
  if(type==='toe') return {x:L.foot.x-L.foot.w*.55-L.S*.5,y:Math.min(L.maxY,L.foot.toes.y+L.h*.35),face:1};
+ if(type==='glass'||type==='steal') return {x:L.table.x+L.table.w*.5+L.S*.35,y:L.table.floor+L.h*.28,face:-1};
+ if(type==='paper') return {x:L.roll.x+L.S*.6,y:L.roll.y+L.h*.15,face:-1};
  return {x:L.cable.mid.x+L.S*.24,y:L.cable.mid.y+L.h*.31,face:1};
 }
 
@@ -487,7 +505,7 @@ function walkTo(p,cb){ const s=G.s; s.st='walk'; s.tx=p.x; s.ty=clamp(p.y,L.minY
 function goIdle(t){ const s=G.s; s.st='idle'; s.t=t==null?P.idle():t; s.jump=0; setCat('sit',s.happy?'e-happy':''); }
 function chooseType(){
  if(G.next.length) return G.next.shift();
- let opts=['peb','toe','cable'];
+ let opts=['peb','toe','cable','glass',L.RM===1?'steal':'paper']; if(G.t<12) opts=opts.filter(o=>o!=='glass'&&o!=='paper'&&o!=='steal');
  if(pebs.filter(p=>p.state==='floor').length>=4) opts=opts.filter(o=>o!=='peb');
  const h=G.hist; if(h.length>=2&&h[h.length-1]===h[h.length-2]) opts=opts.filter(o=>o!==h[h.length-1]);
  return pick(opts);
@@ -498,16 +516,19 @@ function startWarn(type){ const s=G.s; s.st='warn'; s.type=type; s.t=P.warn(); s
  if(type==='peb') setCat('stand','wiggle crouch');
  else setCat('stand','wiggle crouch flat');
  if(type==='cable'){ s.x=L.cable.mid.x-L.S*.55; s.y=L.cable.mid.y+L.h*.25; }
- if(G.count[type]<=2) hint(type==='peb'?'hPeb':type==='toe'?'hToe':'hCable');
+ if(G.count[type]<=2) hint({peb:'hPeb',toe:'hToe',cable:'hCable',glass:'hGlass',paper:'hPaper',steal:'hSteal'}[type]);
+ if(type==='glass') $('cup').classList.add('warn'); if(type==='paper') $('roll').classList.add('warn'); if(type==='steal') $('fish').classList.add('warn');
  tone('triangle',300,240,.12,.08);
 }
 function act(){ const s=G.s;
  if(s.type==='peb'){ s.st='flick'; s.n=P.nPeb(); s.k=0; s.t=.15; setCat('sit','e-wide'); }
  else if(s.type==='toe'){ s.st='pounce'; s.pt=0; s.from={x:s.x,y:s.y}; s.to={x:L.foot.x-L.foot.w*.35-L.S*.25,y:s.y}; s.hit=G.foot.out; setCat('stand','e-wide flat'); SFX.pounce(); }
+ else if(s.type==='glass'){ s.st='push'; s.t0=s.t=P.push(); s.ct=0; setCat('stand','e-wide'); }
+ else if(s.type==='paper'||s.type==='steal'){ s.st='chew'; s.t0=s.t=P.chew()*1.15; s.ct=0; if(s.type==='steal'){ s.jump=-L.h*.42; } setCat('stand','e-wide'); }
  else { s.st='chew'; s.t0=s.t=P.chew(); s.ct=0; s.x=L.cable.mid.x+L.S*.24; s.y=L.cable.mid.y+L.h*.31; s.face=1; setCat('lie','chew m-open flat'); }
 }
 function shoo(dragged){ const s=G.s; const was=s.st, type=s.type;
- addScore(was==='chew'?25:20,s.x,s.y-L.h); pop(s.x,s.y-L.h*.6,was==='chew'?T[lang].saved:T[lang].shoo); SFX.good(); mrrp();
+ addScore(was==='chew'?25:20,s.x,s.y-L.h); pop(s.x,s.y-L.h*.6,type==='glass'?T[lang].svGlass:type==='paper'?T[lang].svPaper:type==='steal'?T[lang].svSteal:was==='chew'?T[lang].saved:T[lang].shoo); clearWarn(); if(type==='glass'){ G.cup=0; placeThings(); } SFX.good(); mrrp();
  if(!dragged){ const p=randFloor(L.cable.mid); s.st='hop'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=p; s.face=p.x>s.x?1:-1; setCat('stand','e-wide'); }
  else { s.st='sheep'; s.t=1; s.happy=true; setCat('sit','e-happy'); }
 }
@@ -523,7 +544,8 @@ function updateSoya(dt){ const s=G.s;
    s.t-=dt; if(s.t<=0) act(); break;
   case 'flick': s.t-=dt; if(s.t<=0){ if(s.k<s.n){ flickPeb(); s.k++; s.t=.32; } else { s.st='bat'; s.t=1.1; s.bt=.1; } } break;
   case 'bat': s.t-=dt; s.bt-=dt; if(s.bt<=0){ batPeb(); s.bt=.6; } if(s.t<=0){ s.st='rest'; s.t=.4; setCat('sit',''); } break;
-  case 'chew': s.t-=dt; s.ct-=dt; if(s.ct<=0){ SFX.chew(); s.ct=.38; } if(s.t<=0) cableFail(); break;
+  case 'chew': s.t-=dt; s.ct-=dt; if(s.ct<=0){ if(s.type==='paper') SFX.rustle(); else SFX.chew(); s.ct=.38; } if(s.type==='paper') G.paperOut=1-s.t/s.t0; if(s.t<=0){ if(s.type==='cable') cableFail(); else otherFail(); } if(s.type==='paper') placeThings(); break;
+  case 'push': s.t-=dt; G.cup=1-Math.max(0,s.t)/s.t0; if(s.ct==null||(s.ct-=dt)<=0){ SFX.tok(); s.ct=.5; } placeThings(); if(s.t<=0) glassFail(); break;
   case 'pounce': { s.pt+=dt/.38; const k=Math.min(1,s.pt); s.x=lerp(s.from.x,s.to.x,k); s.y=lerp(s.from.y,s.to.y,k); s.jump=-Math.sin(k*Math.PI)*L.h*.35;
    if(k>=1){ s.jump=0; s.dodging=false;
     if(G.foot.out){ bite(); s.st='rest'; s.t=.9; setCat('sit','e-happy m-open'); }
@@ -543,6 +565,22 @@ function cableFail(){ const s=G.s; $('dark').className=''; void $('dark').offset
  pop(L.W/2,L.H*.3,T[lang].flicker,true); mistake();
  s.st='flee'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=randFloor(L.cable.mid); s.face=s.to.x>s.x?1:-1; setCat('stand','e-wide flat'); }
 
+function clearWarn(){ ['cup','roll','fish'].forEach(i=>$(i).classList.remove('warn')); }
+function glassFail(){ const s=G.s; clearWarn(); const c=$('cup'); c.classList.add('fall'); G.cupFall=1; placeThings(); SFX.crash();
+ setTimeout(()=>{ pop(L.table.x-L.table.w*.6,L.table.floor+20,'💥',true); },420);
+ pop(L.W/2,L.H*.3,T[lang].crash,true); mistake(); s.st='flee'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=randFloor(L.table); s.face=s.to.x>s.x?1:-1; setCat('stand','e-wide flat');
+ setTimeout(()=>{ if(!G) return; c.classList.remove('fall'); G.cupFall=0; G.cup=0; c.style.opacity=0; placeThings(); setTimeout(()=>c.style.opacity=1,300); },1600); }
+function otherFail(){ const s=G.s, t=s.type; clearWarn(); s.jump=0; SFX.bad(); meow(1.3,.1,.3);
+ if(t==='paper'){ pop(L.roll.x+40,L.roll.y-30,T[lang].paperFail,true); for(let i=0;i<4;i++) setTimeout(()=>pop(rnd(L.W*.1,L.W*.6),rnd(L.minY+40,L.maxY-40),'🧻'),i*120); setTimeout(()=>{ if(G){ G.paperOut=0; placeThings(); } },1500); }
+ else { pop(L.table.x,L.table.top-30,T[lang].stealFail,true); $('fish').style.opacity=0; setTimeout(()=>{ $('fish').style.opacity=1; },2500); }
+ mistake(); s.st='flee'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=randFloor(L.table); s.face=s.to.x>s.x?1:-1; setCat('stand','e-wide flat'); }
+function placeThings(){ if(!L.table) return; const T0=L.table, cs=Math.max(30,8*L.u), c=$('cup'), f=$('fish'), r=$('roll');
+ c.style.fontSize=cs+'px'; c.style.width=cs*1.2+'px'; const off=(G&&G.cup)||0;
+ const cx=T0.x+T0.w*.12-off*T0.w*.62, cy=(G&&G.cupFall)?T0.floor+L.h*.1-cs:T0.top-cs*1.05;
+ c.style.transform=`translate(${cx-cs*.6}px,${cy}px) rotate(${(G&&G.cupFall)?-100:off*-12}deg)`; c.style.zIndex=Math.round(T0.floor)+1;
+ f.style.display=L.RM===1?'block':'none'; f.style.fontSize=cs*.95+'px'; f.style.transform=`translate(${T0.x+T0.w*.12}px,${T0.top-cs}px)`; f.style.zIndex=Math.round(T0.floor);
+ r.style.display=L.RM===1?'none':'block'; const rs=Math.max(34,9*L.u), po=(G&&G.paperOut)||0; r.style.fontSize=rs+'px'; r.style.transform=`translate(${L.roll.x-rs/2}px,${L.roll.y-rs}px) rotate(${po*540}deg)`; r.style.zIndex=Math.round(L.roll.y);
+ r.style.filter=po>0?`drop-shadow(${po*60}px 6px 0 #fff)`:''; }
 /* ================= Pebbles ================= */
 let pebs=[];
 function flickPeb(){ SFX.flick(); const m=L.pot.mouth; let tx,ty;
@@ -573,6 +611,7 @@ stage.addEventListener('pointerdown',e=>{
  if(!running||paused||ending) return; ac(); const tg=e.target;
  const pe=tg.closest('.peb'); if(pe){ const p=pebs.find(q=>q.el===pe); if(p) returnPeb(p); return; }
  if(tg.closest('#foot')){ tapFoot(); return; }
+ if(tg.closest('#cup')||(tg.closest('#soya')&&G.s.st==='push')){ const s=G.s; if(s.st==='push'||(s.st==='warn'&&s.type==='glass')){ s.st='warn'; shoo(false); } return; }
  if(tg.closest('#soya')){ const s=G.s;
   if(s.st==='warn'||s.st==='chew'){ s.prev=s.st; s.st='held'; drag={id:e.pointerId,start:local(e),moved:false,was:s.prev}; setCat('sit','e-wide'); try{stage.setPointerCapture(e.pointerId);}catch(_){} }
   else if(s.st==='idle'||s.st==='rest'||s.st==='sheep'){ mrrp(); pop(s.x,s.y-L.h,T[lang].purr); }
@@ -645,7 +684,7 @@ requestAnimationFrame(loop);
 #roomPick button{min-height:44px;padding:6px 12px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px}
 #roomPick button.on{background:#fff;box-shadow:0 0 0 3px #c8306f}
 #roomPick button:disabled{opacity:.45}
-#stage.r1 #room{filter:hue-rotate(35deg) saturate(1.1)} #stage.r2 #room{filter:hue-rotate(220deg) brightness(.92)}
+
 </style>
 <script>
 (()=>{
@@ -664,7 +703,7 @@ function showHint(k){ hint.textContent=sx().hint+' '+x()[k]; hint.classList.add(
 setTimeout(()=>window.dispatchEvent(new Event('resize')),0);
 const tag=document.createElement('div'); tag.id='roomTag'; st.appendChild(tag);
 const rp=document.createElement('div'); rp.id='roomPick'; $('best').before(rp);
-function drawRooms(){ rp.innerHTML=x().rooms.map((r,i)=>`<button data-r="${i}" class="${i===room?'on':''}" ${i>=unl?'disabled':''}>${i>=unl?x().lock+' ':''}${r}</button>`).join(''); tag.textContent=x().rooms[room]; st.className=st.className.replace(/\br\d\b/g,'').trim()+' r'+room; }
+function drawRooms(){ rp.innerHTML=x().rooms.map((r,i)=>`<button data-r="${i}" class="${i===room?'on':''}" ${i>=unl?'disabled':''}>${i>=unl?x().lock+' ':''}${r}</button>`).join(''); tag.textContent=x().rooms[room]; st.className=st.className.replace(/\br\d\b/g,'').trim()+' r'+room; if(window.__room!==room){ window.__room=room; layout(); } }
 rp.onclick=e=>{ const b=e.target.closest('[data-r]'); if(!b||b.disabled) return; room=+b.dataset.r; localStorage.setItem(KR,room); SFX.click&&SFX.click(); drawRooms(); };
 function drawBar(){ bar.innerHTML=PK.map(k=>{ const n=inv[k]||0, on=fx[k]>0&&k!=='net'; return `<button data-p="${k}" class="${on?'on':''} ${n?'':'empty'}" title="${x()[k]}" aria-label="${x()[k]}"><span class="pe">${EM[k]}</span><span class="pl">${sx()[k]}</span><b>${k==='net'&&fx.net>0?'🛡'+fx.net:n}</b>${on&&DUR[k]?`<span class="cd" style="width:${Math.max(0,fx[k]/DUR[k]*100)}%"></span>`:''}</button>`; }).join(''); }
 bar.addEventListener('pointerdown',e=>{ const b=e.target.closest('[data-p]'); if(!b||!running||paused) return; e.stopPropagation(); e.preventDefault(); if(!inv[b.dataset.p]){ showHint(b.dataset.p); return; } use(b.dataset.p); });
@@ -684,6 +723,11 @@ let lastT=performance.now(); (function tk(n){ const dt=Math.min(.05,(n-lastT)/10
 const fin=finish; finish=function(win){ fin(win); if(win&&room+1>=unl&&unl<3){ unl++; localStorage.setItem(KU,unl); room=unl-1; localStorage.setItem(KR,room); $('endBest').textContent+=' · '+ff(x().unlocked,{r:x().rooms[room]}); } drawRooms(); };
 const al=applyLang; applyLang=function(){ al(); drawRooms(); drawBar(); };
 drawRooms();
+Object.assign(T.he,{hGlass:'סויה דוחף את הכוס! לחצי על הכוס 🥛',hPaper:'סויה פורם את הנייר! לחצי עליו 🧻',hSteal:'סויה קפץ לשולחן! לחצי עליו 🐟',svGlass:'הכוס ניצלה! 🥛',svPaper:'הגליל ניצל! 🧻',svSteal:'הדג ניצל! 🐟',crash:'קראש! הכוס נפלה 💥',paperFail:'איזה בלגן של נייר! 😹',stealFail:'סויה גנב את הדג! 😼'});
+Object.assign(T.fr,{hGlass:'Soya pousse le verre ! Touche le verre 🥛',hPaper:'Soya déroule le papier ! Touche-le 🧻',hSteal:'Soya est sur la table ! Touche-le 🐟',svGlass:'Verre sauvé ! 🥛',svPaper:'Rouleau sauvé ! 🧻',svSteal:'Poisson sauvé ! 🐟',crash:'Crac ! Le verre est tombé 💥',paperFail:'Quel bazar de papier ! 😹',stealFail:'Soya a volé le poisson ! 😼'});
+Object.assign(T.en,{hGlass:'Soya is pushing the glass! Tap the glass 🥛',hPaper:'Soya is unrolling the paper! Tap him 🧻',hSteal:'Soya jumped on the table! Tap him 🐟',svGlass:'Glass saved! 🥛',svPaper:'Roll saved! 🧻',svSteal:'Fish saved! 🐟',crash:'Crash! The glass fell 💥',paperFail:'What a paper mess! 😹',stealFail:'Soya stole the fish! 😼'});
+T.he.how.splice(3,0,'🥛🧻🐟 סויה דוחף כוס, פורם נייר או גונב דג – לחצי מהר!'); T.fr.how.splice(3,0,'🥛🧻🐟 Soya pousse un verre, déroule le papier ou vole un poisson – touche vite !'); T.en.how.splice(3,0,'🥛🧻🐟 Soya pushes a glass, unrolls paper or steals a fish – tap fast!');
+applyLang();
 window.__sh={inv:o=>{inv=o;drawBar();},room:r=>{room=r;drawRooms();},use};
 })();
 </script>
