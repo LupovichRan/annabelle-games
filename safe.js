@@ -8,9 +8,11 @@
     var cs=p.parentNode?getComputedStyle(p):null, b=cs?parseFloat(cs.paddingBottom)||0:0;
     var standalone=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||navigator.standalone||localStorage.getItem('annabelle-debug-standalone')==='1';
     var extra=standalone?10:4;
-    // Android edge-to-edge PWAs: page draws under the 3-button nav bar but env() may report 0.
+    // Edge-to-edge only if the page really reaches the bottom of the screen (under the system bar).
     var android=/Android/i.test(navigator.userAgent)||localStorage.getItem('annabelle-debug-android')==='1';
-    if(standalone&&android&&b<8) b=48;
+    var e2e=standalone&&android&&screen.height&&Math.abs(screen.height-innerHeight)<=8;
+    if(b<8&&e2e) b=48;
+    extra=b>0?6:4;
     r.style.setProperty('--sab',(Math.max(b,dbg)+extra)+'px');
     var h=(window.visualViewport&&visualViewport.height)||innerHeight;
     r.style.setProperty('--app-h',h+'px');
