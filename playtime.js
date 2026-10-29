@@ -89,7 +89,8 @@
   /* ---------- UI ---------- */
   // first: undo any game-wide styles (button{}, div{}, h2{}…) leaking into our UI; our own rules below win again
   var css = '#pt-panel :is(div,span,button,input,b,i,h3),#pt-lock :is(div,span,button,h2,p){all:revert;box-sizing:border-box}' +
-    '#pt-badge{position:fixed;z-index:2147483000;left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));font:700 11px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#5a3b1a;background:rgba(255,248,230,.82);border:1.5px solid rgba(232,134,45,.55);border-radius:999px;padding:3px 6px;pointer-events:none;direction:ltr;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:.85;transition:background .3s}' +
+    '#pt-badge{position:fixed;z-index:2147483000;left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));font:700 11px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#5a3b1a;background:rgba(255,248,230,.82);border:1.5px solid rgba(232,134,45,.55);border-radius:999px;padding:3px 6px;pointer-events:none;direction:ltr;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:.85;transition:background .3s,translate .45s ease}' +
+    '#pt-badge.tuck{translate:calc(-100% - 14px) 0}#pt-badge.tuck[data-at*=r]{translate:calc(100% + 14px) 0}' +
     '#pt-badge.low{background:#ffe1d6;color:#b3261e;border-color:#ff7a59;opacity:1}' +
     '#pt-badge.launch{position:absolute;top:calc(6px + env(safe-area-inset-top));bottom:auto;pointer-events:auto;cursor:pointer;min-height:30px;padding:4px 10px;font-size:13px;opacity:.95}' +
     '#pt-toast{position:fixed;z-index:2147483100;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translate(-50%,-140%);max-width:min(92vw,460px);background:#fff8e6;color:#5a3b1a;border:3px solid #ffb84d;border-radius:18px;padding:10px 14px;font:700 16px/1.3 system-ui,-apple-system,Arial,sans-serif;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .45s cubic-bezier(.2,1.4,.4,1);pointer-events:none}' +
@@ -141,7 +142,8 @@
       if (e === badge || badge.contains(e)) return false; var r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
       var cs = getComputedStyle(e); return cs.visibility !== 'hidden' && cs.opacity !== '0';
     }).map(function (e) { return e.getBoundingClientRect(); });
-    for (var i = 0; i < order.length; i++) {
+    var tk = badge.classList.contains('tuck'); badge.style.transition = 'none'; badge.classList.remove('tuck');
+    try { for (var i = 0; i < order.length; i++) {
       var p = POS[order[i]]; if (!p) continue; var st = badge.style;
       st.left = st.right = st.top = st.bottom = st.transform = '';
       if (p[0] === 'right') { st.left = 'auto'; st.right = 'calc(6px + env(safe-area-inset-right))'; }
@@ -152,9 +154,10 @@
       if (ok) { badge.setAttribute('data-at', order[i]); return; }
     }
     badge.setAttribute('data-at', 'none');
+    } finally { if (tk) badge.classList.add('tuck'); badge.getBoundingClientRect(); badge.style.transition = ''; }
   }
-  window.addEventListener('resize', function () { setTimeout(placeBadge, 50); });
-  document.addEventListener('click', function () { setTimeout(placeBadge, 400); }, true);
+  window.addEventListener('resize', function () { setTimeout(function () { if (badge && !badge.classList.contains('tuck')) placeBadge(); }, 50); });
+  document.addEventListener('click', function () { setTimeout(function () { if (badge && !badge.classList.contains('tuck')) placeBadge(); }, 400); }, true);
   function renderBadge() {
     if (!badge) return; var s = play(), p = par(), l = left(s, p);
     badge.textContent = '⏰ ' + fmtLeft(l) + (IS_LAUNCHER ? ' ⚙️' : '');
@@ -162,8 +165,15 @@
     badge.setAttribute('aria-label', badge.title);
     badge.classList.toggle('low', l <= 300);
     badge.style.display = locked ? 'none' : '';
-    placeBadge();
+    if (IS_LAUNCHER || !badge.classList.contains('tuck')) placeBadge();
+    if (IS_LAUNCHER) return;
+    // Hidden off the side; peeks in for ~5s each time another 10 min of play passes.
+    var step = Math.floor((s.seconds || 0) / 600);
+    if (peekStep < 0) peekStep = step;
+    if (step > peekStep && !locked) { peekStep = step; placeBadge(); badge.classList.remove('tuck'); clearTimeout(peekT); peekT = setTimeout(function () { badge.classList.add('tuck'); }, 5000); }
+    else if (!peekT) badge.classList.add('tuck');
   }
+  var peekStep = -1, peekT = 0;
   function showToast(msg) {
     if (!toast) return; toast.textContent = msg; toast.dir = dir(); toast.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 6000);
