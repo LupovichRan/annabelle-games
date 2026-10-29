@@ -89,7 +89,7 @@
   /* ---------- UI ---------- */
   // first: undo any game-wide styles (button{}, div{}, h2{}…) leaking into our UI; our own rules below win again
   var css = '#pt-panel :is(div,span,button,input,b,i,h3),#pt-lock :is(div,span,button,h2,p){all:revert;box-sizing:border-box}' +
-    '#pt-badge{position:fixed;z-index:2147483000;left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));font:700 12px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#5a3b1a;background:rgba(255,248,230,.82);border:1.5px solid rgba(232,134,45,.55);border-radius:999px;padding:4px 8px;pointer-events:none;direction:ltr;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:.85;transition:background .3s}' +
+    '#pt-badge{position:fixed;z-index:2147483000;left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));font:700 11px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#5a3b1a;background:rgba(255,248,230,.82);border:1.5px solid rgba(232,134,45,.55);border-radius:999px;padding:3px 6px;pointer-events:none;direction:ltr;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15);opacity:.85;transition:background .3s}' +
     '#pt-badge.low{background:#ffe1d6;color:#b3261e;border-color:#ff7a59;opacity:1}' +
     '#pt-badge.launch{position:absolute;top:calc(6px + env(safe-area-inset-top));bottom:auto;pointer-events:auto;cursor:pointer;min-height:30px;padding:4px 10px;font-size:13px;opacity:.95}' +
     '#pt-toast{position:fixed;z-index:2147483100;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translate(-50%,-140%);max-width:min(92vw,460px);background:#fff8e6;color:#5a3b1a;border:3px solid #ffb84d;border-radius:18px;padding:10px 14px;font:700 16px/1.3 system-ui,-apple-system,Arial,sans-serif;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .45s cubic-bezier(.2,1.4,.4,1);pointer-events:none}' +
@@ -130,6 +130,31 @@
     render();
   }
   function fmtLeft(sec) { var m = Math.ceil(sec / 60); return sec < 60 && sec > 0 ? sec + '″' : m + '′'; }
+  // Auto-place the badge in a corner/edge that covers no button. A page may force one via
+  // <script src="playtime.js" data-pos="tr|tl|br|bl"> (tried first).
+  var POS = {bl: ['left', 'bottom'], br: ['right', 'bottom'], tl: ['left', 'top'], tr: ['right', 'top'], ml: ['left', 50], mr: ['right', 50], ml2: ['left', 35], mr2: ['right', 35], ml3: ['left', 65], mr3: ['right', 65], ml4: ['left', 22], mr4: ['right', 22], ml5: ['left', 78], mr5: ['right', 78]};
+  function placeBadge() {
+    if (!badge || IS_LAUNCHER || badge.style.display === 'none') return;
+    var pref = (me && me.getAttribute('data-pos')) || '';
+    var order = (pref ? [pref] : []).concat(['bl', 'br', 'tl', 'tr', 'ml', 'mr', 'ml2', 'mr2', 'ml3', 'mr3', 'ml4', 'mr4', 'ml5', 'mr5']);
+    var hits = [].slice.call(document.querySelectorAll('button,a[href],input,select,textarea,[role=button],[onclick],.btn,.act')).filter(function (e) {
+      if (e === badge || badge.contains(e)) return false; var r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
+      var cs = getComputedStyle(e); return cs.visibility !== 'hidden' && cs.opacity !== '0';
+    }).map(function (e) { return e.getBoundingClientRect(); });
+    for (var i = 0; i < order.length; i++) {
+      var p = POS[order[i]]; if (!p) continue; var st = badge.style;
+      st.left = st.right = st.top = st.bottom = st.transform = '';
+      if (p[0] === 'right') { st.left = 'auto'; st.right = 'calc(6px + env(safe-area-inset-right))'; }
+      if (p[1] === 'top') { st.bottom = 'auto'; st.top = 'calc(6px + env(safe-area-inset-top))'; }
+      if (typeof p[1] === 'number') { st.bottom = 'auto'; st.top = p[1] + '%'; st.transform = 'translateY(-50%)'; }
+      var b = badge.getBoundingClientRect(), ok = true;
+      for (var j = 0; j < hits.length; j++) { var r = hits[j]; if (r.left < b.right + 3 && r.right > b.left - 3 && r.top < b.bottom + 3 && r.bottom > b.top - 3) { ok = false; break; } }
+      if (ok) { badge.setAttribute('data-at', order[i]); return; }
+    }
+    badge.setAttribute('data-at', 'none');
+  }
+  window.addEventListener('resize', function () { setTimeout(placeBadge, 50); });
+  document.addEventListener('click', function () { setTimeout(placeBadge, 400); }, true);
   function renderBadge() {
     if (!badge) return; var s = play(), p = par(), l = left(s, p);
     badge.textContent = '⏰ ' + fmtLeft(l) + (IS_LAUNCHER ? ' ⚙️' : '');
@@ -137,6 +162,7 @@
     badge.setAttribute('aria-label', badge.title);
     badge.classList.toggle('low', l <= 300);
     badge.style.display = locked ? 'none' : '';
+    placeBadge();
   }
   function showToast(msg) {
     if (!toast) return; toast.textContent = msg; toast.dir = dir(); toast.classList.add('show');
