@@ -17,12 +17,32 @@ a[class^=g]:active{transform:translateY(5px);box-shadow:0 3px 0 #0003}
 a span.e{font-size:min(2.2em,6vh)}
 a small{display:block;font-size:.62em;font-weight:700;opacity:.9}
 .g1{background:linear-gradient(#5fd38d,#2fb36a)} .g2{background:linear-gradient(#b48bff,#7c5cff)} .g3{background:linear-gradient(#ffb84d,#ff7a1f)} .g4{background:linear-gradient(#ff8fb8,#ff4d8d)} .g5{background:linear-gradient(#5ac8ff,#2a8fd0)} .g6{background:linear-gradient(#ffc46b,#e8862d)} .g7{background:linear-gradient(#7fbf5a,#3d8a3a)} .g8{background:linear-gradient(#ff9ec7,#c86dd7)} .g9{background:linear-gradient(#4fd1c5,#2b8a9e)} .g10{background:linear-gradient(#6b5a7e,#2e2438)} .g11{background:linear-gradient(#ffb86b,#e8607a)} .g12{background:linear-gradient(#ffd36b,#ff8a3d)}
+a[class^=g]{position:relative}
+.sec{width:min(100%,620px);margin:0;font-size:clamp(13px,2.2vh,18px);color:#7a3d8f;text-align:start;display:flex;align-items:center;gap:6px}
+@media (orientation:landscape){.sec{width:min(100%,1000px)}}
+.sec small{font-size:.7em;opacity:.75;font-weight:700}
+.fav{position:absolute;top:0;inset-inline-start:0;width:44px;height:44px;border:0;background:none;font-size:20px;line-height:44px;padding:0;cursor:pointer;filter:grayscale(1) opacity(.55);z-index:2}
+.fav.on{filter:none}
+.tools{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;display:flex;gap:8px;z-index:5}.paws{display:none!important}
+.tools button{min-height:44px;border:0;border-radius:22px;padding:4px 14px;font:inherit;font-weight:800;font-size:14px;background:#fffc;color:#7a3d8f;box-shadow:0 3px 0 #0002;cursor:pointer}
+body.compact a[class^=g]{height:min(12.6vh,130px)}
+body.compact .paws{display:none}
+.mv{display:none;position:absolute;bottom:0;width:44px;height:44px;border:0;border-radius:14px;background:#fffd;color:#7a3d8f;font-size:22px;font-weight:900;z-index:3;padding:0}
+.mv.l{left:0}.mv.r{right:0}
+body.edit .mv{display:block}body.edit a[class^=g] small{display:none}.mv{width:40px;height:34px;font-size:16px;bottom:4px;background:#fff9}.mv.l{left:4px}.mv.r{right:4px}
+.sec small{display:none}
+body.edit a[class^=g]{animation:wig .35s ease-in-out infinite alternate}
+@keyframes wig{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/launcher.webmanifest"><meta name="theme-color" content="#ffd6b8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" type="image/png" sizes="192x192" href="icons/launcher-192.png"><meta name="apple-mobile-web-app-title" content="משחקי אנאבל"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/launcher-apple-180.png"><script src="pwa.js" data-app="launcher" data-slots='[]' defer></script><!--/pwa-->
 </head><body>
 <h1>המשחקים של אנאבל</h1>
 <div class="paws">🦁 🐯 🐱</div>
-<div class="grid">
+<div class="tools"><button id="ed">✏️ סידור</button></div>
+<h2 class="sec" id="fh">⭐ המועדפים שלי <small>Mes favoris · My favorites</small></h2>
+<div class="grid" id="fg"></div>
+<h2 class="sec" id="ah">🎮 כל המשחקים <small>Tous les jeux · All games</small></h2>
+<div class="grid" id="ag">
 <a class="g1" href="cats.html"><span class="e">🃏</span><span>זוגות של חתולים<small>Mémoire · Memory</small></span></a>
 <a class="g2" href="bubbles.html"><span class="e">🫧</span><span>בועות החתולים<small>Bulles · Bubbles</small></span></a>
 <a class="g3" href="pacman.html"><span class="e">🐯</span><span>הטיגריס הרעבתן<small>Le tigre gourmand · Hungry Tiger</small></span></a>
@@ -36,4 +56,31 @@ a small{display:block;font-size:.62em;font-weight:700;opacity:.9}
 <a class="g11" href="soyahome.html"><span class="e">🪴</span><span>סויה בבית<small>Soya à la maison · Soya at Home</small></span></a>
 <a class="g12" href="lionking.html"><span class="e">🦁</span><span>הרפתקת האריה הקטן<small>L'aventure du petit lion · Little Lion's Adventure</small></span></a>
 </div>
+<script>
+(function(){
+var K='annabelle-launcher',st;try{st=JSON.parse(localStorage.getItem(K))||{}}catch(e){st={}}
+var tiles={},ids=[];document.querySelectorAll('#ag a').forEach(function(a){var id=a.getAttribute('href');tiles[id]=a;ids.push(id);
+ var f=document.createElement('button');f.className='fav';f.textContent='⭐';f.setAttribute('aria-label','מועדף');
+ f.onclick=function(e){e.preventDefault();e.stopPropagation();var i=favs.indexOf(id);if(i<0)favs.push(id);else favs.splice(i,1);save();draw()};a.appendChild(f);
+ [['l','◀',-1],['r','▶',1]].forEach(function(m){var b=document.createElement('button');b.className='mv '+m[0];b.textContent=m[1];
+  b.onclick=function(e){e.preventDefault();e.stopPropagation();move(id,m[0]=='r'?1:-1)};a.appendChild(b)});
+ a.addEventListener('click',function(e){if(document.body.classList.contains('edit'))e.preventDefault()});
+});
+var order=(st.order||[]).filter(function(i){return tiles[i]});ids.forEach(function(i){if(order.indexOf(i)<0)order.push(i)});
+var favs=(st.favs||[]).filter(function(i){return tiles[i]});
+function save(){try{localStorage.setItem(K,JSON.stringify({favs:favs,order:order}))}catch(e){}}
+function list(fav){return order.filter(function(i){return (favs.indexOf(i)>=0)==fav})}
+// RTL grid: visual "◀" (left) = later in order, "▶" (right) = earlier
+function move(id,dir){var grp=list(favs.indexOf(id)>=0),k=grp.indexOf(id),j=k+(dir>0?-1:1);if(j<0||j>=grp.length)return;
+ var a=order.indexOf(id),b=order.indexOf(grp[j]);order[a]=grp[j];order[b]=id;save();draw()}
+var fg=document.getElementById('fg'),ag=document.getElementById('ag');
+function draw(){var f=list(true);fg.style.display=document.getElementById('fh').style.display=f.length?'':'none';
+ document.getElementById('ah').style.display=f.length?'':'none';
+ f.forEach(function(i){fg.appendChild(tiles[i])});list(false).forEach(function(i){ag.appendChild(tiles[i])});
+ ids.forEach(function(i){tiles[i].querySelector('.fav').classList.toggle('on',favs.indexOf(i)>=0)});
+ document.body.classList.toggle('compact',f.length>0||document.body.classList.contains('edit'))}
+var ed=document.getElementById('ed');ed.onclick=function(){var on=document.body.classList.toggle('edit');
+ ed.innerHTML=on?'✔ סיימתי':'✏️ סידור';draw()};
+draw();})();
+</script>
 </body></html>
