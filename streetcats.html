@@ -1120,7 +1120,7 @@ requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1
 
 </script>
 <style>
-#jy{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;overflow:hidden;touch-action:none;font-weight:800}
+#jy{position:fixed;inset:0;z-index:40;background:#9be37a;display:none;flex-direction:column;align-items:center;overflow:hidden;touch-action:none;font-weight:800}
 #jy.show{display:flex}
 #jy .jbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:max(8px,env(safe-area-inset-top)) 64px 4px;z-index:3;width:100%}
 #jy .pl{background:#fff;border-radius:999px;padding:6px 12px;box-shadow:0 3px 0 #0002;font-size:16px}
@@ -1155,6 +1155,7 @@ requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1
 @keyframes jbob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
 @keyframes jglow{50%{transform:scale(1.25)}}
 #jy .mbus{position:absolute;z-index:3;font-size:34px;transform:translate(-50%,-110%) scaleX(-1);transition:left 1.4s cubic-bezier(.5,-.3,.5,1.3),top 1.4s cubic-bezier(.5,-.3,.5,1.3);pointer-events:none}
+#jy .jbar .maptap{position:static;flex-basis:100%;width:auto;max-width:none;margin:2px 0 0;padding:6px 12px;font-size:16px;animation:none}
 #jy .mfoot{position:absolute;bottom:max(10px,var(--sab,env(safe-area-inset-bottom)));left:0;right:0;display:flex;gap:8px;justify-content:center;z-index:3;flex-wrap:wrap}
 #jy .tap{position:absolute;z-index:3;top:calc(58px + env(safe-area-inset-top));left:4vw;right:4vw;margin:auto;width:max-content;max-width:92vw;text-align:center;white-space:normal!important;background:#fff;border-radius:18px;padding:8px 14px;font-size:17px;box-shadow:0 4px 0 #0002;white-space:nowrap;animation:jbob 1.6s ease-in-out infinite}
 #jy .lane{position:absolute;left:0;right:0;top:38%;height:34%;z-index:1;overflow:hidden}
@@ -1203,7 +1204,9 @@ let run=null, tick=null;
 const snd=k=>{ try{ if(typeof SFX!=="undefined"&&SFX[k]) SFX[k](); }catch(e){} };
 function open(){ ac&&ac(); $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; J.town>=TOWNS.length?adoption():mapView(false); }
 function close(){ stop(); $("jy").classList.remove("show"); }
-function stop(){ clearInterval(tick); tick=null; run=null; $("jyField").innerHTML=""; }
+function fitMap(){ const f=$("jyField"); f.style.top=$("jyBar").offsetHeight+"px"; }
+addEventListener("resize",()=>{ if($("jyField").querySelector(".road")) fitMap(); });
+function stop(){ $("jyField").style.top=""; clearInterval(tick); tick=null; run=null; $("jyField").innerHTML=""; }
 function panel(h){ $("jyPanel").innerHTML=`<div class="jpanel jpop">${h}</div>`; }
 function bg(i){ const T=TOWNS[Math.min(i,4)]; $("jyBg").innerHTML=`<rect width="400" height="700" fill="${T.sky}"/>${T.lm}<rect y="340" width="400" height="360" fill="${T.gr}"/>`; }
 function bar(h){ $("jyBar").innerHTML=h; }
@@ -1211,15 +1214,15 @@ const beep=(f,d=.15,ty="square",v=.12,f2)=>{ try{ tone(f,0,d,ty,v,f2); }catch(e)
 const honk=()=>{ try{ tone(392,0,.16,"square",.13); tone(330,.18,.22,"square",.13); }catch(e){} };
 const PTS=[[22,84],[72,68],[30,52],[74,36],[38,20]];
 function roadSvg(){ const d="M"+PTS.map(p=>p[0]*4+" "+p[1]*7).join(" L"); return `<svg class="road" viewBox="0 0 400 700" preserveAspectRatio="none"><rect width="400" height="700" fill="#9be37a"/><circle cx="60" cy="130" r="40" fill="#7fd060"/><circle cx="340" cy="560" r="55" fill="#7fd060"/><circle cx="330" cy="90" r="30" fill="#fff" opacity=".7"/><circle cx="70" cy="380" r="22" fill="#fff" opacity=".6"/><path d="M200 700 L${PTS[0][0]*4} ${PTS[0][1]*7}" stroke="#c98a4b" stroke-width="44" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#c98a4b" stroke-width="44" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="#ffe7a3" stroke-width="5" stroke-dasharray="14 14" fill="none"/></svg>`; }
-function mapView(anim){ stop(); const i=Math.min(J.town,4); $("jyBg").innerHTML=""; bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${f(t().rescued,{n:J.kits.length})}</span><span class="pl">${J.perks.map(p=>PERKS[p].e).join("")||"🎁"}</span>`);
+function mapView(anim){ stop(); const i=Math.min(J.town,4); $("jyBg").innerHTML=""; bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${f(t().rescued,{n:J.kits.length})}</span>${J.perks.length?`<span class="pl">${J.perks.map(p=>PERKS[p].e).join("")}</span>`:""}<div class="tap maptap">${t().tapTown}</div>`);
   $("jyPanel").innerHTML=""; const from=anim&&J.town>0?J.town-1:i;
   $("jyField").innerHTML=roadSvg()+TOWNS.map((T,k)=>{ const st=k<J.town?"done":k===i?"cur":"lock"; const s=J.stars[k]||0;
     return `<button class="town ${st}" data-t="${k}" style="left:${PTS[k][0]}%;top:${PTS[k][1]}%"><span class="ic">${T.lic}</span><span class="nm">${st==="lock"?"🔒 ":""}${T.n[lg()]}</span><span class="st">${st==="done"?"⭐".repeat(s)+"☆".repeat(3-s):""}</span></button>`; }).join("")
-    +`<div class="mbus" id="jyBus" style="left:${PTS[from][0]}%;top:${PTS[from][1]-4}%">🚌</div><div class="tap">${t().tapTown}</div><div class="mfoot"><button class="jb" id="jyR" style="font-size:13px;min-height:36px;padding:6px 10px">${t().reset}</button></div>`;
+    +`<div class="mbus" id="jyBus" style="left:${PTS[from][0]}%;top:${PTS[from][1]-4}%">🚌</div><div class="mfoot"><button class="jb" id="jyR" style="font-size:13px;min-height:36px;padding:6px 10px">${t().reset}</button></div>`;
   $("jyField").querySelectorAll(".town").forEach(el=>el.onclick=()=>{ const k=+el.dataset.t;
     if(k!==i){ el.animate([{transform:"translate(-50%,-50%) rotate(0)"},{transform:"translate(-50%,-50%) rotate(-12deg)"},{transform:"translate(-50%,-50%) rotate(12deg)"},{transform:"translate(-50%,-50%) rotate(0)"}],{duration:350}); beep(180,.12,"triangle"); return; }
     honk(); const b=$("jyBus"); b.style.left=PTS[i][0]+"%"; b.style.top=(PTS[i][1]-4)+"%"; try{ confetti(60); }catch(e){} setTimeout(()=>J.town>0?travel(i):arrive(i),1300); });
-  $("jyR").onclick=()=>{ J={town:0,perks:[],kits:[],stars:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
+  fitMap(); $("jyR").onclick=()=>{ J={town:0,perks:[],kits:[],stars:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
 function travel(i){ stop(); bg(i); let fish=0, up=false, alive=true; const tm=[];
   bar(`<span class="pl">🚌 → ${TOWNS[i].lic} ${TOWNS[i].n[lg()]}</span><span class="pl" id="jyFish">${f(t().fish,{n:0})}</span>`);
   const fl=$("jyField"); fl.innerHTML=`<div class="tap">${t().hop}</div><div class="lane" id="jyLane"><div class="asph"></div><div class="rider" id="jyRider">🛵</div></div>`;
