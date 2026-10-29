@@ -10,7 +10,7 @@
     en: {b: 'Share with a friend', g: 'Come play {n} with me! 🐱', a: 'Come play Annabelle\'s games with me! 🐱'}
   };
   function lang() { var l = 'he'; try { l = localStorage.getItem('annabelle-lang') || 'he'; } catch (e) {} return T[l] ? l : 'he'; }
-  function name() { var m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); return (m && m.content) || document.title; }
+  function name() { var h = lang() !== 'he' && document.querySelector('h1'); if (h && h.textContent.trim()) return h.textContent.trim(); var m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); return (m && m.content) || document.title; }
   function href() {
     var t = T[lang()], page = (location.pathname.split('/').pop() || '');
     var url = D.all ? BASE : BASE + page, txt = D.all ? t.a : t.g.replace('{n}', name());
