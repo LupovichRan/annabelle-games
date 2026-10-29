@@ -699,9 +699,9 @@ requestAnimationFrame(loop);
 <script>
 (()=>{
 const SH={he:{box:'קופסה',cover:'מגן',slip:'נעליים',treat:'חטיף',net:'רשת',hint:'מתנה חדשה! לחצי עליה בשורה למטה:'},fr:{box:'Carton',cover:'Câble',slip:'Chaussons',treat:'Friandise',net:'Filet',hint:'Nouveau cadeau ! Touche-le en bas :'},en:{box:'Box',cover:'Cover',slip:'Slippers',treat:'Treat',net:'Net',hint:'New gift! Tap it in the row below:'}};
-const X={he:{rooms:['🛋️ סלון','🍳 מטבח','🛏️ חדר שינה'],perk:'קיבלת מתנה: {p}!',box:'📦 קופסה – סויה מתיישב בפנים',cover:'🛡️ מגן לכבלים – 15 שניות',slip:'🩴 נעלי בית – אין נשיכות 15 שניות',treat:'🍗 חטיף – סויה מאט',net:'🥅 רשת אבנים – חוסמת עפיפה',used:'{p}',lock:'🔒',unlocked:'חדר חדש נפתח: {r}!',saved:'מוגן! 🛡️'},
-fr:{rooms:['🛋️ Salon','🍳 Cuisine','🛏️ Chambre'],perk:'Cadeau : {p} !',box:'📦 Carton – Soya s\'assoit dedans',cover:'🛡️ Cache-câble – 15 s',slip:'🩴 Chaussons – pas de morsure 15 s',treat:'🍗 Friandise – Soya ralentit',net:'🥅 Filet – bloque un caillou',used:'{p}',lock:'🔒',unlocked:'Nouvelle pièce : {r} !',saved:'Protégé ! 🛡️'},
-en:{rooms:['🛋️ Living room','🍳 Kitchen','🛏️ Bedroom'],perk:'You got a gift: {p}!',box:'📦 Box – Soya sits inside',cover:'🛡️ Cable cover – 15s',slip:'🩴 Slippers – no bites for 15s',treat:'🍗 Treat – Soya slows down',net:'🥅 Pebble net – blocks a flick',used:'{p}',lock:'🔒',unlocked:'New room unlocked: {r}!',saved:'Protected! 🛡️'}};
+const X={he:{rooms:['🛋️ סלון 🪨🪟','🍳 מטבח 🐟🥛','🛏️ חדר שינה 🧦⏰'],perk:'קיבלת מתנה: {p}!',box:'📦 קופסה – סויה מתיישב בפנים',cover:'🛡️ מגן לכבלים – 15 שניות',slip:'🩴 נעלי בית – אין נשיכות 15 שניות',treat:'🍗 חטיף – סויה מאט',net:'🥅 רשת אבנים – חוסמת עפיפה',used:'{p}',lock:'🔒',unlocked:'חדר חדש נפתח: {r}!',saved:'מוגן! 🛡️'},
+fr:{rooms:['🛋️ Salon 🪨🪟','🍳 Cuisine 🐟🥛','🛏️ Chambre 🧦⏰'],perk:'Cadeau : {p} !',box:'📦 Carton – Soya s\'assoit dedans',cover:'🛡️ Cache-câble – 15 s',slip:'🩴 Chaussons – pas de morsure 15 s',treat:'🍗 Friandise – Soya ralentit',net:'🥅 Filet – bloque un caillou',used:'{p}',lock:'🔒',unlocked:'Nouvelle pièce : {r} !',saved:'Protégé ! 🛡️'},
+en:{rooms:['🛋️ Living room 🪨🪟','🍳 Kitchen 🐟🥛','🛏️ Bedroom 🧦⏰'],perk:'You got a gift: {p}!',box:'📦 Box – Soya sits inside',cover:'🛡️ Cable cover – 15s',slip:'🩴 Slippers – no bites for 15s',treat:'🍗 Treat – Soya slows down',net:'🥅 Pebble net – blocks a flick',used:'{p}',lock:'🔒',unlocked:'New room unlocked: {r}!',saved:'Protected! 🛡️'}};
 const x=()=>X[lang]||X.he, ff=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
 const KU='soyahome-rooms', KR='soyahome-room';
 let unl=+localStorage.getItem(KU)||1, room=Math.min(+localStorage.getItem(KR)||0,unl-1);
@@ -739,6 +739,80 @@ Object.assign(T.en,{hGlass:'Soya is pushing the glass! Tap the glass 🥛',hPape
 T.he.how.splice(3,0,'🥛🧻🐟 סויה דוחף כוס, פורם נייר או גונב דג – לחצי מהר!'); T.fr.how.splice(3,0,'🥛🧻🐟 Soya pousse un verre, déroule le papier ou vole un poisson – touche vite !'); T.en.how.splice(3,0,'🥛🧻🐟 Soya pushes a glass, unrolls paper or steals a fish – tap fast!');
 applyLang();
 window.__sh={inv:o=>{inv=o;drawBar();},room:r=>{room=r;drawRooms();},use};
+})();
+</script>
+<style>.prop{position:absolute;left:0;top:0;line-height:1;text-align:center;filter:drop-shadow(0 3px 2px #0003);transition:opacity .3s}.prop.warn{animation:wob .35s ease-in-out infinite alternate}</style>
+<script>
+/* ===== Room-specific mischief: each room has its own items ===== */
+(()=>{
+const R=()=>L.RM||0;
+const PR={
+ sofa:{r:0,e:'',ring:'🛋️',burst:'🪶',at:()=>({x:L.W*.84,y:L.floorY+L.H*.01,w:L.W*.3,h:L.H*.12}),sp:()=>({x:L.W*.64,y:L.floorY+L.h*.32,face:1})},
+ curtain:{r:0,e:'',ring:'🪟',burst:'🎀',jump:.5,at:()=>({x:L.W*.4,y:L.floorY-L.H*.02,w:L.W*.2,h:L.H*.22}),sp:()=>({x:L.W*.42,y:L.floorY+L.h*.18,face:1})},
+ milk:{r:1,e:'🥛',ring:'🥛',burst:'💧',at:()=>({x:L.W*.3,y:L.floorY+L.H*.14})},
+ bag:{r:1,e:'🛍️',ring:'🗄️',burst:'🥨',at:()=>({x:L.W*.13,y:L.floorY+L.H*.035})},
+ sock:{r:2,e:'🧦',ring:'🧦',burst:'🧶',at:()=>({x:L.W*.33,y:L.floorY+L.H*.2})},
+ blanket:{r:2,e:'',ring:'🛏️',burst:'💤',jump:.42,at:()=>({x:L.W*.82,y:L.floorY+L.H*.01,w:L.W*.36,h:L.H*.15}),sp:()=>({x:L.W*.6,y:L.floorY+L.h*.3,face:1})}
+};
+const SETS=[['peb','cable','glass','sofa','curtain','toe'],['steal','cable','glass','milk','bag','toe'],['paper','cable','glass','sock','blanket','toe']];
+const EARLY=[['peb','toe','cable'],['milk','toe','cable'],['sock','toe','cable']];
+const TX={
+ he:{h_sofa:'סויה מתכונן לשרוט את הספה! לחצי עליו 🛋️',s_sofa:'הספה ניצלה! 🛋️',f_sofa:'שריטות על הספה! 😹',
+  h_curtain:'סויה רוצה לטפס על הווילון! לחצי עליו 🪟',s_curtain:'הווילון ניצל! 🪟',f_curtain:'סויה מתנדנד על הווילון! 🙀',
+  h_milk:'סויה מכניס את הראש לחלב! לחצי עליו 🥛',s_milk:'החלב ניצל! 🥛',f_milk:'שפם של חלב! 😹',
+  h_bag:'סויה פותח את הארון! לחצי עליו 🗄️',s_bag:'הארון סגור! 🗄️',f_bag:'סויה שלף שקית ביסלי! 🥨',
+  h_sock:'סויה חטף גרב! לחצי עליו 🧦',s_sock:'הגרב ניצל! 🧦',f_sock:'סויה ברח עם הגרב! 🧦😹',
+  h_blanket:'סויה רוצה לחפור בשמיכה! לחצי עליו 🛏️',s_blanket:'המיטה מסודרת! 🛏️',f_blanket:'סויה התחפר מתחת לשמיכה! 💤',
+  r1:{hCable:'סויה נוגס בכבל של הקומקום! 🔌',flicker:'הקומקום כבה! ☕',hGlass:'סויה דוחף את הספל! לחצי על הספל ☕',svGlass:'הספל ניצל! ☕',crash:'קראש! הספל נפל 💥'},
+  r2:{hCable:'סויה לועס את המטען של הטלפון! 🔌',flicker:'המטען נקרע! 📱',hGlass:'סויה דוחף את השעון המעורר! לחצי עליו ⏰',svGlass:'השעון ניצל! ⏰',crash:'טררר! השעון נפל ומצלצל ⏰'},
+  howR:'🏠 בכל חדר סויה עושה שטויות אחרות: ספה ווילון בסלון, חלב וארון במטבח, גרב ושמיכה בחדר השינה!'},
+ fr:{h_sofa:'Soya va griffer le canapé ! Touche-le 🛋️',s_sofa:'Canapé sauvé ! 🛋️',f_sofa:'Des griffures sur le canapé ! 😹',
+  h_curtain:'Soya veut grimper au rideau ! Touche-le 🪟',s_curtain:'Rideau sauvé ! 🪟',f_curtain:'Soya se balance au rideau ! 🙀',
+  h_milk:'Soya met la tête dans le lait ! Touche-le 🥛',s_milk:'Lait sauvé ! 🥛',f_milk:'Moustache de lait ! 😹',
+  h_bag:'Soya ouvre le placard ! Touche-le 🗄️',s_bag:'Placard fermé ! 🗄️',f_bag:'Soya a sorti un paquet de bretzels ! 🥨',
+  h_sock:'Soya a attrapé une chaussette ! Touche-le 🧦',s_sock:'Chaussette sauvée ! 🧦',f_sock:'Soya s’enfuit avec la chaussette ! 🧦😹',
+  h_blanket:'Soya veut creuser dans la couverture ! Touche-le 🛏️',s_blanket:'Lit bien fait ! 🛏️',f_blanket:'Soya s’est caché sous la couverture ! 💤',
+  r1:{hCable:'Soya mord le fil de la bouilloire ! 🔌',flicker:'La bouilloire s’est éteinte ! ☕',hGlass:'Soya pousse la tasse ! Touche la tasse ☕',svGlass:'Tasse sauvée ! ☕',crash:'Crac ! La tasse est tombée 💥'},
+  r2:{hCable:'Soya mâche le chargeur du téléphone ! 🔌',flicker:'Le chargeur est cassé ! 📱',hGlass:'Soya pousse le réveil ! Touche-le ⏰',svGlass:'Réveil sauvé ! ⏰',crash:'Drrring ! Le réveil est tombé ⏰'},
+  howR:'🏠 Dans chaque pièce, Soya fait d’autres bêtises : canapé et rideau au salon, lait et placard à la cuisine, chaussette et couverture dans la chambre !'},
+ en:{h_sofa:'Soya is about to scratch the sofa! Tap him 🛋️',s_sofa:'Sofa saved! 🛋️',f_sofa:'Scratches on the sofa! 😹',
+  h_curtain:'Soya wants to climb the curtain! Tap him 🪟',s_curtain:'Curtain saved! 🪟',f_curtain:'Soya is swinging on the curtain! 🙀',
+  h_milk:'Soya is dunking his head in the milk! Tap him 🥛',s_milk:'Milk saved! 🥛',f_milk:'Milk moustache! 😹',
+  h_bag:'Soya is opening the cupboard! Tap him 🗄️',s_bag:'Cupboard closed! 🗄️',f_bag:'Soya pulled out a bag of pretzels! 🥨',
+  h_sock:'Soya grabbed a sock! Tap him 🧦',s_sock:'Sock saved! 🧦',f_sock:'Soya ran off with the sock! 🧦😹',
+  h_blanket:'Soya wants to dig in the blanket! Tap him 🛏️',s_blanket:'Bed is tidy! 🛏️',f_blanket:'Soya burrowed under the blanket! 💤',
+  r1:{hCable:'Soya is biting the kettle cord! 🔌',flicker:'The kettle switched off! ☕',hGlass:'Soya is pushing the mug! Tap the mug ☕',svGlass:'Mug saved! ☕',crash:'Crash! The mug fell 💥'},
+  r2:{hCable:'Soya is chewing the phone charger! 🔌',flicker:'The charger broke! 📱',hGlass:'Soya is pushing the alarm clock! Tap it ⏰',svGlass:'Clock saved! ⏰',crash:'Brrring! The clock fell ⏰'},
+  howR:'🏠 Each room has its own mischief: sofa and curtain in the living room, milk and cupboard in the kitchen, sock and blanket in the bedroom!'}};
+const BASE={}; for(const l in TX){ BASE[l]={}; for(const k in TX[l].r1) BASE[l][k]=T[l][k]; Object.assign(T[l],TX[l]); T[l].how=T[l].how.filter(s=>!s.startsWith('🥛🧻🐟')); T[l].how.splice(3,0,TX[l].howR); }
+function roomText(){ const r=R(); for(const l in TX) Object.assign(T[l],r?TX[l]['r'+r]:BASE[l]); }
+const EL={}; for(const k in PR){ const d=document.createElement('div'); d.className='prop'; d.textContent=PR[k].e; stage.appendChild(d); EL[k]=d;
+ d.addEventListener('pointerdown',e=>{ if(!running||paused||ending) return; const s=G.s; if(s.type===k&&(s.st==='warn'||s.st==='chew')){ e.stopPropagation(); s.st='warn'; shoo(false); } }); }
+function placeProps(){ if(!L.W) return; const cs=Math.max(34,9*L.u);
+ for(const k in PR){ const p=PR[k], d=EL[k], a=p.at(); d.style.display=p.r===R()?'block':'none';
+  if(p.e){ d.style.fontSize=cs+'px'; d.style.width=cs*1.2+'px'; d.style.height=cs*1.1+'px'; d.style.transform=`translate(${a.x-cs*.6}px,${a.y-cs*1.1}px)`; }
+  else { d.style.width=a.w+'px'; d.style.height=a.h+'px'; d.style.transform=`translate(${a.x-a.w/2}px,${a.y-a.h}px)`; }
+  d.style.zIndex=Math.round(a.y); } }
+const lay=layout; layout=function(){ lay(); potEl.style.display=R()===0?'':'none'; roomText(); placeProps(); };
+const dr=drawRoom; drawRoom=function(){ dr(); if(L.RM!==1) return; const {W,H,floorY}=L, x0=W*.02, x1=W*.25, y0=floorY-H*.13, y1=floorY+H*.035;
+ $('room').insertAdjacentHTML('beforeend',`<g><rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="6" fill="#f2d3a6" stroke="#c89b62" stroke-width="3"/><line x1="${(x0+x1)/2}" y1="${y0+4}" x2="${(x0+x1)/2}" y2="${y1-4}" stroke="#c89b62" stroke-width="3"/><circle cx="${(x0+x1)/2-8}" cy="${(y0+y1)/2}" r="4" fill="#c89b62"/><circle cx="${(x0+x1)/2+8}" cy="${(y0+y1)/2}" r="4" fill="#c89b62"/><rect x="${x0-4}" y="${y0-8}" width="${x1-x0+8}" height="10" rx="3" fill="#8f8f99"/></g>`); };
+const pt=placeThings; placeThings=function(){ pt(); if(L.W){ $('cup').textContent=['🥛','☕','⏰'][R()]; if(R()===1){ const cs=Math.max(30,8*L.u); $('fish').style.transform=`translate(${L.table.x-L.table.w*.55}px,${L.table.top-cs}px)`; } } placeProps(); };
+const ng=newGame; newGame=function(){ ng(); G.next=EARLY[R()].slice(); };
+chooseType=function(){ if(G.next.length) return G.next.shift(); const r=R(); let o=SETS[r].slice(); if(G.t<12) o=o.filter(t=>EARLY[r].includes(t));
+ if(pebs.filter(p=>p.state==='floor').length>=4) o=o.filter(t=>t!=='peb'); const h=G.hist; if(h.length>=2&&h[h.length-1]===h[h.length-2]) o=o.filter(t=>t!==h[h.length-1]); return pick(o); };
+const sp0=spot; spot=function(t){ const p=PR[t]; if(!p) return sp0(t); if(p.sp) return p.sp(); const a=p.at(); return {x:a.x+L.S*.6,y:a.y+L.h*.22,face:-1}; };
+const sw=startWarn; startWarn=function(t){ G.count[t]=G.count[t]||0; if(!PR[t]) return sw(t); const s=G.s; s.st='warn'; s.type=t; s.t=P.warn(); s.wait=0; s.face=spot(t).face; G.count[t]++;
+ setCat('stand','wiggle crouch flat'); if(G.count[t]<=2) hint('h_'+t); EL[t].classList.add('warn'); tone('triangle',300,240,.12,.08); };
+const a0=act; act=function(){ const s=G.s, p=PR[s.type]; if(!p) return a0(); s.st='chew'; s.t0=s.t=P.chew()*1.1; s.ct=0; s.jump=p.jump?-L.h*p.jump:0; setCat('stand','e-wide'+(p.jump?' flat':'')); };
+const ps=placeSoya; placeSoya=function(){ ps(); const s=G.s, cr=$('chewRing'); if(cr.style.display==='block'){ if(PR[s.type]) cr.dataset.i=PR[s.type].ring; else if(s.type==='glass') cr.dataset.i=['🥛','☕','⏰'][R()]; } };
+const cw=clearWarn; clearWarn=function(){ cw(); for(const k in EL) EL[k].classList.remove('warn'); };
+const sh=shoo; shoo=function(d){ const t=G.s.type; if(!PR[t]) return sh(d); const ks=T[lang].saved, ksh=T[lang].shoo; T[lang].saved=T[lang].shoo=T[lang]['s_'+t]; G.s.jump=0; try{ sh(d); } finally { T[lang].saved=ks; T[lang].shoo=ksh; } };
+const of=otherFail; otherFail=function(){ const s=G.s, t=s.type, p=PR[t]; if(!p) return of(); const a=p.at(); clearWarn(); s.jump=0; SFX.bad(); meow(1.3,.1,.3);
+ pop(a.x,a.y-L.H*.08,T[lang]['f_'+t],true); for(let i=0;i<5;i++) setTimeout(()=>pop(a.x+rnd(-L.W*.15,L.W*.15),a.y-rnd(0,L.H*.1),p.burst),i*120);
+ if(p.e){ EL[t].style.opacity=0; setTimeout(()=>{ EL[t].style.opacity=1; },2200); }
+ mistake(); s.st='flee'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=randFloor(a); s.face=s.to.x>s.x?1:-1; setCat('stand','e-wide flat'); };
+layout(); newGame(); applyLang();
+window.__props={PR,startWarn:t=>startWarn(t)};
 })();
 </script>
 
