@@ -98,7 +98,7 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
  <div id="stage">
   <svg id="room" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="thing" id="pot"></div>
-  <div class="thing" id="cup">🥛</div><div class="thing" id="fish">🐟</div><div class="thing" id="roll">🧻</div>
+  <div class="thing" id="cup">🥛</div><div class="thing" id="fish">🐟</div><div class="thing" id="roll"></div><div id="ptrail" style="position:absolute;left:0;top:0;pointer-events:none;display:none;filter:drop-shadow(0 2px 1px #0002)"></div>
   <div class="thing" id="foot"></div>
   <div class="thing" id="soya"><div class="flip"></div></div>
   <div id="alert">❗</div>
@@ -580,8 +580,17 @@ function placeThings(){ if(!L.table) return; const T0=L.table, cs=Math.max(30,8*
  const cx=T0.x+T0.w*.12-off*T0.w*.62, cy=(G&&G.cupFall)?T0.floor+L.h*.1-cs:T0.top-cs*1.05;
  c.style.transform=`translate(${cx-cs*.6}px,${cy}px) rotate(${(G&&G.cupFall)?-100:off*-12}deg)`; c.style.zIndex=Math.round(T0.floor)+1;
  f.style.display=L.RM===1?'block':'none'; f.style.fontSize=cs*.95+'px'; f.style.transform=`translate(${T0.x+T0.w*.12}px,${T0.top-cs}px)`; f.style.zIndex=Math.round(T0.floor);
- r.style.display=L.RM===1?'none':'block'; const rs=Math.max(34,9*L.u), po=(G&&G.paperOut)||0; r.style.fontSize=rs+'px'; r.style.transform=`translate(${L.roll.x-rs/2}px,${L.roll.y-rs}px) rotate(${po*540}deg)`; r.style.zIndex=Math.round(L.roll.y);
- r.style.filter=po>0?`drop-shadow(${po*60}px 6px 0 #fff)`:''; }
+ r.style.display=L.RM===1?'none':'block'; const rs=Math.max(34,9*L.u), po=(G&&G.paperOut)||0, rr=rs*.42; r.style.fontSize='0'; r.style.width=rs+'px'; r.style.height=rs+'px';
+ if(!r.firstChild) r.innerHTML='<svg viewBox="-50 -50 100 100" width="100%" height="100%"><g class="rg"><circle r="46" fill="#fff" stroke="#c9c2cc" stroke-width="4"/><circle r="36" fill="none" stroke="#eee6ef" stroke-width="2"/><circle r="15" fill="#c9a27a" stroke="#a07c58" stroke-width="3"/><circle r="8" fill="#6b4a32"/></g></svg>';
+ r.querySelector('.rg').setAttribute('transform','rotate('+(po*540)+')');
+ r.style.transform=`translate(${L.roll.x-rs/2}px,${L.roll.y-rs}px)`; r.style.zIndex=Math.round(L.roll.y)+1;
+ const pt=$('ptrail'); if(L.RM===1||po<=0){ pt.style.display='none'; } else { const len=Math.max(4,po*L.W*.42), h=rr*.5, n=Math.max(1,Math.floor(len/(rr*1.6)));
+  let d='M0,0', d2='', perf=''; for(let i=1;i<=n*2;i++){ const x=len*i/(n*2), y=(i%2?1:-1)*h*.1; d+=` Q${x-len/(n*4)},${y} ${x},0`; }
+  for(let i=1;i<n;i++){ const x=len*i/n; perf+=`<line x1="${x}" y1="${-h*.9}" x2="${x}" y2="${h*.9}" stroke="#d6cfd9" stroke-width="1.4" stroke-dasharray="2 2"/>`; }
+  pt.style.display='block'; pt.style.width=len+4+'px'; pt.style.height=h*3+'px';
+  pt.innerHTML=`<svg width="${len+4}" height="${h*3}" viewBox="-2 ${-h*1.5} ${len+4} ${h*3}" overflow="visible"><path d="${d}" fill="none" stroke="#c9c2cc" stroke-width="${h*2+2}" stroke-linecap="butt"/><path d="${d}" fill="none" stroke="#fff" stroke-width="${h*2}" stroke-linecap="butt"/>${perf}</svg>`;
+  pt.style.transform=`translate(${L.roll.x}px,${L.roll.y-h*2.1}px)`; pt.style.zIndex=Math.round(L.roll.y); }
+}
 /* ================= Pebbles ================= */
 let pebs=[];
 function flickPeb(){ SFX.flick(); const m=L.pot.mouth; let tx,ty;
