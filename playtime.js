@@ -45,21 +45,9 @@
       parentLink: 'הורים', panel: 'פאנל הורים', played: 'שוחק היום', of: 'מתוך', limit: 'מגבלה יומית', plus: '+15 דק׳ להיום', reset: 'איפוס היום',
       lock: '🔒 לנעול עכשיו', unlock: '🔓 לפתוח נעילה', bedtime: 'שעת שינה', on: 'פעיל', off: 'כבוי', from: 'מ־', to: 'עד', chpin: 'שינוי קוד', close: 'סגירה',
       create: 'יצירת קוד הורים (4 ספרות)', confirm: 'הקלידו שוב את הקוד', enter: 'קוד הורים', mismatch: 'הקודים לא תואמים, נסו שוב', wrong: 'קוד שגוי', wait: 'יותר מדי ניסיונות. נסו שוב בעוד', sec: 'שנ׳',
-      forgot: 'שכחתי את הקוד', math: 'שאלת הורים', check: 'בדיקה', newpin: 'הגדרת קוד חדש', saved: 'נשמר ✓', back: 'חזרה'},
-    fr: {left: 'reste', min: 'min', w5: 'Plus que 5 minutes de jeu aujourd\'hui – pense à finir bientôt ! 🐱', w1: 'Plus qu\'une minute ! Il est temps de dire bonne nuit au jeu 🦁',
-      time: ['Fini de jouer pour aujourd\'hui !', 'Bravo, tu as bien joué ! Reviens demain 🌙'], bed: ['C\'est l\'heure de dormir !', 'Le lion va dormir aussi. Bonne nuit, à demain 🌙'], parent: ['Les jeux sont verrouillés', 'Tes parents ont verrouillé les jeux. Demande-leur 💛'],
-      parentLink: 'Parents', panel: 'Espace parents', played: 'Joué aujourd\'hui', of: 'sur', limit: 'Limite par jour', plus: '+15 min aujourd\'hui', reset: 'Remettre à zéro',
-      lock: '🔒 Verrouiller', unlock: '🔓 Déverrouiller', bedtime: 'Heure du coucher', on: 'Activé', off: 'Désactivé', from: 'de', to: 'à', chpin: 'Changer le code', close: 'Fermer',
-      create: 'Créer le code parent (4 chiffres)', confirm: 'Retapez le code', enter: 'Code parent', mismatch: 'Les codes ne correspondent pas', wrong: 'Code incorrect', wait: 'Trop d\'essais. Réessayez dans', sec: 's',
-      forgot: 'Code oublié', math: 'Question parent', check: 'Vérifier', newpin: 'Nouveau code', saved: 'Enregistré ✓', back: 'Retour'},
-    en: {left: 'left', min: 'min', w5: 'Only 5 minutes of play left today – time to wrap up soon! 🐱', w1: 'Just 1 minute left! Time to say good night to the game 🦁',
-      time: ['Time\'s up for today!', 'Great playing! Come back tomorrow 🌙'], bed: ['It\'s bedtime!', 'The lion is going to sleep too. Good night, see you tomorrow 🌙'], parent: ['Games are locked', 'Your parents locked the games. Ask them 💛'],
-      parentLink: 'Parents', panel: 'Parent panel', played: 'Played today', of: 'of', limit: 'Daily limit', plus: '+15 min today', reset: 'Reset today',
-      lock: '🔒 Lock now', unlock: '🔓 Unlock', bedtime: 'Bedtime', on: 'On', off: 'Off', from: 'from', to: 'to', chpin: 'Change PIN', close: 'Close',
-      create: 'Create a parent PIN (4 digits)', confirm: 'Type the PIN again', enter: 'Parent PIN', mismatch: 'PINs don\'t match, try again', wrong: 'Wrong PIN', wait: 'Too many tries. Try again in', sec: 's',
-      forgot: 'Forgot PIN', math: 'Parent question', check: 'Check', newpin: 'Set a new PIN', saved: 'Saved ✓', back: 'Back'}
+      forgot: 'שכחתי את הקוד', math: 'שאלת הורים', check: 'בדיקה', newpin: 'הגדרת קוד חדש', saved: 'נשמר ✓', back: 'חזרה'}
   };
-  function L() { var l = ''; try { l = localStorage.getItem('annabelle-lang'); } catch (e) {} return T[l] ? l : 'he'; }
+  function L() { return 'he'; }
   function t(k) { return T[L()][k]; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
 
@@ -131,7 +119,7 @@
 
   var badge, toast, lockEl, panelEl, toastTimer;
   function el(tag, attrs, html) { var e = document.createElement(tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
-  function dir() { return L() === 'he' ? 'rtl' : 'ltr'; }
+  function dir() { return 'rtl'; }
   function setupUI() {
     if (badge) return;
     document.head.appendChild(el('style', {id: 'pt-style'}, css));
@@ -177,12 +165,11 @@
       lockEl = el('div', {id: 'pt-lock', role: 'dialog', 'aria-modal': 'true'});
       document.body.appendChild(lockEl);
     }
-    var l = L(), others = ['he', 'fr', 'en'].filter(function (x) { return x !== l; });
+    var l = L();
     var stars = ''; for (var i = 0; i < 14; i++) stars += '<span class="star" style="left:' + ((i * 37) % 97) + '%;top:' + ((i * 23) % 45) + '%;font-size:' + (8 + (i % 3) * 5) + 'px;animation-delay:' + (i % 5) * .4 + 's">✦</span>';
     var key = reason === 'bed' ? 'bed' : reason === 'parent' ? 'parent' : 'time';
     lockEl.innerHTML = stars + '<div dir="' + dir() + '" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + LION +
-      '<h2>' + esc(T[l][key][0]) + '</h2><p>' + esc(T[l][key][1]) + '</p>' +
-      '<div class="other">' + others.map(function (o) { return '<div dir="' + (o === 'he' ? 'rtl' : 'ltr') + '">' + esc(T[o][key][0]) + '</div>'; }).join('') + '</div></div>' +
+      '<h2>' + esc(T[l][key][0]) + '</h2><p>' + esc(T[l][key][1]) + '</p>' + '</div>' +
       '<button id="pt-plink" type="button">🔒 ' + esc(t('parentLink')) + '</button>';
     lockEl.dataset.reason = reason;
     lockEl.querySelector('#pt-plink').addEventListener('click', function (e) { e.stopPropagation(); openPanel(); });
