@@ -59,9 +59,10 @@
   .hearts svg.lost{opacity:.22;transform:scale(.8)}
   .pausebtn{font-size:0}
   .pausebtn::before,.pausebtn::after{content:"";width:6px;height:18px;border-radius:3px;background:var(--ink);margin:0 3px}
-  #toast{position:fixed;left:50%;z-index:20;pointer-events:none;background:#fff;border-radius:22px;padding:6px 18px;font-size:clamp(18px,5vw,28px);font-weight:900;top:70px;
-         box-shadow:0 0 0 4px var(--accent),0 6px 0 #0002;transform:translate(-50%,0) scale(0);transition:transform .3s cubic-bezier(.3,1.7,.5,1);white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
-  #toast.show{transform:translate(-50%,0) scale(1)}
+  #toast{position:fixed;left:auto;width:max-content;box-sizing:border-box;z-index:20;pointer-events:none;background:#fff;border-radius:18px;padding:6px 12px;font-size:clamp(15px,4.2vw,24px);font-weight:900;line-height:1.2;top:70px;text-align:center;
+         box-shadow:0 0 0 4px var(--accent),0 6px 0 #0002;transform:translateY(-50%) scale(0);transform-origin:100% 50%;transition:transform .3s cubic-bezier(.3,1.7,.5,1);white-space:normal;overflow-wrap:anywhere}
+  #toast::after{content:"";position:absolute;right:-13px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:12px solid #fff;border-right:0}
+  #toast.show{transform:translateY(-50%) scale(1)}
   .card{background:#fffffff2;border-radius:30px;padding:18px 20px;box-shadow:0 8px 0 #0002,0 0 0 5px #ffd36b;max-width:min(94vw,560px);display:flex;flex-direction:column;align-items:center;gap:10px}
   .card h2{margin:0;font-size:clamp(26px,7vw,44px);color:var(--accent);font-weight:900;line-height:1.15}
   .card h2.winT{color:var(--accent2);font-size:clamp(32px,9vw,58px);text-shadow:0 3px 0 #ffd36b,0 6px 0 #0001}
@@ -448,16 +449,16 @@ function grab(o){
   for(let i=0;i<6;i++) bubbles.push({x:o.x+(Math.random()-.5)*o.r,y:o.y,r:U*(.06+Math.random()*.08),v:U*(1.5+Math.random())});
 }
 function land(o){
-  const t=T[lang], d=IT[o.k], hp={x:PIV.x,y:PIV.y+L0};
+  const t=T[lang], d=IT[o.k], hp={x:PIV.x,y:PIV.y+L0}, fp={x:Math.min(W-U*.9,PIV.x+U*.9),y:PIV.y+L0*.6};
   stats.catches++;
-  if(o.k==="clock"){ timeLeft+=6; stats.clocks++; SFX.clock(); toast(pick(t.catch.clock),"#3fa9ff"); addFloat(hp.x,hp.y-U,"+6 ⏰","#3fa9ff"); react=.9; reactK="happy"; }
+  if(o.k==="clock"){ timeLeft+=6; stats.clocks++; SFX.clock(); toast(pick(t.catch.clock),"#3fa9ff"); addFloat(fp.x,fp.y,"+6 ⏰","#3fa9ff"); react=.9; reactK="happy"; }
   else {
     lvScore+=d.p; total+=d.p;
     const junk=o.k==="boot"||o.k==="can";
     if(junk){ stats.junk++; SFX.junk(); toast(pick(t.catch[o.k]),"#8a6d4a"); react=1.4; reactK="yuck"; }
     else { (o.k==="gold"||o.k==="chest"?SFX.gold:o.k==="big"?SFX.big:SFX.fish)(); toast(pick(t.catch[o.k]),o.k==="gold"||o.k==="chest"?"#e0a800":"#34c47c"); react=1; reactK=o.k==="big"||o.k==="chest"||o.k==="gold"?"wow":"happy";
       for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; parts.push({x:hp.x,y:hp.y-U*.5,vx:Math.cos(a)*U*3,vy:Math.sin(a)*U*3-U,life:.6,max:.6,r:U*.1,col:o.k==="gold"?"#ffd23f":pick(["#ffd23f","#ff9fbf","#9fd8ff"]),star:true}); } }
-    addFloat(hp.x,hp.y-U,"+"+d.p,junk?"#8a6d4a":"#f2a800");
+    addFloat(fp.x,fp.y,"+"+d.p,junk?"#8a6d4a":"#f2a800");
   }
   updateHUD();
   if(lvScore>=LEVELS[level].t) levelDone();
@@ -642,7 +643,9 @@ let lastHud="";
 function updateHUD(){ $("lvl").textContent=(level+1)+"/"+LEVELS.length; $("tgt").textContent="/"+LEVELS[level].t; lastHud=""; updateHUDnum(); }
 function updateHUDnum(){ const tl=Math.ceil(timeLeft), s=lvScore+"|"+tl; if(s===lastHud) return; lastHud=s; $("score").textContent=lvScore; $("time").textContent=tl; $("timePill").classList.toggle("low",tl<=5); }
 let toastT=null;
-function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto"; el.style.boxShadow=`0 0 0 4px ${col},0 6px 0 #0002`; el.style.color=col; el.style.top=(($("hud").offsetHeight||56)+8)+"px";
+function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto"; el.style.boxShadow=`0 0 0 4px ${col},0 6px 0 #0002`; el.style.color=col; 
+  const hud=($("hud").offsetHeight||56)+8, mw=Math.max(120,Math.min(W*.7,W/2-U*.9-26)); el.style.maxWidth=mw+"px"; el.style.left="auto"; el.style.right=(W/2+U*.9+14)+"px";
+  el.style.top=Math.max(hud+el.offsetHeight/2,Math.min(SURF-U*1.9,SURF-8-el.offsetHeight/2))+"px";
   el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1500); }
 function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
   $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("tCtrl").textContent=t.ctrl; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch;
