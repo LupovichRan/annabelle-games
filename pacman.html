@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffd6c4">
-<title>הטיגריס הרעבתן של אנאבל</title>
+<title>הטיגריס הרעבתן של אנאבל</title><script src="safe.js"></script>
 <style>
   :root{ --bg1:#ffe9a8; --bg2:#ffc7d9; --ink:#4a2c6b; --accent:#ff7a3d; --accent2:#7c5cff; --ok:#34c47c; --bad:#ff4d6d; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -21,7 +21,7 @@
   .corner{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-end:12px;z-index:60;}
   .hidden{display:none !important}
   .ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:safe center;gap:min(2vh,16px);
-      padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));z-index:30;text-align:center;overflow-y:auto;touch-action:pan-y}
+      padding:max(14px,env(safe-area-inset-top)) 16px max(14px,var(--sab,env(safe-area-inset-bottom)));z-index:30;text-align:center;overflow-y:auto;touch-action:pan-y}
   .ov.show{display:flex}
   .menu{background:#fff8;backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px)}
   .dim{background:#fff6;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
@@ -648,7 +648,7 @@ function layout(){
   W=innerWidth; H=innerHeight; DPR=Math.min(devicePixelRatio||1,2.5);
   cv.width=W*DPR|0; cv.height=H*DPR|0;
   const playing=state!=="menu", hud=$("hud");
-  const top=playing?hud.getBoundingClientRect().height+6:8, bot=8, portrait=H>W*1.15;
+  const top=playing?hud.getBoundingClientRect().height+6:8, bot=Math.max(8,(window.__sab?__sab():8)), portrait=H>W*1.15;
   const pad=$("pad"); pad.classList.toggle("hidden",!(playing&&padOn));
   let availH=H-top-bot, ts=Math.floor(Math.min((W-10)/COLS,availH/ROWS));
   if(playing&&padOn&&portrait){ const need=Math.min(200,Math.max(140,W*.42)); const tsW=Math.floor((W-10)/COLS);
@@ -657,7 +657,7 @@ function layout(){
   if(playing&&padOn&&portrait){ MY=Math.round(top+4); const rest=H-(MY+TS*ROWS)-bot-6; const s=Math.min(210,rest,W*.62);
     Object.assign(pad.style,{width:s+"px",height:s+"px",left:(W-s)/2+"px",top:(MY+TS*ROWS+6+(rest-s)/2)+"px",bottom:"auto",right:"auto"}); }
   else { MY=Math.round(top+(availH-TS*ROWS)/2); const side=(W-TS*COLS)/2-12, s=Math.max(120,Math.min(190,side,H*.4));
-    Object.assign(pad.style,{width:s+"px",height:s+"px",top:"auto",bottom:(12)+"px",left:"auto",right:"12px"}); }
+    Object.assign(pad.style,{width:s+"px",height:s+"px",top:"auto",bottom:(Math.max(12,(window.__sab?__sab():12)))+"px",left:"auto",right:"12px"}); }
   buildSprites(); mazeImg=null;
 }
 addEventListener("resize",()=>{ layout(); });
