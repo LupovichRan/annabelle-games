@@ -626,5 +626,54 @@ layout(); newGame(); applyLang(); updMute();
 window.addEventListener('resize',()=>{ layout(); });
 requestAnimationFrame(loop);
 </script>
+<style>
+#perks{position:absolute;bottom:8px;inset-inline-start:8px;z-index:4500;display:flex;gap:6px;flex-wrap:wrap;max-width:60%}
+#perks button{width:48px;height:48px;border-radius:14px;background:#fff;box-shadow:0 3px 0 #0002;font-size:24px;position:relative;padding:0}
+#perks button b{position:absolute;top:-6px;inset-inline-end:-6px;background:#ff4d8d;color:#fff;border-radius:10px;font-size:12px;padding:1px 5px}
+#perks button.on{box-shadow:0 0 0 3px #5fd38d,0 3px 0 #0002}
+#roomTag{position:absolute;top:8px;inset-inline-start:8px;z-index:4400;background:#fff9;border-radius:12px;padding:4px 10px;font-weight:800;font-size:14px;pointer-events:none}
+#roomPick{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+#roomPick button{min-height:44px;padding:6px 12px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px}
+#roomPick button.on{background:#fff;box-shadow:0 0 0 3px #c8306f}
+#roomPick button:disabled{opacity:.45}
+#stage.r1 #room{filter:hue-rotate(35deg) saturate(1.1)} #stage.r2 #room{filter:hue-rotate(220deg) brightness(.92)}
+</style>
+<script>
+(()=>{
+const X={he:{rooms:['🛋️ סלון','🍳 מטבח','🛏️ חדר שינה'],perk:'קיבלת מתנה: {p}!',box:'📦 קופסה – סויה מתיישב בפנים',cover:'🛡️ מגן לכבלים – 15 שניות',slip:'🩴 נעלי בית – אין נשיכות 15 שניות',treat:'🍗 חטיף – סויה מאט',net:'🥅 רשת אבנים – חוסמת עפיפה',used:'{p}',lock:'🔒',unlocked:'חדר חדש נפתח: {r}!',saved:'מוגן! 🛡️'},
+fr:{rooms:['🛋️ Salon','🍳 Cuisine','🛏️ Chambre'],perk:'Cadeau : {p} !',box:'📦 Carton – Soya s\'assoit dedans',cover:'🛡️ Cache-câble – 15 s',slip:'🩴 Chaussons – pas de morsure 15 s',treat:'🍗 Friandise – Soya ralentit',net:'🥅 Filet – bloque un caillou',used:'{p}',lock:'🔒',unlocked:'Nouvelle pièce : {r} !',saved:'Protégé ! 🛡️'},
+en:{rooms:['🛋️ Living room','🍳 Kitchen','🛏️ Bedroom'],perk:'You got a gift: {p}!',box:'📦 Box – Soya sits inside',cover:'🛡️ Cable cover – 15s',slip:'🩴 Slippers – no bites for 15s',treat:'🍗 Treat – Soya slows down',net:'🥅 Pebble net – blocks a flick',used:'{p}',lock:'🔒',unlocked:'New room unlocked: {r}!',saved:'Protected! 🛡️'}};
+const x=()=>X[lang]||X.he, ff=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
+const KU='soyahome-rooms', KR='soyahome-room';
+let unl=+localStorage.getItem(KU)||1, room=Math.min(+localStorage.getItem(KR)||0,unl-1);
+const PK=['box','cover','slip','treat','net'], EM={box:'📦',cover:'🛡️',slip:'🩴',treat:'🍗',net:'🥅'};
+let inv={}, fx={cover:0,slip:0,treat:0,net:0}, nextMs=80;
+const st=$('stage'); const bar=document.createElement('div'); bar.id='perks'; st.appendChild(bar);
+const tag=document.createElement('div'); tag.id='roomTag'; st.appendChild(tag);
+const rp=document.createElement('div'); rp.id='roomPick'; $('best').before(rp);
+function drawRooms(){ rp.innerHTML=x().rooms.map((r,i)=>`<button data-r="${i}" class="${i===room?'on':''}" ${i>=unl?'disabled':''}>${i>=unl?x().lock+' ':''}${r}</button>`).join(''); tag.textContent=x().rooms[room]; st.className=st.className.replace(/\br\d\b/g,'').trim()+' r'+room; }
+rp.onclick=e=>{ const b=e.target.closest('[data-r]'); if(!b||b.disabled) return; room=+b.dataset.r; localStorage.setItem(KR,room); SFX.click&&SFX.click(); drawRooms(); };
+function drawBar(){ bar.innerHTML=PK.filter(k=>inv[k]).map(k=>`<button data-p="${k}" class="${fx[k]>0?'on':''}" aria-label="${k}">${EM[k]}<b>${inv[k]}</b></button>`).join(''); }
+bar.addEventListener('pointerdown',e=>{ const b=e.target.closest('[data-p]'); if(!b||!running||paused) return; e.stopPropagation(); e.preventDefault(); use(b.dataset.p); });
+function use(k){ if(!inv[k]) return; inv[k]--; const s=G.s;
+  if(k==='box'){ if(s.st!=='held'){ s.happy=true; s.st='idle'; s.t=6; s.jump=0; setCat('sit','e-happy'); $('alert').style.display='none'; $('chewRing').style.display='none'; mrrp(); } }
+  else if(k==='treat'){ fx.treat=12; meow(1.2); } else if(k==='net'){ fx.net+=1; } else fx[k]=15;
+  pop(L.W/2,L.H*.3,x()[k]); try{SFX.good();}catch(e){} drawBar(); }
+const D0=D; D=function(){ return Math.min(1,D0()+room*.22); };
+const sp=P.speed, wr=P.warn; P.speed=()=>sp()*(fx.treat>0?.5:1); P.warn=()=>wr()*(fx.treat>0?1.5:1);
+const act0=act; act=function(){ const s=G.s;
+  if(s.type==='cable'&&fx.cover>0 || s.type==='peb'&&fx.net>0){ if(s.type==='peb') fx.net--; pop(s.x,s.y-L.h,x().saved); addScore(10,s.x,s.y-L.h*.6); goIdle(); drawBar(); return; }
+  act0(); };
+const bite0=bite; bite=function(){ if(fx.slip>0){ pop(L.foot.x,L.foot.top-20,x().saved); const s=G.s; goIdle(); G.foot.out=false; G.foot.rt=1; placeFoot(); return; } bite0(); };
+const ng=newGame; newGame=function(){ ng(); inv={box:1}; fx={cover:0,slip:0,treat:0,net:0}; nextMs=80; drawBar(); drawRooms(); };
+const hud0=hud; hud=function(){ hud0(); if(G&&running&&G.score>=nextMs){ nextMs+=Math.round(110+room*30); const k=PK[(Math.random()*PK.length)|0]; inv[k]=(inv[k]||0)+1; pop(L.W/2,L.H*.45,ff(x().perk,{p:EM[k]}),true); drawBar(); } };
+let lastT=performance.now(); (function tk(n){ const dt=Math.min(.05,(n-lastT)/1000); lastT=n; if(running&&!paused&&!ending){ let ch=false; for(const k of ['cover','slip','treat']) if(fx[k]>0){ fx[k]-=dt; if(fx[k]<=0) ch=true; } if(ch) drawBar(); } requestAnimationFrame(tk); })(lastT);
+const fin=finish; finish=function(win){ fin(win); if(win&&room+1>=unl&&unl<3){ unl++; localStorage.setItem(KU,unl); room=unl-1; localStorage.setItem(KR,room); $('endBest').textContent+=' · '+ff(x().unlocked,{r:x().rooms[room]}); } drawRooms(); };
+const al=applyLang; applyLang=function(){ al(); drawRooms(); };
+drawRooms();
+window.__sh={inv:o=>{inv=o;drawBar();},room:r=>{room=r;drawRooms();},use};
+})();
+</script>
+
 </body>
 </html>
