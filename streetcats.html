@@ -451,7 +451,7 @@ function layout(){
   BUSH={x:W-U*1.2,y:GY+U*1.55,r:U*1.2}; BUSH2={x:U*1.0,y:GY+U*.7,r:U*.95};
   BENCH={x:W*.56,y:GY+U*.95,w:Math.min(U*3.6,W*.4)};
   BED={x:W*.3,y:AY+AH*.22}; YARN={x:W*.6,y:AY+AH*.5}; MOUSE={x:W*.38,y:AY+AH*.42};
-  HOUSE={x:W-U*2.1,y:FLOOR-U*.75}; LAMP={x:W*.84,y:GY+U*.25}; TREE={x:U*1.5};
+  { const fx=MAT.x+MAT.w+U*.12, fw=W-U*.08-fx, hs=clamp(fw/(U*3.8),.42,1); HOUSE={x:fx+fw/2,y:FLOOR-U*.75,s:hs}; } LAMP={x:W*.84,y:GY+U*.25}; TREE={x:U*1.5};
   $("hint").style.bottom=(H-MAT.y+U*.75)+"px";
   placeTop();
 }
@@ -461,7 +461,7 @@ const fromScr=(x,y)=>({x:(x-AX)/AW,y:(y-AY)/AH});
 function bowlPos(i){ return {x:MAT.x+U*.9+i*(MAT.w-U*1.8)/3,y:MAT.y+MAT.h*.58}; }
 function bowlSpot(i,c){ const b=bowlPos(i); return {x:b.x-U*.72*DEF[c.id].size,y:b.y-U*.28}; }
 function hideSpot(c){ return {x:BUSH.x-U*.15+(c.id==="midnight"?-U*.5:0),y:BUSH.y-U*.12}; }
-function houseSlot(i){ return {x:HOUSE.x+(i-1)*U*.95,y:HOUSE.y-U*.12}; }
+function houseSlot(i){ return {x:HOUSE.x+(i-1)*U*.95*HOUSE.s,y:HOUSE.y-U*.12}; }
 function boxScr(b){ return toScr(b.nx,b.ny); }
 function catScr(c){ if(c.bench) return {x:BENCH.x+(c.id==="midnight"?0:U),y:BENCH.y-U*.6}; return toScr(c.nx,c.ny); }
 function depth(y){ return clamp((y-GY)/(FLOOR-GY),0,1); }
@@ -947,7 +947,7 @@ function drawToy(k){ const q=k==="yarn"?YARN:MOUSE, s=U, play=present().some(c=>
   if(k==="yarn"){ circ(0,-s*.28,s*.3,"#ff5d8f"); g.strokeStyle="#ffb3cb"; g.lineWidth=s*.04; for(let i=0;i<3;i++){ g.beginPath(); g.arc(0,-s*.28,s*.3-i*s*.08,gtime*(play?4:0)+i,gtime*(play?4:0)+i+2.2); g.stroke(); } g.strokeStyle="#ff5d8f"; g.beginPath(); g.moveTo(s*.25,-s*.1); g.quadraticCurveTo(s*.6,s*.05,s*.8,-s*.05); g.stroke(); }
   else { ell(0,-s*.14,s*.3,s*.16,"#9aa0ad"); circ(s*.24,-s*.26,s*.08,"#c8ccd6"); circ(s*.3,-s*.16,s*.03,"#222"); g.strokeStyle="#9aa0ad"; g.lineWidth=s*.04; g.beginPath(); g.moveTo(-s*.28,-s*.12); g.quadraticCurveTo(-s*.55,-s*.35,-s*.6,-s*.05); g.stroke(); }
   g.restore(); }
-function drawHouse(){ const s=U, x=HOUSE.x, y=HOUSE.y; g.save(); g.translate(x,y);
+function drawHouse(){ const s=U*HOUSE.s, x=HOUSE.x, y=HOUSE.y; g.save(); g.translate(x,y);
   g.fillStyle="#e9a06a"; g.fillRect(-s*1.6,-s*1.6,s*3.2,s*1.2); g.fillStyle="#c97a4a"; g.fillRect(-s*1.6,-s*.45,s*3.2,s*.12);
   g.fillStyle="#d9534f"; g.beginPath(); g.moveTo(-s*1.9,-s*1.55); g.lineTo(0,-s*2.5); g.lineTo(s*1.9,-s*1.55); g.closePath(); g.fill();
   g.fillStyle="#fff"; g.font=`900 ${s*.32}px sans-serif`; g.textAlign="center"; g.textBaseline="middle"; g.fillText("♥",0,-s*1.95);
