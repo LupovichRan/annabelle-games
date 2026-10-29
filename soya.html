@@ -117,6 +117,7 @@ body.sleeping #night{opacity:.55}
 #start .btns{display:flex;flex-direction:column;gap:10px;align-items:center}
 #tipBox{font-size:14px;font-weight:700;opacity:.85;max-width:420px}
 
+@media (max-width:400px){.act .l{font-size:11px}#bar{gap:4px;padding-left:4px;padding-right:4px}}
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.panel{overflow-y:auto;align-items:safe center;-webkit-overflow-scrolling:touch}.panel .card{max-height:none}#start{overflow-y:auto!important;justify-content:flex-start!important}#start>*{flex-shrink:0}#prev{max-height:30dvh}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/soya.webmanifest"><meta name="apple-mobile-web-app-title" content="סויה"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/soya-apple-180.png"><script src="pwa.js" data-app="soya" data-slots='[["#langs", "after"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="" data-relabel="#homeBtn" defer></script><!--/pwa-->
@@ -157,6 +158,7 @@ body.sleeping #night{opacity:.55}
   <button class="act" data-a="laser"><span class="e">🔴</span><span class="l"></span></button>
   <button class="act" data-a="sleep"><span class="e">💤</span><span class="l"></span></button>
   <button class="act" data-a="trick"><span class="e">🎲</span><span class="l"></span></button>
+  <button class="act" data-a="toys"><span class="e">🎁</span><span class="l"></span></button>
   <button class="act" data-a="dress"><span class="e">🎀</span><span class="l"></span></button>
 </div>
 <div id="toast"></div>
@@ -165,6 +167,11 @@ body.sleeping #night{opacity:.55}
   <h2 id="wardT"></h2>
   <div id="wardGrid"></div>
   <button class="big go" id="wardClose">✔️</button>
+</div></div>
+
+<div class="panel" id="toys"><div class="card">
+  <div id="toyHint"></div>
+  <button class="big go" id="toysClose">✔️</button>
 </div></div>
 
 <div class="panel" id="photo"><div class="card">
@@ -335,7 +342,7 @@ const T = {
  he:{dir:'rtl', title:'סויה החתול', sub:'החתול שלך בתוך החדר!', nameQ:'איך קוראים לחתול?', startCam:'📷 התחילי עם מצלמה', startNoCam:'🏠 בלי מצלמה',
   tip:'לטפי אותו באצבע · החזיקי כדי להרים אותו · שתי אצבעות כדי להגדיל',
   camFail:'אין מצלמה? לא נורא! {n} מחכה לך בבית 🏠', camOn:'כוונני את המצלמה לרצפה, ו{n} יופיע! 📷',
-  a:{feed:'אוכל',play:'כדור',laser:'לייזר',sleep:'שינה',trick:'הפתעה',dress:'בגדים'},
+  a:{feed:'אוכל',play:'כדור',laser:'לייזר',sleep:'שינה',trick:'טריק',toys:'צעצועים',dress:'בגדים'},
   feedTip:'גררי את הצלחת אל {n} 🍽️', playTip:'זרקי את כדור הצמר! 🧶', laserTip:'הזיזי את הנקודה האדומה! 🔴', sleepTip:'הקישי עליו כדי להעיר אותו',
   hungry:'אני רעב! 🍽️', bored:'בואי נשחק! 🧶', sleepy:'אני עייף… 💤', yum:'יאמי! 😋', purr:'פררר… 💕', missed:'{n} התגעגע אלייך! 🐾 +3',
   morning:'בוקר טוב! ☀️', ap:'אַ… אַפּ…', choo:'אפצ׳י!!! 🤧', dizzy:'הכול מסתובב… 😵‍💫', cup1:'מה זה פה? 🤔', cup2:'אופס! 🙀', cup3:'זה לא אני! 😇',
@@ -346,7 +353,7 @@ const T = {
  fr:{dir:'ltr', title:'Soya le chat', sub:'Ton chat dans ta chambre !', nameQ:'Comment s’appelle ton chat ?', startCam:'📷 Avec la caméra', startNoCam:'🏠 Sans caméra',
   tip:'Caresse-le du doigt · appuie longtemps pour le porter · deux doigts pour zoomer',
   camFail:'Pas de caméra ? Pas grave ! {n} t’attend à la maison 🏠', camOn:'Vise le sol avec la caméra, et {n} arrive ! 📷',
-  a:{feed:'Manger',play:'Pelote',laser:'Laser',sleep:'Dodo',trick:'Surprise',dress:'Habits'},
+  a:{feed:'Manger',play:'Pelote',laser:'Laser',sleep:'Dodo',trick:'Tour',toys:'Jouets',dress:'Habits'},
   feedTip:'Glisse l’assiette vers {n} 🍽️', playTip:'Lance la pelote ! 🧶', laserTip:'Bouge le point rouge ! 🔴', sleepTip:'Touche-le pour le réveiller',
   hungry:'J’ai faim ! 🍽️', bored:'On joue ? 🧶', sleepy:'Je suis fatigué… 💤', yum:'Miam ! 😋', purr:'Rrrrr… 💕', missed:'{n} s’est ennuyé de toi ! 🐾 +3',
   morning:'Bonjour ! ☀️', ap:'A… a…', choo:'ATCHOUM !!! 🤧', dizzy:'Ça tourne… 😵‍💫', cup1:'C’est quoi, ça ? 🤔', cup2:'Oups ! 🙀', cup3:'C’est pas moi ! 😇',
@@ -357,7 +364,7 @@ const T = {
  en:{dir:'ltr', title:'Soya the Cat', sub:'Your kitty, right in your room!', nameQ:'What’s your kitty’s name?', startCam:'📷 Start with camera', startNoCam:'🏠 No camera',
   tip:'Stroke him with a finger · hold to pick him up · two fingers to resize',
   camFail:'No camera? No problem! {n} is waiting at home 🏠', camOn:'Point the camera at the floor and {n} appears! 📷',
-  a:{feed:'Food',play:'Yarn',laser:'Laser',sleep:'Sleep',trick:'Surprise',dress:'Dress'},
+  a:{feed:'Food',play:'Yarn',laser:'Laser',sleep:'Sleep',trick:'Trick',toys:'Toys',dress:'Dress'},
   feedTip:'Drag the plate to {n} 🍽️', playTip:'Throw the yarn ball! 🧶', laserTip:'Move the red dot! 🔴', sleepTip:'Tap him to wake him up',
   hungry:'I’m hungry! 🍽️', bored:'Let’s play! 🧶', sleepy:'I’m sleepy… 💤', yum:'Yummy! 😋', purr:'Purrr… 💕', missed:'{n} missed you! 🐾 +3',
   morning:'Good morning! ☀️', ap:'Ah… ahh…', choo:'ACHOO!!! 🤧', dizzy:'Everything is spinning… 😵‍💫', cup1:'What’s this? 🤔', cup2:'Oops! 🙀', cup3:'Wasn’t me! 😇',
@@ -746,8 +753,8 @@ window.__soya={S,P,get plate(){return plate},get yarn(){return yarn},laser,runTr
 <style>
 .wi{height:clamp(50px,7.5vh,72px)!important;font-size:26px!important}
 #toyRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
-#toyRow button{min-height:52px;border-radius:16px;background:#fff3c4;font-size:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 3px 0 #0002}
-#toyRow small{font-size:11px;font-weight:800}
+#toyRow button{min-height:84px;position:relative;gap:2px;padding:6px 4px;border-radius:16px;background:#fff3c4;font-size:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 3px 0 #0002}
+#toyRow small{font-size:12px;font-weight:800;line-height:1.15}#toyRow .te{font-size:30px;line-height:1}#toyRow i{font-style:normal;font-size:12px;font-weight:900;background:#fff;border-radius:999px;padding:1px 8px}#toyRow .lock .te{filter:grayscale(.7);opacity:.7}#toyRow .own{background:#d8f7e3}#toyHint{font-weight:700;font-size:14px;text-align:center;opacity:.85}#toyHint.first{background:#fff3c4;border-radius:14px;padding:6px 10px;opacity:1;box-shadow:0 0 0 3px #ffb84d}#toys .card{gap:10px}
 #goalLine{font-weight:800;font-size:14px;background:#e9fbe9;border-radius:12px;padding:6px 10px}
 #toyT{margin:0;font-size:17px}
 .soyaSvg.w-hat .acc-hat,.soyaSvg.w-scarf .acc-scarf{display:inline}
@@ -757,11 +764,11 @@ window.__soya={S,P,get plate(){return plate},get yarn(){return yarn},laser,runTr
 </style>
 <script>
 (()=>{
-const X={he:{toys:'צעצועים להפתעה 🎁',feather:'שרביט נוצה',box:'קופסת קרטון',mouse:'עכבר קטניף',buy:'{c}🐾',hat:'מגבעת',scarf:'צעיף',goal:'🎯 משימה היום: להאכיל {f}/1 ולשחק {p}/2 → +5🐾',goalDone:'🎯 המשימה של היום הושלמה! ✅',goalWin:'כל הכבוד! השלמת את המשימה היומית: +5🐾 🎉',
+const X={he:{toyHint:'קני צעצוע בכפות 🐾 ולחצי עליו – סויה ישחק איתו!',toys:'צעצועים להפתעה 🎁',feather:'שרביט נוצה',box:'קופסת קרטון',mouse:'עכבר קטניף',buy:'{c}🐾',hat:'מגבעת',scarf:'צעיף',goal:'🎯 משימה היום: להאכיל {f}/1 ולשחק {p}/2 → +5🐾',goalDone:'🎯 המשימה של היום הושלמה! ✅',goalWin:'כל הכבוד! השלמת את המשימה היומית: +5🐾 🎉',
   feS:'סויה קופץ על הנוצה! 🪶',boS:'סויה נכנס לקופסה… אם זה מתאים – הוא יושב! 📦',moS:'קטניף! סויה משתגע ומסתובב! 🌀😹',noP:'צריך עוד כפות 🐾'},
-fr:{toys:'Jouets surprise 🎁',feather:'Canne à plume',box:'Carton',mouse:'Souris à herbe à chat',buy:'{c}🐾',hat:'Chapeau',scarf:'Écharpe',goal:'🎯 Défi du jour : nourrir {f}/1 et jouer {p}/2 → +5🐾',goalDone:'🎯 Défi du jour réussi ! ✅',goalWin:'Bravo ! Défi du jour réussi : +5🐾 🎉',
+fr:{toyHint:'Achète un jouet avec tes pattes 🐾 et touche-le : Soya va jouer avec !',toys:'Jouets surprise 🎁',feather:'Canne à plume',box:'Carton',mouse:'Souris à herbe à chat',buy:'{c}🐾',hat:'Chapeau',scarf:'Écharpe',goal:'🎯 Défi du jour : nourrir {f}/1 et jouer {p}/2 → +5🐾',goalDone:'🎯 Défi du jour réussi ! ✅',goalWin:'Bravo ! Défi du jour réussi : +5🐾 🎉',
   feS:'Soya saute sur la plume ! 🪶',boS:'Soya entre dans le carton… S\'il rentre, il s\'assoit ! 📦',moS:'Herbe à chat ! Soya devient fou et tourne ! 🌀😹',noP:'Il faut plus de pattes 🐾'},
-en:{toys:'Surprise toys 🎁',feather:'Feather wand',box:'Cardboard box',mouse:'Catnip mouse',buy:'{c}🐾',hat:'Top hat',scarf:'Scarf',goal:'🎯 Today: feed {f}/1 and play {p}/2 → +5🐾',goalDone:'🎯 Today\'s goal done! ✅',goalWin:'Great job! Daily goal done: +5🐾 🎉',
+en:{toyHint:'Buy a toy with your paws 🐾 and tap it – Soya will play with it!',toys:'Surprise toys 🎁',feather:'Feather wand',box:'Cardboard box',mouse:'Catnip mouse',buy:'{c}🐾',hat:'Top hat',scarf:'Scarf',goal:'🎯 Today: feed {f}/1 and play {p}/2 → +5🐾',goalDone:'🎯 Today\'s goal done! ✅',goalWin:'Great job! Daily goal done: +5🐾 🎉',
   feS:'Soya pounces on the feather! 🪶',boS:'Soya climbs in the box… if he fits, he sits! 📦',moS:'Catnip! Soya goes wild and spins! 🌀😹',noP:'You need more paws 🐾'}};
 const x=()=>X[lang]||X.he;
 const TOYS=[['feather','🪶',5],['box','📦',8],['mouse','🐭',12]];
@@ -778,12 +785,13 @@ const f0=actFeed; actFeed=function(){ f0.apply(this,arguments); P.goal.f++; chk(
 const p0=actPlay; actPlay=function(b){ const had=!!yarn; p0.apply(this,arguments); if(!had&&yarn){ P.goal.p++; chk(); } };
 const l0=actLaser; actLaser=function(b){ const had=laser.on; l0.apply(this,arguments); if(!had&&laser.on){ P.goal.p++; chk(); } };
 const card=$('ward').querySelector('.card'); const gl=document.createElement('div'); gl.id='goalLine'; const tt=document.createElement('h3'); tt.id='toyT'; const tr=document.createElement('div'); tr.id='toyRow';
-$('wardGrid').after(tt,tr,gl);
-const rw=renderWard; renderWard=function(){ rw(); tt.textContent=x().toys; gl.textContent=goalTxt();
-  tr.innerHTML=TOYS.map(([k,e,c])=>{ const own=P.toys.includes(k); return `<button data-toy="${k}">${e}<small>${x()[k]}${own?'':' · '+x().buy.replace('{c}',c)}</small></button>`; }).join(''); };
+$('toyHint').before(tt); $('toyHint').after(tr,gl); $('toysClose').onclick=()=>{ $('toys').classList.remove('show'); };
+$('bar').addEventListener('click',e=>{ const b=e.target.closest('[data-a="toys"]'); if(!b) return; e.stopImmediatePropagation(); renderWard(); $('toys').classList.add('show'); if(!localStorage.getItem('soya-toyhint')){ localStorage.setItem('soya-toyhint','1'); $('toyHint').classList.add('first'); } else $('toyHint').classList.remove('first'); },true);
+const rw=renderWard; renderWard=function(){ rw(); tt.textContent=x().toys; gl.textContent=goalTxt(); $('toyHint').textContent=x().toyHint;
+  tr.innerHTML=TOYS.map(([k,e,c])=>{ const own=P.toys.includes(k); return `<button data-toy="${k}" class="${own?'own':'lock'}"><span class="te">${e}</span><small>${x()[k]}</small><i>${own?'▶':'🔒 '+x().buy.replace('{c}',c)}</i></button>`; }).join(''); };
 tr.onclick=e=>{ const b=e.target.closest('[data-toy]'); if(!b) return; const [k,,c]=TOYS.find(t=>t[0]===b.dataset.toy);
   if(!P.toys.includes(k)){ if(P.paws<c){ toast(x().noP); try{SFX.mrrp();}catch(e){} return; } P.paws-=c; $('pawN').textContent=P.paws; P.toys.push(k); save(); try{SFX.unlock();}catch(e){} }
-  $('ward').classList.remove('show'); setTimeout(()=>playToy(k),250); renderWard(); };
+  $('toys').classList.remove('show'); setTimeout(()=>playToy(k),250); renderWard(); };
 function playToy(k){ if(S.state==='sleep') wake(true); interrupt(); const [hx,hy]=headXY(); P.goal.p++; chk();
   if(k==='feather'){ S.state='trick'; setPose('stand'); setFace('wide'); say(x().feS); anim('a-jump',600); fx('🪶',hx+30,hy-30); setTimeout(()=>{ anim('a-jump',600); fx('🪶',hx-30,hy-40); meow(600,0,.25); },700); setTimeout(()=>idle(3000),1500); }
   else if(k==='box'){ S.state='trick'; setPose('sit'); setFace('happy'); say(x().boS,2600); fx('📦',hx,hy+40); purrStart(); setTimeout(()=>{ purrStop(); idle(3000); },2600); }
