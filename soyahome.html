@@ -717,7 +717,7 @@ function drawRooms(){ rp.innerHTML=x().rooms.map((r,i)=>`<button data-r="${i}" c
 rp.onclick=e=>{ const b=e.target.closest('[data-r]'); if(!b||b.disabled) return; room=+b.dataset.r; localStorage.setItem(KR,room); SFX.click&&SFX.click(); drawRooms(); };
 function drawBar(){ bar.innerHTML=PK.map(k=>{ const n=inv[k]||0, on=fx[k]>0&&k!=='net'; return `<button data-p="${k}" class="${on?'on':''} ${n?'':'empty'}" title="${x()[k]}" aria-label="${x()[k]}"><span class="pe">${EM[k]}</span><span class="pl">${sx()[k]}</span><b>${k==='net'&&fx.net>0?'🛡'+fx.net:n}</b>${on&&DUR[k]?`<span class="cd" style="width:${Math.max(0,fx[k]/DUR[k]*100)}%"></span>`:''}</button>`; }).join(''); }
 bar.addEventListener('pointerdown',e=>{ const b=e.target.closest('[data-p]'); if(!b||!running||paused) return; e.stopPropagation(); e.preventDefault(); if(!inv[b.dataset.p]){ showHint(b.dataset.p); return; } use(b.dataset.p); });
-function use(k){ if(!inv[k]) return; inv[k]--; const s=G.s;
+function use(k){ if(!inv[k]) return; if(k==='box'&&G.s.st==='held'){ showHint(k); return; } inv[k]--; const s=G.s;
   if(k==='box'){ if(s.st!=='held'){ s.happy=true; s.st='idle'; s.t=6; s.jump=0; setCat('sit','e-happy'); $('alert').style.display='none'; $('chewRing').style.display='none'; mrrp(); } }
   else if(k==='treat'){ fx.treat=12; meow(1.2); } else if(k==='net'){ fx.net+=1; } else fx[k]=15;
   showHint(k); hint.textContent=x()[k]; try{SFX.good();}catch(e){} drawBar(); }
