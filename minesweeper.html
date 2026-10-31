@@ -25,7 +25,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .rules{max-width:460px;background:#fff;border-radius:16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 3px 0 #0001}
 .rules p{margin:3px 0}
 #game{padding:6px}
-.bar{display:flex;align-items:center;gap:8px;width:100%;max-width:900px;flex:0 0 auto}
+.bar{display:flex;align-items:center;gap:5px;width:100%;max-width:900px;flex:0 0 auto}
 .iconbtn{width:48px;height:48px;border-radius:50%;border:2px solid #e8862d;background:#fff;font-size:22px;flex:0 0 auto}
 .pill{flex:1;text-align:center;background:#fff;border-radius:999px;padding:8px 4px;font-weight:800;font-size:16px;box-shadow:0 3px 0 #0001;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0006;z-index:20}
@@ -45,13 +45,14 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .tl .n i{font-style:normal;font-size:.55em;opacity:.55}
 .tl.pop{animation:tp .25s}@keyframes tp{from{transform:scale(.6)}}
 .n1{color:#2a7de1}.n2{color:#2e9a3a}.n3{color:#e23b3b}.n4{color:#7b3fc4}.n5{color:#b5541c}.n6{color:#0c8f8f}.n7{color:#333}.n8{color:#888}
-.flagbtn{min-width:84px;height:48px;border-radius:999px;border:3px solid #e8862d;background:#fff;font:800 17px Rubik,Arial;color:#5a3b1a;flex:0 0 auto}
+.flagbtn{min-width:72px;padding:0 8px;height:48px;border-radius:999px;border:3px solid #e8862d;background:#fff;font:800 17px Rubik,Arial;color:#5a3b1a;flex:0 0 auto}
 .flagbtn.on{background:#e8862d;color:#fff;animation:pulse2 1s infinite alternate}@keyframes pulse2{to{transform:scale(1.06)}}
-.stat{background:#fff;border-radius:999px;padding:6px 10px;font-weight:800;font-size:16px;white-space:nowrap;box-shadow:0 3px 0 #0001}
+.stat{background:#fff;border-radius:999px;padding:6px 7px;font-weight:800;font-size:16px;white-space:nowrap;box-shadow:0 3px 0 #0001}
 .chase{position:fixed;font-size:54px;z-index:15;pointer-events:none;white-space:nowrap;top:40%}
 .toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;border:3px solid #e8862d;border-radius:16px;padding:8px 14px;font-weight:800;font-size:18px;z-index:16;pointer-events:none;animation:pop2 .25s}@keyframes pop2{from{transform:translateX(-50%) scale(.3)}}
 .dance{display:inline-block;animation:dn .5s infinite alternate}@keyframes dn{from{transform:rotate(-15deg) translateY(0)}to{transform:rotate(15deg) translateY(-10px)}}
 .best{font-size:14px;opacity:.8}
+@media(max-width:420px){.lbl{display:none}#flagBtn{min-width:54px;font-size:22px}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/minesweeper.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/minesweeper-192.png"><meta name="apple-mobile-web-app-title" content="גינת החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/minesweeper-apple-180.png"><script src="pwa.js" data-app="minesweeper" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 </head>
@@ -73,7 +74,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
     <button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button>
     <div class="stat" id="hearts"></div>
     <div class="pill" id="info" dir="ltr"></div>
-    <button class="flagbtn" id="flagBtn"></button>
+    <button class="flagbtn" id="hintBtn" style="min-width:50px;padding:0 6px" aria-label="hint"></button><button class="flagbtn" id="flagBtn"></button>
     <div style="width:48px"></div>
   </div>
   <div id="wrap"><div id="grid"></div></div>
@@ -85,15 +86,15 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 const $=id=>document.getElementById(id);
 const TX={
  he:{title:"גינת החתולים",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
-  rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
+  rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","🌿 פתחי את כל המשבצות בלי כלבים כדי לנצח!","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
   dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הכלב התעורר! 🐶 ווף!",run:"רוצי! 😹",
   winT:"ניצחת, אנאבל! 🎉",lose:"אופס! הכלבים התעוררו 🐶",again:"🔁 עוד משחק",retry:"🔁 נסי שוב",best:"שיא",newBest:"שיא חדש! 🏆",sec:"שנ׳"},
  fr:{title:"Le jardin des chats",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
-  rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
+  rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","🌿 Ouvre toutes les cases sans chien pour gagner !","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
   dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Le chien s'est réveillé ! 🐶 Ouaf !",run:"Cours ! 😹",
   winT:"Tu as gagné, Annabelle ! 🎉",lose:"Oups ! Les chiens se sont réveillés 🐶",again:"🔁 Rejouer",retry:"🔁 Réessaie",best:"Record",newBest:"Nouveau record ! 🏆",sec:"s"},
  en:{title:"Cat Garden",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
-  rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
+  rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","🌿 Open all the tiles without dogs to win!","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
   dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! The dog woke up! 🐶 Woof!",run:"Run! 😹",
   winT:"You won, Annabelle! 🎉",lose:"Oops! The dogs woke up 🐶",again:"🔁 Play again",retry:"🔁 Try again",best:"Best",newBest:"New record! 🏆",sec:"s"}};
 const LV={easy:{c:8,r:8,d:8,l:3},normal:{c:9,r:11,d:14,l:2}};
@@ -123,7 +124,7 @@ let G=null,timer=null;
 function newGame(mode){
  const L=LV[mode],land=innerWidth>innerHeight;
  const C=land?Math.max(L.c,L.r):L.c,R=land?Math.min(L.c,L.r):L.r;
- G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0};
+ G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:3};
  for(let i=0;i<C*R;i++)G.cells.push({dog:false,n:0,o:false,f:false});
  const g=$("grid");g.innerHTML="";g.style.gridTemplateColumns=`repeat(${C},1fr)`;
  for(let i=0;i<C*R;i++){const b=document.createElement("button");b.className="tl";b.dataset.i=i;g.appendChild(b)}
@@ -135,22 +136,32 @@ function plant(safe){const ban=new Set([safe,...nb(safe)]);const pool=[];for(let
  for(let k=0;k<G.D;k++){const j=pool.splice(Math.random()*pool.length|0,1)[0];G.cells[j].dog=true}
  G.cells.forEach((c,i)=>c.n=nb(i).filter(j=>G.cells[j].dog).length)}
 function hud(){const f=G.cells.filter(c=>c.f||(c.o&&c.dog)).length;
- $("info").textContent=`⏱️${G.sec} 🐶${Math.max(0,G.D-f)}`;$("hearts").textContent="❤️".repeat(G.lives)||"🤍"}
-function setFlag(v){G.flagMode=v;const b=$("flagBtn");b.classList.toggle("on",v);b.textContent=v?t("flag"):t("dig")}
+ const left=G.cells.filter(c=>!c.dog&&!c.o).length;$("info").textContent=`🌿${left} 🐶${Math.max(0,G.D-f)} ⏱️${G.sec}`;$("hintBtn").textContent=`💡${G.hints}`;$("hintBtn").disabled=!G.hints;$("hintBtn").style.opacity=G.hints?1:.4;$("hearts").textContent=G.lives?"❤️"+G.lives:"🤍"}
+function setFlag(v){G.flagMode=v;const b=$("flagBtn");b.classList.toggle("on",v);const L=(v?t("flag"):t("dig")).split(" ");b.innerHTML=`${L[0]}<span class="lbl"> ${L.slice(1).join(" ")}</span>`}
 function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl";b.innerHTML="";
  if(c.o){if(c.dog){b.classList.add("d");b.textContent="🐶"}else{b.classList.add("o");if(c.n)b.innerHTML=`<span class="n n${c.n}"><i>🐾</i>${c.n}</span>`;else if(i%5===2)b.innerHTML='<span style="opacity:.6;font-size:.7em">🐟</span>'}}
  else if(c.f){b.classList.add("f");b.textContent="🐾"}}
-function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o||c.f)continue;c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
-function tap(i,forceFlag){if(!G||G.over)return;const c=G.cells[i];if(c.o)return;ac();
+function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
+function tap(i,forceFlag){if(!G||G.over)return;const c=G.cells[i];ac();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
  if(forceFlag||G.flagMode){c.f=!c.f;render(i);SFX.flag();hud();return}
  if(c.f)return;
  if(!G.started){G.started=true;G.t0=Date.now();plant(i)}
  if(c.dog){c.o=true;render(i);G.lives--;G.hits++;hud();dogWake();if(G.lives<=0){G.over=true;setTimeout(lose,1400)}return}
  open(i);SFX.dig();hud();checkWin()}
+function chord(i){const ns=nb(i).filter(j=>!G.cells[j].o);if(ns.filter(j=>G.cells[j].f).length!==G.cells[i].n)return;
+ const rest=ns.filter(j=>!G.cells[j].f);if(!rest.length)return;let hit=false;
+ for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;dogWake();if(G.lives<=0){G.over=true;setTimeout(lose,1400)}}}else open(j)}
+ SFX.dig();hud();if(!G.over)checkWin()}
+function hint(){if(!G||G.over||!G.hints)return;ac();
+ if(!G.started){G.hints--;setFlag(false);tap((G.R>>1)*G.C+(G.C>>1));return}
+ const cand=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(!cand.length)return;
+ const near=cand.filter(i=>nb(i).some(j=>G.cells[j].o&&!G.cells[j].dog));const pool=near.length?near:cand;
+ const i=pool[Math.random()*pool.length|0];G.hints--;G.cells[i].f=false;open(i);$("grid").children[i].animate([{transform:"scale(1.4)",background:"#fff59d"},{transform:"scale(1)"}],{duration:600});SFX.dig();hud();checkWin()}
 function toast(s,ms=1500){const d=document.createElement("div");d.className="toast";d.textContent=s;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function dogWake(){SFX.bark();setTimeout(SFX.meow,300);toast(t("oops"));const d=document.createElement("div");d.className="chase";d.textContent="🐈 💨   🐕";document.body.appendChild(d);
  d.animate([{transform:"translateX(-60vw)"},{transform:"translateX(110vw)"}],{duration:1400,easing:"ease-in-out"}).onfinish=()=>d.remove()}
-function checkWin(){if(G.opened<G.C*G.R-G.D+G.hits&&G.cells.some(c=>!c.dog&&!c.o))return;if(G.cells.some(c=>!c.dog&&!c.o))return;
+function checkWin(){const closed=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(closed.some(i=>!G.cells[i].f))return;
+ closed.forEach(i=>{G.cells[i].f=false;G.cells[i].o=true;G.opened++;render(i)});
  G.over=true;G.sec=Math.floor((Date.now()-G.t0)/1000);hud();G.cells.forEach((c,i)=>{if(c.dog&&!c.o){c.f=true;render(i)}});
  const b=getBest(),nb_=!b[G.mode]||G.sec<b[G.mode];if(nb_){b[G.mode]=G.sec;localStorage.setItem(BK,JSON.stringify(b))}
  setTimeout(()=>{$("winT").textContent=t("winT");$("winS").innerHTML='<span class="dance">😸</span><span class="dance" style="animation-delay:.25s">🐟</span><span class="dance">😺</span><span class="dance" style="animation-delay:.25s">🐟</span>';
@@ -162,6 +173,7 @@ $("grid").addEventListener("pointerdown",e=>{const b=e.target.closest(".tl");if(
 ["pointerup","pointercancel","pointerleave"].forEach(ev=>$("grid").addEventListener(ev,()=>clearTimeout(lp)));
 $("grid").addEventListener("click",e=>{const b=e.target.closest(".tl");if(!b)return;if(lpFired){lpFired=false;return}tap(+b.dataset.i)});
 $("grid").addEventListener("contextmenu",e=>e.preventDefault());
+$("hintBtn").addEventListener("click",hint);
 $("flagBtn").addEventListener("click",()=>{SFX.click();setFlag(!G.flagMode)});
 window.__G=()=>G;window.__tap=tap;
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}
