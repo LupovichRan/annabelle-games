@@ -137,7 +137,6 @@ function pieceMoves(b,r,c,capOnly){const pc=b[r][c],out=[];for(const[dr,dc]of di
 function legal(b,p,chain,bonus){
  if(chain)return pieceMoves(b,chain[0],chain[1],true).filter(m=>m.cap);
  let all=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(b[r][c]&&b[r][c].p===p)all=all.concat(pieceMoves(b,r,c,false));
- if(bonus)return all.filter(m=>!m.cap);
  const caps=all.filter(m=>m.cap);return caps.length?caps:all}
 function sqXY(r,c){return[c*S,r*S]}
 function draw(){
@@ -165,7 +164,7 @@ function kitten(pc,r,c){
 function bubble(r,c,txt,ms=1400){const box=$("boardBox"),k=box.clientWidth/800,d=document.createElement("div");d.className="bub";d.textContent=txt;
  d.style.left=Math.min(Math.max((c*S+50)*k,70),box.clientWidth-70)+"px";d.style.top=Math.max(r*S*k,30)+"px";box.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function pcEl(id){return $("board").querySelector(`g.pc[data-id="${id}"]`)}
-function updTurn(){if(!G)return;let s;if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus")+" "+s;$("turn").textContent=s}
+function updTurn(){if(!G)return;let s;if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus");$("turn").textContent=s}
 function snapshot(){return JSON.stringify({b:G.b,turn:G.turn,yarn:G.yarn,bonus:G.bonus})}
 function doMove(m){
  return new Promise(res=>{
