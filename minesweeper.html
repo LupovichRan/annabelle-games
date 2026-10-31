@@ -52,6 +52,12 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;border:3px solid #e8862d;border-radius:16px;padding:8px 14px;font-weight:800;font-size:18px;z-index:16;pointer-events:none;animation:pop2 .25s}@keyframes pop2{from{transform:translateX(-50%) scale(.3)}}
 .dance{display:inline-block;animation:dn .5s infinite alternate}@keyframes dn{from{transform:rotate(-15deg) translateY(0)}to{transform:rotate(15deg) translateY(-10px)}}
 .best{font-size:14px;opacity:.8}
+#oops{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0004;z-index:14}#oops.on{display:flex;animation:pop2b .3s}@keyframes pop2b{from{opacity:0}}
+#oops .card{background:#fff;border:4px solid #e23b3b;border-radius:22px;padding:14px 18px;text-align:center;max-width:90vw;box-shadow:0 6px 0 #0002}#oops h2{margin:4px 0;font-size:28px;color:#c62828}#oops .big{margin-top:12px}
+.chase{z-index:13!important}
+.tl.awake{z-index:12;box-shadow:0 0 0 5px #e23b3b,0 0 18px 6px #e23b3b;animation:aw .6s infinite alternate}@keyframes aw{to{transform:scale(1.25)}}
+.heartbreak{position:fixed;font-size:44px;z-index:16;pointer-events:none;transform:translate(-50%,-50%);animation:hb 1.6s forwards}@keyframes hb{60%{transform:translate(-50%,-50%) scale(1.6)}to{transform:translate(-50%,40px) scale(1);opacity:0}}
+.shake{animation:sh .12s 5}@keyframes sh{50%{transform:translateX(5px)}}
 @media(max-width:420px){.lbl{display:none}#flagBtn{min-width:54px;font-size:22px}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/minesweeper.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/minesweeper-192.png"><meta name="apple-mobile-web-app-title" content="גינת החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/minesweeper-apple-180.png"><script src="pwa.js" data-app="minesweeper" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
@@ -80,6 +86,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
   <div id="wrap"><div id="grid"></div></div>
 </section>
 <div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><div id="winB" class="best"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
+<div id="oops"><div class="card"><div style="font-size:64px" class="dance">🐶</div><h2 id="oopsT"></h2><div id="oopsS" style="font-size:20px;font-weight:800"></div><button class="big" id="oopsBtn"></button></div></div>
 <canvas id="conf"></canvas>
 <script>
 "use strict";
@@ -87,15 +94,15 @@ const $=id=>document.getElementById(id);
 const TX={
  he:{title:"גינת החתולים",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
   rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","🌿 פתחי את כל המשבצות בלי כלבים כדי לנצח!","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
-  dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הכלב התעורר! 🐶 ווף!",run:"רוצי! 😹",
+  dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
   winT:"ניצחת, אנאבל! 🎉",lose:"אופס! הכלבים התעוררו 🐶",again:"🔁 עוד משחק",retry:"🔁 נסי שוב",best:"שיא",newBest:"שיא חדש! 🏆",sec:"שנ׳"},
  fr:{title:"Le jardin des chats",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","🌿 Ouvre toutes les cases sans chien pour gagner !","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
-  dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Le chien s'est réveillé ! 🐶 Ouaf !",run:"Cours ! 😹",
+  dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
   winT:"Tu as gagné, Annabelle ! 🎉",lose:"Oups ! Les chiens se sont réveillés 🐶",again:"🔁 Rejouer",retry:"🔁 Réessaie",best:"Record",newBest:"Nouveau record ! 🏆",sec:"s"},
  en:{title:"Cat Garden",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","🌿 Open all the tiles without dogs to win!","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
-  dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! The dog woke up! 🐶 Woof!",run:"Run! 😹",
+  dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
   winT:"You won, Annabelle! 🎉",lose:"Oops! The dogs woke up 🐶",again:"🔁 Play again",retry:"🔁 Try again",best:"Best",newBest:"New record! 🏆",sec:"s"}};
 const LV={easy:{c:8,r:8,d:8,l:3},normal:{c:9,r:11,d:14,l:2}};
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
@@ -142,24 +149,30 @@ function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl";b
  if(c.o){if(c.dog){b.classList.add("d");b.textContent="🐶"}else{b.classList.add("o");if(c.n)b.innerHTML=`<span class="n n${c.n}"><i>🐾</i>${c.n}</span>`;else if(i%5===2)b.innerHTML='<span style="opacity:.6;font-size:.7em">🐟</span>'}}
  else if(c.f){b.classList.add("f");b.textContent="🐾"}}
 function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
-function tap(i,forceFlag){if(!G||G.over)return;const c=G.cells[i];ac();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
+function tap(i,forceFlag){if(!G||G.over||G.paused)return;const c=G.cells[i];ac();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
  if(forceFlag||G.flagMode){c.f=!c.f;render(i);SFX.flag();hud();return}
  if(c.f)return;
  if(!G.started){G.started=true;G.t0=Date.now();plant(i)}
- if(c.dog){c.o=true;render(i);G.lives--;G.hits++;hud();dogWake();if(G.lives<=0){G.over=true;setTimeout(lose,1400)}return}
+ if(c.dog){c.o=true;render(i);G.lives--;G.hits++;hud();dogWake(i);return}
  open(i);SFX.dig();hud();checkWin()}
 function chord(i){const ns=nb(i).filter(j=>!G.cells[j].o);if(ns.filter(j=>G.cells[j].f).length!==G.cells[i].n)return;
  const rest=ns.filter(j=>!G.cells[j].f);if(!rest.length)return;let hit=false;
- for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;dogWake();if(G.lives<=0){G.over=true;setTimeout(lose,1400)}}}else open(j)}
+ for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;dogWake(j);}}else open(j)}
  SFX.dig();hud();if(!G.over)checkWin()}
-function hint(){if(!G||G.over||!G.hints)return;ac();
+function hint(){if(!G||G.over||G.paused||!G.hints)return;ac();
  if(!G.started){G.hints--;setFlag(false);tap((G.R>>1)*G.C+(G.C>>1));return}
  const cand=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(!cand.length)return;
  const near=cand.filter(i=>nb(i).some(j=>G.cells[j].o&&!G.cells[j].dog));const pool=near.length?near:cand;
  const i=pool[Math.random()*pool.length|0];G.hints--;G.cells[i].f=false;open(i);$("grid").children[i].animate([{transform:"scale(1.4)",background:"#fff59d"},{transform:"scale(1)"}],{duration:600});SFX.dig();hud();checkWin()}
 function toast(s,ms=1500){const d=document.createElement("div");d.className="toast";d.textContent=s;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
-function dogWake(){SFX.bark();setTimeout(SFX.meow,300);toast(t("oops"));const d=document.createElement("div");d.className="chase";d.textContent="🐈 💨   🐕";document.body.appendChild(d);
- d.animate([{transform:"translateX(-60vw)"},{transform:"translateX(110vw)"}],{duration:1400,easing:"ease-in-out"}).onfinish=()=>d.remove()}
+function dogWake(i){G.paused=true;if(G.lives<=0)G.over=true;SFX.bark();setTimeout(SFX.meow,300);
+ const b=$("grid").children[i];b.classList.add("awake");
+ const hb=document.createElement("div");hb.className="heartbreak";hb.textContent="💔";const r=$("hearts").getBoundingClientRect();hb.style.left=(r.left+r.width/2)+"px";hb.style.top=(r.top+r.height/2)+"px";document.body.appendChild(hb);setTimeout(()=>hb.remove(),1600);$("hearts").classList.add("shake");setTimeout(()=>$("hearts").classList.remove("shake"),700);
+ const d=document.createElement("div");d.className="chase";d.textContent="🐈 💨   🐕";document.body.appendChild(d);
+ d.animate([{transform:"translateX(-60vw)"},{transform:"translateX(110vw)"}],{duration:3000,easing:"ease-in-out"}).onfinish=()=>d.remove();
+ $("oopsT").textContent=t("oops");$("oopsS").textContent=G.lives>0?t("lost").replace("N",G.lives):t("lastH");$("oopsBtn").textContent=t("cont");
+ setTimeout(()=>$("oops").classList.add("on"),350);
+ $("oopsBtn").onclick=()=>{SFX.click();$("oops").classList.remove("on");b.classList.remove("awake");G.paused=false;if(G.lives<=0)lose()}}
 function checkWin(){const closed=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(closed.some(i=>!G.cells[i].f))return;
  closed.forEach(i=>{G.cells[i].f=false;G.cells[i].o=true;G.opened++;render(i)});
  G.over=true;G.sec=Math.floor((Date.now()-G.t0)/1000);hud();G.cells.forEach((c,i)=>{if(c.dog&&!c.o){c.f=true;render(i)}});
