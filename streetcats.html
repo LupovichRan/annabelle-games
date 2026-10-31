@@ -400,7 +400,7 @@ let state="menu", prevState=null, gtime=0, tool="pet", sel=null;
 let W=0,H=0,DPR=1,U=40,TOPH=60,BOTH=80,GY=200,WALLT=150,FLOOR=700,AX=0,AW=1,AY=0,AH=1;
 let MAT,BUSH,BUSH2,BENCH,BED,YARN,MOUSE,HOUSE,LAMP,TREE;
 let parts=[], floats=[], rain=[], bf={nx:.5,ny:.3,h:1.4,tx:.6,ty:.4,t:0};
-let S=null;
+let S=null, TOWN=null;
 const ptr={down:false,id:null,x:0,y:0,lx:0,ly:0,spd:0,still:0,cat:null,rub:0,moved:0,tool:null,lt:0};
 const TEST={};
 let saveT=0, cardT=0, tipShownAt=-99, lastPhase=-1;
@@ -862,9 +862,9 @@ function skyCols(t){ for(let i=0;i<SKY.length-1;i++){ const a=SKY[i],b=SKY[i+1];
 function nightAmt(t){ return t<.68?Math.max(0,(.05-t)/.05)*.25:t<.8?(t-.68)/.12*.35:t<.97?.42:.42*(1-(t-.97)/.03); }
 function drawBush(x,y,r,col){ const cs=[[-.6,-.3,.55],[.6,-.3,.55],[0,-.65,.62],[-.3,-.85,.45],[.35,-.9,.42],[0,-.25,.6]]; for(const [dx,dy,rr0] of cs) circ(x+dx*r,y+dy*r,rr0*r,col);
   for(const [dx,dy] of [[-.4,-.6],[.3,-.4],[.1,-.95],[-.7,-.25],[.65,-.6]]) circ(x+dx*r,y+dy*r,r*.08,"#ff8fb8"); }
-function drawBG(){
+function drawBG(){ if(TOWN&&!TOWN.img){ TOWN.img=new Image(); TOWN.img.src="data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340"><rect width="400" height="340" fill="${TOWN.sky}"/>${TOWN.lm}</svg>`); }
   const [s1,s2]=skyCols(S.tod), rainy=S.rainT>0?Math.min(1,S.rainT/3,1):0;
-  let sk=g.createLinearGradient(0,0,0,WALLT); sk.addColorStop(0,mix(s1,"#7c8698",rainy*.6)); sk.addColorStop(1,mix(s2,"#aab3c2",rainy*.6)); g.fillStyle=sk; g.fillRect(0,0,W,GY);
+  let sk=g.createLinearGradient(0,0,0,WALLT); sk.addColorStop(0,mix(s1,"#7c8698",rainy*.6)); sk.addColorStop(1,mix(s2,"#aab3c2",rainy*.6)); g.fillStyle=sk; g.fillRect(0,0,W,GY); if(TOWN){ g.fillStyle=TOWN.sky; g.fillRect(0,0,W,GY); const ts=W/400; if(TOWN.img.complete) g.drawImage(TOWN.img,0,WALLT-340*ts,W,340*ts); }
   const na=nightAmt(S.tod);
   if(na>.2){ g.fillStyle="#ffffff"; for(let i=0;i<30;i++){ const x=(i*97.3)%W, y=(i*53.7)%Math.max(10,WALLT-U); g.globalAlpha=(na-.2)*2*(.5+.5*Math.sin(gtime*2+i)); g.fillRect(x,y,2,2); } g.globalAlpha=1; }
   // sun / moon
@@ -873,7 +873,7 @@ function drawBG(){
   // clouds
   for(let i=0;i<4;i++){ const x=((i*W/3.2+gtime*U*.12*(i%2+1))%(W+U*5))-U*2.5, y=TOPH+U*(.6+i%3*.55); g.fillStyle=rainy?"#9aa3b3e0":"#ffffffd8"; g.beginPath(); g.ellipse(x,y,U*1.1,U*.4,0,0,7); g.ellipse(x+U*.7,y-U*.25,U*.7,U*.45,0,0,7); g.ellipse(x-U*.6,y-U*.12,U*.55,U*.32,0,0,7); g.fill(); }
   // houses behind the wall
-  const hs=[[.0,2.6,"#f4c9a8"],[.17,3.3,"#cfe3f0"],[.36,2.3,"#f7e1a0"],[.55,3.6,"#e8c6e0"],[.76,2.8,"#c9e8c8"],[.92,3.1,"#f3d2b5"]];
+  const hs=TOWN?[]:[[.0,2.6,"#f4c9a8"],[.17,3.3,"#cfe3f0"],[.36,2.3,"#f7e1a0"],[.55,3.6,"#e8c6e0"],[.76,2.8,"#c9e8c8"],[.92,3.1,"#f3d2b5"]];
   for(const [fx,h,col] of hs){ const x=fx*W, w=W*.2, top=WALLT-U*h; g.fillStyle=mix(col,"#2a2f66",na*.9); g.fillRect(x,top,w,U*h);
     g.fillStyle=mix("#c96a4a","#2a2f66",na*.8); g.beginPath(); g.moveTo(x-U*.15,top); g.lineTo(x+w/2,top-U*.6); g.lineTo(x+w+U*.15,top); g.fill();
     for(let wy=top+U*.35;wy<WALLT-U*.4;wy+=U*.85) for(let wx=x+U*.3;wx<x+w-U*.5;wx+=U*.9){ g.fillStyle=na>.25&&((wx*7+wy*3|0)%3)?"#ffd86b":mix("#9ed0f0","#3a3f7a",na); g.fillRect(wx,wy,U*.42,U*.48); } }
@@ -886,7 +886,7 @@ function drawBG(){
   // little mural paw on wall
   g.fillStyle="#ff8fb855"; const px=W*.3, py=WALLT+(GY-WALLT)*.5; circ(px,py+U*.1,U*.22,"#ff8fb855"); [[-.25,-.18],[-.08,-.3],[.1,-.3],[.27,-.18]].forEach(([dx,dy])=>circ(px+dx*U,py+dy*U,U*.09,"#ff8fb855"));
   // ground
-  let gr=g.createLinearGradient(0,GY,0,H); gr.addColorStop(0,"#dcc9a2"); gr.addColorStop(1,"#c9b083"); g.fillStyle=gr; g.fillRect(0,GY,W,H-GY);
+  let gr=g.createLinearGradient(0,GY,0,H); gr.addColorStop(0,TOWN?TOWN.gr:"#dcc9a2"); gr.addColorStop(1,TOWN?mix(TOWN.gr,"#000000",.12):"#c9b083"); g.fillStyle=gr; g.fillRect(0,GY,W,H-GY);
   g.strokeStyle="#bfa57a88"; g.lineWidth=1.2; for(let i=1;i<7;i++){ const y=GY+(FLOOR-GY)*Math.pow(i/7,1.4); g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
   for(let i=-6;i<=6;i++){ g.beginPath(); g.moveTo(W/2+i*U*1.2,GY); g.lineTo(W/2+i*U*2.4,H); g.stroke(); }
   // grass strip with flowers
@@ -1025,7 +1025,7 @@ function openOv(id){ if(state!=="play") return; prevState="play"; state="paused"
 function closeOv(){ if(state==="paused"){ state="play"; show(null); } }
 function startPlay(){ ac(); state="play"; show(null); $("hud").classList.remove("hidden"); $("tools").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); setTool(tool,true);
   if(S.play<1){ setTimeout(()=>{ if(state==="play") hint(L().hints.pet); },900); } }
-function toMenu(){ save(); state="menu"; ptr.cat=null; $("hud").classList.add("hidden"); $("tools").classList.add("hidden"); $("card").classList.add("hidden"); $("tip").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); sel=null; renderMenu(); show("menu"); layout(); }
+function toMenu(){ save(); TOWN=null; const tp=$("townPill"); if(tp) tp.remove(); state="menu"; ptr.cat=null; $("hud").classList.add("hidden"); $("tools").classList.add("hidden"); $("card").classList.add("hidden"); $("tip").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); sel=null; renderMenu(); show("menu"); layout(); }
 function pause(){ if(state==="play"){ prevState="play"; state="paused"; ptr.cat=null; ptr.down=false; show("pause"); $("resetBtn").dataset.sure=""; $("resetBtn").textContent=L().reset; save(); } }
 function resume(){ if(state==="paused"){ state="play"; show(null); } }
 
@@ -1140,7 +1140,6 @@ requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1
 #jy .jgrid button{min-width:0;overflow:hidden;background:#fff3e0;border-radius:12px;padding:3px 2px;font-size:12px;min-height:48px;box-shadow:0 2px 0 #0002}
 #jy .jgrid button.sel{box-shadow:0 0 0 3px #7c5cff}
 #jy .jgrid button.done{opacity:.45}
-#jy .jbag{position:absolute;bottom:max(12px,var(--sab,env(safe-area-inset-bottom)));z-index:3;font-size:18px}
 @keyframes jpop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 #jy .jpop{animation:jpop .5s}
 #jy .road{position:absolute;inset:0;width:100%;height:100%;z-index:1}
@@ -1158,27 +1157,6 @@ requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1
 #jy .jbar .maptap{position:static;flex-basis:100%;width:auto;max-width:none;margin:2px 0 0;padding:6px 12px;font-size:16px;animation:none}
 #jy .mfoot{position:absolute;bottom:max(10px,var(--sab,env(safe-area-inset-bottom)));left:0;right:0;display:flex;gap:8px;justify-content:center;z-index:3;flex-wrap:wrap}
 #jy .tap{position:absolute;z-index:3;top:calc(58px + env(safe-area-inset-top));left:4vw;right:4vw;margin:auto;width:max-content;max-width:92vw;text-align:center;white-space:normal!important;background:#fff;border-radius:18px;padding:8px 14px;font-size:17px;box-shadow:0 4px 0 #0002;white-space:nowrap;animation:jbob 1.6s ease-in-out infinite}
-#jy .lane{position:absolute;left:0;right:0;top:38%;height:34%;z-index:1;overflow:hidden}
-#jy .lane .asph{position:absolute;left:0;right:0;bottom:0;height:42%;background:repeating-linear-gradient(90deg,#fff 0 30px,#0000 30px 70px) center/100% 6px no-repeat,#555;border-top:6px solid #8bc34a}
-#jy .rider{position:absolute;left:18%;bottom:30%;font-size:56px;transition:bottom .22s ease-out;z-index:2}
-#jy .rider.up{bottom:72%}
-#jy .obj{position:absolute;font-size:38px;z-index:1}
-#jy .burst{position:absolute;font-size:28px;pointer-events:none;z-index:4;animation:jburst .7s forwards}
-@keyframes jburst{to{transform:translateY(-50px) scale(1.6);opacity:0}}
-#jy .greet{display:flex;align-items:flex-end;gap:8px;justify-content:center}
-#jy .greet .jcat{font-size:64px;animation:jbob 1.1s ease-in-out infinite}
-#jy .bub{background:#fff7d6;border:3px solid #ffc14d;border-radius:18px;padding:8px 12px;font-size:16px;max-width:230px}
-#jy .peek{display:flex;justify-content:center;gap:6px;font-size:34px;height:44px;overflow:hidden}
-#jy .peek span{animation:jpeek 1.4s ease-in-out infinite;display:inline-block}
-@keyframes jpeek{0%,100%{transform:translateY(30px)}40%,70%{transform:translateY(0)}}
-#jy .jcards{display:flex;gap:8px;justify-content:center;perspective:700px}
-#jy .jcard{width:calc((100% - 16px)/3);max-width:118px;height:clamp(120px,22vh,160px);position:relative;transform-style:preserve-3d;transition:transform .6s;background:none;padding:0}
-#jy .jcard.flip{transform:rotateY(180deg)}
-#jy .jcard>div{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 0 #0003;font-size:13px;padding:4px}
-#jy .jcard .fr{background:repeating-linear-gradient(45deg,#ff8fb1 0 12px,#ffb3c9 12px 24px);font-size:46px}
-#jy .jcard .bk{background:#fff7d6;border:3px solid #ffc14d;transform:rotateY(180deg)}
-#jy .jcard .bk b{font-size:40px}
-#jy .jcard.pick{animation:jpop .5s}#jy .jcard.dim{opacity:.35}
 #jy .stars{font-size:40px;letter-spacing:4px}#jy .stars span{display:inline-block;animation:jpop .5s backwards}
 #jy .jpanel.jc{padding:0 14px 14px;overflow:hidden auto;border:4px solid #fff;gap:8px}
 #jy .jhead{position:relative;margin:0 -14px;height:clamp(84px,15vh,120px);overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;flex:none}
@@ -1186,40 +1164,33 @@ requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1
 #jy .jhead b{position:relative;background:#ff4d8d;color:#fff;border-radius:999px;padding:5px 16px;font-size:clamp(18px,5.4vw,24px);box-shadow:0 3px 0 #0003}
 #jy .jhead .hic{position:absolute;top:6px;inset-inline-start:10px;font-size:34px;filter:drop-shadow(0 3px 0 #0003)}
 #jy .jsub{font-size:16px;color:#5a3d7a;line-height:1.3}
-#jy .jtip{display:flex;align-items:center;gap:8px;background:#eef8ff;border-radius:14px;padding:6px 10px;font-size:14px;text-align:start;line-height:1.3}
-#jy .jtip>span:first-child{font-size:28px;flex:none}
 #jy .jb.go{font-size:21px;padding:12px 18px;min-height:54px;box-shadow:0 4px 0 #1e8a52}
-#jy .jcard .bk small{font-size:11px;color:#7a5a20;font-weight:700;line-height:1.2}
-#jy .cd{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none}#jy .cd span{width:150px;height:150px;border-radius:50%;background:#ff4d8dcc;color:#fff;font-size:96px;display:flex;align-items:center;justify-content:center;border:6px solid #fff;box-shadow:0 6px 0 #0003}
-#jy .lane .flag{position:absolute;right:4%;bottom:42%;font-size:46px}
-#jy .jbag{background:#fff;border:3px solid #ffc14d}#jy .jbag.empty{background:#ffd6d6;border-color:#ff4d6d;animation:jbob 1s infinite}
 </style>
 <div id="jy"><svg class="bg" id="jyBg" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 700"></svg><div class="jbar" id="jyBar"></div><div id="jyField" style="position:absolute;inset:0;z-index:1"></div><div id="jyPanel" style="display:contents"></div></div>
 <script>
 (()=>{
 const $=id=>document.getElementById(id), lg=()=>lang;
-const TX={he:{tapTown:"👆 לחצי על העיר הבאה!",hop:"👆 לחצי כדי לקפוץ ולתפוס דגים!",fish:"🐟 {n}",fishB:"🐟 דגים שתפסת: {n} → +{s} שניות בעיר! 🎉",hi:"מיאו! ברוכה הבאה! כאן {t} 🎉 הגורים שלנו רעבים, את תעזרי?",hi0:"מיאו! אני מחכה לך כאן 😺 הגורים בשכונה רעבים!",gift:"🎁 בחרי קלף מתנה!",stars:"כוכבים: {n}/3",btn:"🚌 מסע בין הערים",goal:"האכילי {n} גורים רעבים!",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 שקית: {b} · לחצי למילוי",win:"כל הכבוד! הגורים שבעים 💛",lose:"נגמר הזמן… נסי שוב!",retry:"🔁 שוב",next:"🚌 לעיר הבאה",perk:"בחרי מתנה:",start:"▶ יוצאות לדרך!",back:"🏠 תפריט",reset:"↺ מסע חדש",adopt:"🏡 יום אימוץ!",adoptH:"בחרי גור ואז משפחה שמתאימה לו",home:"בית חדש! 💞",cert:"תעודת אימוץ 🏅",certT:"אנאבל מצאה בית ל-{n} גורים! את גיבורת החתולים!",wrong:"אולי משפחה אחרת? 🤔",rescued:"🐱 הוצלו: {n}",go:"קדימה!",rideT:"בדרך אל {t}!",rideG:"תפסי דגים 🐟 וקפצי מעל שלוליות 💧",rideH:"לחצי על המסך כדי לקפוץ",fishR:"תפסת {n} דגים 🐟 = עוד {s} שניות!",welc:"ברוכה הבאה! 🎉",bagT:"שקית האוכל שלך: {b} מנות 🥣",bagH:"נגמר האוכל? לחצי על השקית למטה ותמלאי אותה בחינם",kitH:"לחצי על גור רעב 🍽️ כדי להאכיל אותו",perkH:"המתנה תעזור לך בעיר הבאה",new:["הגורים מחכים לך בשכונה","יותר גורים רעבים בשוק!","בנמל הגורים ממהרים – זריזות!","בכפר יש המון גורים","העיר הגדולה – האתגר הכי גדול!"]},
-fr:{tapTown:"👆 Touche la ville suivante !",hop:"👆 Touche pour sauter et attraper des poissons !",fish:"🐟 {n}",fishB:"🐟 Poissons attrapés : {n} → +{s} s en ville ! 🎉",hi:"Miaou ! Bienvenue ! Ici, c'est {t} 🎉 Nos chatons ont faim, tu nous aides ?",hi0:"Miaou ! Je t'attends ici 😺 Les chatons du quartier ont faim !",gift:"🎁 Choisis une carte cadeau !",stars:"Étoiles : {n}/3",btn:"🚌 Voyage de ville en ville",goal:"Nourris {n} chatons affamés !",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 Sac : {b} · touche pour remplir",win:"Bravo ! Les chatons sont rassasiés 💛",lose:"Temps écoulé… Réessaie !",retry:"🔁 Encore",next:"🚌 Ville suivante",perk:"Choisis un cadeau :",start:"▶ En route !",back:"🏠 Menu",reset:"↺ Nouveau voyage",adopt:"🏡 Journée d'adoption !",adoptH:"Choisis un chaton puis la famille qui lui va",home:"Nouvelle maison ! 💞",cert:"Certificat d'adoption 🏅",certT:"Annabelle a trouvé une maison pour {n} chatons ! Héroïne des chats !",wrong:"Une autre famille ? 🤔",rescued:"🐱 Sauvés : {n}",go:"En avant !",rideT:"En route vers {t} !",rideG:"Attrape des poissons 🐟 et saute les flaques 💧",rideH:"Touche l'écran pour sauter",fishR:"{n} poissons 🐟 = {s} secondes en plus !",welc:"Bienvenue ! 🎉",bagT:"Ton sac de nourriture : {b} portions 🥣",bagH:"Plus de nourriture ? Touche le sac en bas pour le remplir gratuitement",kitH:"Touche un chaton affamé 🍽️ pour le nourrir",perkH:"Le cadeau t'aidera dans la ville suivante",new:["Les chatons t'attendent dans le quartier","Plus de chatons affamés au marché !","Au port, les chatons sont pressés – vite !","Au village, il y a plein de chatons","La grande ville – le plus grand défi !"]},
-en:{tapTown:"👆 Tap the next town!",hop:"👆 Tap to hop and catch fish!",fish:"🐟 {n}",fishB:"{n} fish caught: +{s} seconds in town! 🎉",hi:"Meow! Welcome! This is {t} 🎉 Our kittens are hungry, can you help?",hi0:"Meow! I'm waiting here 😺 The street kittens are hungry!",gift:"🎁 Pick a gift card!",stars:"Stars: {n}/3",btn:"🚌 Town-to-town journey",goal:"Feed {n} hungry kittens!",fed:"🐾 {a}/{n}",time:"⏱️ {t}",bag:"🥣 Bag: {b} · tap to refill",win:"Great job! The kittens are full 💛",lose:"Time's up… try again!",retry:"🔁 Again",next:"🚌 Next town",perk:"Pick a gift:",start:"▶ Let's go!",back:"🏠 Menu",reset:"↺ New journey",adopt:"🏡 Adoption Day!",adoptH:"Pick a kitten, then the family that fits",home:"New home! 💞",cert:"Adoption certificate 🏅",certT:"Annabelle found homes for {n} kittens! A true cat hero!",wrong:"Maybe another family? 🤔",rescued:"🐱 Rescued: {n}",go:"Let's go!",rideT:"On the way to {t}!",rideG:"Catch fish 🐟 and hop over puddles 💧",rideH:"Tap the screen to hop",fishR:"{n} fish 🐟 = {s} extra seconds!",welc:"Welcome! 🎉",bagT:"Your food bag: {b} portions 🥣",bagH:"Out of food? Tap the bag at the bottom to refill it for free",kitH:"Tap a hungry kitten 🍽️ to feed it",perkH:"Your gift helps in the next town",new:["The kittens are waiting on your street","More hungry kittens at the market!","Harbor kittens are in a hurry – be quick!","The village has lots of kittens","The big city – the biggest challenge!"]}};
+const TX={he:{tapTown:"👆 לחצי על העיר הבאה!",stars:"כוכבים: {n}/3",btn:"🚌 מסע בין הערים",win:"כל הכבוד! הגורים שבעים 💛",back:"🏠 תפריט",reset:"↺ מסע חדש",adopt:"🏡 יום אימוץ!",adoptH:"בחרי גור ואז משפחה שמתאימה לו",home:"בית חדש! 💞",cert:"תעודת אימוץ 🏅",certT:"אנאבל מצאה בית ל-{n} גורים! את גיבורת החתולים!",wrong:"אולי משפחה אחרת? 🤔",rescued:"🐱 הוצלו: {n}"},
+fr:{tapTown:"👆 Touche la ville suivante !",stars:"Étoiles : {n}/3",btn:"🚌 Voyage de ville en ville",win:"Bravo ! Les chatons sont rassasiés 💛",back:"🏠 Menu",reset:"↺ Nouveau voyage",adopt:"🏡 Journée d'adoption !",adoptH:"Choisis un chaton puis la famille qui lui va",home:"Nouvelle maison ! 💞",cert:"Certificat d'adoption 🏅",certT:"Annabelle a trouvé une maison pour {n} chatons ! Héroïne des chats !",wrong:"Une autre famille ? 🤔",rescued:"🐱 Sauvés : {n}"},
+en:{tapTown:"👆 Tap the next town!",stars:"Stars: {n}/3",btn:"🚌 Town-to-town journey",win:"Great job! The kittens are full 💛",back:"🏠 Menu",reset:"↺ New journey",adopt:"🏡 Adoption Day!",adoptH:"Pick a kitten, then the family that fits",home:"New home! 💞",cert:"Adoption certificate 🏅",certT:"Annabelle found homes for {n} kittens! A true cat hero!",wrong:"Maybe another family? 🤔",rescued:"🐱 Rescued: {n}"}};
 const TOWNS=[{n:{he:"השכונה",fr:"Le quartier",en:"Home street"},ic:"🏘️",lic:"🏘️",sky:"#bfe6ff",gr:"#e9d7b0",lm:'<rect x="40" y="200" width="90" height="140" fill="#f7a8a8"/><rect x="150" y="170" width="100" height="170" fill="#ffe08a"/><rect x="270" y="210" width="90" height="130" fill="#a8d8a8"/>',goal:4,t:45},
 {n:{he:"השוק",fr:"Le marché",en:"The market"},ic:"🍎",lic:"🏪",sky:"#ffe7c2",gr:"#e8c59a",lm:'<path d="M30 260 h120 l-20 -50 h-80z" fill="#ff6b81"/><path d="M160 260 h120 l-20 -50 h-80z" fill="#34c47c"/><path d="M290 260 h100 l-20 -50 h-60z" fill="#ffc14d"/><rect x="30" y="260" width="360" height="40" fill="#b07a4a"/>',goal:5,t:45},
 {n:{he:"הנמל",fr:"Le port",en:"The harbor"},ic:"⚓",lic:"⛵",sky:"#cfefff",gr:"#d8cbb0",lm:'<rect x="0" y="250" width="400" height="90" fill="#4fa3e0"/><path d="M120 250 l60 -80 v80z" fill="#fff"/><rect x="100" y="250" width="110" height="20" fill="#b0503a"/><rect x="300" y="150" width="30" height="100" fill="#ff4d6d"/>',goal:6,t:45},
 {n:{he:"הכפר",fr:"Le village",en:"The village"},ic:"🌾",lic:"🌻",sky:"#d9f5d0",gr:"#bfe39b",lm:'<path d="M60 300 l60 -70 l60 70z" fill="#c0392b"/><rect x="75" y="300" width="90" height="50" fill="#f3d9a4"/><circle cx="300" cy="250" r="50" fill="#5cb85c"/><rect x="293" y="290" width="14" height="50" fill="#8b5a2b"/>',goal:7,t:48},
 {n:{he:"העיר הגדולה",fr:"La grande ville",en:"The big city"},ic:"🏙️",lic:"🏙️",sky:"#ffd6e8",gr:"#cfcfd8",lm:'<rect x="20" y="120" width="70" height="220" fill="#7c5cff"/><rect x="100" y="80" width="80" height="260" fill="#5a7bd8"/><rect x="190" y="140" width="70" height="200" fill="#ff7a3d"/><rect x="270" y="60" width="90" height="280" fill="#4a2c6b"/>',goal:8,t:50}];
-const PERKS={bag:{e:"🎒",he:"שקית גדולה",fr:"Grand sac",en:"Big bag",d:{he:"+2 מנות",fr:"+2 portions",en:"+2 portions"}},fast:{e:"👟",he:"הליכה מהירה",fr:"Marche rapide",en:"Fast walking",d:{he:"+8 שניות",fr:"+8 secondes",en:"+8 seconds"}},magnet:{e:"🧲",he:"מגנט חטיפים",fr:"Aimant à friandises",en:"Treat magnet",d:{he:"גורים מחכים יותר",fr:"Les chatons attendent plus",en:"Kittens wait longer"}},dog:{e:"🐶",he:"כלב חבר עוזר",fr:"Chien copain",en:"Dog helper",d:{he:"מאכיל גור לבד",fr:"Nourrit un chaton",en:"Feeds kittens too"}}};
 const KN=[["🐱","Mitzi",0],["🐈","Pitzi",1],["😺","Luna",2],["😸","Tigi",0],["🐈‍⬛","Shadow",1],["😻","Bisli",2],["😽","Nala",0],["🙀","Ziggy",1]];
 const FAM=[{e:"👨‍👩‍👧",h:{he:"אוהב לשחק 🧶",fr:"aime jouer 🧶",en:"loves to play 🧶"}},{e:"👵",h:{he:"ישנוני 💤",fr:"endormi 💤",en:"sleepy 💤"}},{e:"👩‍🍳",h:{he:"אוהב לאכול 🐟",fr:"gourmand 🐟",en:"loves food 🐟"}}];
 const KEY="annabelle-streetcats-journey";
-let J=JSON.parse(localStorage.getItem(KEY)||"null")||{town:0,perks:[],kits:[]}; J.stars=J.stars||[]; let fishB=0;
+let J=JSON.parse(localStorage.getItem(KEY)||"null")||{town:0,kits:[]}; J.stars=J.stars||[]; 
 const sv=()=>localStorage.setItem(KEY,JSON.stringify(J));
 const t=()=>TX[lg()]||TX.he, f=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
-let run=null, tick=null;
+let tick=null;
 const snd=k=>{ try{ if(typeof SFX!=="undefined"&&SFX[k]) SFX[k](); }catch(e){} };
 function open(){ ac&&ac(); $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; J.town>=TOWNS.length?adoption():mapView(false); }
 function close(){ stop(); $("jy").classList.remove("show"); }
 function fitMap(){ const f=$("jyField"); f.style.top=$("jyBar").offsetHeight+"px"; }
 addEventListener("resize",()=>{ if($("jyField").querySelector(".road")) fitMap(); });
-function stop(){ $("jyField").style.top="0"; clearInterval(tick); tick=null; run=null; $("jyField").innerHTML=""; }
+function stop(){ $("jyField").style.top="0"; $("jyField").innerHTML=""; }
 function panel(h){ $("jyPanel").innerHTML=`<div class="jpanel jpop">${h}</div>`; }
 function card(i,title,h){ const T=TOWNS[Math.min(i,4)]; $("jyPanel").innerHTML=`<div class="jpanel jc jpop"><div class="jhead" style="background:linear-gradient(${T.sky} 30%,${T.gr})"><svg viewBox="0 40 400 320" preserveAspectRatio="xMidYMax slice">${T.lm}<rect y="340" width="400" height="30" fill="${T.gr}"/></svg><span class="hic">${T.lic}</span><b>${title}</b></div>${h}</div>`; }
 function bg(i){ const T=TOWNS[Math.min(i,4)]; $("jyBg").innerHTML=`<rect width="400" height="700" fill="${T.sky}"/>${T.lm}<rect y="340" width="400" height="360" fill="${T.gr}"/>`; }
@@ -1228,65 +1199,30 @@ const beep=(f,d=.15,ty="square",v=.12,f2)=>{ try{ tone(f,0,d,ty,v,f2); }catch(e)
 const honk=()=>{ try{ tone(392,0,.16,"square",.13); tone(330,.18,.22,"square",.13); }catch(e){} };
 const PTS=[[22,84],[72,68],[30,52],[74,36],[38,20]];
 function roadSvg(){ const d="M"+PTS.map(p=>p[0]*4+" "+p[1]*7).join(" L"); return `<svg class="road" viewBox="0 0 400 700" preserveAspectRatio="none"><rect width="400" height="700" fill="#9be37a"/><circle cx="60" cy="130" r="40" fill="#7fd060"/><circle cx="340" cy="560" r="55" fill="#7fd060"/><circle cx="330" cy="90" r="30" fill="#fff" opacity=".7"/><circle cx="70" cy="380" r="22" fill="#fff" opacity=".6"/><path d="M200 700 L${PTS[0][0]*4} ${PTS[0][1]*7}" stroke="#c98a4b" stroke-width="44" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#c98a4b" stroke-width="44" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="#ffe7a3" stroke-width="5" stroke-dasharray="14 14" fill="none"/></svg>`; }
-function mapView(anim){ stop(); const i=Math.min(J.town,4); $("jyBg").innerHTML=""; bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${f(t().rescued,{n:J.kits.length})}</span>${J.perks.length?`<span class="pl">${J.perks.map(p=>PERKS[p].e).join("")}</span>`:""}<div class="tap maptap">${t().tapTown}</div>`);
-  $("jyPanel").innerHTML=""; const from=anim&&J.town>0?J.town-1:i;
+function mapView(anim){ stop(); const i=Math.min(J.town,4); $("jyBg").innerHTML=""; bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${f(t().rescued,{n:J.kits.length})}</span><div class="tap maptap">${t().tapTown}</div>`);
+  $("jyPanel").innerHTML=""; const from=J.town>0?J.town-1:i; let busy=false;
   $("jyField").innerHTML=roadSvg()+TOWNS.map((T,k)=>{ const st=k<J.town?"done":k===i?"cur":"lock"; const s=J.stars[k]||0;
     return `<button class="town ${st}" data-t="${k}" style="left:${PTS[k][0]}%;top:${PTS[k][1]}%"><span class="ic">${T.lic}</span><span class="nm">${st==="lock"?"🔒 ":""}${T.n[lg()]}</span><span class="st">${st==="done"?"⭐".repeat(s)+"☆".repeat(3-s):""}</span></button>`; }).join("")
     +`<div class="mbus" id="jyBus" style="left:${PTS[from][0]}%;top:${PTS[from][1]-4}%">🚌</div><div class="mfoot"><button class="jb" id="jyR" style="font-size:13px;min-height:36px;padding:6px 10px">${t().reset}</button></div>`;
   $("jyField").querySelectorAll(".town").forEach(el=>el.onclick=()=>{ const k=+el.dataset.t;
     if(k!==i){ el.animate([{transform:"translate(-50%,-50%) rotate(0)"},{transform:"translate(-50%,-50%) rotate(-12deg)"},{transform:"translate(-50%,-50%) rotate(12deg)"},{transform:"translate(-50%,-50%) rotate(0)"}],{duration:350}); beep(180,.12,"triangle"); return; }
-    honk(); const b=$("jyBus"); b.style.left=PTS[i][0]+"%"; b.style.top=(PTS[i][1]-4)+"%"; try{ confetti(60); }catch(e){} setTimeout(()=>J.town>0?travel(i):arrive(i),1300); });
-  fitMap(); $("jyR").onclick=()=>{ J={town:0,perks:[],kits:[],stars:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
-function travel(i){ stop(); bg(i); bar(`<span class="pl">🚌 → ${TOWNS[i].lic} ${TOWNS[i].n[lg()]}</span>`);
-  card(i,f(t().rideT,{t:TOWNS[i].n[lg()]}),`<div style="font-size:54px">🛵💨 🐟 💧</div><div class="jsub">${t().rideG}</div><div class="jtip"><span>👆</span><span>${t().rideH}</span></div><button class="jb go" id="jyGo">${t().go}</button>`);
-  $("jyGo").onclick=()=>{ $("jyPanel").innerHTML=""; const cd=document.createElement("div"); cd.className="cd"; $("jy").appendChild(cd); let n=3; const c=()=>{ if(n){ cd.innerHTML=`<span class="jpop">${n}</span>`; beep(440,.1,"triangle",.12); n--; setTimeout(c,650); } else { cd.remove(); ride(i); } }; c(); }; }
-function ride(i){ let fish=0, up=false, alive=true; const tm=[];
-  bar(`<span class="pl">🚌 → ${TOWNS[i].lic} ${TOWNS[i].n[lg()]}</span><span class="pl" id="jyFish">${f(t().fish,{n:0})}</span>`);
-  const fl=$("jyField"); fl.innerHTML=`<div class="tap">${t().rideG}</div><div class="lane" id="jyLane" style="background:linear-gradient(#0000 55%,${TOWNS[i].gr} 55%)"><div class="asph"></div><div class="flag">${TOWNS[i].lic}🏁</div><div class="rider" id="jyRider">🛵</div></div>`;
-  const lane=$("jyLane"), rider=$("jyRider"), rtl=false;
-  const hop=()=>{ if(up||!alive) return; up=true; rider.classList.add("up"); beep(520,.12,"square",.1,880); setTimeout(()=>{ rider.classList.remove("up"); up=false; },520); };
-  fl.onpointerdown=e=>{ e.preventDefault(); hop(); };
-  const sp=(k,n)=>{ if(!alive) return; const o=document.createElement("div"); o.className="obj"; o.textContent=k==="f"?"🐟":"💧"; o.style.bottom=k==="f"?"74%":"28%"; lane.appendChild(o);
-    const W=lane.clientWidth, t0=performance.now(), dur=2200; const step=now=>{ if(!o.isConnected) return; const p=(now-t0)/dur; const x=W*(1-p); o.style[rtl?"right":"left"]=x+"px";
-      const rx=W*.18, rw=56; if(!o.dataset.h && x<rx+rw*.8 && x>rx-20){ if(k==="f"&&up){ o.dataset.h=1; fish++; $("jyFish").textContent=f(t().fish,{n:fish}); beep(880,.1,"sine",.15,1320); o.textContent="✨"; setTimeout(()=>o.remove(),250); }
-        else if(k==="p"&&!up){ o.dataset.h=1; o.textContent="💦"; beep(150,.15,"sawtooth",.06); rider.animate([{rotate:"0deg"},{rotate:"-10deg"},{rotate:"10deg"},{rotate:"0deg"}],{duration:300}); } }
-      if(p<1.1) requestAnimationFrame(step); else o.remove(); }; requestAnimationFrame(step); };
-  [300,1000,1700,2400,3100,3800,4500].forEach((ms,n)=>tm.push(setTimeout(()=>sp(n%2?"p":"f"),ms)));
-  tm.push(setTimeout(()=>{ alive=false; fl.onpointerdown=null; fishB=Math.min(8,fish*2); honk(); try{ confetti(80); }catch(e){} arrive(i,fish); },7200));
-  run={travel:1}; window.__jyTimers=tm; }
-function arrive(i,fish){ (window.__jyTimers||[]).forEach(clearTimeout); stop(); bg(i); const T=TOWNS[i];
-  bar(`<span class="pl">${T.lic} ${T.n[lg()]}</span>`); try{ meow(620,0,.35); }catch(e){}
-  const has=p=>J.perks.filter(x=>x===p).length, bag=3+has("bag")*2;
-  card(i,T.n[lg()],`<div class="greet"><span class="jcat">😺</span><div class="bub">${i?t().welc+" "+t().new[i]:t().hi0}</div></div>${fish?`<div class="jtip" style="background:#e6fbef"><span>🐟</span><span>${f(t().fishR,{n:fish,s:fishB})}</span></div>`:""}<div class="jsub">🎯 ${f(t().goal,{n:T.goal})}</div><div class="peek">${KN.slice(0,T.goal>5?5:T.goal).map((k,n)=>`<span style="animation-delay:${n*.18}s">${k[0]}</span>`).join("")}</div><div class="jtip"><span>🍽️</span><span>${t().kitH}</span></div><div class="jtip" style="background:#fff3d6"><span>🥣</span><span><b>${f(t().bagT,{b:bag})}</b><br>${t().bagH}</span></div><button class="jb go" id="jyGo">${t().go}</button>`);
-  $("jyGo").onclick=()=>play(i); }
-function play(i){ snd("click"); fishB=fishB||0; const _fb=fishB; fishB=0; const T=TOWNS[i], P=J.perks; const has=p=>P.filter(x=>x===p).length;
-  run={i,fed:0,goal:T.goal,time:T.t+has("fast")*8+_fb,t0:T.t+has("fast")*8+_fb,bag:3+has("bag")*2,max:3+has("bag")*2,kits:[]}; $("jyPanel").innerHTML="";
-  const field=$("jyField"); field.innerHTML=`<button class="jb jbag" id="jyBag" style="left:50%;transform:translateX(-50%)"></button>`;
-  $("jyBag").onclick=()=>{ run.bag=run.max; snd("click"); hud(); };
-  const spawn=()=>{ if(!run||field.querySelectorAll(".k:not(.fed)").length>=3) return; const k=document.createElement("button"); k.className="k jpop"; const kd=KN[(Math.random()*KN.length)|0];
-    k.innerHTML=kd[0]+'<span class="hb">🍽️</span>'; const W=innerWidth,H=innerHeight; k.style.left=(10+Math.random()*(W-84))+"px"; k.style.top=(H*.42+Math.random()*(H*.4-80))+"px";
-    k.onpointerdown=e=>{ e.preventDefault(); if(k.classList.contains("fed")||!run) return; if(run.bag<=0){ $("jyBag").classList.remove("jpop"); void $("jyBag").offsetWidth; $("jyBag").classList.add("jpop"); return; }
-      run.bag--; feed(k,kd); };
-    field.appendChild(k); setTimeout(()=>{ if(k.isConnected&&!k.classList.contains("fed")) k.remove(); }, (7000-i*700)+has("magnet")*2000); };
-  const feed=(k,kd)=>{ k.classList.add("fed"); k.querySelector(".hb").textContent="💛"; snd("heart"); try{ meow(700+Math.random()*300,0,.25); }catch(e){} run.fed++; run.kits.push(kd); setTimeout(()=>k.remove(),700); hud(); if(run.fed>=run.goal) end(true); };
-  const hud=()=>{ if(!run||!$("jyBag")) return; bar(`<span class="pl">${TOWNS[i].ic} ${TOWNS[i].n[lg()]}</span><span class="pl">${f(t().fed,{a:run.fed,n:run.goal})}</span><span class="pl">${f(t().time,{t:Math.ceil(run.time)})}</span>`); $("jyBag").textContent=f(t().bag,{b:run.bag}); $("jyBag").classList.toggle("empty",run.bag<=0); };
-  let acc=0, dogAcc=0; hud(); spawn();
-  tick=setInterval(()=>{ if(!run) return; if(window.__ptLocked) return; run.time-=.25; acc+=.25; dogAcc+=.25; if(acc>=Math.max(.9,1.8-i*.2)){ acc=0; spawn(); }
-    if(has("dog")&&dogAcc>=6){ dogAcc=0; const k=field.querySelector(".k:not(.fed)"); if(k){ k.querySelector(".hb").textContent="🐶"; feed(k,KN[0]); } }
-    if(run&&run.time<=0) end(false); else hud(); },250); }
-function end(win){ const r=run; stop(); if(win){ const fr=r.time/r.t0, ns=fr>.45?3:fr>.2?2:1; J.stars[r.i]=Math.max(J.stars[r.i]||0,ns); const SH=`<div class="stars">${[0,1,2].map(n=>`<span style="animation-delay:${.2+n*.3}s">${n<ns?"⭐":"☆"}</span>`).join("")}</div>`; [0,1,2].forEach(n=>n<ns&&setTimeout(()=>beep(660+n*220,.18,"triangle",.15),200+n*300)); J.kits=J.kits.concat(r.kits.slice(0,2).map(k=>k[1]+":"+k[2]+":"+k[0])); J.town=r.i+1; sv(); try{ confetti(120); }catch(e){}
-    if(J.town>=TOWNS.length){ card(r.i,t().win,`${SH}<button class="jb go" id="jyA">${t().adopt}</button>`); $("jyA").onclick=adoption; return; }
-    const keys=Object.keys(PERKS), ch=[0,1,2].map(n=>keys[(r.i+n)%4]);
-    card(r.i,t().win,`${SH}<div class="jsub">${t().gift}</div><div class="jcards">${ch.map(p=>`<button class="jcard" data-p="${p}"><div class="fr">🎁</div><div class="bk"><b>${PERKS[p].e}</b>${PERKS[p][lg()]}<small>${PERKS[p].d[lg()]}</small></div></button>`).join("")}</div><div class="jtip"><span>💡</span><span>${t().perkH}</span></div>`);
-    const cs=[...$("jyPanel").querySelectorAll(".jcard")]; let picked=false;
-    cs.forEach((c,n)=>setTimeout(()=>{ c.classList.add("flip"); beep(700+n*150,.1,"sine",.12,1400); },1300+n*350));
-    cs.forEach(c=>c.onclick=()=>{ if(picked||!c.classList.contains("flip")) return; picked=true; c.classList.add("pick"); cs.forEach(x=>x!==c&&x.classList.add("dim")); beep(523,.1,"triangle",.15); setTimeout(()=>beep(784,.2,"triangle",.15),110); try{ confetti(90); }catch(e){} J.perks.push(c.dataset.p); sv(); setTimeout(()=>mapView(true),1100); });
-  } else { card(r.i,t().lose,`<div style="font-size:54px">😿⏱️</div><div class="jtip" style="background:#fff3d6"><span>🥣</span><span>${t().bagH}</span></div><button class="jb go" id="jyAg">${t().retry}</button>`); $("jyAg").onclick=()=>play(r.i); } }
+    if(busy) return; busy=true; honk(); const b=$("jyBus"); b.style.left=PTS[i][0]+"%"; b.style.top=(PTS[i][1]-4)+"%"; setTimeout(()=>go(i),1300); });
+  fitMap(); $("jyR").onclick=()=>{ J={town:0,kits:[],stars:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
+function go(i){ const jy=$("jy"); jy.style.transition="opacity .4s"; jy.style.opacity="0";
+  setTimeout(()=>{ close(); jy.style.opacity=""; const T=TOWNS[i]; TOWN={sky:T.sky,gr:T.gr,lm:T.lm}; const goal=T.goal*2, h0=S.hearts, t0=Date.now(); startPlay();
+    const pill=document.createElement("div"); pill.className="pill"; pill.id="townPill"; $("dayPill").after(pill);
+    const upd=()=>{ pill.textContent=`${T.ic} ${T.n[lg()]} ❤️${Math.min(goal,S.hearts-h0)}/${goal}`; }; upd();
+    tick=setInterval(()=>{ if(!TOWN){ clearInterval(tick); tick=null; return; } upd(); if(S.hearts-h0>=goal){ clearInterval(tick); tick=null; win(i,(Date.now()-t0)/1000); } },300); },400); }
+function win(i,sec){ toMenu(); const T=TOWNS[i], ns=sec<=T.t*2?3:sec<=T.t*4?2:1; J.stars[i]=Math.max(J.stars[i]||0,ns); J.kits=J.kits.concat([0,1].map(n=>{ const k=KN[(i*2+n)%KN.length]; return k[1]+":"+k[2]+":"+k[0]; })); J.town=i+1; sv(); lbl();
+  $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; bg(i); bar(`<span class="pl">${T.lic} ${T.n[lg()]}</span>`); try{ confetti(120); }catch(e){}
+  [0,1,2].forEach(n=>n<ns&&setTimeout(()=>beep(660+n*220,.18,"triangle",.15),200+n*300)); const SH=`<div class="stars">${[0,1,2].map(n=>`<span style="animation-delay:${.2+n*.3}s">${n<ns?"⭐":"☆"}</span>`).join("")}</div>`;
+  if(J.town>=TOWNS.length){ card(i,t().win,`${SH}<button class="jb go" id="jyA">${t().adopt}</button>`); $("jyA").onclick=adoption; return; }
+  card(i,t().win,SH); setTimeout(()=>{ if($("jy").classList.contains("show")) mapView(true); },2000); }
 function adoption(){ stop(); bg(0); $("jyBg").innerHTML+='<text x="200" y="120" font-size="60" text-anchor="middle">🎈🏡🎈</text>';
   bar(`<button class="pl" id="jyX">${t().back}</button><span class="pl">${t().adopt}</span>`); $("jyX").onclick=close;
   const kits=J.kits.slice(0,8); let pick=-1, done={};
   const draw=()=>{ const n=Object.keys(done).length;
-    if(n>=kits.length){ snd("heart"); panel(`<h2>${t().cert}</h2><div style="border:4px double #ffc14d;border-radius:14px;padding:12px;font-size:17px">🏅 ${f(t().certT,{n:kits.length})}<div style="font-size:30px">${kits.map(k=>k.split(":")[2]).join("")}💞</div></div><button class="jb go" id="jyN">${t().reset}</button>`); $("jyN").onclick=()=>{ J={town:0,perks:[],kits:[],stars:[]}; sv(); mapView(false); }; return; }
+    if(n>=kits.length){ snd("heart"); panel(`<h2>${t().cert}</h2><div style="border:4px double #ffc14d;border-radius:14px;padding:12px;font-size:17px">🏅 ${f(t().certT,{n:kits.length})}<div style="font-size:30px">${kits.map(k=>k.split(":")[2]).join("")}💞</div></div><button class="jb go" id="jyN">${t().reset}</button>`); $("jyN").onclick=()=>{ J={town:0,kits:[],stars:[]}; sv(); mapView(false); }; return; }
     panel(`<h2>${t().adopt}</h2><div style="font-size:14px">${t().adoptH}</div><div class="jgrid">${kits.map((k,i)=>{ const [nm,tr,e]=k.split(":"); return `<button data-k="${i}" class="${pick==i?"sel":""} ${done[i]?"done":""}"><span style="font-size:22px">${done[i]?"🏠":e}</span><br>${nm} ${["🧶","💤","🐟"][tr]}</button>`; }).join("")}</div><div class="jgrid f3">${FAM.map((F,i)=>`<button data-f="${i}"><span style="font-size:26px">${F.e}</span><br>${F.h[lg()]}</button>`).join("")}</div><div id="jyMsg" style="min-height:22px"></div>`);
     $("jyPanel").querySelectorAll("[data-k]").forEach(el=>el.onclick=()=>{ if(done[el.dataset.k]) return; pick=+el.dataset.k; snd("click"); draw(); });
     $("jyPanel").querySelectorAll("[data-f]").forEach(el=>el.onclick=()=>{ if(pick<0) return; const tr=+kits[pick].split(":")[1]; if(tr===+el.dataset.f){ done[pick]=1; pick=-1; snd("heart"); draw(); const m=$("jyMsg"); if(m) m.textContent=t().home+" 💗💗💗"; } else $("jyMsg").textContent=t().wrong; }); };
@@ -1295,7 +1231,7 @@ const btn=document.createElement("button"); btn.className="big"; btn.id="journey
 $("playBtn").after(btn); btn.onclick=()=>{ snd("click"); open(); };
 const lbl=()=>{ btn.textContent=t().btn+(J.town?` (${Math.min(J.town,5)}/5)`:""); }; lbl();
 document.addEventListener("click",e=>{ if(e.target.closest("[data-lang]")) setTimeout(lbl,0); });
-window.__jy={open,adoption,mapView,state:()=>J,set:o=>{Object.assign(J,o);sv();},win:()=>run&&(run.fed=run.goal-1,run.goal&&end(true))};
+window.__jy={open,adoption,mapView,state:()=>J,set:o=>{Object.assign(J,o);sv();},win:()=>{ if(TOWN) S.hearts+=999; }};
 })();
 </script>
 
