@@ -61,6 +61,8 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #lobIn{width:min(80vw,300px);height:70px;border-radius:18px;border:3px solid #e8862d;background:#fff;text-align:center;font:900 34px Rubik,Arial;color:#5a3b1a;letter-spacing:.12em;direction:ltr;user-select:text;-webkit-user-select:text}
 #lobCd{font-weight:900;font-size:26px;color:#e8862d;direction:ltr;min-height:32px}#lobCd.low{color:#e23b3b;animation:pulse2 .6s infinite alternate}@keyframes pulse2{to{transform:scale(1.12)}}
 #lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px}
+#appr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:45}#appr.on{display:flex}
+#appr .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2{margin:0;font-size:22px;color:#e8862d}#apprN{font-size:64px;font-weight:900;color:#e8862d;letter-spacing:.1em;direction:ltr;line-height:1}
 #pause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:40}#pause.on{display:flex}
 #pause .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#pause h2{margin:0;font-size:24px;color:#e8862d}
 a.big{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48}
@@ -101,22 +103,23 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
 </section>
 <div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
 <div id="pause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="pauseT"></h2><div id="pauseS" style="font-weight:700"></div><button class="big g" id="pauseLeave"></button></div></div>
+<div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big" style="background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48" id="apprYes"></button><button class="big g" id="apprNo"></button></div></div></div>
 <canvas id="conf"></canvas>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"דמקת חתולים",paused:"החברה התנתקה… ממתינים שתתחבר מחדש ⏳",pausedS:"המשחק נשמר וימשיך בדיוק מאותו מקום",leave:"🏠 יציאה מהמשחק",left:"החברה יצאה מהמשחק 👋",roomLeft:"החדר פתוח עוד",expired:"⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🩶",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
+ he:{title:"דמקת חתולים",paused:"החברה התנתקה… ממתינים שתתחבר מחדש ⏳",pausedS:"המשחק נשמר וימשיך בדיוק מאותו מקום",leave:"🏠 יציאה מהמשחק",left:"החברה יצאה מהמשחק 👋",roomLeft:"החדר פתוח עוד",expired:"⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש",apprT:"מישהי מבקשת להצטרף למשחק 🔐",apprS:"אשרי רק אם גם אצל החברה שלך מופיע בדיוק המספר הזה",apprYes:"✅ אשרי",apprNo:"❌ דחי",pairMsg:"קוד אימות: N 🔐 מחכים שהחברה תאשר…",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🩶",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
   rules:["🐾 לחצי על חתלתול ואז על משבצת ירוקה.","😼 אם אפשר לאכול – חובה לקפוץ! אפשר כמה קפיצות ברצף.","🦁 חתלתול שמגיע לצד השני הופך לאריה עם כתר!","🧶 כדור צמר: חתלתול שנוחת עליו משתעשע – ומקבל תור נוסף!"],
   you:"התור שלך 🧡",cpu:"המחשב חושב… 🤔",p1:"תור הכתומים 🧡",p2:"תור האפורים 🩶",bonus:"תור בונוס! 🧶",again:"🔁 עוד משחק",
   winYou:"ניצחת, אנאבל! 🎉",winCpu:"המחשב ניצח… נסי שוב! 💪",winO:"הכתומים ניצחו! 🧡",winG:"האפורים ניצחו! 🩶",
   meow:"מיאו!",yarn:["איזה כיף, צמר! 🧶 עוד תור!","שיחקתי קצת! 🧶 עוד תור!","ווי! צמר! 🧶"],king:"אני מלך! 👑",jump:"עוד קפיצה!"},
- fr:{title:"Dames des chats",paused:"Ton ami s'est déconnecté… on attend sa reconnexion ⏳",pausedS:"La partie est sauvegardée et reprendra au même endroit",leave:"🏠 Quitter la partie",left:"Ton ami a quitté la partie 👋",roomLeft:"Salle ouverte encore",expired:"⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🩶",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
+ fr:{title:"Dames des chats",paused:"Ton ami s'est déconnecté… on attend sa reconnexion ⏳",pausedS:"La partie est sauvegardée et reprendra au même endroit",leave:"🏠 Quitter la partie",left:"Ton ami a quitté la partie 👋",roomLeft:"Salle ouverte encore",expired:"⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle",apprT:"Quelqu'un veut rejoindre la partie 🔐",apprS:"Accepte seulement si ton amie voit exactement ce même nombre",apprYes:"✅ Accepter",apprNo:"❌ Refuser",pairMsg:"Code de vérification : N 🔐 on attend que ton amie accepte…",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🩶",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
   rules:["🐾 Touche un chaton puis une case verte.","😼 Si tu peux manger, tu dois sauter ! Plusieurs sauts d'affilée.","🦁 Un chaton qui arrive de l'autre côté devient un lion couronné !","🧶 Pelote : le chaton qui s'y pose joue avec – et gagne un tour en plus !"],
   you:"À toi 🧡",cpu:"L'ordi réfléchit… 🤔",p1:"Tour des oranges 🧡",p2:"Tour des gris 🩶",bonus:"Tour bonus ! 🧶",again:"🔁 Rejouer",
   winYou:"Tu as gagné, Annabelle ! 🎉",winCpu:"L'ordi a gagné… réessaie ! 💪",winO:"Les oranges gagnent ! 🧡",winG:"Les gris gagnent ! 🩶",
   meow:"Miaou !",yarn:["Youpi, une pelote ! 🧶 Encore un tour !","Je joue un peu ! 🧶 Encore !","Wiii ! 🧶"],king:"Je suis roi ! 👑",jump:"Encore un saut !"},
- en:{title:"Cat Checkers",paused:"Your friend disconnected… waiting for them to reconnect ⏳",pausedS:"The game is saved and will continue exactly where it stopped",leave:"🏠 Leave the game",left:"Your friend left the game 👋",roomLeft:"Room open for",expired:"⏰ Time's up, the code is no longer valid. Create a new room",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🩶",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
+ en:{title:"Cat Checkers",paused:"Your friend disconnected… waiting for them to reconnect ⏳",pausedS:"The game is saved and will continue exactly where it stopped",leave:"🏠 Leave the game",left:"Your friend left the game 👋",roomLeft:"Room open for",expired:"⏰ Time's up, the code is no longer valid. Create a new room",apprT:"Someone wants to join the game 🔐",apprS:"Accept only if your friend sees exactly this same number",apprYes:"✅ Accept",apprNo:"❌ Decline",pairMsg:"Verification code: N 🔐 waiting for your friend to accept…",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🩶",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
   rules:["🐾 Tap a kitten, then a green square.","😼 If you can capture, you must jump! Several jumps in a row are OK.","🦁 A kitten reaching the far side becomes a crowned lion!","🧶 Yarn ball: a kitten landing on it plays – and gets an extra turn!"],
   you:"Your turn 🧡",cpu:"Computer is thinking… 🤔",p1:"Orange's turn 🧡",p2:"Grey's turn 🩶",bonus:"Bonus turn! 🧶",again:"🔁 Play again",
   winYou:"You won, Annabelle! 🎉",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🩶",
@@ -129,7 +132,7 @@ function applyLang(){
  $("tTitle").textContent=t("title"); document.title=t("title");
  $("flags").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${l}</button>`).join("");
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
- $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
+ $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("apprT").textContent=t("apprT");$("apprS").textContent=t("apprS");$("apprYes").textContent=t("apprYes");$("apprNo").textContent=t("apprNo");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
  if(G)updTurn();
 }
 // ---- sound ----
@@ -274,7 +277,7 @@ document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=
 $("muteBtn").addEventListener("click",()=>{muted=!muted;localStorage.setItem("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});
 // ---- online play: WebRTC via PeerJS (room code or link), with pause / save / resync on disconnect ----
 const ROOM_SECS=300;
-const NET={key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0};
+const NET={rs:null,cand:null,joinSec:null,key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0};
 const PEER_SRC="vendor/peerjs.min.js",PEER_CFG={config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
 const PID="annabelle-ck-",SK="annabelle-ck-session";
 function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
@@ -311,7 +314,7 @@ function startCd(gen){
   if(left<=0){lobFail();$("lobStatus").textContent=t("expired")}};
  tick();NET.cd=setInterval(tick,500);
 }
-function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;NET.paused=false;NET.key=null;NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
+function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;NET.paused=false;NET.key=null;NET.rs=null;NET.cand=null;NET.joinSec=null;$("appr").classList.remove("on");NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
 function netLeave(){ // leaving on purpose: tell the friend (so they don't wait), forget the saved game
  const c=NET.conn,p=NET.peer;if(G&&G.online)netSend({t:"bye"});NET.conn=null;NET.peer=null;netClose();clearSess();setPaused(false);
  setTimeout(()=>{try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}},400);
@@ -324,13 +327,14 @@ function hostPeer(code,gen,resume){
  const p=new Peer(PID+code,PEER_CFG);NET.peer=p;
  p.on("open",()=>{if(gen!==NET.gen)return;NET.host=true;NET.me=0;NET.code=code;
   if(resume)return;
-  $("lobCode").textContent=code;const url=location.origin+location.pathname+"?room="+code;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
+  NET.rs=rnd(16);
+  $("lobCode").textContent=code;const url=location.origin+location.pathname+"?room="+code+"&s="+NET.rs;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
   $("lobStatus").textContent="";lobPane("lobCreate");startCd(gen)});
  p.on("disconnected",()=>{if(gen===NET.gen&&!p.destroyed)try{p.reconnect()}catch(e){}});
  p.on("connection",c=>{if(gen!==NET.gen)return;
   if(!NET.key){ // fresh room: the first friend in is accepted (the room code is the secret, valid only for the countdown)
-   if(NET.conn||(G&&G.online)){try{c.close()}catch(e){}return}
-   c.authed=true;attach(c,gen);
+   if(NET.conn||(G&&G.online)||NET.pend.size>=4){try{c.close()}catch(e){}return}
+   c.fresh=true;attach(c,gen,true);
   }else{ // a game exists: only someone who proves they know the game secret can (re)connect
    if(NET.pend.size>=3){try{c.close()}catch(e){}return}
    attach(c,gen,true);
@@ -343,13 +347,23 @@ function createRoom(){
  netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
  loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
 }
-function joinRoom(code){
- netClose();const gen=NET.gen;NET.code=code;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
+function joinRoom(code,sec){
+ netClose();const gen=NET.gen;NET.code=code;NET.joinSec=sec||null;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
  loadPeer().then(()=>{if(gen!==NET.gen)return;
   const p=new Peer(undefined,PEER_CFG);NET.peer=p;
   p.on("open",()=>{if(gen!==NET.gen)return;NET.host=false;NET.me=1;const c=p.connect(PID+code,{reliable:true});attach(c,gen);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!(NET.conn&&NET.conn.open))lobFail()},15000)});
   p.on("error",()=>{if(gen===NET.gen)lobFail()});
  }).catch(()=>{if(gen===NET.gen)lobFail()});
+}
+function admit(c){ // host: this connection is the friend
+ if(NET.cand&&NET.cand!==c){try{NET.cand.close()}catch(e){}}NET.cand=null;$("appr").classList.remove("on");
+ if(NET.conn||!c.open)return;c.authed=true;NET.pend.delete(c);clearTimeout(c.to);c.fin()}
+function askApproval(c){
+ c.pair=String(10+crypto.getRandomValues(new Uint32Array(1))[0]%90);clearTimeout(c.to);c.to=setTimeout(()=>{if(NET.cand===c){try{c.close()}catch(e){}}},60000);
+ try{c.send({t:"pair",n:c.pair})}catch(e){}
+ $("apprN").textContent=c.pair;$("appr").classList.add("on");SFX.join();
+ $("apprYes").onclick=()=>{SFX.click();if(NET.cand===c)admit(c)};
+ $("apprNo").onclick=()=>{SFX.click();NET.cand=null;$("appr").classList.remove("on");try{c.close()}catch(e){}};
 }
 function attach(c,gen,pending){
  c.myN=rnd(16);if(c.authed===undefined)c.authed=false;
@@ -362,18 +376,28 @@ function attach(c,gen,pending){
  const op=()=>{if(opened||gen!==NET.gen)return;opened=true;
   c.to=setTimeout(()=>{if(!c.authed){NET.pend.delete(c);try{c.close()}catch(e){}}},10000);
   if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
-  else if(c.authed&&NET.host)finish()};
+  else if(!NET.host){try{c.send({t:"join",s:NET.joinSec})}catch(e){}}};
+ c.fin=finish;
  c.on("open",op);
  c.on("data",async d=>{
   if(gen!==NET.gen||!d||typeof d!=="object")return;
   if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
   if(d.t==="pr"&&NET.key&&typeof d.h==="string"){if(c.authed)return;const want=await hmac(NET.key,"R"+(NET.host?"g":"h")+c.myN);if(gen!==NET.gen)return;if(d.h===want){c.authed=true;finish()}else{NET.pend.delete(c);try{c.close()}catch(e){}}return}
+  if(c.fresh&&NET.host&&!NET.key){ // room still open: invitation link (secret) joins directly, a typed code needs the host's approval
+   if(d.t!=="join")return;
+   const sec=typeof d.s==="string"&&/^[0-9a-f]{32}$/.test(d.s)?d.s:null;
+   if(NET.conn){try{c.close()}catch(e){}return}
+   if(sec&&NET.rs&&sec===NET.rs){admit(c)}
+   else if(!sec&&!NET.cand){NET.cand=c;askApproval(c)}
+   else{try{c.close()}catch(e){}}
+   return}
+  if(!c.authed&&!NET.host&&d.t==="pair"&&!NET.key&&typeof d.n==="string"&&/^\d{2}$/.test(d.n)){$("lobStatus").textContent=t("pairMsg").replace("N",d.n);clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!NET.key)lobFail()},70000);return}
   if(!c.authed){ // first contact of a joining friend: take the game secret from the host's first "start"
    if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanYarn(d.y)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
    return}
   if(NET.conn!==c)return;
   NET.last=Date.now();onNetData(d)});
- const gone=()=>{NET.pend.delete(c);if(gen===NET.gen&&NET.conn===c)onNetClose()};
+ const gone=()=>{NET.pend.delete(c);if(NET.cand===c){NET.cand=null;$("appr").classList.remove("on")}if(gen===NET.gen&&NET.conn===c)onNetClose()};
  c.on("close",gone);c.on("error",gone);
  if(c.open)op();
 }
@@ -463,8 +487,9 @@ $("bGo").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,""
 $("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6)});
 $("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
 applyLang();updMute();
-{const q=new URLSearchParams(location.search).get("room")||"";let sv=null;try{sv=JSON.parse(localStorage.getItem(SK))}catch(e){}
- if(/^\d{6}$/.test(q)&&!(sv&&sv.code===q&&!sv.host)){clearSess();setTimeout(()=>{showLobby();joinRoom(q)},0)}else if(sv)resumeSession()}
+{const U=new URLSearchParams(location.search),q=U.get("room")||"",sc=/^[0-9a-f]{32}$/.test(U.get("s")||"")?U.get("s"):null;let sv=null;try{sv=JSON.parse(localStorage.getItem(SK))}catch(e){}
+ if(q||U.has("s"))try{history.replaceState(null,"",location.pathname)}catch(e){}
+ if(/^\d{6}$/.test(q)&&!(sv&&sv.code===q&&!sv.host)){clearSess();setTimeout(()=>{showLobby();joinRoom(q,sc)},0)}else if(sv)resumeSession()}
 </script>
 </body>
 </html>
