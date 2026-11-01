@@ -70,6 +70,8 @@ kbd{background:#fff;border:1px solid #2fa04a;border-radius:5px;padding:0 5px;fon
   <div class="rules" id="rules"></div>
   <div class="lbl2" id="tDiff"></div>
   <div class="row" id="diffRow"></div>
+  <div class="lbl2" id="tTeam"></div>
+  <div class="row" id="teamRow"></div>
   <div class="row">
     <button class="big g" id="bMatch"></button>
     <button class="big" id="bPen"></button>
@@ -88,7 +90,7 @@ kbd{background:#fff;border:1px solid #2fa04a;border-radius:5px;padding:0 5px;fon
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"כדורגל חתולים",meter0:"1/3 · כיוון ◀▶",meter1:"2/3 · גובה ▲▼",meter2:"3/3 · עוצמה 💪",tooStrong:"חזק מדי – הכדור עף לחלל! 🚀",tooWeak:"חלש מדי – קל לשוער 😴",padStop0:"◀▶<br>עצרי כיוון",padStop1:"▲▼<br>עצרי גובה",padStop2:"💪<br>בעיטה!",padKick:"⚡<br>בעיטה חזקה",padShoot:"⚽<br>בעיטה!",padHint:"🎮 ג׳ויסטיק מחוץ למגרש",flub:["השוער החליק על קליפת בננה! 🍌","הכדור חמק מהכפפות! 🧤😹","אוי, ידיים של חמאה! 🧈"],gkSilly:["השוער רודף אחרי פרפר! 🦋","השוער נרדם על הקו 😴","השוער מתעטש! 🤧"],unstick:["הכדור התחבא בפינה! 😹 בום!","הקהל עזר לשחרר את הכדור 🧹","השופט שחרר את הכדור! 🐱🟨"],
+ he:{title:"כדורגל חתולים",teamT:"כמה חתלתולים בקבוצה?",team2:"👤 2 נגד 2",team3:"👥 3 נגד 3",team4:"🧑‍🤝‍🧑 4 נגד 4",meter0:"1/3 · כיוון ◀▶",meter1:"2/3 · גובה ▲▼",meter2:"3/3 · עוצמה 💪",tooStrong:"חזק מדי – הכדור עף לחלל! 🚀",tooWeak:"חלש מדי – קל לשוער 😴",padStop0:"◀▶<br>עצרי כיוון",padStop1:"▲▼<br>עצרי גובה",padStop2:"💪<br>בעיטה!",padKick:"⚡<br>בעיטה חזקה",padShoot:"⚽<br>בעיטה!",padHint:"🎮 ג׳ויסטיק מחוץ למגרש",flub:["השוער החליק על קליפת בננה! 🍌","הכדור חמק מהכפפות! 🧤😹","אוי, ידיים של חמאה! 🧈"],gkSilly:["השוער רודף אחרי פרפר! 🦋","השוער נרדם על הקו 😴","השוער מתעטש! 🤧"],unstick:["הכדור התחבא בפינה! 😹 בום!","הקהל עזר לשחרר את הכדור 🧹","השופט שחרר את הכדור! 🐱🟨"],
   rules:["⚽ משחק קטן: גררי את האצבע – החלוץ הכתום רץ אחריה ובועט בכדור. לכל קבוצה יש גם שוער ושני מגנים – עקפי אותם והבקיעי יותר גולים מהאפורים!","🥅 פנדלים: עצרי שלושה מדים נעים – כיוון, גובה ועוצמה (בירוק!) – ובעטי. השוער ינסה לתפוס!","🏆 מי שמבקיע ראשון 5 גולים (או יותר בסוף הזמן) מנצח."],
   diff:"איך נשחק?",easy:"🐣 קל וכיפי",normal:"🐯 רגיל",match:"⚽ משחק קטן",pen:"🥅 פנדלים",
   goal:["גוווול! 🎉","איזה גול! ⚽😸","בום! הכדור בפנים!"],conceded:["אוי… נכנס גול 😿","הכדור חמק לרשת!"],
@@ -99,7 +101,7 @@ const TX={
   keeperSilly:["השוער רדף אחרי פרפר 🦋","השוער התעטש! 🤧","השוער נרדם 😴"],round:"בעיטה",final:"סיימנו! ",stars:"כוכבים",
   hintMatch:"<kbd>↑↓←→</kbd>/<kbd>WASD</kbd> תנועה · <kbd>רווח</kbd> בעיטה חזקה · <kbd>Esc</kbd> הפסקה · <kbd>M</kbd> שקט",
   hintPen:"<kbd>רווח</kbd> / <kbd>Enter</kbd> / קליק – עצירת המד (כיוון ← גובה ← עוצמה) · <kbd>Esc</kbd> הפסקה"},
- fr:{title:"Foot des chats",meter0:"1/3 · direction ◀▶",meter1:"2/3 · hauteur ▲▼",meter2:"3/3 · puissance 💪",tooStrong:"Trop fort – le ballon part dans l'espace ! 🚀",tooWeak:"Trop faible – facile pour le gardien 😴",padStop0:"◀▶<br>Direction",padStop1:"▲▼<br>Hauteur",padStop2:"💪<br>Tire !",padKick:"⚡<br>Tir fort",padShoot:"⚽<br>Tire !",padHint:"🎮 Manette hors du terrain",flub:["Le gardien a glissé sur une banane ! 🍌","Le ballon a glissé des gants ! 🧤😹","Oups, des mains de beurre ! 🧈"],gkSilly:["Le gardien court après un papillon ! 🦋","Le gardien dort sur la ligne 😴","Le gardien éternue ! 🤧"],unstick:["Le ballon se cachait dans le coin ! 😹 Boum !","Le public a aidé à libérer le ballon 🧹","L'arbitre a relancé le ballon ! 🐱🟨"],
+ fr:{title:"Foot des chats",teamT:"Combien de chatons par équipe ?",team2:"👤 2 contre 2",team3:"👥 3 contre 3",team4:"🧑‍🤝‍🧑 4 contre 4",meter0:"1/3 · direction ◀▶",meter1:"2/3 · hauteur ▲▼",meter2:"3/3 · puissance 💪",tooStrong:"Trop fort – le ballon part dans l'espace ! 🚀",tooWeak:"Trop faible – facile pour le gardien 😴",padStop0:"◀▶<br>Direction",padStop1:"▲▼<br>Hauteur",padStop2:"💪<br>Tire !",padKick:"⚡<br>Tir fort",padShoot:"⚽<br>Tire !",padHint:"🎮 Manette hors du terrain",flub:["Le gardien a glissé sur une banane ! 🍌","Le ballon a glissé des gants ! 🧤😹","Oups, des mains de beurre ! 🧈"],gkSilly:["Le gardien court après un papillon ! 🦋","Le gardien dort sur la ligne 😴","Le gardien éternue ! 🤧"],unstick:["Le ballon se cachait dans le coin ! 😹 Boum !","Le public a aidé à libérer le ballon 🧹","L'arbitre a relancé le ballon ! 🐱🟨"],
   rules:["⚽ Match : glisse ton doigt – l'attaquant orange court vers lui et tape dans le ballon. Chaque équipe a aussi un gardien et deux défenseurs – dribble-les et marque plus de buts que les gris !","🥅 Penalties : arrête trois jauges mobiles – direction, hauteur et puissance (dans le vert !) – puis tire. Le gardien essaie d'arrêter !","🏆 Le premier à 5 buts (ou le plus de buts à la fin du temps) gagne."],
   diff:"On joue comment ?",easy:"🐣 Facile et rigolo",normal:"🐯 Normal",match:"⚽ Petit match",pen:"🥅 Penalties",
   goal:["BUUUT ! 🎉","Quel but ! ⚽😸","Boum ! Dans la lucarne !"],conceded:["Oh non… but encaissé 😿","Le ballon file au fond !"],
@@ -110,7 +112,7 @@ const TX={
   keeperSilly:["Le gardien court après un papillon 🦋","Le gardien éternue ! 🤧","Le gardien s'endort 😴"],round:"Tir",final:"Fini ! ",stars:"étoiles",
   hintMatch:"<kbd>↑↓←→</kbd>/<kbd>WASD</kbd> bouger · <kbd>Espace</kbd> tir puissant · <kbd>Échap</kbd> pause · <kbd>M</kbd> son",
   hintPen:"<kbd>Espace</kbd> / <kbd>Entrée</kbd> / clic – arrêter la jauge (direction → hauteur → puissance) · <kbd>Échap</kbd> pause"},
- en:{title:"Cat Football",meter0:"1/3 · direction ◀▶",meter1:"2/3 · height ▲▼",meter2:"3/3 · power 💪",tooStrong:"Too strong – the ball flew into space! 🚀",tooWeak:"Too weak – easy for the keeper 😴",padStop0:"◀▶<br>Stop direction",padStop1:"▲▼<br>Stop height",padStop2:"💪<br>Shoot!",padKick:"⚡<br>Power kick",padShoot:"⚽<br>Shoot!",padHint:"🎮 Joystick outside the pitch",flub:["The keeper slipped on a banana peel! 🍌","The ball slipped out of the gloves! 🧤😹","Oops, butter fingers! 🧈"],gkSilly:["The keeper is chasing a butterfly! 🦋","The keeper fell asleep on the line 😴","The keeper sneezed! 🤧"],unstick:["The ball was hiding in the corner! 😹 Boom!","The crowd helped free the ball 🧹","The ref flicked the ball back into play! 🐱🟨"],
+ en:{title:"Cat Football",teamT:"Kittens per team?",team2:"👤 2 vs 2",team3:"👥 3 vs 3",team4:"🧑‍🤝‍🧑 4 vs 4",meter0:"1/3 · direction ◀▶",meter1:"2/3 · height ▲▼",meter2:"3/3 · power 💪",tooStrong:"Too strong – the ball flew into space! 🚀",tooWeak:"Too weak – easy for the keeper 😴",padStop0:"◀▶<br>Stop direction",padStop1:"▲▼<br>Stop height",padStop2:"💪<br>Shoot!",padKick:"⚡<br>Power kick",padShoot:"⚽<br>Shoot!",padHint:"🎮 Joystick outside the pitch",flub:["The keeper slipped on a banana peel! 🍌","The ball slipped out of the gloves! 🧤😹","Oops, butter fingers! 🧈"],gkSilly:["The keeper is chasing a butterfly! 🦋","The keeper fell asleep on the line 😴","The keeper sneezed! 🤧"],unstick:["The ball was hiding in the corner! 😹 Boom!","The crowd helped free the ball 🧹","The ref flicked the ball back into play! 🐱🟨"],
   rules:["⚽ Match: drag your finger – the orange striker runs to it and kicks the ball. Each team also has a goalkeeper and two defenders – get past them and score more goals than the greys!","🥅 Penalties: stop three moving meters – direction, height and power (in the green!) – then shoot. The cat goalkeeper tries to save!","🏆 First to 5 goals (or most goals when time is up) wins."],
   diff:"How shall we play?",easy:"🐣 Easy & funny",normal:"🐯 Normal",match:"⚽ Mini match",pen:"🥅 Penalties",
   goal:["GOOOAL! 🎉","What a goal! ⚽😸","Boom! Right in the net!"],conceded:["Oh no… a goal against 😿","The ball slipped into the net!"],
@@ -144,8 +146,10 @@ const SFX={click:()=>tone(560,.08,"triangle",.16),kick:()=>{tone(180,.12,"square
  sad:()=>[392,330,262].forEach((f,i)=>tone(f,.28,"triangle",.18,null,i*.16)),meow:()=>{tone(700,.12,"sawtooth",.07,1100);tone(1100,.25,"sawtooth",.07,500,.12)},
  boing:()=>tone(300,.28,"sine",.22,900),save:()=>{tone(300,.1,"square",.15,500);tone(500,.15,"square",.15,300,.1)},silly:()=>{tone(800,.1,"triangle",.14,1200);tone(1200,.1,"triangle",.14,600,.1);tone(600,.15,"triangle",.14,900,.2)},
  /* ball + pitch */
- kickPow:(sp)=>{const p=Math.min(1,sp/800);tone(150+80*(1-p),.1+.08*p,"square",.12+.16*p,60);noise(.07+.06*p,1400+1200*p,"bandpass",.14+.2*p,500,0,.8);if(p>.6)tone(1100,.05,"triangle",.08)},
- tap:()=>{noise(.05,900,"lowpass",.11,300);tone(220,.05,"sine",.08,140)},                       // soft dribble touch
+ kickPow:(sp,pitch=1)=>{const p=Math.min(1,sp/800);                       // paw hits the ball: thud + leather "pop" + air whoosh for hard shots
+  tone((130+90*(1-p))*pitch,.12+.08*p,"square",.2+.2*p,55*pitch);tone(320*pitch,.06,"triangle",.12+.1*p,160);
+  noise(.08+.06*p,1500+1300*p,"bandpass",.2+.25*p,500,0,.8);if(p>.45)noise(.25,500,"bandpass",.1+.1*p,2600,.03,.7);if(p>.6)tone(1100*pitch,.05,"triangle",.08)},
+ tap:()=>{noise(.06,1000,"lowpass",.16,300);tone(240,.06,"sine",.12,150);tone(480,.03,"triangle",.05)},                       // soft dribble touch
  thump:(sp)=>{const p=Math.min(1,sp/700);if(p<.12)return;tone(130,.1,"sine",.07+.14*p,70);noise(.06,500,"lowpass",.07+.1*p,200)},
  post:()=>{[1245,1870,2490].forEach((f,i)=>tone(f,.5-.1*i,"triangle",.14-.03*i,f*.995));noise(.04,3000,"highpass",.12)},   // metallic clang
  net:()=>{noise(.5,2800,"bandpass",.2,700,0,.5);noise(.35,400,"lowpass",.18,150,.03);tone(110,.25,"sine",.12,70)},         // net swish + soft thud
@@ -184,9 +188,15 @@ function sillySfx(kind){({fly:SFX.flutter,sleep:SFX.snore,sneeze:SFX.sneeze,lost
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 /* ambient crowd murmur (band-passed noise) that swells on a goal */
 let crowdNode=null;
-function crowdStart(){if(muted||crowdNode)return;const a=ac();if(!a)return;const len=a.sampleRate*2,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let lp=0;for(let i=0;i<len;i++){lp=lp*.97+(Math.random()*2-1)*.03;d[i]=lp*8}
+function crowdStart(){rollStart();if(muted||crowdNode)return;const a=ac();if(!a)return;const len=a.sampleRate*2,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let lp=0;for(let i=0;i<len;i++){lp=lp*.97+(Math.random()*2-1)*.03;d[i]=lp*8}
  const src=a.createBufferSource();src.buffer=buf;src.loop=true;const f=a.createBiquadFilter();f.type="bandpass";f.frequency.value=650;f.Q.value=.6;const g=a.createGain();g.gain.value=.045;src.connect(f).connect(g).connect(a.destination);src.start();crowdNode={src,g}}
-function crowdStop(){if(crowdNode){try{crowdNode.src.stop()}catch(e){}crowdNode=null}}
+function crowdStop(){if(crowdNode){try{crowdNode.src.stop()}catch(e){}crowdNode=null}rollStop()}
+/* the ball rolling on the grass: a soft hiss whose volume and brightness follow the ball's speed */
+let rollNode=null;
+function rollStart(){if(muted||rollNode)return;const a=ac();if(!a)return;const len=a.sampleRate*1.5,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let lp=0;for(let i=0;i<len;i++){lp=lp*.88+(Math.random()*2-1)*.12;d[i]=lp*3.2}
+ const src=a.createBufferSource();src.buffer=buf;src.loop=true;const f=a.createBiquadFilter();f.type="lowpass";f.frequency.value=400;const g=a.createGain();g.gain.value=0;src.connect(f).connect(g).connect(a.destination);src.start();rollNode={src,g,f}}
+function rollSet(sp){if(!rollNode||!AC)return;const n=AC.currentTime;rollNode.g.gain.setTargetAtTime(sp<30?0:Math.min(.1,.012+sp/700*.09),n,.04);rollNode.f.frequency.setTargetAtTime(260+Math.min(1400,sp*1.6),n,.06)}
+function rollStop(){if(rollNode){try{rollNode.src.stop()}catch(e){}rollNode=null}}
 function crowdSwell(){if(!crowdNode||!AC)return;const n=AC.currentTime,g=crowdNode.g.gain;g.cancelScheduledValues(n);g.setValueAtTime(g.value,n);g.linearRampToValueAtTime(.2,n+.3);g.linearRampToValueAtTime(.045,n+2.8)}
 /* ---------- helpers ---------- */
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}
@@ -196,13 +206,15 @@ function drawMenu(){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";
  $("tTitle").textContent=t("title");document.title=t("title");$("rules").innerHTML=t("rules").map(r=>"<p>"+r+"</p>").join("");
  $("tDiff").textContent=t("diff");$("bMatch").textContent=t("match");$("bPen").textContent=t("pen");
+ $("tTeam").textContent=t("teamT");$("teamRow").innerHTML=[2,3,4].map(k=>`<button class="lang ${k===teamSize()?"sel":""}" data-team="${k}">${t("team"+k)}</button>`).join("");
  $("diffRow").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}">${t(k)}</button>`).join("");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");
  const b=+ls.get("annabelle-football-best")||0;$("best").textContent=b?"🏆 "+b:"";
  $("againBtn").textContent=t("again");
 }
 document.addEventListener("click",e=>{
- const L=e.target.closest("[data-lang]"),D=e.target.closest("[data-diff]");
+ const L=e.target.closest("[data-lang]"),D=e.target.closest("[data-diff]"),TM=e.target.closest("[data-team]");
+ if(TM){ls.set("annabelle-football-team",TM.dataset.team);SFX.click();drawMenu()}
  if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawMenu();if(G)setHint();updKick();applyPad()}
  if(D){diff=D.dataset.diff;ls.set("annabelle-football-diff",diff);SFX.click();drawMenu()}
 });
@@ -340,17 +352,19 @@ let G=null,raf=0,last=0;
 const keys={};let ptr=null; // pointer target (logical)
 function setHint(){$("hint").innerHTML=G?t(G.mode==="pen"?"hintPen":"hintMatch"):""}
 const MID=(PY0+PY1)/2;
-function mkMate(team,role,i){ // team 0 = orange (defends the bottom goal), team 1 = grey (defends the top goal)
- const hy=role==="gk"?(team===0?PY1-40:PY0+40):(team===0?PY1-190:PY0+190),hx=role==="gk"?FW/2:FW/2+(i?1:-1)*135;
- return {team,role,x:hx,y:hy,hx,hy,vx:0,vy:0,r:role==="gk"?27:26,ang:team===0?-Math.PI/2:Math.PI/2,silly:0,sillyKind:"",sillyT:rr([4,9]),react:0,tx:hx,ty:hy,sleep:false,dive:0};
+const teamSize=()=>{const v=+ls.get("annabelle-football-team");return v===3||v===4?v:2}; // kittens per team: striker + keeper (+1 or 2 defenders)
+function mkMate(team,role,i,sz=1){ // team 0 = orange (defends the bottom goal), team 1 = grey (defends the top goal)
+ const hy=role==="gk"?(team===0?PY1-40:PY0+40):(team===0?PY1-190:PY0+190),hx=role==="gk"||i===2?FW/2:FW/2+(i?1:-1)*135;
+ return {team,role,x:hx,y:hy,hx,hy,vx:0,vy:0,r:(role==="gk"?27:26)*sz,ang:team===0?-Math.PI/2:Math.PI/2,silly:0,sillyKind:"",sillyT:rr([4,9]),react:0,tx:hx,ty:hy,sleep:false,dive:0};
 }
 function resetMates(g){for(const m of g.mates){m.x=m.hx;m.y=m.hy;m.vx=m.vy=0;m.tx=m.hx;m.ty=m.hy;m.silly=0;m.sleep=false;m.sillyKind="";m.dive=0}}
+function buildMates(ts,sz){const m=[];for(const team of [0,1]){m.push(mkMate(team,"gk",0,sz));if(ts===3)m.push(mkMate(team,"df",2,sz));if(ts>=4){m.push(mkMate(team,"df",0,sz));m.push(mkMate(team,"df",1,sz))}}return m}
 function startMatch(){
- const P=PRE[diff];
+ const P=PRE[diff],TS=teamSize(),SZ=TS>=4?.88:TS===3?.94:1;
  G={mode:"match",P,s:[0,0],time:P.time,state:"kick",st:0,pause:false,over:false,
-  me:{x:FW/2,y:MID+120,vx:0,vy:0,r:30,ang:-Math.PI/2,dash:0,cool:0,tilt:0},
-  cpu:{x:FW/2,y:MID-120,vx:0,vy:0,r:30,ang:Math.PI/2,silly:0,sillyKind:"",sillyT:rr(P.sillyEvery),react:0,tx:FW/2,ty:MID-120,sleep:false},
-  mates:[mkMate(0,"gk",0),mkMate(0,"df",0),mkMate(0,"df",1),mkMate(1,"gk",0),mkMate(1,"df",0),mkMate(1,"df",1)],
+  me:{x:FW/2,y:MID+120,vx:0,vy:0,r:30*SZ,ang:-Math.PI/2,dash:0,cool:0,tilt:0},
+  cpu:{x:FW/2,y:MID-120,vx:0,vy:0,r:30*SZ,ang:Math.PI/2,silly:0,sillyKind:"",sillyT:rr(P.sillyEvery),react:0,tx:FW/2,ty:MID-120,sleep:false},
+  mates:buildMates(TS,SZ),
   ball:{x:FW/2,y:(PY0+PY1)/2,vx:0,vy:0,r:16},parts:[],msgT:0};
  show("game");setHint();updHud();SFX.whistle();toast(t("kickoff"));crowdStart();applyPad();loop();
 }
@@ -415,7 +429,7 @@ function kickBall(k,power,isCpu){
   const bx=b.x,by=b.y;b.x=Math.max(PX0+b.r+1,Math.min(PX1-b.r-1,b.x));if(!inMouth)b.y=Math.max(PY0+b.r+1,Math.min(PY1-b.r-1,b.y));
   const cdx=b.x-bx,cdy=b.y-by;if(cdx||cdy){k.x-=cdx*1.1;k.y-=cdy*1.1;clampK(k)}
  }
- b.stuckT=0;{const sp2=Math.hypot(b.vx,b.vy);sp2<330?SFX.tap():SFX.kickPow(sp2)}
+ b.stuckT=0;{const sp2=Math.hypot(b.vx,b.vy);sp2<330?SFX.tap():SFX.kickPow(sp2,isCpu?.82:1)}
 }
 // safety net: if the ball lies still next to a wall/corner while a kitten is close, the "ref" flicks it back into play
 function unstickBall(dt){
@@ -471,7 +485,7 @@ function scored(who){
  if(who===0){SFX.goal();SFX.cheer();toast(pick(t("goal")),1800);confetti();SFX.meow()}else{SFX.sad();setTimeout(SFX.aww,250);toast(pick(t("conceded")),1800)}
 }
 function moveBall(dt,frozenGoal){
- const b=G.ball;{const sp=Math.hypot(b.vx,b.vy);b.rot=(b.rot||0)+(b.vx>=0?1:-1)*sp*dt/b.r*.8;(b.trail=b.trail||[]).push({x:b.x,y:b.y,s:sp});if(b.trail.length>7)b.trail.shift()}
+ const b=G.ball;rollSet(frozenGoal||G.mode!=="match"?0:Math.hypot(b.vx,b.vy));{const sp=Math.hypot(b.vx,b.vy);b.rot=(b.rot||0)+(b.vx>=0?1:-1)*sp*dt/b.r*.8;(b.trail=b.trail||[]).push({x:b.x,y:b.y,s:sp});if(b.trail.length>7)b.trail.shift()}
  b.x+=b.vx*dt;b.y+=b.vy*dt;const f=Math.pow(.42,dt);b.vx*=f;b.vy*=f;
  const inMouthX=b.x>GX0&&b.x<GX1;
  // side walls
@@ -503,7 +517,7 @@ function clearBall(m,power){ // a keeper / defender gets rid of the ball towards
  b.vx=vx*sp;b.vy=vy*sp;
  b.x=m.x+out.x*(m.r+b.r+1);b.y=m.y+out.y*(m.r+b.r+1);
  b.x=Math.max(PX0+b.r+1,Math.min(PX1-b.r-1,b.x));if(!(b.x>GX0&&b.x<GX1))b.y=Math.max(PY0+b.r+1,Math.min(PY1-b.r-1,b.y));
- b.stuckT=0;SFX.kickPow(sp);
+ b.stuckT=0;SFX.kickPow(sp,m.role==="gk"?.7:.9);
 }
 function mateTouch(m){ // the ball touches a keeper / defender
  const g=G,b=g.ball,P=g.P,sp=Math.hypot(b.vx,b.vy);
