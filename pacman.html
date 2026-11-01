@@ -89,6 +89,9 @@
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.ov{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}}
 .keys{display:none;font-size:15px;font-weight:700;opacity:.75;background:#fff9;border-radius:14px;padding:5px 14px;max-width:560px}
   .desk .keys{display:block}
+  #keysPlay{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;display:none;font-size:14px;font-weight:700;background:#fffd;border-radius:999px;padding:4px 14px;pointer-events:none;white-space:nowrap;transition:opacity .6s}
+  .desk.playing #keysPlay{display:block}
+  .desk #keysPlay.fade{opacity:0}
   .desk #cv{cursor:default}
   .desk .iconbtn{width:48px;height:48px}.desk #hud .iconbtn{width:48px;height:48px}
   .desk .lang{padding:10px 18px}
@@ -166,6 +169,7 @@
 </section>
 <canvas id="confetti"></canvas>
 
+<div id="keysPlay"></div>
 <script>
 "use strict";
 const ANIMALS = {
@@ -592,7 +596,8 @@ function updateFoe(f,dt){
 const PRIMARY={menu:"playBtn",pause:"resumeBtn",done:"nextBtn",over:"againBtn",win:"wAgainBtn"};
 function show(id){ ["menu","pause","done","over","win"].forEach(o=>$(o).classList.toggle("show",o===id)); $("pad").style.visibility=id?"hidden":"";
   if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
-function startGame(){ score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; startLevel(0); }
+let hintTm=0;
+function startGame(){ $("keysPlay").classList.remove("fade"); clearTimeout(hintTm); hintTm=setTimeout(()=>$("keysPlay").classList.add("fade"),9000); window.focus(); score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; startLevel(0); }
 function startLevel(i){ lvI=i; L=LEVELS[i]; loadMaze(); resetActors(); parts=[]; floats=[]; stopConfetti();
   state="ready"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
 function levelComplete(){ state="dance"; stateT=0; frightT=0; pl.huge=0; SFX.dance(); toast(T[lang].yum,"#34c47c");
@@ -913,7 +918,7 @@ function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto";
   el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1500); }
 function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
   $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch;
-  $("tLv").textContent=t.lv; $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu; updatePadBtn(); $("keysMenu").textContent=$("keysPause").textContent=KEYHINT[lang]; renderMenu(); }
+  $("tLv").textContent=t.lv; $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu; updatePadBtn(); $("keysMenu").textContent=$("keysPause").textContent=$("keysPlay").textContent=KEYHINT[lang]; renderMenu(); }
 function renderMenu(){ const t=T[lang], done=LS.done();
   $("tDiff").textContent=t.diffT; $("diffRow").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
@@ -988,7 +993,7 @@ function stopConfetti(){ cancelAnimationFrame(confRaf); const c=$("confetti"); c
 
 /* ============ LOOP ============ */
 let lastT=0;
-function frame(t){ const dt=Math.min(.05,(t-lastT)/1000||0); lastT=t; stats.frames++;
+function frame(t){ document.documentElement.classList.toggle("playing",state==="play"||state==="ready"||state==="dying"); const dt=Math.min(.05,(t-lastT)/1000||0); lastT=t; stats.frames++;
   try{ if(state!=="paused") update(dt); render(); }catch(err){ console.error(err); }
   requestAnimationFrame(frame); }
 
