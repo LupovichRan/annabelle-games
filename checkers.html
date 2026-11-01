@@ -28,6 +28,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 #game{padding:6px}
 .bar{display:flex;align-items:center;gap:8px;width:100%;max-width:900px;flex:0 0 auto}
 .iconbtn{width:48px;height:48px;border-radius:50%;border:2px solid #e8862d;background:#fff;font-size:22px;flex:0 0 auto}
+#netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s}
 .pill{flex:1;text-align:center;background:#fff;border-radius:999px;padding:8px 10px;font-weight:800;font-size:16px;box-shadow:0 3px 0 #0001;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #wrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0;gap:10px}
 #boardBox{position:relative}
@@ -106,7 +107,7 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <section class="screen" id="game">
   <div class="bar">
     <button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button>
-    <div class="pill" id="turn"></div>
+    <div class="pill" id="turn"></div><i id="netDot" aria-hidden="true"></i>
     <button class="iconbtn" id="undoBtn" aria-label="undo">↩️</button>
     <div style="width:48px"></div>
   </div>
@@ -332,7 +333,16 @@ $("muteBtn").addEventListener("click",()=>{muted=!muted;localStorage.setItem("an
 // ---- online play: WebRTC via PeerJS (room code or link), with pause / save / resync on disconnect ----
 const ROOM_SECS=300;
 const NET={waitCode:null,rs:null,cand:null,joinSec:null,key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0};
-const PEER_SRC="vendor/peerjs.min.js",PEER_CFG={config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
+const PEER_SRC="vendor/peerjs.min.js";
+/* ICE servers. STUN finds a direct route; TURN relays the game when there is none (two phones on mobile data / strict Wi-Fi).
+   The free public relay below is shared and best-effort: for a rock-solid game put your own TURN credentials in
+   localStorage["annabelle-turn"] as a JSON array of ICE servers (e.g. from a free metered.ca / Cloudflare TURN account). */
+function iceServers(){
+ let own=null;try{own=JSON.parse(localStorage.getItem("annabelle-turn")||"null")}catch(e){}
+ const base=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
+  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:80?transport=tcp","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
+ return Array.isArray(own)&&own.length?[...own,...base]:base}
+const PEER_CFG={config:{iceServers:iceServers(),iceCandidatePoolSize:2}};
 const PID="annabelle-ck-",SK="annabelle-ck-session";
 function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
 // --- everything from the network is untrusted: validate & rebuild it, never use it as-is ---
@@ -416,9 +426,18 @@ function createRoom(){
 function joinRoom(code,sec){
  netClose();const gen=NET.gen;NET.code=code;NET.joinSec=sec||null;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
  loadPeer().then(()=>{if(gen!==NET.gen)return;
-  const p=new Peer(undefined,PEER_CFG);NET.peer=p;
-  p.on("open",()=>{if(gen!==NET.gen)return;NET.host=false;NET.me=1;const c=p.connect(PID+code,{reliable:true});attach(c,gen);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!(NET.conn&&NET.conn.open))lobFail()},15000)});
-  p.on("error",()=>{if(gen===NET.gen)lobFail()});
+  const p=new Peer(undefined,PEER_CFG);NET.peer=p;let cur=null,attempt=0;
+  const joined=()=>NET.conn&&NET.conn.open;
+  const go=()=>{if(gen!==NET.gen||joined())return;attempt++;
+   if(attempt>4){lobFail();return}
+   $("lobStatus").textContent=t("conn")+(attempt>1?" ("+attempt+"/4)":"");
+   if(cur){try{cur.close()}catch(e){}}
+   NET.host=false;NET.me=1;cur=p.connect(PID+code,{reliable:true});attach(cur,gen);
+   clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!joined())go()},13000)};
+  p.on("open",()=>{if(gen===NET.gen)go()});
+  p.on("error",e=>{if(gen!==NET.gen)return;const ty=e&&e.type;
+   if(ty==="peer-unavailable"||ty==="webrtc"||ty==="negotiation"||ty==="socket-error"||ty==="socket-closed"){clearTimeout(NET.tm);NET.tm=setTimeout(go,3000)}   // host may just be waking up: try again shortly
+   else lobFail()});
  }).catch(()=>{if(gen===NET.gen)lobFail()});
 }
 function admit(c){ // host: this connection is the friend
@@ -444,7 +463,12 @@ function attach(c,gen,pending){
   if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
   else if(!NET.host){try{c.send({t:"join",s:NET.joinSec})}catch(e){}}};
  c.fin=finish;
- c.on("open",op);
+ const watchIce=()=>{const pc=c.peerConnection;if(!pc||c._w)return;c._w=1;
+  pc.addEventListener("iceconnectionstatechange",()=>{const st=pc.iceConnectionState;clearTimeout(c.iceT);
+   if(st==="failed"||st==="closed"){gone()}
+   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},6000)}})};
+ setTimeout(watchIce,0);setTimeout(watchIce,800);
+ c.on("open",()=>{watchIce();op()});
  c.on("data",async d=>{
   if(gen!==NET.gen||!d||typeof d!=="object")return;
   if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
@@ -532,8 +556,16 @@ function netKick(){ // phone woke up / network is back: retry right away
  if(NET.paused){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
  else netSend({t:"ping"});
 }
-setInterval(()=>{if(!G||!G.online||NET.paused)return;netSend({t:"ping"});if(NET.conn&&Date.now()-NET.last>10000)onNetClose()},3000);
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")netKick()});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
+function netQ(){ // connection quality dot: green = data flowing, amber = quiet for a few seconds, red = lost / paused
+ const d=$("netDot");if(!d)return;if(!G||!G.online){d.style.display="none";return}
+ const a=NET.paused?9e9:Date.now()-NET.last;d.style.display="";d.style.background=a<5000?"#2fb36a":a<10000?"#f2c94c":"#e23b3b";d.title=a<5000?"🟢":a<10000?"🟡":"🔴"}
+setInterval(()=>{const now=Date.now();
+ if(NET.tickAt&&now-NET.tickAt>6000)NET.last=now;                   // OUR timers were frozen (phone asleep / app in background): that says nothing about the friend
+ NET.tickAt=now;netQ();
+ if(!G||!G.online||NET.paused)return;netSend({t:"ping"});
+ if(document.hidden)return;
+ if(NET.conn&&now-NET.last>11000)onNetClose()},3000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){NET.last=Date.now();NET.tickAt=Date.now();netKick()}});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
 function resumeSession(){
  let r=null;try{r=JSON.parse(localStorage.getItem(SK))}catch(e){}
  const cs=r&&r.s?cleanState(r.s):null;
