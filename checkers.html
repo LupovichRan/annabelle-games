@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head><!--pt--><script src="playtime.js" data-app="checkers"></script><!--/pt-->
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -56,8 +57,8 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #lobby{justify-content:center;gap:12px;padding:10px;overflow:auto}
 .lobpane{display:none;flex-direction:column;align-items:center;gap:10px}
 .lobpane.on{display:flex}
-#lobCode{font-size:clamp(54px,18vw,90px);font-weight:900;letter-spacing:.12em;color:#e8862d;direction:ltr;text-shadow:0 4px 0 #0002;line-height:1}
-#lobIn{width:min(70vw,240px);height:70px;border-radius:18px;border:3px solid #e8862d;background:#fff;text-align:center;font:900 40px Rubik,Arial;color:#5a3b1a;letter-spacing:.2em;direction:ltr;user-select:text;-webkit-user-select:text}
+#lobCode{font-size:clamp(40px,13vw,72px);font-weight:900;letter-spacing:.12em;color:#e8862d;direction:ltr;text-shadow:0 4px 0 #0002;line-height:1}
+#lobIn{width:min(80vw,300px);height:70px;border-radius:18px;border:3px solid #e8862d;background:#fff;text-align:center;font:900 34px Rubik,Arial;color:#5a3b1a;letter-spacing:.12em;direction:ltr;user-select:text;-webkit-user-select:text}
 #lobCd{font-weight:900;font-size:26px;color:#e8862d;direction:ltr;min-height:32px}#lobCd.low{color:#e23b3b;animation:pulse2 .6s infinite alternate}@keyframes pulse2{to{transform:scale(1.12)}}
 #lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px}
 #pause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:40}#pause.on{display:flex}
@@ -85,7 +86,7 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
   <div class="heads">📱🐱📱</div>
   <div class="row" id="lobMain"><button class="big" id="bCreate"></button><button class="big p" id="bJoin"></button></div>
   <div class="lobpane" id="lobCreate"><div style="font-weight:800" id="lobCodeL"></div><div id="lobCode"></div><a class="big" id="lobWa" target="_blank" rel="noopener"></a><div id="lobWait"></div><div id="lobCd"></div></div>
-  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="4" autocomplete="off"><button class="big" id="bGo"></button></div>
+  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="6" autocomplete="off"><button class="big" id="bGo"></button></div>
   <div id="lobStatus"></div>
   <button class="big g" id="lobBack"></button>
 </section>
@@ -273,13 +274,27 @@ document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=
 $("muteBtn").addEventListener("click",()=>{muted=!muted;localStorage.setItem("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});
 // ---- online play: WebRTC via PeerJS (room code or link), with pause / save / resync on disconnect ----
 const ROOM_SECS=300;
-const NET={cd:null,peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0};
-const PEER_SRC="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js",PEER_CFG={config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
+const NET={key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0};
+const PEER_SRC="vendor/peerjs.min.js",PEER_CFG={config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
 const PID="annabelle-ck-",SK="annabelle-ck-session";
 function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
+// --- everything from the network is untrusted: validate & rebuild it, never use it as-is ---
+const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
+function cleanYarn(y){if(!Array.isArray(y)||y.length>2)return null;const o=[];for(const q of y){if(!Array.isArray(q)||q.length!==2||!int(q[0],0,7)||!int(q[1],0,7))return null;o.push([q[0],q[1]])}return o}
+function cleanState(s){
+ if(!s||typeof s!=="object"||!int(s.turn,0,1)||typeof s.bonus!=="boolean"||typeof s.over!=="boolean"||!int(s.seq,0,1e6)||!Array.isArray(s.b)||s.b.length!==8)return null;
+ const ids=new Set(),b=[];
+ for(const row of s.b){if(!Array.isArray(row)||row.length!==8)return null;const r=[];
+  for(const c of row){if(c===null){r.push(null);continue}if(!c||typeof c!=="object"||!int(c.p,0,1)||!int(c.k,0,1)||!int(c.id,0,63)||ids.has(c.id))return null;ids.add(c.id);r.push({p:c.p,k:c.k,id:c.id})}b.push(r)}
+ const y=cleanYarn(s.yarn);if(!y)return null;
+ let ch=null;if(s.chain!==null&&s.chain!==undefined){if(!Array.isArray(s.chain)||s.chain.length!==2||!int(s.chain[0],0,7)||!int(s.chain[1],0,7))return null;ch=[s.chain[0],s.chain[1]]}
+ return {b,turn:s.turn,yarn:y,bonus:s.bonus,chain:ch,over:s.over,seq:s.seq};
+}
+const rnd=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>b.toString(16).padStart(2,"0")).join("");
+async function hmac(key,msg){const e=new TextEncoder(),k=await crypto.subtle.importKey("raw",e.encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC",k,e.encode(msg))),b=>b.toString(16).padStart(2,"0")).join("")}
 // --- saved game state (survives reloads / app being killed) ---
 function snap(){return {b:G.b,turn:G.turn,yarn:G.yarn,bonus:G.bonus,chain:G.chain,over:G.over,seq:G.seq||0}}
-function saveSess(){if(!G||!G.online)return;if(G.over){clearSess();return}try{localStorage.setItem(SK,JSON.stringify({code:NET.code,host:NET.host,me:G.me,ts:Date.now(),s:snap()}))}catch(e){}}
+function saveSess(){if(!G||!G.online)return;if(G.over){clearSess();return}try{localStorage.setItem(SK,JSON.stringify({code:NET.code,key:NET.key,host:NET.host,me:G.me,ts:Date.now(),s:snap()}))}catch(e){}}
 function clearSess(){try{localStorage.removeItem(SK)}catch(e){}}
 function commit(){if(!G)return;G.seq=(G.seq||0)+1;if(G.online)saveSess()}
 function applyState(s){
@@ -296,7 +311,7 @@ function startCd(gen){
   if(left<=0){lobFail();$("lobStatus").textContent=t("expired")}};
  tick();NET.cd=setInterval(tick,500);
 }
-function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;NET.paused=false;try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
+function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;NET.paused=false;NET.key=null;NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
 function netLeave(){ // leaving on purpose: tell the friend (so they don't wait), forget the saved game
  const c=NET.conn,p=NET.peer;if(G&&G.online)netSend({t:"bye"});NET.conn=null;NET.peer=null;netClose();clearSess();setPaused(false);
  setTimeout(()=>{try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}},400);
@@ -313,16 +328,20 @@ function hostPeer(code,gen,resume){
   $("lobStatus").textContent="";lobPane("lobCreate");startCd(gen)});
  p.on("disconnected",()=>{if(gen===NET.gen&&!p.destroyed)try{p.reconnect()}catch(e){}});
  p.on("connection",c=>{if(gen!==NET.gen)return;
-  if(NET.conn&&!(G&&G.online)){try{c.close()}catch(e){}return}
-  if(NET.conn){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}} // a returning friend replaces a stale half-open connection
-  attach(c,gen)});
+  if(!NET.key){ // fresh room: the first friend in is accepted (the room code is the secret, valid only for the countdown)
+   if(NET.conn||(G&&G.online)){try{c.close()}catch(e){}return}
+   c.authed=true;attach(c,gen);
+  }else{ // a game exists: only someone who proves they know the game secret can (re)connect
+   if(NET.pend.size>=3){try{c.close()}catch(e){}return}
+   attach(c,gen,true);
+  }});
  p.on("error",e=>{if(gen!==NET.gen)return;
   if(resume||NET.paused){if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.paused){const g=NET.gen;try{p.destroy()}catch(x){}hostPeer(code,g,true)}},3000)}return}
   if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
 }
 function createRoom(){
  netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
- loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(1000+Math.random()*9000|0),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
+ loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
 }
 function joinRoom(code){
  netClose();const gen=NET.gen;NET.code=code;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
@@ -332,32 +351,53 @@ function joinRoom(code){
   p.on("error",()=>{if(gen===NET.gen)lobFail()});
  }).catch(()=>{if(gen===NET.gen)lobFail()});
 }
-function attach(c,gen){
- NET.conn=c;NET.last=Date.now();let opened=false;
- const op=()=>{if(opened||gen!==NET.gen||NET.conn!==c)return;opened=true;clearTimeout(NET.tm);NET.last=Date.now();
+function attach(c,gen,pending){
+ c.myN=rnd(16);if(c.authed===undefined)c.authed=false;
+ if(pending)NET.pend.add(c);else NET.conn=c;
+ NET.last=Date.now();let opened=false;
+ const finish=()=>{if(gen!==NET.gen)return;NET.pend.delete(c);clearTimeout(c.to);
+  if(NET.conn&&NET.conn!==c){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
+  NET.conn=c;NET.last=Date.now();clearTimeout(NET.tm);
   if(G&&G.online)sendHello();else if(NET.host)startOnlineHost();else netSend({t:"hello",seq:-1})};
- c.on("open",op);c.on("data",d=>{if(gen===NET.gen&&NET.conn===c){NET.last=Date.now();onNetData(d)}});
- c.on("close",()=>{if(gen===NET.gen&&NET.conn===c)onNetClose()});c.on("error",()=>{if(gen===NET.gen&&NET.conn===c)onNetClose()});
+ const op=()=>{if(opened||gen!==NET.gen)return;opened=true;
+  c.to=setTimeout(()=>{if(!c.authed){NET.pend.delete(c);try{c.close()}catch(e){}}},10000);
+  if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
+  else if(c.authed&&NET.host)finish()};
+ c.on("open",op);
+ c.on("data",async d=>{
+  if(gen!==NET.gen||!d||typeof d!=="object")return;
+  if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
+  if(d.t==="pr"&&NET.key&&typeof d.h==="string"){if(c.authed)return;const want=await hmac(NET.key,"R"+(NET.host?"g":"h")+c.myN);if(gen!==NET.gen)return;if(d.h===want){c.authed=true;finish()}else{NET.pend.delete(c);try{c.close()}catch(e){}}return}
+  if(!c.authed){ // first contact of a joining friend: take the game secret from the host's first "start"
+   if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanYarn(d.y)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
+   return}
+  if(NET.conn!==c)return;
+  NET.last=Date.now();onNetData(d)});
+ const gone=()=>{NET.pend.delete(c);if(gen===NET.gen&&NET.conn===c)onNetClose()};
+ c.on("close",gone);c.on("error",gone);
  if(c.open)op();
 }
-function startOnlineHost(){stopCd();NET.q=[];SFX.join();newGame("online");netSend({t:"start",y:G.yarn})}
+function startOnlineHost(){stopCd();NET.q=[];SFX.join();if(!NET.key)NET.key=rnd(16);newGame("online");netSend({t:"start",y:G.yarn,k:NET.key})}
 function sendHello(){const g=G;(function w(){if(G!==g||!NET.conn)return;if(G.busy){setTimeout(w,80);return}netSend({t:"hello",seq:G.seq||0})})()}
 function sendState(){const g=G;(function w(){if(G!==g||!NET.conn)return;if(G.busy){setTimeout(w,80);return}netSend({t:"state",s:snap()})})()}
 function onNetData(d){
  if(!d||typeof d!=="object")return;
- if(d.t==="start"&&!NET.host){NET.q=[];SFX.join();setPaused(false);newGame("online",Array.isArray(d.y)?d.y:undefined)}
+ if(d.t==="start"&&!NET.host){const y=cleanYarn(d.y);if(!y||d.k!==NET.key)return;NET.q=[];SFX.join();setPaused(false);newGame("online",y)}
  else if(d.t==="hello"){
+  if(!int(d.seq,-1,1e6))return;
   const mine=G&&G.online?(G.seq||0):-1;
   if(mine>d.seq)sendState();
   else if(mine===d.seq&&mine>=0)setPaused(false);
  }
- else if(d.t==="state"&&d.s&&Array.isArray(d.s.b)){
+ else if(d.t==="state"){
+  const cs=cleanState(d.s);if(!cs)return;
+  if(G&&G.online&&NET.host&&cs.seq<(G.seq||0))return; // the host's board is authoritative: never go backwards
   if(!G||!G.online){NET.q=[];newGame("online")}
-  applyState(d.s);setPaused(false);
+  applyState(cs);setPaused(false);
  }
  else if(d.t==="resync"){if(NET.host)sendState()}
- else if(d.t==="move"&&G&&G.online&&d.m&&!G.paused){NET.q.push(d.m);pumpNet()}
- else if(d.t==="yarn"&&G&&G.online&&Array.isArray(d.y)){const g=G;(function ap(){if(G!==g)return;if(G.busy){setTimeout(ap,100);return}G.yarn=d.y;draw();saveSess()})()}
+ else if(d.t==="move"&&G&&G.online&&!G.paused&&d.m&&typeof d.m==="object"&&NET.q.length<64&&int(d.m.fr,0,7)&&int(d.m.fc,0,7)&&int(d.m.r,0,7)&&int(d.m.c,0,7)){NET.q.push({fr:d.m.fr,fc:d.m.fc,r:d.m.r,c:d.m.c});pumpNet()}
+ else if(d.t==="yarn"&&G&&G.online&&cleanYarn(d.y)){const g=G,yy=cleanYarn(d.y);(function ap(){if(G!==g)return;if(G.busy){setTimeout(ap,100);return}G.yarn=yy;draw();saveSess()})()}
  else if(d.t==="rematch"){SFX.click();NET.oppRe=true;maybeRematch()}
  else if(d.t==="bye"){const had=G&&G.online;if(had)SFX.drop();clearSess();netClose();setPaused(false);
   if(had){G.over=true;$("winT").textContent=t("left");$("winS").textContent="👋";$("againBtn").style.display="none";$("win").classList.add("on")}else lobFail()}
@@ -405,9 +445,10 @@ setInterval(()=>{if(!G||!G.online||NET.paused)return;netSend({t:"ping"});if(NET.
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")netKick()});addEventListener("online",netKick);
 function resumeSession(){
  let r=null;try{r=JSON.parse(localStorage.getItem(SK))}catch(e){}
- if(!r||!r.s||!Array.isArray(r.s.b)||Date.now()-r.ts>2*3600e3){clearSess();return false}
- NET.code=r.code;NET.host=!!r.host;NET.me=r.me;
- newGame("online",r.s.yarn);const s=r.s;
+ const cs=r&&r.s?cleanState(r.s):null;
+ if(!r||!cs||!/^\d{6}$/.test(r.code||"")||!/^[0-9a-f]{32}$/.test(r.key||"")||!(Date.now()-r.ts<2*3600e3)){clearSess();return false}
+ NET.code=r.code;NET.key=r.key;NET.host=!!r.host;NET.me=r.me===1?1:0;
+ newGame("online",cs.yarn);const s=cs;
  G.b=s.b;G.turn=s.turn;G.yarn=s.yarn;G.bonus=s.bonus;G.chain=s.chain;G.seq=s.seq;G.sel=null;G.over=false;draw();updTurn();
  setPaused(true);if(s.over)checkEnd();
  const gen=NET.gen;
@@ -418,12 +459,12 @@ $("pauseLeave").addEventListener("click",()=>{SFX.click();toMenu()});
 $("bOnline").addEventListener("click",()=>{SFX.click();showLobby()});
 $("bCreate").addEventListener("click",()=>{SFX.click();createRoom()});
 $("bJoin").addEventListener("click",()=>{SFX.click();lobPane("lobJoin");$("lobStatus").textContent="";$("lobIn").value="";$("lobIn").focus()});
-$("bGo").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===4){SFX.click();joinRoom(c)}});
-$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
+$("bGo").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===6){SFX.click();joinRoom(c)}});
+$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6)});
 $("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
 applyLang();updMute();
 {const q=new URLSearchParams(location.search).get("room")||"";let sv=null;try{sv=JSON.parse(localStorage.getItem(SK))}catch(e){}
- if(/^\d{4}$/.test(q)&&!(sv&&sv.code===q&&!sv.host)){clearSess();setTimeout(()=>{showLobby();joinRoom(q)},0)}else if(sv)resumeSession()}
+ if(/^\d{6}$/.test(q)&&!(sv&&sv.code===q&&!sv.host)){clearSess();setTimeout(()=>{showLobby();joinRoom(q)},0)}else if(sv)resumeSession()}
 </script>
 </body>
 </html>
