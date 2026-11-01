@@ -419,6 +419,11 @@ let parts=[], floats=[], rain=[], bf={nx:.5,ny:.3,h:1.4,tx:.6,ty:.4,t:0};
 let S=null, TOWN=null;
 const ptr={down:false,id:null,x:0,y:0,lx:0,ly:0,spd:0,still:0,cat:null,rub:0,moved:0,tool:null,lt:0};
 const TEST={};
+let sillyT=9;
+const SILLY={
+ he:[["{n} מתגלגל בצחוק! 🙃","{n} מתגלגלת בצחוק! 🙃"],["{n} רודף אחרי הזנב! 🌀","{n} רודפת אחרי הזנב! 🌀"],["{n} התעטש! 🤧","{n} התעטשה! 🤧"],["{n} עשה סלטה! 🤸","{n} עשתה סלטה! 🤸"],["{n} נבהל מהצל שלו 🙀","{n} נבהלה מהצל שלה 🙀"],["{n} מפהק ענק 🥱","{n} מפהקת ענק 🥱"],["{n} צוחק: חי-חי! 😹","{n} צוחקת: חי-חי! 😹"],["{n} רוקד! 💃","{n} רוקדת! 💃"]],
+ fr:["{n} roule de rire ! 🙃","{n} court après sa queue ! 🌀","{n} a éternué ! 🤧","{n} fait une galipette ! 🤸","{n} a peur de son ombre 🙀","{n} bâille très fort 🥱","{n} rigole : hihi ! 😹","{n} danse ! 💃"],
+ en:["{n} is rolling with laughter! 🙃","{n} chases its own tail! 🌀","{n} sneezed! 🤧","{n} did a somersault! 🤸","{n} got scared of its shadow 🙀","{n} yawns super wide 🥱","{n} giggles: hehe! 😹","{n} is dancing! 💃"]};
 let saveT=0, cardT=0, tipShownAt=-99, lastPhase=-1;
 
 function L(){ return T[lang]; }
@@ -645,7 +650,7 @@ function updCat(c,dt){
   if(c.blinkT>0) c.blinkT-=dt; if(c.blinkCD>0) c.blinkCD-=dt; if(c.bandageT>0) c.bandageT-=dt; if(c.jump>0) c.jump-=dt; if(c.mouthT>0) c.mouthT-=dt; c.meowCD-=dt;
   if(c.st!=="pet") c.purr=Math.max(0,c.purr-dt*2);
   const k=isNight()?.6:1;
-  c.hun=Math.max(15,c.hun-dt*.5*k); c.thi=Math.max(15,c.thi-dt*.62*k); c.hap=Math.max(15,c.hap-dt*(.2+(S.mess.length>8?.25:0)+(c.scratch?.1:0))); c.cln=Math.max(20,c.cln-dt*.12);
+  c.hun=Math.max(15,c.hun-dt*.38*k); c.thi=Math.max(15,c.thi-dt*.47*k); c.hap=Math.max(15,c.hap-dt*(.2+(S.mess.length>8?.25:0)+(c.scratch?.1:0))); c.cln=Math.max(20,c.cln-dt*.12);
   if(c.meowCD<=0&&(c.st==="idle"||c.st==="walk")){ c.meowCD=d.chatty?rnd(6,12):rnd(14,30); if(Math.random()<.7) catMeow(c,true); }
   switch(c.st){
     case "walk": case "flee": { const p=catScr(c), q=toScr(c.tx,c.ty), dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), step=U*1.5*c.spd*dt;
@@ -729,6 +734,10 @@ function update(dt){
   S.play+=dt;
   updWorld(dt);
   present().forEach(c=>updCat(c,dt));
+  sillyT-=dt; if(sillyT<=0){ sillyT=rnd(11,19); const can=present().filter(c=>["idle","walk","play","chase"].includes(c.st)&&!shyLow(c)&&!c.bench&&c.boxId==null);
+    if(can.length){ const c=pick(can), q=catCenter(c), a=SILLY[lang]||SILLY.he; let tx=pick(a); if(Array.isArray(tx)) tx=tx[DEF[c.id].g==="f"?1:0]; tx=tx.replace("{n}",cname(c));
+      c.jump=.5; c.hap=Math.min(100,c.hap+10); SFX.pop(); setTimeout(()=>catMeow(c,true),180); burst(q.x,q.y-q.r*.3,8,"#ffd23f","spark",1.6);
+      floats.push({x:clamp(q.x,Math.min(W/2,155),Math.max(W/2,W-155)),y:q.y-q.r*1.2,txt:tx,col:"#ff7a3d",life:2.4,max:2.4}); } }
   // petting / brushing
   const c=ptr.cat;
   if(c&&ptr.down){ const a=ptr.rub/U; ptr.rub=0; const d=DEF[c.id]; const q=catCenter(c);
@@ -1257,11 +1266,11 @@ const $=id=>document.getElementById(id), lg=()=>lang;
 const TX={he:{tapTown:"👆 לחצי על העיר הבאה!",stars:"כוכבים: {n}/3",btn:"🚌 מסע בין הערים",win:"כל הכבוד! הגורים שבעים 💛",back:"🏠 תפריט",reset:"↺ מסע חדש",adopt:"🏡 יום אימוץ!",adoptH:"בחרי גור ואז משפחה שמתאימה לו",home:"בית חדש! 💞",cert:"תעודת אימוץ 🏅",certT:"אנאבל מצאה בית ל-{n} גורים! את גיבורת החתולים!",wrong:"אולי משפחה אחרת? 🤔",rescued:"🐱 הוצלו: {n}"},
 fr:{tapTown:"👆 Touche la ville suivante !",stars:"Étoiles : {n}/3",btn:"🚌 Voyage de ville en ville",win:"Bravo ! Les chatons sont rassasiés 💛",back:"🏠 Menu",reset:"↺ Nouveau voyage",adopt:"🏡 Journée d'adoption !",adoptH:"Choisis un chaton puis la famille qui lui va",home:"Nouvelle maison ! 💞",cert:"Certificat d'adoption 🏅",certT:"Annabelle a trouvé une maison pour {n} chatons ! Héroïne des chats !",wrong:"Une autre famille ? 🤔",rescued:"🐱 Sauvés : {n}"},
 en:{tapTown:"👆 Tap the next town!",stars:"Stars: {n}/3",btn:"🚌 Town-to-town journey",win:"Great job! The kittens are full 💛",back:"🏠 Menu",reset:"↺ New journey",adopt:"🏡 Adoption Day!",adoptH:"Pick a kitten, then the family that fits",home:"New home! 💞",cert:"Adoption certificate 🏅",certT:"Annabelle found homes for {n} kittens! A true cat hero!",wrong:"Maybe another family? 🤔",rescued:"🐱 Rescued: {n}"}};
-const TOWNS=[{n:{he:"השכונה",fr:"Le quartier",en:"Home street"},ic:"🏘️",lic:"🏘️",sky:"#bfe6ff",gr:"#e9d7b0",lm:'<rect x="40" y="200" width="90" height="140" fill="#f7a8a8"/><rect x="150" y="170" width="100" height="170" fill="#ffe08a"/><rect x="270" y="210" width="90" height="130" fill="#a8d8a8"/>',goal:4,t:45},
-{n:{he:"השוק",fr:"Le marché",en:"The market"},ic:"🍎",lic:"🏪",sky:"#ffe7c2",gr:"#e8c59a",lm:'<path d="M30 260 h120 l-20 -50 h-80z" fill="#ff6b81"/><path d="M160 260 h120 l-20 -50 h-80z" fill="#34c47c"/><path d="M290 260 h100 l-20 -50 h-60z" fill="#ffc14d"/><rect x="30" y="260" width="360" height="40" fill="#b07a4a"/>',goal:5,t:45},
-{n:{he:"הנמל",fr:"Le port",en:"The harbor"},ic:"⚓",lic:"⛵",sky:"#cfefff",gr:"#d8cbb0",lm:'<rect x="0" y="250" width="400" height="90" fill="#4fa3e0"/><path d="M120 250 l60 -80 v80z" fill="#fff"/><rect x="100" y="250" width="110" height="20" fill="#b0503a"/><rect x="300" y="150" width="30" height="100" fill="#ff4d6d"/>',goal:6,t:45},
-{n:{he:"הכפר",fr:"Le village",en:"The village"},ic:"🌾",lic:"🌻",sky:"#d9f5d0",gr:"#bfe39b",lm:'<path d="M60 300 l60 -70 l60 70z" fill="#c0392b"/><rect x="75" y="300" width="90" height="50" fill="#f3d9a4"/><circle cx="300" cy="250" r="50" fill="#5cb85c"/><rect x="293" y="290" width="14" height="50" fill="#8b5a2b"/>',goal:7,t:48},
-{n:{he:"העיר הגדולה",fr:"La grande ville",en:"The big city"},ic:"🏙️",lic:"🏙️",sky:"#ffd6e8",gr:"#cfcfd8",lm:'<rect x="20" y="120" width="70" height="220" fill="#7c5cff"/><rect x="100" y="80" width="80" height="260" fill="#5a7bd8"/><rect x="190" y="140" width="70" height="200" fill="#ff7a3d"/><rect x="270" y="60" width="90" height="280" fill="#4a2c6b"/>',goal:8,t:50}];
+const TOWNS=[{n:{he:"השכונה",fr:"Le quartier",en:"Home street"},ic:"🏘️",lic:"🏘️",sky:"#bfe6ff",gr:"#e9d7b0",lm:'<rect x="40" y="200" width="90" height="140" fill="#f7a8a8"/><rect x="150" y="170" width="100" height="170" fill="#ffe08a"/><rect x="270" y="210" width="90" height="130" fill="#a8d8a8"/>',goal:3,t:45},
+{n:{he:"השוק",fr:"Le marché",en:"The market"},ic:"🍎",lic:"🏪",sky:"#ffe7c2",gr:"#e8c59a",lm:'<path d="M30 260 h120 l-20 -50 h-80z" fill="#ff6b81"/><path d="M160 260 h120 l-20 -50 h-80z" fill="#34c47c"/><path d="M290 260 h100 l-20 -50 h-60z" fill="#ffc14d"/><rect x="30" y="260" width="360" height="40" fill="#b07a4a"/>',goal:4,t:45},
+{n:{he:"הנמל",fr:"Le port",en:"The harbor"},ic:"⚓",lic:"⛵",sky:"#cfefff",gr:"#d8cbb0",lm:'<rect x="0" y="250" width="400" height="90" fill="#4fa3e0"/><path d="M120 250 l60 -80 v80z" fill="#fff"/><rect x="100" y="250" width="110" height="20" fill="#b0503a"/><rect x="300" y="150" width="30" height="100" fill="#ff4d6d"/>',goal:5,t:45},
+{n:{he:"הכפר",fr:"Le village",en:"The village"},ic:"🌾",lic:"🌻",sky:"#d9f5d0",gr:"#bfe39b",lm:'<path d="M60 300 l60 -70 l60 70z" fill="#c0392b"/><rect x="75" y="300" width="90" height="50" fill="#f3d9a4"/><circle cx="300" cy="250" r="50" fill="#5cb85c"/><rect x="293" y="290" width="14" height="50" fill="#8b5a2b"/>',goal:6,t:48},
+{n:{he:"העיר הגדולה",fr:"La grande ville",en:"The big city"},ic:"🏙️",lic:"🏙️",sky:"#ffd6e8",gr:"#cfcfd8",lm:'<rect x="20" y="120" width="70" height="220" fill="#7c5cff"/><rect x="100" y="80" width="80" height="260" fill="#5a7bd8"/><rect x="190" y="140" width="70" height="200" fill="#ff7a3d"/><rect x="270" y="60" width="90" height="280" fill="#4a2c6b"/>',goal:7,t:50}];
 const KN=[["🐱","Mitzi",0],["🐈","Pitzi",1],["😺","Luna",2],["😸","Tigi",0],["🐈‍⬛","Shadow",1],["😻","Bisli",2],["😽","Nala",0],["🙀","Ziggy",1]];
 const FAM=[{e:"👨‍👩‍👧",h:{he:"אוהב לשחק 🧶",fr:"aime jouer 🧶",en:"loves to play 🧶"}},{e:"👵",h:{he:"ישנוני 💤",fr:"endormi 💤",en:"sleepy 💤"}},{e:"👩‍🍳",h:{he:"אוהב לאכול 🐟",fr:"gourmand 🐟",en:"loves food 🐟"}}];
 const KEY="annabelle-streetcats-journey";
@@ -1297,7 +1306,7 @@ function go(i){ const jy=$("jy"); jy.style.transition="opacity .4s"; jy.style.op
     const pill=document.createElement("div"); pill.className="pill"; pill.id="townPill"; $("dayPill").after(pill);
     const upd=()=>{ pill.textContent=`${T.ic} ${T.n[lg()]} ❤️${Math.min(goal,S.hearts-h0)}/${goal}`; }; upd();
     tick=setInterval(()=>{ if(!TOWN){ clearInterval(tick); tick=null; return; } upd(); if(S.hearts-h0>=goal){ clearInterval(tick); tick=null; win(i,(Date.now()-t0)/1000); } },300); },400); }
-function win(i,sec){ toMenu(); const T=TOWNS[i], ns=sec<=T.t*2?3:sec<=T.t*4?2:1; J.stars[i]=Math.max(J.stars[i]||0,ns); J.kits=J.kits.concat([0,1].map(n=>{ const k=KN[(i*2+n)%KN.length]; return k[1]+":"+k[2]+":"+k[0]; })); J.town=i+1; sv(); lbl();
+function win(i,sec){ toMenu(); const T=TOWNS[i], ns=sec<=T.t*3?3:sec<=T.t*6?2:1; J.stars[i]=Math.max(J.stars[i]||0,ns); J.kits=J.kits.concat([0,1].map(n=>{ const k=KN[(i*2+n)%KN.length]; return k[1]+":"+k[2]+":"+k[0]; })); J.town=i+1; sv(); lbl();
   $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; bg(i); bar(`<span class="pl">${T.lic} ${T.n[lg()]}</span>`); try{ confetti(120); }catch(e){}
   [0,1,2].forEach(n=>n<ns&&setTimeout(()=>beep(660+n*220,.18,"triangle",.15),200+n*300)); const SH=`<div class="stars">${[0,1,2].map(n=>`<span style="animation-delay:${.2+n*.3}s">${n<ns?"⭐":"☆"}</span>`).join("")}</div>`;
   if(J.town>=TOWNS.length){ card(i,t().win,`${SH}<button class="jb go" id="jyA">${t().adopt}</button>`); $("jyA").onclick=adoption; return; }

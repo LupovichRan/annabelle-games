@@ -57,6 +57,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 
 .tl.awake{z-index:12;box-shadow:0 0 0 5px #e23b3b,0 0 18px 6px #e23b3b;animation:aw .6s infinite alternate}@keyframes aw{to{transform:scale(1.25)}}
 .heartbreak{position:fixed;font-size:44px;z-index:16;pointer-events:none;transform:translate(-50%,-50%);animation:hb 1.6s forwards}@keyframes hb{60%{transform:translate(-50%,-50%) scale(1.6)}to{transform:translate(-50%,40px) scale(1);opacity:0}}
+.tl.glow{z-index:5;animation:gl .7s infinite alternate;box-shadow:0 0 0 4px #fff59d,0 0 16px 6px #ffe14d}@keyframes gl{to{transform:scale(1.15)}}
 .shake{animation:sh .12s 5}@keyframes sh{50%{transform:translateX(5px)}}
 .khint,.khg{display:none}
 .desk .khint{display:block;max-width:560px;font-size:14px;font-weight:700;opacity:.85;text-align:center;line-height:1.5}
@@ -80,6 +81,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
   <div class="rules" id="rules"></div>
   <div class="row">
+    <button class="big" data-mode="tiny" id="bTiny" style="background:linear-gradient(#7fd89a,#35a85a);box-shadow:0 4px 0 #1f7a3d"></button>
     <button class="big" data-mode="easy" id="bEasy"></button>
     <button class="big p" data-mode="normal" id="bNorm"></button>
   </div>
@@ -104,19 +106,24 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"גינת החתולים",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
+ he:{title:"גינת החתולים",tiny:"🌼 גינה זעירה · 6×6",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
   rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","🌿 פתחי את כל המשבצות בלי כלבים כדי לנצח!","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
-  keys:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · בלוח: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> חפירה · <kbd>X</kbd> סימון · <kbd>F</kbd> מצב סימון · <kbd>H</kbd> רמז · <kbd>Esc</kbd> תפריט · קליק ימני = סימון",dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
+  keys:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> זעירה · בלוח: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> חפירה · <kbd>X</kbd> סימון · <kbd>F</kbd> מצב סימון · <kbd>H</kbd> רמז · <kbd>Esc</kbd> תפריט · קליק ימני = סימון",dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
   winT:"ניצחת, אנאבל! 🎉",lose:"אופס! הכלבים התעוררו 🐶",again:"🔁 עוד משחק",retry:"🔁 נסי שוב",best:"שיא",newBest:"שיא חדש! 🏆",sec:"שנ׳"},
- fr:{title:"Le jardin des chats",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
+ fr:{title:"Le jardin des chats",tiny:"🌼 Mini-jardin · 6×6",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","🌿 Ouvre toutes les cases sans chien pour gagner !","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
-  keys:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · Sur le plateau : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> creuser · <kbd>X</kbd> marquer · <kbd>F</kbd> mode patte · <kbd>H</kbd> indice · <kbd>Échap</kbd> menu · clic droit = marquer",dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
+  keys:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Mini · Sur le plateau : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> creuser · <kbd>X</kbd> marquer · <kbd>F</kbd> mode patte · <kbd>H</kbd> indice · <kbd>Échap</kbd> menu · clic droit = marquer",dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
   winT:"Tu as gagné, Annabelle ! 🎉",lose:"Oups ! Les chiens se sont réveillés 🐶",again:"🔁 Rejouer",retry:"🔁 Réessaie",best:"Record",newBest:"Nouveau record ! 🏆",sec:"s"},
- en:{title:"Cat Garden",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
+ en:{title:"Cat Garden",tiny:"🌼 Tiny garden · 6×6",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","🌿 Open all the tiles without dogs to win!","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
-  keys:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · On the board: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> dig · <kbd>X</kbd> mark · <kbd>F</kbd> mark mode · <kbd>H</kbd> hint · <kbd>Esc</kbd> menu · right-click = mark",dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
+  keys:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Tiny · On the board: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> dig · <kbd>X</kbd> mark · <kbd>F</kbd> mark mode · <kbd>H</kbd> hint · <kbd>Esc</kbd> menu · right-click = mark",dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
   winT:"You won, Annabelle! 🎉",lose:"Oops! The dogs woke up 🐶",again:"🔁 Play again",retry:"🔁 Try again",best:"Best",newBest:"New record! 🏆",sec:"s"}};
-const LV={easy:{c:8,r:8,d:8,l:3},normal:{c:9,r:11,d:14,l:2}};
+const FUN={
+ he:{oops:["אופס! הערת כלב 🐶","הכלב התעורר ופיהק ענק 🥱","בו! הכלב התעטש 🤧","הכלב מצמץ: מי העיר אותי? 😴"],back:["הכלב פיהק וחזר לישון 😴","חרררר… הכלב שוב נרדם 💤"],quip:["החתול מחפש דג 🐟","מיאו! אפשר לחפור עוד? 😸","הדשא מדגדג ברגליים 🌿","הכלבים מנחרים… שששש 🤫","החתול עושה סלטה! 🤸"],big:["וואו, כמה מקום! 🌿","חפרנו מלא! 🎉"],glow:"הכפה הקסומה מראה מקום בטוח ✨"},
+ fr:{oops:["Oups ! Tu as réveillé un chien 🐶","Le chien bâille très fort 🥱","Atchoum ! Le chien a éternué 🤧","Le chien cligne : qui m'a réveillé ? 😴"],back:["Le chien a bâillé et s'est rendormi 😴","Rrrr… le chien ronfle déjà 💤"],quip:["Le chat cherche un poisson 🐟","Miaou ! On creuse encore ? 😸","L'herbe chatouille les pattes 🌿","Les chiens ronflent… chut 🤫","Le chat fait une galipette ! 🤸"],big:["Waouh, quelle place ! 🌿","On a creusé plein de cases ! 🎉"],glow:"La patte magique montre une case sûre ✨"},
+ en:{oops:["Oops! You woke a dog 🐶","The dog woke up with a giant yawn 🥱","Achoo! The dog sneezed 🤧","The dog blinks: who woke me? 😴"],back:["The dog yawned and fell asleep again 😴","Zzzz… the dog is snoring again 💤"],quip:["The cat is looking for a fish 🐟","Meow! Can we dig more? 😸","The grass tickles my paws 🌿","The dogs are snoring… shhh 🤫","The cat does a somersault! 🤸"],big:["Wow, so much space! 🌿","We dug up lots of tiles! 🎉"],glow:"The magic paw shows a safe tile ✨"}};
+const pickf=a=>a[Math.random()*a.length|0];
+const LV={tiny:{c:6,r:6,d:4,l:5,h:5},easy:{c:8,r:8,d:7,l:5,h:5},normal:{c:9,r:11,d:12,l:5,h:5}}; // tiny: fewer dogs than hearts, so it cannot be lost
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
@@ -127,9 +134,9 @@ function applyLang(){
  $("tTitle").textContent=t("title"); document.title=t("title");
  $("flags").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${l}</button>`).join("");
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
- $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("againBtn").textContent=t("again");
- const b=getBest();$("bestT").textContent=["easy","normal"].filter(k=>b[k]).map(k=>`🏆 ${t(k).split("·")[0].trim()}: ${b[k]} ${t("sec")}`).join("   ");
- $("kh").innerHTML=t("keys");$("kh2").innerHTML=t("keys").split(" · ").slice(2).join("<br>").replace(/^[^:：]*[:：] ?/,"");
+ $("bTiny").textContent=t("tiny");$("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("againBtn").textContent=t("again");
+ const b=getBest();$("bestT").textContent=["tiny","easy","normal"].filter(k=>b[k]).map(k=>`🏆 ${t(k).split("·")[0].trim()}: ${b[k]} ${t("sec")}`).join("   ");
+ $("kh").innerHTML=t("keys");$("kh2").innerHTML=t("keys").split(" · ").slice(3).join("<br>").replace(/^[^:：]*[:：] ?/,"");
  if(G)hud();
 }
 let AC=null,muted=localStorage.getItem("annabelle-muted")==="1";
@@ -144,14 +151,22 @@ let G=null,timer=null,cur=0;
 function newGame(mode){
  const L=LV[mode],land=innerWidth>innerHeight;
  const C=land?Math.max(L.c,L.r):L.c,R=land?Math.min(L.c,L.r):L.r;
- G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:3};
+ G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:L.h||5,lastAct:Date.now(),glow:-1,nextSilly:Date.now()+14000};
  for(let i=0;i<C*R;i++)G.cells.push({dog:false,n:0,o:false,f:false});
  const g=$("grid");g.innerHTML="";g.style.gridTemplateColumns=`repeat(${C},1fr)`;
  cur=(R>>1)*C+(C>>1);
  for(let i=0;i<C*R;i++){const b=document.createElement("button");b.className="tl"+(i===cur?" cur":"");b.dataset.i=i;b.tabIndex=-1;g.appendChild(b)}
- clearInterval(timer);timer=setInterval(()=>{if(G&&G.started&&!G.over){G.sec=Math.floor((Date.now()-G.t0)/1000);hud()}},500);
+ clearInterval(timer);timer=setInterval(tick,500);
  show("game");setFlag(false);hud();
 }
+function tick(){if(!G||!G.started||G.over)return;const now=Date.now();G.sec=Math.floor((now-G.t0)/1000);hud();
+ if(G.paused||$("win").classList.contains("on"))return;
+ if(G.glow<0&&now-G.lastAct>11000){const cand=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o&&!G.cells[i].f);
+  const near=cand.filter(i=>nb(i).some(j=>G.cells[j].o&&!G.cells[j].dog));const pool=near.length?near:cand;
+  if(pool.length){const i=pool[Math.random()*pool.length|0];G.glow=i;$("grid").children[i].classList.add("glow");toast(FUN[lang].glow,2200);SFX.flag()}}
+ if(now>G.nextSilly){G.nextSilly=now+rndT(16000,26000);toast(pickf(FUN[lang].quip),1800);SFX.meow()}}
+const rndT=(a,b)=>a+Math.random()*(b-a);
+function act(){if(!G)return;G.lastAct=Date.now();if(G.glow>=0){const e=$("grid").children[G.glow];if(e)e.classList.remove("glow");G.glow=-1}}
 const nb=i=>{const r=Math.floor(i/G.C),c=i%G.C,o=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<G.R&&cc>=0&&cc<G.C)o.push(rr*G.C+cc)}return o};
 function plant(safe){const ban=new Set([safe,...nb(safe)]);const pool=[];for(let i=0;i<G.cells.length;i++)if(!ban.has(i))pool.push(i);
  for(let k=0;k<G.D;k++){const j=pool.splice(Math.random()*pool.length|0,1)[0];G.cells[j].dog=true}
@@ -159,21 +174,21 @@ function plant(safe){const ban=new Set([safe,...nb(safe)]);const pool=[];for(let
 function hud(){const f=G.cells.filter(c=>c.f||(c.o&&c.dog)).length;
  const left=G.cells.filter(c=>!c.dog&&!c.o).length;$("info").textContent=`🌿${left} 🐶${Math.max(0,G.D-f)} ⏱️${G.sec}`;$("hintBtn").textContent=`💡${G.hints}`;$("hintBtn").disabled=!G.hints;$("hintBtn").style.opacity=G.hints?1:.4;$("hearts").textContent=G.lives?"❤️"+G.lives:"🤍"}
 function setFlag(v){G.flagMode=v;const b=$("flagBtn");b.classList.toggle("on",v);const L=(v?t("flag"):t("dig")).split(" ");b.innerHTML=`${L[0]}<span class="lbl"> ${L.slice(1).join(" ")}</span>`}
-function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl"+(i===cur?" cur":"");b.innerHTML="";
+function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl"+(i===cur?" cur":"")+(i===G.glow&&!c.o?" glow":"");b.innerHTML="";
  if(c.o){if(c.dog){b.classList.add("d");b.textContent="🐶"}else{b.classList.add("o");if(c.n)b.innerHTML=`<span class="n n${c.n}"><i>🐾</i>${c.n}</span>`;else if(i%5===2)b.innerHTML='<span style="opacity:.6;font-size:.7em">🐟</span>'}}
  else if(c.f){b.classList.add("f");b.textContent="🐾"}}
 function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
-function tap(i,forceFlag){if(!G||G.over||G.paused)return;const c=G.cells[i];ac();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
+function tap(i,forceFlag){if(!G||G.over||G.paused)return;const c=G.cells[i];ac();act();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
  if(forceFlag||G.flagMode){c.f=!c.f;render(i);SFX.flag();hud();return}
  if(c.f)return;
  if(!G.started){G.started=true;G.t0=Date.now();plant(i)}
  if(c.dog){c.o=true;render(i);G.lives--;G.hits++;hud();dogWake(i);return}
- open(i);SFX.dig();hud();checkWin()}
+ const before=G.opened;open(i);SFX.dig();if(G.opened-before>=10)toast(pickf(FUN[lang].big),1500);hud();checkWin()}
 function chord(i){const ns=nb(i).filter(j=>!G.cells[j].o);if(nb(i).filter(j=>G.cells[j].f||(G.cells[j].o&&G.cells[j].dog)).length!==G.cells[i].n)return;
  const rest=ns.filter(j=>!G.cells[j].f);if(!rest.length)return;let hit=false;
  for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;dogWake(j);}}else open(j)}
  SFX.dig();hud();if(!G.over)checkWin()}
-function hint(){if(!G||G.over||G.paused||!G.hints)return;ac();
+function hint(){if(!G||G.over||G.paused||!G.hints)return;ac();act();
  if(!G.started){const m=(G.R>>1)*G.C+(G.C>>1);G.hints--;setFlag(false);G.cells[m].f=false;tap(m);return}
  const cand=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(!cand.length)return;
  const near=cand.filter(i=>nb(i).some(j=>G.cells[j].o&&!G.cells[j].dog));const pool=near.length?near:cand;
@@ -184,9 +199,9 @@ function dogWake(i){G.paused=true;if(G.lives<=0)G.over=true;SFX.bark();setTimeou
  const hb=document.createElement("div");hb.className="heartbreak";hb.textContent="💔";const r=$("hearts").getBoundingClientRect();hb.style.left=(r.left+r.width/2)+"px";hb.style.top=(r.top+r.height/2)+"px";document.body.appendChild(hb);setTimeout(()=>hb.remove(),1600);$("hearts").classList.add("shake");setTimeout(()=>$("hearts").classList.remove("shake"),700);
  const d=document.createElement("div");d.className="chase";d.textContent="🐈      🐕";document.body.appendChild(d);
  d.animate([{transform:"translateX(110vw)"},{transform:"translateX(-70vw)"}],{duration:3000,easing:"ease-in-out"}).onfinish=()=>d.remove();
- $("oopsT").textContent=t("oops");$("oopsS").textContent=G.lives>0?t("lost").replace("N",G.lives):t("lastH");$("oopsBtn").textContent=t("cont");
+ $("oopsT").textContent=pickf(FUN[lang].oops);$("oopsS").textContent=G.lives>0?t("lost").replace("N",G.lives):t("lastH");$("oopsBtn").textContent=t("cont");
  setTimeout(()=>$("oops").classList.add("on"),350);
- $("oopsBtn").onclick=()=>{SFX.click();$("oops").classList.remove("on");b.classList.remove("awake");G.paused=false;if(G.lives<=0)lose()}}
+ $("oopsBtn").onclick=()=>{SFX.click();$("oops").classList.remove("on");b.classList.remove("awake");G.paused=false;act();if(G.lives<=0)lose();else{toast(pickf(FUN[lang].back),1700)}}}
 function checkWin(){const closed=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(closed.some(i=>!G.cells[i].f))return;
  closed.forEach(i=>{G.cells[i].f=false;G.cells[i].o=true;G.opened++;render(i)});
  G.over=true;G.sec=Math.floor((Date.now()-G.t0)/1000);hud();G.cells.forEach((c,i)=>{if(c.dog&&!c.o){c.f=true;render(i)}});
@@ -212,7 +227,7 @@ document.addEventListener("keydown",e=>{
  const act=k==="Enter"||k===" ";
  if(on("oops")){if(act||k==="ArrowRight"||k==="ArrowLeft"){if(!btn||btn.id!=="oopsBtn"){e.preventDefault();$("oopsBtn").click()}}else if(k==="Escape"){e.preventDefault();$("oopsBtn").click();$("menuBtn").click()}return}
  if(on("win")){if(act){if(!btn){e.preventDefault();$("againBtn").click()}}else if(k==="Escape"){e.preventDefault();toMenu()}return}
- if($("menu").classList.contains("active")){const m=k==="1"?"easy":k==="2"?"normal":null;if(m){e.preventDefault();ac();SFX.click();newGame(m)}return}
+ if($("menu").classList.contains("active")){const m=k==="1"?"easy":k==="2"?"normal":k==="3"?"tiny":null;if(m){e.preventDefault();ac();SFX.click();newGame(m)}return}
  if(!G||!$("game").classList.contains("active"))return;
  const kk=k.length===1?k.toLowerCase():k,rtl=document.documentElement.dir==="rtl";
  let dr=0,dc=0;
