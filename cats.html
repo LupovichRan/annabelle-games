@@ -55,7 +55,7 @@
   .level .dots i{width:9px;height:12px;border-radius:3px;background:#fff9}
   .level .best{font-size:16px;font-weight:700;background:#0002;border-radius:999px;padding:2px 10px;min-height:24px}
   .level .best.empty{background:none}
-  .l6{background:linear-gradient(#5fd38d,#2fb36a)} .l10{background:linear-gradient(#ffb84d,#ff8a1f)} .l12{background:linear-gradient(#ff7aa8,#e8487f)}
+  .l3{background:linear-gradient(#4dc3ff,#1f8fe8)} .l6{background:linear-gradient(#5fd38d,#2fb36a)} .l10{background:linear-gradient(#ffb84d,#ff8a1f)} .l12{background:linear-gradient(#ff7aa8,#e8487f)}
 
   /* ---------- game ---------- */
   .bar{display:flex;align-items:center;gap:10px;height:64px;flex:none}
@@ -87,6 +87,11 @@
   @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}70%{transform:scale(.97) rotate(2deg)}100%{transform:scale(1)}}
   .card.wiggle .inner{animation:wig .4s ease}
   @keyframes wig{0%,100%{transform:rotateY(180deg)}25%{transform:rotateY(180deg) rotate(-4deg)}75%{transform:rotateY(180deg) rotate(4deg)}}
+
+  .card.glow{animation:glowp .5s ease-in-out infinite alternate;position:relative;z-index:2}
+  @keyframes glowp{from{filter:drop-shadow(0 0 4px #ffd23f);transform:scale(1)}to{filter:drop-shadow(0 0 18px #ffb300);transform:scale(1.07)}}
+  #silly{position:fixed;left:50%;top:76px;transform:translate(-50%,-14px) scale(.9);opacity:0;pointer-events:none;z-index:25;background:#fff;border-radius:999px;padding:8px 20px;font-size:clamp(18px,2.6vw,26px);font-weight:900;color:#7c5cff;box-shadow:0 5px 0 #0002;max-width:92vw;text-align:center;transition:opacity .25s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+  #silly.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
   /* fact toast */
   #fact{position:fixed;left:50%;bottom:max(14px,var(--sab,env(safe-area-inset-bottom)));transform:translate(-50%,calc(100% + 60px));visibility:hidden;pointer-events:none;width:min(92vw,720px);background:#fff;border-radius:24px;padding:12px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 0 #0002,0 0 0 5px #ffd36b;transition:transform .45s cubic-bezier(.3,1.4,.5,1);z-index:20;}
@@ -147,6 +152,7 @@
   <div id="board"><div id="grid"></div></div>
 </section>
 
+<div id="silly" aria-live="polite"></div>
 <div id="fact"><div id="factPic"></div><div><div class="nm" id="factName"></div><div class="tx" id="factText"></div></div></div>
 
 <div id="win">
@@ -207,15 +213,15 @@ const ANIMALS = {
 const KEYS = Object.keys(ANIMALS);
 
 const T = {
-  he:{dir:"rtl",title:"המשחק של אנאבל",keys:"<kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> רמה · <kbd>M</kbd> סוג משחק · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> הפיכת קלף · <kbd>Esc</kbd> תפריט",mode:"בחרי משחק",mPics:"תמונות זהות",mNames:"חיה ושם",level:"בחרי רמה",pairs:"זוגות",
-      lv:["קל","בינוני","קשה"],moves:"מהלכים",best:"שיא",win:"כל הכבוד, אנאבל!",winSub:"סיימת ב־{n} מהלכים",rec:"שיא חדש! 🏆",again:"🔁 עוד פעם",menu:"🏠 תפריט",word:"אריה"},
-  fr:{dir:"ltr",title:"Le jeu d'Annabelle",keys:"<kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> niveau · <kbd>M</kbd> type de jeu · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> retourner · <kbd>Échap</kbd> menu",mode:"Choisis un jeu",mPics:"Images identiques",mNames:"Animal et nom",level:"Choisis un niveau",pairs:"paires",
-      lv:["Facile","Moyen","Difficile"],moves:"Coups",best:"Record",win:"Bravo, Annabelle !",winSub:"Terminé en {n} coups",rec:"Nouveau record ! 🏆",again:"🔁 Rejouer",menu:"🏠 Menu",word:"lion"},
-  en:{dir:"ltr",title:"Annabelle's Game",keys:"<kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> level · <kbd>M</kbd> game type · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> flip · <kbd>Esc</kbd> menu",mode:"Pick a game",mPics:"Matching pictures",mNames:"Animal & name",level:"Pick a level",pairs:"pairs",
-      lv:["Easy","Medium","Hard"],moves:"Moves",best:"Best",win:"Well done, Annabelle!",winSub:"Finished in {n} moves",rec:"New record! 🏆",again:"🔁 Play again",menu:"🏠 Menu",word:"lion"}
+  he:{dir:"rtl",title:"המשחק של אנאבל",keys:"<kbd>1</kbd>–<kbd>4</kbd> רמה · <kbd>M</kbd> סוג משחק · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> הפיכת קלף · <kbd>Esc</kbd> תפריט",mode:"בחרי משחק",mPics:"תמונות זהות",mNames:"חיה ושם",level:"בחרי רמה",pairs:"זוגות",
+      lv:["זעיר","קל","בינוני","קשה"],oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","קרוב! 😺","חמוד, עוד פעם! 🤪"],cheer:["יש! 😻","מיאוווו! 🎉","זוג מושלם! 🌟","את אלופה! 🏆","הידד! 🥳"],tip:"✨ פסססט… הקלף הנוצץ!",moves:"מהלכים",best:"שיא",win:"כל הכבוד, אנאבל!",winSub:"סיימת ב־{n} מהלכים",rec:"שיא חדש! 🏆",again:"🔁 עוד פעם",menu:"🏠 תפריט",word:"אריה"},
+  fr:{dir:"ltr",title:"Le jeu d'Annabelle",keys:"<kbd>1</kbd>–<kbd>4</kbd> niveau · <kbd>M</kbd> type de jeu · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> retourner · <kbd>Échap</kbd> menu",mode:"Choisis un jeu",mPics:"Images identiques",mNames:"Animal et nom",level:"Choisis un niveau",pairs:"paires",
+      lv:["Minuscule","Facile","Moyen","Difficile"],oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Presque ! 😺","Mignon, encore ! 🤪"],cheer:["Oui ! 😻","Miaouuu ! 🎉","Paire parfaite ! 🌟","Championne ! 🏆","Hourra ! 🥳"],tip:"✨ Psst… la carte qui brille !",moves:"Coups",best:"Record",win:"Bravo, Annabelle !",winSub:"Terminé en {n} coups",rec:"Nouveau record ! 🏆",again:"🔁 Rejouer",menu:"🏠 Menu",word:"lion"},
+  en:{dir:"ltr",title:"Annabelle's Game",keys:"<kbd>1</kbd>–<kbd>4</kbd> level · <kbd>M</kbd> game type · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> flip · <kbd>Esc</kbd> menu",mode:"Pick a game",mPics:"Matching pictures",mNames:"Animal & name",level:"Pick a level",pairs:"pairs",
+      lv:["Tiny","Easy","Medium","Hard"],oops:["Oopsie! 🙈","Hee hee, not that one! 😹","Meow-ps! 🙊","Close! 😺","Cute, try again! 🤪"],cheer:["Yes! 😻","Meowww! 🎉","Perfect pair! 🌟","You're a champ! 🏆","Hooray! 🥳"],tip:"✨ Psst… the sparkly card!",moves:"Moves",best:"Best",win:"Well done, Annabelle!",winSub:"Finished in {n} moves",rec:"New record! 🏆",again:"🔁 Play again",menu:"🏠 Menu",word:"lion"}
 };
 const LANGS = [["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
-const LEVELS = [6,10,12];
+const LEVELS = [3,6,10,12];   // 3 = new tiny starter level; 6/10/12 unchanged so saved bests stay valid
 
 /* ============================================================
    SVG cat-face generator
@@ -358,6 +364,7 @@ const SFX = {
 let lang = localStorage.getItem("annabelle-lang") || "he";
 if (!T[lang]) lang="he";
 let mode = localStorage.getItem("annabelle-mode") || "pics";
+let missStreak = 0, sillyT = null, glowT = null;
 let pairs = 6, cards = [], open = [], lock = false, moves = 0, found = 0, cur = 0, gridCols = 1;
 const $ = id => document.getElementById(id);
 const bestKey = (m,p)=>`annabelle-best-${m}-${p}`;
@@ -378,7 +385,7 @@ function renderMenu(){
     `<button class="mode ${mode==="pics"?"sel":""}" data-mode="pics"><div class="pic">${face("tiger")}${face("tiger")}</div>${t.mPics}</button>`+
     `<button class="mode ${mode==="names"?"sel":""}" data-mode="names"><div class="pic">${face("lion")}<span class="word">${ANIMALS.lion.name[lang]}</span></div>${t.mNames}</button>`;
   $("levels").innerHTML = LEVELS.map((n,i)=>{
-    const b=getBest(mode,n), cols = n===6?4:n===10?5:6;
+    const b=getBest(mode,n), cols = n===3?3:n===6?4:n===10?5:6;
     return `<button class="level l${n}" data-pairs="${n}"><span class="t">${t.lv[i]}</span><span class="n">${n}</span>
       <span class="dots" style="grid-template-columns:repeat(${cols},9px)">${"<i></i>".repeat(n*2)}</span>
       <span class="t">${t.pairs}</span><span class="best ${b===null?"empty":""}">${b!==null?"🏆 "+b:"&nbsp;"}</span></button>`;}).join("");
@@ -404,7 +411,7 @@ $("againBtn").onclick = ()=>{ SFX.click(); stopWin(); startGame(pairs); };
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function startGame(n){
-  pairs=n; moves=0; found=0; open=[]; lock=false; cur=0; hideFact();
+  pairs=n; moves=0; found=0; open=[]; lock=false; cur=0; missStreak=0; hideFact(); clearTimeout(glowT); $("silly").classList.remove("show");
   const chosen = shuffle(KEYS.slice()).slice(0,n);
   const deck=[];
   chosen.forEach(k=>{ deck.push({k,kind:"pic"}); deck.push({k,kind: mode==="names"?"word":"pic"}); });
@@ -435,7 +442,7 @@ document.addEventListener("keydown", e=>{
   const winOn=$("win").classList.contains("show");
   if(winOn){ if(act&&!btn){ e.preventDefault(); $("againBtn").click(); } else if(k==="Escape"){ e.preventDefault(); $("menuBtn").click(); } return; }
   if($("menu").classList.contains("active")){
-    if(k>="1"&&k<="3"){ const b=document.querySelectorAll("#levels .level")[+k-1]; if(b){ e.preventDefault(); b.click(); } }
+    if(k>="1"&&k<="4"){ const b=document.querySelectorAll("#levels .level")[+k-1]; if(b){ e.preventDefault(); b.click(); } }
     else if(k==="m"||k==="M"){ e.preventDefault(); const nb=document.querySelector('#modes .mode:not(.sel)'); if(nb) nb.click(); }
     return;
   }
@@ -469,19 +476,27 @@ function layout(){
 window.addEventListener("resize", layout);
 window.addEventListener("orientationchange", ()=>setTimeout(layout,200));
 
+function silly(arr){ const el=$("silly"); el.textContent=arr[Math.random()*arr.length|0]; el.classList.add("show"); clearTimeout(sillyT); sillyT=setTimeout(()=>el.classList.remove("show"),1500); }
+function clearGlow(){ clearTimeout(glowT); cards.forEach(c=>c.classList.remove("glow")); }
 function tap(el){
   if(lock || el.classList.contains("up")) return;
   ac(); if(open.length===0) hideFact();
+  clearGlow();
   el.classList.add("up"); SFX.flip(); open.push(el);
-  if(open.length<2) return;
+  if(open.length<2){
+    // friendly help: after 2 misses in a row, the twin of the card you just opened sparkles for a moment
+    if(missStreak>=2){ const twin=cards.find(c=>c!==el && c.dataset.key===el.dataset.key && !c.classList.contains("up"));
+      if(twin){ twin.classList.add("glow"); silly([T[lang].tip]); glowT=setTimeout(clearGlow,2600); } }
+    return;
+  }
   moves++; $("moves").textContent=moves;
   const [a,b]=open;
   if(a.dataset.key===b.dataset.key){
-    open=[]; found++;
+    open=[]; found++; missStreak=0; silly(T[lang].cheer);
     setTimeout(()=>{ a.classList.add("matched"); b.classList.add("matched"); SFX.match(); SFX.voice(ANIMALS[a.dataset.key].voice); showFact(a.dataset.key); },250);
     if(found===pairs) setTimeout(win, 1300);
   } else {
-    lock=true;
+    lock=true; missStreak++; silly(T[lang].oops);
     setTimeout(()=>{ a.classList.add("wiggle"); b.classList.add("wiggle"); SFX.oops(); },450);
     setTimeout(()=>{ a.classList.remove("up","wiggle"); b.classList.remove("up","wiggle"); open=[]; lock=false; },1050);
   }

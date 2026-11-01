@@ -150,6 +150,7 @@
   <div class="heads" id="menuHeads"></div>
   <div class="langs" id="langs"></div>
   <div class="how" id="tHow"></div>
+  <div class="langs" id="diffs"></div>
   <button class="big go" id="playBtn"></button>
   <div class="label" id="tLevels"></div>
   <div class="levels" id="levels"></div>
@@ -371,6 +372,8 @@ const SFX = {
   thorn(){ noise(0,.3,.3,500,2); tone(200,0,.35,"sawtooth",.08,70); },
   blocked(){ tone(140,0,.09,"square",.08); tone(110,.06,.09,"square",.06); },
   tick(){ tone(1200,0,.05,"sine",.08); },
+  boing(){ tone(260,0,.28,"sine",.17,720); tone(520,.12,.18,"triangle",.08,300); },
+  giggle(){ [900,1100,950,1250].forEach((f,i)=>tone(f,i*.07,.07,"triangle",.07)); },
   mission(){ [659,784,988].forEach((f,i)=>tone(f,i*.08,.16,"triangle",.14)); },
   level(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.22,"triangle",.16)); },
   tryagain(){ [523,466,440].forEach((f,i)=>tone(f,i*.16,.25,"sine",.12)); },
@@ -396,17 +399,29 @@ const T = {
       collect:"אספי רק:",go:"▶ יאללה!",newT:"משימה חדשה!",combo:"קומבו",sec:"שנ׳",paused:"הפסקה",resume:"▶ המשך",restart:"🔁 מההתחלה",menu:"🏠 תפריט",
       next:"לשלב הבא ⬅",again:"🔁 עוד פעם",passT:"שלב {n} הושלם!",passS:"ניקוד: {s}",failT:"כמעט!",failS:"צברת {s} מתוך {g}. עוד ניסיון ותצליחי!",
       rec:"שיא חדש! 🏆",win:"כל הכבוד, אנאבל!",winS:"עברת את כל השלבים! ניקוד כולל: {n}",
-      hFlee:"חלק מהבועות בורחות מהאצבע!",hObs:"מכשולים חוסמים לחיצות – הבועות מקפצות מהם",hThorn:"זהירות! בועת קוצים מורידה 3 שניות",hGoal:"יעד: {g} נקודות"},
+      hFlee:"חלק מהבועות בורחות מהאצבע!",hObs:"מכשולים חוסמים לחיצות – הבועות מקפצות מהם",hThorn:"זהירות! בועת קוצים מורידה {n} שניות",hGoal:"יעד: {g} נקודות",
+      diff:"קושי",easy:"🐣 קל",normal:"⭐ רגיל",
+      oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","בלגן חמוד! 🤪","גיגי! 🙃"],giggle:["חי חי!","חחח 😆","גיגול! 🫧","ציק ציק!"],
+      cheer:["מיאוווו! 😻","את אלופה! 🏆","וואו! 🌟","פיצוץ מושלם! 🎉","הידד! 🥳"],look:"👀 הנה!",
+      failFun:["כמעט! החתולים צוחקים איתך 😹","אופס, הבועות ברחו! 🫧","עוד קצת ותצליחי! 😺","הבועות מדגדגות! 🤭"]},
   fr:{dir:"ltr",title:"Les bulles félines d'Annabelle",how:"Éclate seulement les bulles avec les bons animaux avant la fin du temps !",play:"▶ Jouer",levels:"Niveaux",lv:"Niveau",best:"Record",
       collect:"Attrape seulement :",go:"▶ C'est parti !",newT:"Nouvelle mission !",combo:"Combo",sec:"s",paused:"Pause",resume:"▶ Continuer",restart:"🔁 Recommencer",menu:"🏠 Menu",
       next:"Niveau suivant ➡",again:"🔁 Rejouer",passT:"Niveau {n} réussi !",passS:"Score : {s}",failT:"Presque !",failS:"Tu as {s} points sur {g}. Encore un essai et tu vas y arriver !",
       rec:"Nouveau record ! 🏆",win:"Bravo, Annabelle !",winS:"Tu as réussi tous les niveaux ! Score total : {n}",
-      hFlee:"Certaines bulles fuient ton doigt !",hObs:"Les obstacles bloquent les touches et font rebondir les bulles",hThorn:"Attention ! Une bulle à épines fait perdre 3 secondes",hGoal:"Objectif : {g} points"},
+      hFlee:"Certaines bulles fuient ton doigt !",hObs:"Les obstacles bloquent les touches et font rebondir les bulles",hThorn:"Attention ! Une bulle à épines fait perdre {n} secondes",hGoal:"Objectif : {g} points",
+      diff:"Difficulté",easy:"🐣 Facile",normal:"⭐ Normal",
+      oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Quel joli désordre ! 🤪","Boing ! 🙃"],giggle:["Hi hi !","Ha ha 😆","Glouglou ! 🫧","Tchic tchic !"],
+      cheer:["Miaouuu ! 😻","Tu es une championne ! 🏆","Waouh ! 🌟","Éclatement parfait ! 🎉","Hourra ! 🥳"],look:"👀 Ici !",
+      failFun:["Presque ! Les chats rient avec toi 😹","Oups, les bulles se sont sauvées ! 🫧","Encore un peu et tu y es ! 😺","Les bulles chatouillent ! 🤭"]},
   en:{dir:"ltr",title:"Annabelle's Cat Bubbles",how:"Pop only the bubbles with the right animals before time runs out!",play:"▶ Play",levels:"Levels",lv:"Level",best:"Best",
       collect:"Pop only:",go:"▶ Let's go!",newT:"New mission!",combo:"Combo",sec:"s",paused:"Paused",resume:"▶ Resume",restart:"🔁 Restart",menu:"🏠 Menu",
       next:"Next level ➡",again:"🔁 Play again",passT:"Level {n} complete!",passS:"Score: {s}",failT:"So close!",failS:"You got {s} of {g} points. One more try and you'll do it!",
       rec:"New record! 🏆",win:"Well done, Annabelle!",winS:"You beat every level! Total score: {n}",
-      hFlee:"Some bubbles run away from your finger!",hObs:"Obstacles block taps and bubbles bounce off them",hThorn:"Careful! A thorn bubble costs 3 seconds",hGoal:"Goal: {g} points"}
+      hFlee:"Some bubbles run away from your finger!",hObs:"Obstacles block taps and bubbles bounce off them",hThorn:"Careful! A thorn bubble costs {n} seconds",hGoal:"Goal: {g} points",
+      diff:"Difficulty",easy:"🐣 Easy",normal:"⭐ Normal",
+      oops:["Oopsie! 🙈","Hee hee, not that one! 😹","Meow-ps! 🙊","Cute mess! 🤪","Boing! 🙃"],giggle:["Hee hee!","Ha ha 😆","Giggle! 🫧","Tee-hee!"],
+      cheer:["Meowww! 😻","You're a champ! 🏆","Wow! 🌟","Perfect pop! 🎉","Hooray! 🥳"],look:"👀 Here!",
+      failFun:["So close! The cats are laughing with you 😹","Oops, the bubbles ran away! 🫧","Just a little more! 😺","The bubbles tickle! 🤭"]}
 };
 const LANGS = [["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
 
@@ -435,6 +450,14 @@ const LEVELS = [
   {n:13,speed:110,flee:.45,thorns:2,time:55,goal:160,targets:["leopard","cheetah","tiger","housecats","spotted"],
      obs:[{m:"rot",x:.5,y:.5,len:.44,spd:-1,spiky:1},{m:"slide",x:.5,y:.17,len:.32,ax:"x",amp:.28,per:5},{m:"slide",x:.5,y:.85,len:.32,ax:"x",amp:.28,per:5,ph:Math.PI},{m:"rot",x:.16,y:.32,len:.15,spd:2.2}]}
 ];
+/* difficulty: "normal" = the original numbers, "easy" (default) = fewer/larger/slower bubbles, more time, gentle penalties, auto help */
+const DIFF_KEY="annabelle-bubbles-diff";
+let diff = localStorage.getItem(DIFF_KEY)==="normal" ? "normal" : "easy";
+function tune(b){
+  if(diff==="normal") return {...b,thornPen:3,wrongPen:5,goodSec:1,tapPad:8,helpAfter:0};
+  return {...b,n:Math.max(6,Math.round(b.n*.72)),speed:Math.round(b.speed*.7),flee:b.flee*.4,thorns:b.thorns>1?1:0,time:b.time+30,
+    goal:Math.round(b.goal*.8/10)*10,obs:b.obs.slice(0,Math.ceil(b.obs.length*.5)),thornPen:2,wrongPen:2,goodSec:2,tapPad:18,helpAfter:7};
+}
 const SWITCH_EVERY = 6;      // correct pops before the mission changes
 const TARGET_SHARE = .36;    // share of animal bubbles that are correct
 
@@ -449,6 +472,7 @@ const LS = {
 };
 let state="menu";            // menu | ready | play | paused | end
 let lvI=0, L=LEVELS[0], score=0, timeLeft=60, combo=0, tgtI=0, tgtCount=0, ending=false, lastTick=-1;
+let sinceGood=0, helpB=null, giggleT=5;
 let bubbles=[], obstacles=[], particles=[], flyers=[], floats=[], wrongs=[], spawnQ=[];
 let W=0,H=0,DPR=1,A={x0:0,y0:0,x1:0,y1:0},S=1, shake=0, gtime=0;
 const stats={wall:0,pair:0,obs:0,pops:0,frames:0};
@@ -572,7 +596,7 @@ function rerollAnimals(){
   animals.forEach((b,i)=>{ b.key = i<want ? pick(tgt().keys) : pick(d); b.sq=1; sparkle(b.x,b.y,b.r); });
 }
 function startLevel(i){
-  lvI=i; L=LEVELS[i]; score=0; combo=0; tgtI=0; tgtCount=0; ending=false; lastTick=-1; timeLeft=L.time;
+  lvI=i; L=tune(LEVELS[i]); score=0; combo=0; tgtI=0; tgtCount=0; ending=false; lastTick=-1; timeLeft=L.time; sinceGood=0; helpB=null; giggleT=4+Math.random()*3;
   particles=[]; flyers=[]; floats=[]; wrongs=[]; spawnQ=[]; bubbles=[];
   showHUD(true); resize();
   N=Math.round(L.n*areaScale()); R0=rAvg(N);
@@ -587,7 +611,7 @@ function startLevel(i){
   const hints=[`<div class="hint"><i>🎯</i>${t.hGoal.replace("{g}",L.goal)}</div>`];
   if(L.flee) hints.push(`<div class="hint"><i>💨</i>${t.hFlee}</div>`);
   if(L.obs.length) hints.push(`<div class="hint"><i>🚧</i>${t.hObs}</div>`);
-  if(L.thorns) hints.push(`<div class="hint"><i>🌵</i>${t.hThorn}</div>`);
+  if(L.thorns) hints.push(`<div class="hint"><i>🌵</i>${t.hThorn.replace("{n}",L.thornPen)}</div>`);
   $("readyHints").innerHTML=hints.join("");
   $("readyHints").style.cssText="display:flex;flex-direction:column;gap:6px";
   showOv("ready"); state="ready";
@@ -632,7 +656,7 @@ function tapAt(x,y){
   ac();
   for(const o of obstacles){ const c=segClosest(o,x,y); if(Math.hypot(c.x-x,c.y-y)<o.hit+4){ SFX.blocked(); floats.push({x,y,txt:"✋",col:"#7c5cff",life:.7,max:.7,size:30}); return; } }
   let hit=null, hd=1e9;
-  for(const b of bubbles){ if(b.age<.25) continue; const d=Math.hypot(b.x-x,b.y-y); if(d<b.r+8 && d/b.r<hd){hd=d/b.r;hit=b;} }
+  for(const b of bubbles){ if(b.age<.25) continue; const d=Math.hypot(b.x-x,b.y-y); if(d<b.r+(L.tapPad||8) && d/b.r<hd){hd=d/b.r;hit=b;} }
   if(hit) popBubble(hit);
   // runaway bubbles dodge away from every tap
   for(const b of bubbles){ if(!b.flee) continue; const dx=b.x-x, dy=b.y-y, d=Math.hypot(dx,dy)||1, R=b.r*2.2+110*S;
@@ -644,29 +668,48 @@ function popBubble(b){
   SFX.pop();
   const t=T[lang];
   if(b.thorn){
-    timeLeft=Math.max(0,timeLeft-3); score=Math.max(0,score-5); combo=0;
-    floats.push({x:b.x,y:b.y,txt:`−3 ${t.sec}`,col:"#e8204f",life:1.1,max:1.1,size:30});
-    floats.push({x:b.x,y:b.y+34,txt:"−5",col:"#e8204f",life:1.1,max:1.1,size:24});
-    flash(); shake=.35; SFX.thorn(); spawnQ.push({t:1.2,thorn:true});
+    timeLeft=Math.max(0,timeLeft-L.thornPen); score=Math.max(0,score-L.wrongPen); combo=0;
+    floats.push({x:b.x,y:b.y,txt:`−${L.thornPen} ${t.sec}`,col:"#e8204f",life:1.1,max:1.1,size:30});
+    floats.push({x:b.x,y:b.y+34,txt:"−"+L.wrongPen,col:"#e8204f",life:1.1,max:1.1,size:24});
+    flash(); shake=.35; SFX.thorn(); funny(b.x,b.y+b.r+20,t.oops); spawnQ.push({t:1.2,thorn:true});
   } else if(isTarget(b.key)){
-    combo++; const m=mult(), pts=10*m; score+=pts; timeLeft+=1; tgtCount++;
+    combo++; const m=mult(), pts=10*m; score+=pts; timeLeft+=L.goodSec; tgtCount++; sinceGood=0; helpB=null;
     flyers.push({key:b.key,x:b.x,y:b.y,r:b.r,t:0,from:{x:b.x,y:b.y}});
     floats.push({x:b.x,y:b.y-b.r*.3,txt:"+"+pts,col:"#1f9e5a",life:1,max:1,size:34});
-    floats.push({x:b.x,y:b.y+b.r*.5,txt:`+1 ${t.sec}`,col:"#1f8fe8",life:1,max:1,size:20});
+    floats.push({x:b.x,y:b.y+b.r*.5,txt:`+${L.goodSec} ${t.sec}`,col:"#1f8fe8",life:1,max:1,size:20});
     if(m>1 && (combo-1)%3===0) floats.push({x:W/2,y:A.y0+100,txt:`${t.combo} ×${m}!`,col:"#7c5cff",life:1.3,max:1.3,size:40,rtl:lang==="he"});
     SFX.good(combo); SFX.voice(ANIMALS[b.key].voice);
+    if(combo%5===0){ funny(W/2,A.y0+150,t.cheer,"#e8487f",36); }
     spawnQ.push({t:.4+Math.random()*.6});
     if(tgtCount>=SWITCH_EVERY && L.targets.length>1){
       tgtCount=0; tgtI=(tgtI+1)%L.targets.length; renderTarget(); rerollAnimals(); banner(); SFX.mission();
     }
     if(score>=L.goal*2 && !ending){ ending=true; setTimeout(()=>endLevel(),700); }
   } else {
-    score=Math.max(0,score-5); combo=0;
+    score=Math.max(0,score-L.wrongPen); combo=0;
     wrongs.push({key:b.key,x:b.x,y:b.y,r:b.r,t:0});
-    floats.push({x:b.x,y:b.y-b.r*.3,txt:"−5",col:"#e8204f",life:1,max:1,size:34});
-    flash(); shake=.3; SFX.wrong(); spawnQ.push({t:.6+Math.random()*.6});
+    floats.push({x:b.x,y:b.y-b.r*.3,txt:"−"+L.wrongPen,col:"#e8204f",life:1,max:1,size:34});
+    funny(b.x,b.y+b.r*.7,t.oops);
+    if(diff==="normal"){ flash(); shake=.3; SFX.wrong(); } else { shake=.12; SFX.boing(); } spawnQ.push({t:.6+Math.random()*.6});
   }
   updateHUD();
+}
+
+/* ============ SILLY MOMENTS ============ */
+function funny(x,y,arr,col,size){
+  const a=arr[Math.random()*arr.length|0], m=Math.min(Math.max(x,A.x0+70),A.x1-70);
+  floats.push({x:m,y:Math.min(Math.max(y,A.y0+30),A.y1-30),txt:a,col:col||"#7c5cff",life:1.5,max:1.5,size:size||26,rtl:lang==="he"});
+}
+function funnyTick(dt){
+  giggleT-=dt;
+  if(giggleT<=0){ giggleT=6+Math.random()*5; const c=bubbles.filter(b=>!b.thorn&&b.age>1); if(c.length){ const b=pick(c); b.sq=1; funny(b.x,b.y-b.r*.2,T[lang].giggle,"#ff5d8f",22); SFX.giggle(); } }
+  if(L.helpAfter){
+    sinceGood+=dt;
+    if(helpB&&(!bubbles.includes(helpB)||helpB.help<=0)) helpB=null;
+    if(helpB) helpB.help-=dt;
+    if(!helpB&&sinceGood>L.helpAfter){ const g=bubbles.filter(b=>!b.thorn&&b.age>.6&&isTarget(b.key));
+      if(g.length){ helpB=pick(g); helpB.help=4; sinceGood=L.helpAfter-3; funny(helpB.x,helpB.y-helpB.r-14,[T[lang].look],"#1f8fe8",26); } }
+  }
 }
 
 /* ============ EFFECTS ============ */
@@ -761,6 +804,7 @@ function render(){
     const rx=b.r*sc*(1+sq), ry=b.r*sc*(1-sq);
     if(b.fleeing>0 && b.flee){ ctx.globalAlpha=.35*Math.min(1,b.fleeing*3); ctx.fillStyle="#fff"; const sp=Math.hypot(b.vx,b.vy)||1;
       for(let k=1;k<=3;k++){ ctx.beginPath(); ctx.arc(b.x-b.vx/sp*b.r*.45*k,b.y-b.vy/sp*b.r*.45*k,b.r*(1-.2*k),0,7); ctx.fill(); } ctx.globalAlpha=1; }
+    if(b.help>0){ const pu=1+.12*Math.sin(gtime*9); ctx.globalAlpha=Math.min(1,b.help*2); ctx.lineWidth=6; ctx.strokeStyle="#ffd23f"; ctx.setLineDash([12,9]); ctx.beginPath(); ctx.arc(b.x,b.y,b.r*1.18*pu,0,7); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; }
     ctx.drawImage(b.thorn?THORN:SPR[b.key], b.x-rx, b.y-ry, rx*2, ry*2);
   }
   for(const o of obstacles) drawObstacle(o);
@@ -802,6 +846,7 @@ function frame(now){
   if(state==="play"){
     timeLeft-=dt;
     const c=Math.ceil(timeLeft); if(c<=5 && c>0 && c!==lastTick){ lastTick=c; SFX.tick(); }
+    funnyTick(dt);
     if(timeLeft<=0){ timeLeft=0; if(!ending){ ending=true; endLevel(); } }
     updateHUDTimer();
   }
@@ -826,7 +871,7 @@ function endLevel(){
   if(pass && LS.unlocked()<lvI+2) localStorage.setItem("annabelle-bubbles-unlocked",Math.min(LEVELS.length,lvI+2));
   if(pass && lvI===LEVELS.length-1){ return winGame(st); }
   $("endStars").innerHTML=starHTML(st);
-  $("endTitle").textContent= pass ? t.passT.replace("{n}",lvI+1) : t.failT;
+  $("endTitle").textContent= pass ? t.passT.replace("{n}",lvI+1) : pick(t.failFun);
   $("endSub").textContent= pass ? t.passS.replace("{s}",score) : t.failS.replace("{s}",score).replace("{g}",L.goal);
   $("endRec").textContent= rec ? t.rec : "";
   $("nextBtn").classList.toggle("hidden",!pass); $("nextBtn").textContent=t.next;
@@ -863,14 +908,16 @@ function applyLang(){
 function renderMenu(){
   const t=T[lang], un=LS.unlocked();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
+  $("diffs").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" aria-label="${t.diff}" dir="auto">${t[k]}</button>`).join("");
   $("levels").innerHTML=LEVELS.map((_,i)=>{ const lock=i>=un, b=LS.best(i), s=LS.stars(i);
     return `<button class="lvl lv${i+1} ${lock?"locked":""}" data-lv="${i}" ${lock?"disabled":""}><span class="n">${lock?"🔒":i+1}</span>
       <span class="st">${[0,1,2].map(k=>`<span class="${k<s?"":"off"}">★</span>`).join("")}</span><span class="b">${b!==null?"🏆 "+b:"&nbsp;"}</span></button>`; }).join("");
 }
 $("menuHeads").innerHTML=["lion","tiger","kitten"].map(k=>`<div class="bub">${face(k)}</div>`).join("");
 document.addEventListener("click",e=>{
-  const l=e.target.closest("[data-lang]"), v=e.target.closest("[data-lv]");
-  if(l){ lang=l.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
+  const l=e.target.closest("[data-lang]"), v=e.target.closest("[data-lv]"), df=e.target.closest("[data-diff]");
+  if(df){ diff=df.dataset.diff==="normal"?"normal":"easy"; try{localStorage.setItem(DIFF_KEY,diff);}catch(_){} SFX.click(); renderMenu(); }
+  else if(l){ lang=l.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
   else if(v && !v.disabled){ ac(); SFX.click(); startLevel(+v.dataset.lv); }
 });
 function updateMute(){ $("muteBtn").textContent=muted?"🔇":"🔊"; }
