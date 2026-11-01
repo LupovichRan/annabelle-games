@@ -138,7 +138,13 @@ const SFX={click:()=>tone(600,.08,"triangle",.15),move:()=>tone(420,.12,"triangl
  meow:()=>{tone(700,.12,"sawtooth",.08,1100);setTimeout(()=>tone(1100,.25,"sawtooth",.08,500),120)},
  roar:()=>{if(muted)return;const a=ac();if(!a)return;const n=a.currentTime,len=a.sampleRate*.8,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);const s=a.createBufferSource();s.buffer=b;const fl=a.createBiquadFilter();fl.type="lowpass";fl.frequency.value=500;const g=a.createGain();g.gain.value=.5;s.connect(fl).connect(g).connect(a.destination);s.start(n);tone(110,.8,"sawtooth",.15,60)},
  boing:()=>tone(300,.3,"sine",.25,900),
- win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.25,"triangle",.2),i*140))};
+ win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.25,"triangle",.2),i*140)),
+ // online
+ join:()=>{tone(523,.14,"triangle",.2);setTimeout(()=>tone(784,.22,"triangle",.2),130)},
+ turn:()=>{tone(880,.12,"sine",.2);setTimeout(()=>tone(1175,.2,"sine",.18),110)},
+ lose:()=>[392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.3,"triangle",.18),i*170)),
+ drop:()=>{tone(500,.18,"sawtooth",.1,250);setTimeout(()=>tone(300,.3,"sawtooth",.1,150),170)},
+ back:()=>{tone(440,.12,"triangle",.2);setTimeout(()=>tone(660,.12,"triangle",.2),110);setTimeout(()=>tone(880,.2,"triangle",.2),220)}};
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 // ---- game ----
 const S=100,NS="http://www.w3.org/2000/svg";
@@ -257,7 +263,7 @@ function fit(){const w=$("wrap");const s=Math.max(200,Math.min(w.clientWidth-4,w
 addEventListener("resize",fit);
 window.toMenu=function(){netLeave();$("win").classList.remove("on");G=null;show("menu")};
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
-function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🩶🦁🩶":"🧡🦁🧡";$("againBtn").style.display="";$("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti()}}
+function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🩶🦁🩶":"🧡🦁🧡";$("againBtn").style.display="";$("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti()}else if(G.online)SFX.lose()}
 function confetti(){const cv=$("conf"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:120},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*3,c:`hsl(${Math.random()*360},90%,60%)`,a:Math.random()*6}));let n=0;(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.a+=.1;x.fillStyle=p.c;x.fillRect(p.x+Math.sin(p.a)*8,p.y,8,12)});if(++n<220)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
 $("againBtn").addEventListener("click",()=>{if(G.online){NET.myRe=true;netSend({t:"rematch"});$("winT").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch();return}const m=G.mode;$("win").classList.remove("on");newGame(m)});
 document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=e.target.closest("[data-mode]");
@@ -278,7 +284,7 @@ function applyState(s){
  G.b=s.b;G.turn=s.turn;G.yarn=s.yarn;G.bonus=s.bonus;G.chain=s.chain;G.seq=s.seq;G.sel=null;G.busy=false;G.over=false;NET.q=[];
  $("win").classList.remove("on");$("againBtn").style.display="";draw();updTurn();if(s.over)checkEnd();saveSess();
 }
-function setPaused(on){NET.paused=on;if(G)G.paused=on;$("pause").classList.toggle("on",on);if(!on){clearTimeout(NET.rt);NET.rt=null}}
+function setPaused(on){if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();NET.paused=on;if(G)G.paused=on;$("pause").classList.toggle("on",on);if(!on){clearTimeout(NET.rt);NET.rt=null}}
 // --- connection plumbing ---
 function netClose(){NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;NET.paused=false;try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
 function netLeave(){ // leaving on purpose: tell the friend (so they don't wait), forget the saved game
@@ -324,12 +330,12 @@ function attach(c,gen){
  c.on("close",()=>{if(gen===NET.gen&&NET.conn===c)onNetClose()});c.on("error",()=>{if(gen===NET.gen&&NET.conn===c)onNetClose()});
  if(c.open)op();
 }
-function startOnlineHost(){NET.q=[];newGame("online");netSend({t:"start",y:G.yarn})}
+function startOnlineHost(){NET.q=[];SFX.join();newGame("online");netSend({t:"start",y:G.yarn})}
 function sendHello(){const g=G;(function w(){if(G!==g||!NET.conn)return;if(G.busy){setTimeout(w,80);return}netSend({t:"hello",seq:G.seq||0})})()}
 function sendState(){const g=G;(function w(){if(G!==g||!NET.conn)return;if(G.busy){setTimeout(w,80);return}netSend({t:"state",s:snap()})})()}
 function onNetData(d){
  if(!d||typeof d!=="object")return;
- if(d.t==="start"&&!NET.host){NET.q=[];setPaused(false);newGame("online",Array.isArray(d.y)?d.y:undefined)}
+ if(d.t==="start"&&!NET.host){NET.q=[];SFX.join();setPaused(false);newGame("online",Array.isArray(d.y)?d.y:undefined)}
  else if(d.t==="hello"){
   const mine=G&&G.online?(G.seq||0):-1;
   if(mine>d.seq)sendState();
@@ -342,8 +348,8 @@ function onNetData(d){
  else if(d.t==="resync"){if(NET.host)sendState()}
  else if(d.t==="move"&&G&&G.online&&d.m&&!G.paused){NET.q.push(d.m);pumpNet()}
  else if(d.t==="yarn"&&G&&G.online&&Array.isArray(d.y)){const g=G;(function ap(){if(G!==g)return;if(G.busy){setTimeout(ap,100);return}G.yarn=d.y;draw();saveSess()})()}
- else if(d.t==="rematch"){NET.oppRe=true;maybeRematch()}
- else if(d.t==="bye"){const had=G&&G.online;clearSess();netClose();setPaused(false);
+ else if(d.t==="rematch"){SFX.click();NET.oppRe=true;maybeRematch()}
+ else if(d.t==="bye"){const had=G&&G.online;if(had)SFX.drop();clearSess();netClose();setPaused(false);
   if(had){G.over=true;$("winT").textContent=t("left");$("winS").textContent="👋";$("againBtn").style.display="none";$("win").classList.add("on")}else lobFail()}
 }
 function maybeRematch(){if(NET.host&&NET.myRe&&NET.oppRe&&NET.conn){NET.myRe=NET.oppRe=false;startOnlineHost()}}
@@ -354,7 +360,7 @@ async function pumpNet(){
   const m=NET.q.shift();while(G===g&&G.busy)await sleep(40);if(G!==g)break;
   const L=legal(G.b,G.turn,G.chain,G.bonus),mv=G.turn!==G.me&&!G.over?L.find(x=>x.fr===m.fr&&x.fc===m.fc&&x.r===m.r&&x.c===m.c):null;
   if(!mv){NET.q=[];if(NET.host)sendState();else netSend({t:"resync"});break} // boards disagree → host's board wins
-  await doMove(mv);
+  await doMove(mv);if(G===g&&!G.over&&G.turn===G.me&&!G.bonus)SFX.turn();
  }
  NET.pumping=false;
 }
