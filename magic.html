@@ -129,7 +129,7 @@ const TX={
   ask:"המספר שלך נמצא בקלף הזה?",yes:"כן ✅",no:"לא ❌",back:"◀ חזרה",card:"קלף",
   drum:"מנחש... 🥁",your:"המספר שלך הוא",wow:"נכון? 🎉",
   howBtn:"❓ איך זה עובד?",how:"איך זה עובד? כל קלף מתחיל במספר מיוחד בפינה (1, 2, 4, 8…). כל מספר הוא סכום של כמה מהמספרים האלה – ומי שיושב על הקלפים הנכונים נותן בדיוק את הסכום!",
-  again:"🔁 עוד פעם",menu:"☰ לתפריט",
+  reset:"🔁 כל הקלפים מחדש",again:"🔁 עוד פעם",menu:"☰ לתפריט",
   selfSay:"השאירי רק את הקלפים שהמספר שלך נמצא בהם",selfSub:"הקישי על קלף שהמספר שלך לא נמצא בו כדי להרחיק אותו. הקישי שוב כדי להחזיר.",
   keep:"נשאר ✔",drop:"הורחק ✖",done:"סיימתי! 🎩",kept:"נשארו",
   sumSay:"עכשיו חברי את המספרים שבפינה השמאלית העליונה של הקלפים שנשארו",
@@ -142,7 +142,7 @@ const TX={
   ask:"Ton nombre est sur cette carte ?",yes:"Oui ✅",no:"Non ❌",back:"◀ Retour",card:"Carte",
   drum:"Je devine... 🥁",your:"Ton nombre est",wow:"C'est ça ? 🎉",
   howBtn:"❓ Comment ça marche ?",how:"Comment ça marche ? Chaque carte commence par un nombre spécial dans le coin (1, 2, 4, 8…). Chaque nombre est la somme de certains d'entre eux – les bonnes cartes donnent exactement la somme !",
-  again:"🔁 Encore",menu:"☰ Menu",
+  reset:"🔁 Toutes les cartes",again:"🔁 Encore",menu:"☰ Menu",
   selfSay:"Garde seulement les cartes qui contiennent ton nombre",selfSub:"Touche une carte qui n'a pas ton nombre pour l'écarter. Touche encore pour la remettre.",
   keep:"Gardée ✔",drop:"Écartée ✖",done:"J'ai fini ! 🎩",kept:"Restent",
   sumSay:"Maintenant additionne les nombres en haut à gauche des cartes gardées",
@@ -155,7 +155,7 @@ const TX={
   ask:"Is your number on this card?",yes:"Yes ✅",no:"No ❌",back:"◀ Back",card:"Card",
   drum:"Guessing... 🥁",your:"Your number is",wow:"Right? 🎉",
   howBtn:"❓ How does it work?",how:"How does it work? Every card starts with a special number in the corner (1, 2, 4, 8…). Every number is a sum of some of them – the right cards add up exactly!",
-  again:"🔁 Again",menu:"☰ Menu",
+  reset:"🔁 All cards again",again:"🔁 Again",menu:"☰ Menu",
   selfSay:"Keep only the cards your number is on",selfSub:"Tap a card that does NOT have your number to put it away. Tap again to bring it back.",
   keep:"Kept ✔",drop:"Away ✖",done:"I'm done! 🎩",kept:"Kept",
   sumSay:"Now add the top-left numbers of the cards you kept",
@@ -287,7 +287,7 @@ function startSelf(){
  mode="self";build();keep=cards.map(()=>true);
  show("self");drawSelf(false);
 }
-function drawSelf(summed){
+function drawSelf(summed){summed=false;
  $("sInfo").textContent=t("kept")+": "+keep.filter(Boolean).length+"/"+cards.length;
  $("sSay").textContent="";$("sSub").textContent="";
  const list=$("selfList");list.innerHTML="";
@@ -301,9 +301,7 @@ function drawSelf(summed){
   }
   list.appendChild(el);
  });
- const d=$("sDone");
- if(summed){d.textContent=t("show");d.onclick=()=>{SFX.click();reveal(cards.filter((c,i)=>keep[i]),"self")}}
- else{d.textContent=t("done");d.onclick=()=>{SFX.click();if(!keep.some(Boolean)){reveal([],"self");return}drawSelf(true);list.scrollTop=0}}
+ const d=$("sDone");d.textContent=t("reset");d.onclick=()=>{SFX.click();keep=cards.map(()=>true);drawSelf(false)};
 }
 
 /* ---------- confetti ---------- */
