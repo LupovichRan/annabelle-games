@@ -52,6 +52,13 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #win h2{margin:0;font-size:28px;color:#e8862d}
 #conf{position:fixed;inset:0;pointer-events:none;z-index:21}
 .corner{position:fixed;top:8px;left:8px;z-index:10}
+#lobby{justify-content:center;gap:12px;padding:10px;overflow:auto}
+.lobpane{display:none;flex-direction:column;align-items:center;gap:10px}
+.lobpane.on{display:flex}
+#lobCode{font-size:clamp(54px,18vw,90px);font-weight:900;letter-spacing:.12em;color:#e8862d;direction:ltr;text-shadow:0 4px 0 #0002;line-height:1}
+#lobIn{width:min(70vw,240px);height:70px;border-radius:18px;border:3px solid #e8862d;background:#fff;text-align:center;font:900 40px Rubik,Arial;color:#5a3b1a;letter-spacing:.2em;direction:ltr;user-select:text;-webkit-user-select:text}
+#lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px}
+a.big{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/checkers.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/checkers-192.png"><meta name="apple-mobile-web-app-title" content="דמקת חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/checkers-apple-180.png"><script src="pwa.js" data-app="checkers" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 </head>
@@ -67,6 +74,16 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
     <button class="big" data-mode="normal" id="bNorm"></button>
     <button class="big p" data-mode="two" id="bTwo"></button>
   </div>
+  <div class="row"><button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button></div>
+</section>
+<section class="screen" id="lobby">
+  <h1 id="lobT"></h1>
+  <div class="heads">📱🐱📱</div>
+  <div class="row" id="lobMain"><button class="big" id="bCreate"></button><button class="big p" id="bJoin"></button></div>
+  <div class="lobpane" id="lobCreate"><div style="font-weight:800" id="lobCodeL"></div><div id="lobCode"></div><a class="big" id="lobWa" target="_blank" rel="noopener"></a><div id="lobWait"></div></div>
+  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="4" autocomplete="off"><button class="big" id="bGo"></button></div>
+  <div id="lobStatus"></div>
+  <button class="big g" id="lobBack"></button>
 </section>
 <section class="screen" id="game">
   <div class="bar">
@@ -83,17 +100,17 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"דמקת חתולים",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
+ he:{title:"דמקת חתולים",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🩶",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
   rules:["🐾 לחצי על חתלתול ואז על משבצת ירוקה.","😼 אם אפשר לאכול – חובה לקפוץ! אפשר כמה קפיצות ברצף.","🦁 חתלתול שמגיע לצד השני הופך לאריה עם כתר!","🧶 כדור צמר: חתלתול שנוחת עליו משתעשע – ומקבל תור נוסף!"],
   you:"התור שלך 🧡",cpu:"המחשב חושב… 🤔",p1:"תור הכתומים 🧡",p2:"תור האפורים 🩶",bonus:"תור בונוס! 🧶",again:"🔁 עוד משחק",
   winYou:"ניצחת, אנאבל! 🎉",winCpu:"המחשב ניצח… נסי שוב! 💪",winO:"הכתומים ניצחו! 🧡",winG:"האפורים ניצחו! 🩶",
   meow:"מיאו!",yarn:["איזה כיף, צמר! 🧶 עוד תור!","שיחקתי קצת! 🧶 עוד תור!","ווי! צמר! 🧶"],king:"אני מלך! 👑",jump:"עוד קפיצה!"},
- fr:{title:"Dames des chats",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
+ fr:{title:"Dames des chats",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🩶",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
   rules:["🐾 Touche un chaton puis une case verte.","😼 Si tu peux manger, tu dois sauter ! Plusieurs sauts d'affilée.","🦁 Un chaton qui arrive de l'autre côté devient un lion couronné !","🧶 Pelote : le chaton qui s'y pose joue avec – et gagne un tour en plus !"],
   you:"À toi 🧡",cpu:"L'ordi réfléchit… 🤔",p1:"Tour des oranges 🧡",p2:"Tour des gris 🩶",bonus:"Tour bonus ! 🧶",again:"🔁 Rejouer",
   winYou:"Tu as gagné, Annabelle ! 🎉",winCpu:"L'ordi a gagné… réessaie ! 💪",winO:"Les oranges gagnent ! 🧡",winG:"Les gris gagnent ! 🩶",
   meow:"Miaou !",yarn:["Youpi, une pelote ! 🧶 Encore un tour !","Je joue un peu ! 🧶 Encore !","Wiii ! 🧶"],king:"Je suis roi ! 👑",jump:"Encore un saut !"},
- en:{title:"Cat Checkers",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
+ en:{title:"Cat Checkers",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🩶",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
   rules:["🐾 Tap a kitten, then a green square.","😼 If you can capture, you must jump! Several jumps in a row are OK.","🦁 A kitten reaching the far side becomes a crowned lion!","🧶 Yarn ball: a kitten landing on it plays – and gets an extra turn!"],
   you:"Your turn 🧡",cpu:"Computer is thinking… 🤔",p1:"Orange's turn 🧡",p2:"Grey's turn 🩶",bonus:"Bonus turn! 🧶",again:"🔁 Play again",
   winYou:"You won, Annabelle! 🎉",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🩶",
@@ -106,7 +123,7 @@ function applyLang(){
  $("tTitle").textContent=t("title"); document.title=t("title");
  $("flags").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${l}</button>`).join("");
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
- $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("againBtn").textContent=t("again");
+ $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
  if(G)updTurn();
 }
 // ---- sound ----
@@ -122,11 +139,15 @@ function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 // ---- game ----
 const S=100,NS="http://www.w3.org/2000/svg";
 let G=null; // {b,turn,mode,sel,chain,bonus,yarn,hist,over,busy}
-const isCPU=p=>G.mode!=="two"&&p===1;
-function newGame(mode){
+const isCPU=p=>(G.mode==="easy"||G.mode==="normal")&&p===1;
+const V=n=>G&&G.flip?7-n:n; // board view: the guest sees the board turned around so own kittens are at the bottom
+function newGame(mode,yarn){
  const b=[];for(let r=0;r<8;r++){b.push([]);for(let c=0;c<8;c++)b[r].push((r+c)%2&&r<3?{p:1,k:0,id:r*8+c}:(r+c)%2&&r>4?{p:0,k:0,id:r*8+c}:null)}
  G={b,turn:0,mode,sel:null,chain:null,bonus:false,yarn:[],hist:[],over:false,busy:false};
- placeYarn();show("game");draw();updTurn();
+ if(mode==="online"){G.online=1;G.me=NET.me;G.flip=NET.me===1;NET.myRe=NET.oppRe=false}
+ placeYarn();if(yarn)G.yarn=yarn;
+ $("win").classList.remove("on");$("againBtn").style.display="";$("undoBtn").style.visibility=mode==="online"?"hidden":"";
+ show("game");draw();updTurn();
 }
 function placeYarn(){const e=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2&&!G.b[r][c])e.push([r,c]);G.yarn=[];for(let i=0;i<2&&e.length;i++)G.yarn.push(e.splice(Math.random()*e.length|0,1)[0])}
 const inb=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
@@ -142,15 +163,15 @@ function sqXY(r,c){return[c*S,r*S]}
 function draw(){
  const sv=$("board");sv.innerHTML="";
  for(let r=0;r<8;r++)for(let c=0;c<8;c++){const q=document.createElementNS(NS,"rect");q.setAttribute("x",c*S);q.setAttribute("y",r*S);q.setAttribute("width",S);q.setAttribute("height",S);q.setAttribute("fill",(r+c)%2?"#a8683a":"#f6deb0");q.setAttribute("class","sq");q.dataset.r=r;q.dataset.c=c;sv.appendChild(q)}
- for(const[r,c]of G.yarn){sv.insertAdjacentHTML("beforeend",`<g transform="translate(${c*S+50},${r*S+50})"><g class="yarn"><circle r="26" fill="#ff5fa2"/><path d="M-24 -6 Q0 -30 24 -6 M-25 6 Q0 -18 25 6 M-20 16 Q0 -4 20 16 M-8 -25 Q10 0 -6 25" stroke="#c2186b" stroke-width="3" fill="none"/></g><path d="M20 18 q14 8 22 -2" stroke="#ff5fa2" stroke-width="3" fill="none"/></g>`)}
- const L=G.over||isCPU(G.turn)?[]:legal(G.b,G.turn,G.chain,G.bonus);
- if(G.sel){sv.insertAdjacentHTML("beforeend",`<rect class="selr" x="${G.sel[1]*S+3}" y="${G.sel[0]*S+3}" width="94" height="94" rx="10"/>`);
-  for(const m of L)if(m.fr===G.sel[0]&&m.fc===G.sel[1])sv.insertAdjacentHTML("beforeend",`<rect class="hl" x="${m.c*S+8}" y="${m.r*S+8}" width="84" height="84" rx="14"/>`)}
- else{const seen={};for(const m of L){const k=m.fr+","+m.fc;if(seen[k])continue;seen[k]=1;sv.insertAdjacentHTML("beforeend",`<circle class="hl" cx="${m.fc*S+50}" cy="${m.fr*S+50}" r="46" style="opacity:.3"/>`)}}
+ for(const[r,c]of G.yarn){sv.insertAdjacentHTML("beforeend",`<g transform="translate(${V(c)*S+50},${V(r)*S+50})"><g class="yarn"><circle r="26" fill="#ff5fa2"/><path d="M-24 -6 Q0 -30 24 -6 M-25 6 Q0 -18 25 6 M-20 16 Q0 -4 20 16 M-8 -25 Q10 0 -6 25" stroke="#c2186b" stroke-width="3" fill="none"/></g><path d="M20 18 q14 8 22 -2" stroke="#ff5fa2" stroke-width="3" fill="none"/></g>`)}
+ const L=G.over||isCPU(G.turn)||(G.online&&G.turn!==G.me)?[]:legal(G.b,G.turn,G.chain,G.bonus);
+ if(G.sel){sv.insertAdjacentHTML("beforeend",`<rect class="selr" x="${V(G.sel[1])*S+3}" y="${V(G.sel[0])*S+3}" width="94" height="94" rx="10"/>`);
+  for(const m of L)if(m.fr===G.sel[0]&&m.fc===G.sel[1])sv.insertAdjacentHTML("beforeend",`<rect class="hl" x="${V(m.c)*S+8}" y="${V(m.r)*S+8}" width="84" height="84" rx="14"/>`)}
+ else{const seen={};for(const m of L){const k=m.fr+","+m.fc;if(seen[k])continue;seen[k]=1;sv.insertAdjacentHTML("beforeend",`<circle class="hl" cx="${V(m.fc)*S+50}" cy="${V(m.fr)*S+50}" r="46" style="opacity:.3"/>`)}}
  for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(G.b[r][c])sv.appendChild(kitten(G.b[r][c],r,c));
 }
 function kitten(pc,r,c){
- const g=document.createElementNS(NS,"g");g.setAttribute("class","pc");g.dataset.id=pc.id;g.style.transform=`translate(${c*S+50}px,${r*S+50}px)`;
+ const g=document.createElementNS(NS,"g");g.setAttribute("class","pc");g.dataset.id=pc.id;g.style.transform=`translate(${V(c)*S+50}px,${V(r)*S+50}px)`;
  const body=pc.p?"#9aa3ad":"#f5973a",dark=pc.p?"#6b737c":"#c96a14",flip=pc.p?-1:1;
  let h=`<path class="tail" d="M22 20 q26 4 22 -24" stroke="${dark}" stroke-width="8" fill="none" stroke-linecap="round"/>`;
  if(pc.k)h+=`<g>${Array.from({length:12},(_,i)=>`<circle cx="${Math.cos(i*Math.PI/6)*33}" cy="${Math.sin(i*Math.PI/6)*33+4}" r="12" fill="${pc.p?"#5d4e3c":"#b5651d"}"/>`).join("")}</g>`;
@@ -162,21 +183,21 @@ function kitten(pc,r,c){
  if(pc.k)h+=`<path d="M-20 -30 L-20 -48 L-10 -38 L0 -52 L10 -38 L20 -48 L20 -30 Z" fill="#ffd23f" stroke="#c99a00" stroke-width="2"/>`;
  g.innerHTML=`<g transform="scale(1.15)">${h}</g>`;return g}
 function bubble(r,c,txt,ms=1400){const box=$("boardBox"),k=box.clientWidth/800,d=document.createElement("div");d.className="bub";d.textContent=txt;
- d.style.left=Math.min(Math.max((c*S+50)*k,70),box.clientWidth-70)+"px";d.style.top=Math.max(r*S*k,30)+"px";box.appendChild(d);setTimeout(()=>d.remove(),ms)}
+ d.style.left=Math.min(Math.max((V(c)*S+50)*k,70),box.clientWidth-70)+"px";d.style.top=Math.max(V(r)*S*k,30)+"px";box.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function pcEl(id){return $("board").querySelector(`g.pc[data-id="${id}"]`)}
-function updTurn(){if(!G)return;let s;if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus");$("turn").textContent=s}
+function updTurn(){if(!G)return;let s;if(G.online)s=G.turn===G.me?t("you"):t("oppTurn");else if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus");if(G.online&&G.over)s=t(G.me?"meG":"meO");$("turn").textContent=s;if(G.online){$("turn").title=t(G.me?"meG":"meO")}}
 function snapshot(){return JSON.stringify({b:G.b,turn:G.turn,yarn:G.yarn,bonus:G.bonus})}
 function doMove(m){
  return new Promise(res=>{
  G.busy=true;const b=G.b,pc=b[m.fr][m.fc];
  if(!G.chain&&!isCPU(G.turn))G.hist.push(snapshot());
  b[m.fr][m.fc]=null;b[m.r][m.c]=pc;
- const el=pcEl(pc.id);if(el){el.parentNode.appendChild(el);requestAnimationFrame(()=>el.style.transform=`translate(${m.c*S+50}px,${m.r*S+50}px)`)}
+ const el=pcEl(pc.id);if(el){el.parentNode.appendChild(el);requestAnimationFrame(()=>el.style.transform=`translate(${V(m.c)*S+50}px,${V(m.r)*S+50}px)`)}
  SFX.move();
  let victim=null;if(m.cap){victim=b[m.cap[0]][m.cap[1]];b[m.cap[0]][m.cap[1]]=null;}
  setTimeout(()=>{
   if(victim){const ve=pcEl(victim.id);SFX.meow();bubble(m.cap[0],m.cap[1],t("meow"),900);
-   if(ve){const x=m.cap[1]*S+50,y=m.cap[0]*S+50,ex=victim.p?900:-100;ve.style.transition="none";
+   if(ve){const x=V(m.cap[1])*S+50,y=V(m.cap[0])*S+50,ex=victim.p?900:-100;ve.style.transition="none";
     ve.animate([{transform:`translate(${x}px,${y}px)`},{transform:`translate(${x}px,${y-90}px) rotate(20deg)`,offset:.35},{transform:`translate(${(x+ex)/2}px,${y-20}px) rotate(-15deg)`,offset:.7},{transform:`translate(${ex}px,${y+30}px)`}],{duration:900,easing:"ease-in"}).onfinish=()=>ve.remove();}}
   let crowned=false;if(!pc.k&&((pc.p===0&&m.r===0)||(pc.p===1&&m.r===7))){pc.k=1;crowned=true;SFX.roar();bubble(m.r,m.c,"🦁 "+t("king"));}
   let yi=G.yarn.findIndex(([yr,yc])=>yr===m.r&&yc===m.c),gotYarn=yi>=0;if(gotYarn)G.yarn.splice(yi,1);
@@ -191,7 +212,7 @@ function doMove(m){
  });
 }
 function gotYarnDelay(m){return m.cap?950:380}
-function endTurn(){G.turn^=1;if(G.turn===0)placeYarn()}
+function endTurn(){G.turn^=1;if(G.turn===0){if(!G.online)placeYarn();else if(NET.host){placeYarn();netSend({t:"yarn",y:G.yarn})}}}
 function checkEnd(){
  if(G.over)return;const p=G.turn;
  if(!legal(G.b,p,G.chain,G.bonus).length){
@@ -212,13 +233,13 @@ async function cpuStep(){
  await doMove(m);if(G.chain&&isCPU(G.turn))setTimeout(cpuStep,500);
 }
 $("board").addEventListener("click",e=>{
- if(!G||G.over||G.busy||isCPU(G.turn))return;
+ if(!G||G.over||G.busy||isCPU(G.turn)||(G.online&&G.turn!==G.me))return;
  const sv=$("board"),pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(sv.getScreenCTM().inverse());
- const r=Math.floor(p.y/S),c=Math.floor(p.x/S);if(!inb(r,c))return;tap(r,c);
+ const r=V(Math.floor(p.y/S)),c=V(Math.floor(p.x/S));if(!inb(r,c))return;tap(r,c);
 });
 function tap(r,c){
  const L=legal(G.b,G.turn,G.chain,G.bonus);
- if(G.sel){const m=L.find(x=>x.fr===G.sel[0]&&x.fc===G.sel[1]&&x.r===r&&x.c===c);if(m){doMove(m);return}}
+ if(G.sel){const m=L.find(x=>x.fr===G.sel[0]&&x.fc===G.sel[1]&&x.r===r&&x.c===c);if(m){if(G.online)netSend({t:"move",m:{fr:m.fr,fc:m.fc,r:m.r,c:m.c}});doMove(m);return}}
  if(G.chain)return;
  const pc=G.b[r][c];if(pc&&pc.p===G.turn){if(L.some(x=>x.fr===r&&x.fc===c)){G.sel=[r,c];SFX.click()}else{G.sel=null;const el=pcEl(pc.id);if(el){el.classList.remove("wag");void el.getBBox();el.classList.add("wag")}}draw()}
 }
@@ -229,15 +250,83 @@ setInterval(()=>{if(!G||!$("game").classList.contains("active"))return;const els
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}
 function fit(){const w=$("wrap");const s=Math.max(200,Math.min(w.clientWidth-4,w.clientHeight-8));$("board").style.width=$("board").style.height=s+"px"}
 addEventListener("resize",fit);
-window.toMenu=function(){$("win").classList.remove("on");G=null;show("menu")};
+window.toMenu=function(){netClose();$("win").classList.remove("on");G=null;show("menu")};
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
-function showWin(w){let s;if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🩶🦁🩶":"🧡🦁🧡";$("win").classList.add("on");if(G.mode==="two"||!w){SFX.win();confetti()}}
+function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🩶🦁🩶":"🧡🦁🧡";$("againBtn").style.display="";$("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti()}}
 function confetti(){const cv=$("conf"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:120},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*3,c:`hsl(${Math.random()*360},90%,60%)`,a:Math.random()*6}));let n=0;(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.a+=.1;x.fillStyle=p.c;x.fillRect(p.x+Math.sin(p.a)*8,p.y,8,12)});if(++n<220)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
-$("againBtn").addEventListener("click",()=>{const m=G.mode;$("win").classList.remove("on");newGame(m)});
+$("againBtn").addEventListener("click",()=>{if(G.online){NET.myRe=true;netSend({t:"rematch"});$("winT").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch();return}const m=G.mode;$("win").classList.remove("on");newGame(m)});
 document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=e.target.closest("[data-mode]");
  if(L){lang=L.dataset.lang;localStorage.setItem("annabelle-lang",lang);SFX.click();applyLang()}
  if(M){ac();SFX.click();newGame(M.dataset.mode)}});
 $("muteBtn").addEventListener("click",()=>{muted=!muted;localStorage.setItem("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});
+// ---- online play: WebRTC via PeerJS (room code or link) ----
+const NET={peer:null,conn:null,host:false,me:0,code:"",q:[],pumping:false,myRe:false,oppRe:false,gen:0,tm:null};
+const PEER_SRC="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js",PEER_CFG={config:{iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"}]}};
+const PID="annabelle-ck-";
+function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
+function netClose(){NET.gen++;clearTimeout(NET.tm);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.q=[];NET.myRe=NET.oppRe=false;try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
+function netSend(o){try{if(NET.conn&&NET.conn.open)NET.conn.send(o)}catch(e){}}
+function lobPane(w){["lobMain","lobCreate","lobJoin"].forEach(id=>{const e=$(id);if(id==="lobMain")e.style.display=w==="main"?"":"none";else e.classList.toggle("on",id===w)})}
+function showLobby(){netClose();$("lobStatus").textContent="";lobPane("main");show("lobby")}
+function lobFail(){netClose();$("lobStatus").textContent=t("failC");lobPane("main")}
+function createRoom(n=0){
+ netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
+ loadPeer().then(()=>{if(gen!==NET.gen)return;
+  const code=String(1000+Math.random()*9000|0),p=new Peer(PID+code,PEER_CFG);NET.peer=p;
+  p.on("open",()=>{if(gen!==NET.gen)return;NET.host=true;NET.me=0;NET.code=code;$("lobCode").textContent=code;
+   const url=location.origin+location.pathname+"?room="+code;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
+   $("lobStatus").textContent="";lobPane("lobCreate")});
+  p.on("connection",c=>{if(gen!==NET.gen)return;if(NET.conn){try{c.close()}catch(e){}return}attach(c,gen)});
+  p.on("error",e=>{if(gen!==NET.gen)return;if(e&&e.type==="unavailable-id"&&n<5){createRoom(n+1)}else lobFail()});
+ }).catch(()=>{if(gen===NET.gen)lobFail()});
+}
+function joinRoom(code){
+ netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
+ loadPeer().then(()=>{if(gen!==NET.gen)return;
+  const p=new Peer(undefined,PEER_CFG);NET.peer=p;
+  p.on("open",()=>{if(gen!==NET.gen)return;NET.host=false;NET.me=1;const c=p.connect(PID+code,{reliable:true});attach(c,gen);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!(NET.conn&&NET.conn.open))lobFail()},15000)});
+  p.on("error",()=>{if(gen===NET.gen)lobFail()});
+ }).catch(()=>{if(gen===NET.gen)lobFail()});
+}
+function attach(c,gen){
+ NET.conn=c;let opened=false;
+ const op=()=>{if(opened||gen!==NET.gen)return;opened=true;clearTimeout(NET.tm);if(NET.host)startOnlineHost()};
+ c.on("open",op);c.on("data",d=>{if(gen===NET.gen)onNetData(d)});
+ c.on("close",()=>{if(gen===NET.gen)onNetClose()});c.on("error",()=>{if(gen===NET.gen)onNetClose()});
+ if(c.open)op();
+}
+function startOnlineHost(){NET.q=[];newGame("online");netSend({t:"start",y:G.yarn})}
+function onNetData(d){
+ if(!d||typeof d!=="object")return;
+ if(d.t==="start"&&!NET.host){NET.q=[];newGame("online",Array.isArray(d.y)?d.y:undefined)}
+ else if(d.t==="move"&&G&&G.online&&d.m){NET.q.push(d.m);pumpNet()}
+ else if(d.t==="yarn"&&G&&G.online&&Array.isArray(d.y)){const g=G;(function ap(){if(G!==g)return;if(G.busy){setTimeout(ap,100);return}G.yarn=d.y;draw()})()}
+ else if(d.t==="rematch"){NET.oppRe=true;maybeRematch()}
+}
+function maybeRematch(){if(NET.host&&NET.myRe&&NET.oppRe&&NET.conn){NET.myRe=NET.oppRe=false;startOnlineHost()}}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function pumpNet(){
+ if(NET.pumping)return;NET.pumping=true;const g=G;
+ while(NET.q.length&&G===g){
+  const m=NET.q.shift();while(G===g&&G.busy)await sleep(40);if(G!==g)break;
+  const L=legal(G.b,G.turn,G.chain,G.bonus),mv=G.turn!==G.me&&!G.over?L.find(x=>x.fr===m.fr&&x.fc===m.fc&&x.r===m.r&&x.c===m.c):null;
+  if(!mv){onNetClose();break}
+  await doMove(mv);
+ }
+ NET.pumping=false;
+}
+function onNetClose(){
+ if(!NET.conn&&!G)return;
+ if(G&&G.online){G.over=true;$("winT").textContent=t("disc");$("winS").textContent="🔌";$("againBtn").style.display="none";$("win").classList.add("on");netClose()}
+ else lobFail();
+}
+$("bOnline").addEventListener("click",()=>{SFX.click();showLobby()});
+$("bCreate").addEventListener("click",()=>{SFX.click();createRoom()});
+$("bJoin").addEventListener("click",()=>{SFX.click();lobPane("lobJoin");$("lobStatus").textContent="";$("lobIn").value="";$("lobIn").focus()});
+$("bGo").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===4){SFX.click();joinRoom(c)}});
+$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
+$("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
+{const q=new URLSearchParams(location.search).get("room");if(/^\d{4}$/.test(q||""))setTimeout(()=>{showLobby();joinRoom(q)},0)}
 applyLang();updMute();
 </script>
 </body>
