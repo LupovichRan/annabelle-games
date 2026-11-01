@@ -81,6 +81,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 </head>
 <body>
 
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
 <!-- MENU -->
 <section class="screen active" id="menu">
   <h1 id="tTitle"></h1>
@@ -166,6 +167,21 @@ const t=k=>TX[lang][k];
 const COLORS=["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"];
 let bits=5,cards=[],mode="",order=[],idx=0,ans=[],keep=[];
 
+let AC=null,muted=false;try{muted=localStorage.getItem("annabelle-muted")==="1"}catch(e){}
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(a.destination);o.start(n);o.stop(n+d)}
+const SFX={
+ click(){tone(520,.08,"triangle",.18)},
+ swish(){tone(900,.18,"sine",.1,300)},
+ yes(){tone(660,.1,"triangle",.22);tone(880,.16,"triangle",.22,null,.09)},
+ no(){tone(300,.18,"sawtooth",.12,200)},
+ back(){tone(420,.1,"triangle",.15,300)},
+ away(){tone(400,.14,"sine",.18,180)},
+ keep(){tone(500,.1,"sine",.18,800)},
+ drum(){for(let i=0;i<14;i++)tone(110+i*6,.09,"square",.08+i*.006,70,i*.1)},
+ win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6)}
+};
+function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id))}
@@ -194,7 +210,7 @@ function drawMenu(){
  $("tRange").textContent=t("range");
  $("rng").innerHTML="";
  [[4,15],[5,31],[6,63]].forEach(([b,n])=>{const x=document.createElement("button");x.className="big"+(b===bits?" sel":"");x.textContent="1–"+n;x.dir="ltr";
-  x.onclick=()=>{bits=b;save("annabelle-magic-bits",b);drawMenu()};$("rng").appendChild(x)});
+  x.onclick=()=>{SFX.click();bits=b;save("annabelle-magic-bits",b);drawMenu()};$("rng").appendChild(x)});
  $("bComp").textContent=t("comp");$("bSelf").textContent=t("self");
  $("flags").innerHTML="";
  LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
@@ -215,19 +231,19 @@ function thinkScreen(){
  $("cSay").textContent=t("think").replace("N",maxN());
  $("cDots").innerHTML="";
  $("cWrap").innerHTML='<div style="text-align:center"><div class="hat" style="font-size:90px">🤔</div><div class="sub" style="font-size:20px;font-weight:800">'+t("thinkS")+'</div></div>';
- $("cBtns").innerHTML="";const r=document.createElement("button");r.className="big";r.textContent=t("ready");r.onclick=()=>{idx=0;askCard()};$("cBtns").appendChild(r);
+ $("cBtns").innerHTML="";const r=document.createElement("button");r.className="big";r.textContent=t("ready");r.onclick=()=>{SFX.click();idx=0;askCard()};$("cBtns").appendChild(r);
 }
 function askCard(){
  const n=order.length;
  $("cInfo").textContent=t("card")+" "+(idx+1)+"/"+n;
  $("cSay").textContent=t("ask");
  $("cDots").innerHTML=order.map((_,i)=>'<i class="'+(i<idx?"on":i===idx?"cur":"")+'"></i>').join("");
- const c=cards[order[idx]],el=cardEl(c);el.classList.add("in");
+ const c=cards[order[idx]],el=cardEl(c);el.classList.add("in");SFX.swish();
  const w=$("cWrap");w.innerHTML="";w.appendChild(el);
  $("cBtns").innerHTML="";
- const bk=document.createElement("button");bk.className="big g";bk.style.minWidth="0";bk.textContent=t("back");bk.onclick=()=>{if(idx===0){thinkScreen();return}idx--;ans.pop();askCard()};
- const no=document.createElement("button");no.className="big n";no.textContent=t("no");no.onclick=()=>answer(false);
- const ye=document.createElement("button");ye.className="big y";ye.textContent=t("yes");ye.onclick=()=>answer(true);
+ const bk=document.createElement("button");bk.className="big g";bk.style.minWidth="0";bk.textContent=t("back");bk.onclick=()=>{SFX.back();if(idx===0){thinkScreen();return}idx--;ans.pop();askCard()};
+ const no=document.createElement("button");no.className="big n";no.textContent=t("no");no.onclick=()=>{SFX.no();answer(false)};
+ const ye=document.createElement("button");ye.className="big y";ye.textContent=t("yes");ye.onclick=()=>{SFX.yes();answer(true)};
  $("cBtns").append(ye,no,bk);
 }
 function answer(v){
@@ -235,7 +251,7 @@ function answer(v){
  if(idx<order.length){askCard();return}
  // all answered → drum roll → reveal
  $("cBtns").innerHTML="";$("cSay").textContent=t("drum");
- $("cWrap").innerHTML='<div class="drum">🥁</div>';
+ $("cWrap").innerHTML='<div class="drum">🥁</div>';SFX.drum();
  setTimeout(()=>{
   const used=order.filter((ci,i)=>ans[i]).map(ci=>cards[ci]).sort((a,b)=>a.key-b.key);
   reveal(used,"comp");
@@ -262,7 +278,7 @@ function reveal(used,from){
  row.appendChild(a);
  const nv=document.createElement("div");nv.id="resNav";
  box.append(h,num,eq,w,ex,row,nv);
- $("res").classList.add("on");confetti();
+ $("res").classList.add("on");confetti();SFX.win();
 }
 
 /* ---------- self mode ---------- */
@@ -281,13 +297,13 @@ function drawSelf(summed){
   if(!summed){
    el.classList.toggle("out",!keep[i]);
    const tag=document.createElement("div");tag.className="tag";tag.textContent=keep[i]?t("keep"):t("drop");el.appendChild(tag);
-   el.onclick=()=>{keep[i]=!keep[i];drawSelf(false)};
+   el.onclick=()=>{keep[i]=!keep[i];keep[i]?SFX.keep():SFX.away();drawSelf(false)};
   }
   list.appendChild(el);
  });
  const d=$("sDone");
- if(summed){d.textContent=t("show");d.onclick=()=>reveal(cards.filter((c,i)=>keep[i]),"self")}
- else{d.textContent=t("done");d.onclick=()=>{if(!keep.some(Boolean)){reveal([],"self");return}drawSelf(true);list.scrollTop=0}}
+ if(summed){d.textContent=t("show");d.onclick=()=>{SFX.click();reveal(cards.filter((c,i)=>keep[i]),"self")}}
+ else{d.textContent=t("done");d.onclick=()=>{SFX.click();if(!keep.some(Boolean)){reveal([],"self");return}drawSelf(true);list.scrollTop=0}}
 }
 
 /* ---------- confetti ---------- */
@@ -301,7 +317,8 @@ function confetti(){
 }
 function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
 
-$("bComp").onclick=startComp;$("bSelf").onclick=startSelf;
+$("bComp").onclick=()=>{SFX.click();startComp()};$("bSelf").onclick=()=>{SFX.click();startSelf()};
+$("muteBtn").addEventListener("click",()=>{muted=!muted;save("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});updMute();
 const sb=+load("annabelle-magic-bits");if(sb>=4&&sb<=6)bits=sb;
 drawMenu();
 </script>
