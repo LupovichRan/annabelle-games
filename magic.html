@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><!--pt--><script src="playtime.js" data-app="magic"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>קסם הקלפים</title><script src="safe.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#efe3ff;font-family:"Rubik","Varela Round",Arial,sans-serif;color:#3d2766;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+#menu{justify-content:center;gap:10px;padding:10px;overflow:auto}
+h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #0001;text-align:center}
+.heads{font-size:38px;line-height:1}
+.langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.lang{min-height:44px;padding:4px 14px;border-radius:999px;border:2px solid #8a4fd8;background:#fff;font:800 16px Rubik,Arial;color:#3d2766}
+.lang.sel{background:#8a4fd8;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.big{min-height:56px;min-width:140px;padding:8px 18px;border-radius:18px;border:none;background:linear-gradient(#b985f5,#8a4fd8);color:#fff;font:800 19px Rubik,Arial;box-shadow:0 4px 0 #5e2e9a}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #5e2e9a}
+.big.o{background:linear-gradient(#ffb35c,#f08a24);box-shadow:0 4px 0 #b65f10}
+.big.g{background:linear-gradient(#b8c1cc,#7d8794);box-shadow:0 4px 0 #555e69}
+.big.y{background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48}
+.big.n{background:linear-gradient(#ff8a8a,#e23b3b);box-shadow:0 4px 0 #9a2020}
+.rules{max-width:460px;background:#fff;border-radius:16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 3px 0 #0001}
+.rules p{margin:3px 0}
+.lbl2{font-weight:800;font-size:16px}
+.rng .big{min-width:92px;min-height:48px;font-size:17px;background:#fff;color:#3d2766;border:3px solid #8a4fd8;box-shadow:0 3px 0 #0002}
+.rng .big.sel{background:#8a4fd8;color:#fff}
+
+/* playing screens */
+.play{padding:6px}
+.bar{display:flex;align-items:center;gap:6px;width:100%;max-width:900px;flex:0 0 auto}
+.iconbtn{width:48px;height:48px;border-radius:50%;border:2px solid #8a4fd8;background:#fff;font-size:22px;flex:0 0 auto}
+.pill{flex:1;text-align:center;background:#fff;border-radius:999px;padding:8px 8px;font-weight:800;font-size:16px;box-shadow:0 3px 0 #0001;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.say{margin:8px 6px 2px;font-weight:800;font-size:clamp(18px,4.6vw,24px);text-align:center;flex:0 0 auto}
+.sub{font-size:15px;opacity:.85;text-align:center;margin:2px 8px;flex:0 0 auto}
+.dots{display:flex;gap:6px;justify-content:center;margin:4px 0;flex:0 0 auto}
+.dots i{width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #8a4fd8}
+.dots i.on{background:#8a4fd8}
+.dots i.cur{transform:scale(1.35);background:#ffb35c;border-color:#e8862d}
+
+/* a card: numbers laid out left-to-right so the smallest (the "key") is top-left */
+.card{--c:#8a4fd8;background:#fff;border:4px solid var(--c);border-radius:16px;padding:8px;box-shadow:0 5px 0 #0002;direction:ltr;position:relative;transition:transform .2s,opacity .2s,filter .2s}
+.card .g{display:grid;gap:4px;direction:ltr}
+.card .g b{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:8px;background:color-mix(in srgb,var(--c) 13%,#fff);font-weight:800;font-size:var(--fs,18px);color:#3d2766}
+.card .g b.key{background:var(--c);color:#fff;box-shadow:0 0 0 3px #ffd54a,0 0 10px 2px #ffd54a;font-size:calc(var(--fs,18px)*1.15)}
+.pickwrap{flex:1;width:100%;min-height:0;display:flex;align-items:center;justify-content:center;padding:4px}
+.pickwrap .card{width:min(94vw,calc((var(--app-h,100vh) - 300px)*var(--ar,1)),520px)}
+.yn{display:flex;gap:12px;justify-content:center;padding:6px 6px calc(var(--sab,6px) + 4px);width:100%;flex:0 0 auto}
+.yn .big{flex:1;max-width:240px;min-height:60px;font-size:21px;white-space:nowrap;padding:8px 10px}.yn .big.g{flex:0 0 auto;font-size:16px}
+.pickwrap .card.in{animation:cin .3s}
+@keyframes cin{from{transform:translateX(-60px) rotate(-6deg);opacity:0}}
+
+/* self mode */
+#selfList{flex:1;width:100%;max-width:980px;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px;padding:8px 8px 12px;align-content:start}
+#selfList .card{cursor:pointer}
+#selfList .card.out{opacity:.28;filter:grayscale(1);transform:scale(.94)}
+#selfList .card .tag{position:absolute;top:-12px;right:10px;background:#2fb36a;color:#fff;border-radius:999px;padding:1px 10px;font-weight:800;font-size:13px;direction:rtl}
+#selfList .card.out .tag{background:#e23b3b}
+.foot{width:100%;display:flex;gap:10px;justify-content:center;padding:6px 6px calc(var(--sab,6px) + 4px);flex:0 0 auto}
+
+/* result */
+#res{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0006;z-index:20;overflow:auto}
+#res.on{display:flex}
+#res .box{background:#efe3ff;border-radius:22px;padding:16px;text-align:center;max-width:92vw;display:flex;flex-direction:column;gap:10px;align-items:center;margin:auto}
+#res h2{margin:0;font-size:24px;color:#8a4fd8}
+#num{font-size:clamp(90px,28vw,150px);font-weight:900;line-height:1;color:#e8862d;text-shadow:0 5px 0 #0002;direction:ltr}
+#num.pop{animation:np .6s cubic-bezier(.2,1.6,.4,1)}@keyframes np{from{transform:scale(.1) rotate(-30deg);opacity:0}}
+.eq{background:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:20px;direction:ltr;box-shadow:0 3px 0 #0001;max-width:88vw;overflow-wrap:anywhere}
+.eq em{font-style:normal;color:#8a4fd8}
+.drum{font-size:70px;animation:dr .25s infinite alternate}@keyframes dr{to{transform:rotate(14deg) scale(1.15)}}
+.hat{font-size:64px}
+#conf{position:fixed;inset:0;pointer-events:none;z-index:30}
+.corner{position:fixed;top:8px;left:8px;z-index:10}
+.best{font-size:14px;opacity:.8}
+.explain{max-width:420px;font-size:15px;line-height:1.4;text-align:right;background:#fff;border-radius:14px;padding:8px 12px}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/magic.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic-192.png"><meta name="apple-mobile-web-app-title" content="קסם הקלפים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic-apple-180.png"><script src="pwa.js" data-app="magic" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+</head>
+<body>
+
+<!-- MENU -->
+<section class="screen active" id="menu">
+  <h1 id="tTitle"></h1>
+  <div class="heads">🎩 ✨ 🃏</div>
+  <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
+  <div class="rules" id="rules"></div>
+  <div class="lbl2" id="tRange"></div>
+  <div class="row rng" id="rng"></div>
+  <div class="row">
+    <button class="big" id="bComp"></button>
+    <button class="big o" id="bSelf"></button>
+  </div>
+</section>
+
+<!-- COMPUTER GUESSES -->
+<section class="screen play" id="comp">
+  <div class="bar"><button class="iconbtn homeBtn" aria-label="menu">🏠</button><div class="pill" id="cInfo"></div><div style="width:48px"></div></div>
+  <div class="say" id="cSay"></div>
+  <div class="dots" id="cDots"></div>
+  <div class="pickwrap" id="cWrap"></div>
+  <div class="yn" id="cBtns"></div>
+</section>
+
+<!-- SELF -->
+<section class="screen play" id="self">
+  <div class="bar"><button class="iconbtn homeBtn" aria-label="menu">🏠</button><div class="pill" id="sInfo"></div><div style="width:48px"></div></div>
+  <div class="say" id="sSay"></div>
+  <div class="sub" id="sSub"></div>
+  <div id="selfList"></div>
+  <div class="foot"><button class="big y" id="sDone"></button></div>
+</section>
+
+<!-- RESULT -->
+<div id="res"><div class="box" id="resBox"></div></div>
+<canvas id="conf"></canvas>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const TX={
+ he:{title:"קסם הקלפים",
+  rules:["🎩 חשבי על מספר – ואני אנחש אותו!","🃏 המחשב מראה קלפים. את עונה אם המספר שלך נמצא בקלף.","🧠 או שאת עושה את הקסם בעצמך: משאירה רק את הקלפים שהמספר נמצא בהם, ומחברת את המספר שבפינה השמאלית העליונה של כל קלף.","✨ הסכום הוא המספר שחשבת עליו!"],
+  range:"עד איזה מספר?",comp:"🪄 המחשב מנחש",self:"🧠 אני עושה את הקסם",
+  think:"חשבי על מספר בין 1 ל־N",thinkS:"אל תגידי לי אותו! 🤫",ready:"חשבתי! ▶",
+  ask:"המספר שלך נמצא בקלף הזה?",yes:"כן ✅",no:"לא ❌",back:"◀ חזרה",card:"קלף",
+  drum:"מנחש... 🥁",your:"המספר שלך הוא",wow:"נכון? 🎉",
+  how:"איך זה עובד? כל קלף מתחיל במספר מיוחד בפינה (1, 2, 4, 8…). כל מספר הוא סכום של כמה מהמספרים האלה – ומי שיושב על הקלפים הנכונים נותן בדיוק את הסכום!",
+  again:"🔁 עוד פעם",menu:"☰ לתפריט",
+  selfSay:"השאירי רק את הקלפים שהמספר שלך נמצא בהם",selfSub:"הקישי על קלף שהמספר שלך לא נמצא בו כדי להרחיק אותו. הקישי שוב כדי להחזיר.",
+  keep:"נשאר ✔",drop:"הורחק ✖",done:"סיימתי! 🎩",kept:"נשארו",
+  sumSay:"עכשיו חברי את המספרים שבפינה השמאלית העליונה של הקלפים שנשארו",
+  show:"גלי לי את המספר ✨",none:"לא נשאר אף קלף – המספר שלך הוא… 0? 😄 נסי מספר מ־1",
+  tryOther:"נסי שוב",reveal:"המספר שלך הוא"},
+ fr:{title:"Magie des cartes",
+  rules:["🎩 Pense à un nombre – je le devine !","🃏 L'ordinateur montre des cartes. Tu réponds si ton nombre y est.","🧠 Ou fais la magie toi-même : garde seulement les cartes qui contiennent ton nombre et additionne le nombre en haut à gauche de chaque carte.","✨ La somme, c'est ton nombre !"],
+  range:"Jusqu'à quel nombre ?",comp:"🪄 L'ordinateur devine",self:"🧠 Je fais la magie",
+  think:"Pense à un nombre entre 1 et N",thinkS:"Ne me le dis pas ! 🤫",ready:"J'y suis ! ▶",
+  ask:"Ton nombre est sur cette carte ?",yes:"Oui ✅",no:"Non ❌",back:"◀ Retour",card:"Carte",
+  drum:"Je devine... 🥁",your:"Ton nombre est",wow:"C'est ça ? 🎉",
+  how:"Comment ça marche ? Chaque carte commence par un nombre spécial dans le coin (1, 2, 4, 8…). Chaque nombre est la somme de certains d'entre eux – les bonnes cartes donnent exactement la somme !",
+  again:"🔁 Encore",menu:"☰ Menu",
+  selfSay:"Garde seulement les cartes qui contiennent ton nombre",selfSub:"Touche une carte qui n'a pas ton nombre pour l'écarter. Touche encore pour la remettre.",
+  keep:"Gardée ✔",drop:"Écartée ✖",done:"J'ai fini ! 🎩",kept:"Restent",
+  sumSay:"Maintenant additionne les nombres en haut à gauche des cartes gardées",
+  show:"Révèle le nombre ✨",none:"Plus aucune carte – ton nombre est… 0 ? 😄 Choisis un nombre dès 1",
+  tryOther:"Réessaie",reveal:"Ton nombre est"},
+ en:{title:"Card Magic",
+  rules:["🎩 Think of a number – and I'll guess it!","🃏 The computer shows cards. You answer if your number is on the card.","🧠 Or do the magic yourself: keep only the cards that contain your number, then add the top-left number of each card.","✨ The sum is the number you thought of!"],
+  range:"Up to which number?",comp:"🪄 Computer guesses",self:"🧠 I do the magic",
+  think:"Think of a number from 1 to N",thinkS:"Don't tell me! 🤫",ready:"Got it! ▶",
+  ask:"Is your number on this card?",yes:"Yes ✅",no:"No ❌",back:"◀ Back",card:"Card",
+  drum:"Guessing... 🥁",your:"Your number is",wow:"Right? 🎉",
+  how:"How does it work? Every card starts with a special number in the corner (1, 2, 4, 8…). Every number is a sum of some of them – the right cards add up exactly!",
+  again:"🔁 Again",menu:"☰ Menu",
+  selfSay:"Keep only the cards your number is on",selfSub:"Tap a card that does NOT have your number to put it away. Tap again to bring it back.",
+  keep:"Kept ✔",drop:"Away ✖",done:"I'm done! 🎩",kept:"Kept",
+  sumSay:"Now add the top-left numbers of the cards you kept",
+  show:"Show me the number ✨",none:"No cards left – your number is… 0? 😄 Pick a number from 1",
+  tryOther:"Try again",reveal:"Your number is"}};
+const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
+let lang="he";try{lang=localStorage.getItem("annabelle-lang")||"he"}catch(e){} if(!TX[lang])lang="he";
+const t=k=>TX[lang][k];
+const COLORS=["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"];
+let bits=5,cards=[],mode="",order=[],idx=0,ans=[],keep=[];
+
+function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id))}
+function maxN(){return (1<<bits)-1}
+
+/* build the cards: card b holds every number 1..max whose bit b is set; the first one is 2^b */
+function build(){
+ cards=[];
+ for(let b=0;b<bits;b++){const nums=[];for(let n=1;n<=maxN();n++)if(n&(1<<b))nums.push(n);cards.push({b,key:1<<b,nums,color:COLORS[b%COLORS.length]})}
+}
+function cardEl(c){
+ const el=document.createElement("div");el.className="card";el.style.setProperty("--c",c.color);
+ const cols=c.nums.length<=8?4:c.nums.length<=16?4:8; // 8 → 4×2, 16 → 4×4, 32 → 8×4
+ const g=document.createElement("div");g.className="g";g.style.gridTemplateColumns="repeat("+cols+",1fr)";
+ const fs=cols===8?"clamp(11px,2.6vw,18px)":"clamp(16px,4.4vw,26px)";el.style.setProperty("--fs",fs);
+ c.nums.forEach((n,i)=>{const b=document.createElement("b");b.textContent=n;if(i===0)b.className="key";g.appendChild(b)});
+ el.appendChild(g);el.style.setProperty("--ar",cols/Math.ceil(c.nums.length/cols));
+ return el;
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ---------- menu ---------- */
+function drawMenu(){
+ $("tTitle").textContent=t("title");document.title=t("title");
+ $("rules").innerHTML=t("rules").map(r=>"<p>"+r+"</p>").join("");
+ $("tRange").textContent=t("range");
+ $("rng").innerHTML="";
+ [[4,15],[5,31],[6,63]].forEach(([b,n])=>{const x=document.createElement("button");x.className="big"+(b===bits?" sel":"");x.textContent="1–"+n;x.dir="ltr";
+  x.onclick=()=>{bits=b;save("annabelle-magic-bits",b);drawMenu()};$("rng").appendChild(x)});
+ $("bComp").textContent=t("comp");$("bSelf").textContent=t("self");
+ $("flags").innerHTML="";
+ LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
+  x.onclick=()=>{lang=c;save("annabelle-lang",c);document.documentElement.lang=c;document.documentElement.dir=c==="he"?"rtl":"ltr";drawMenu()};$("flags").appendChild(x)});
+ document.documentElement.dir=lang==="he"?"rtl":"ltr";
+}
+function toMenu(){$("res").classList.remove("on");stopConf();show("menu");drawMenu()}
+window.toMenu=toMenu;
+document.querySelectorAll(".homeBtn").forEach(b=>b.onclick=toMenu);
+
+/* ---------- computer guesses ---------- */
+function startComp(){
+ mode="comp";build();order=shuffle(cards.map((_,i)=>i));idx=-1;ans=[];
+ show("comp");thinkScreen();
+}
+function thinkScreen(){
+ $("cInfo").textContent="🎩";
+ $("cSay").textContent=t("think").replace("N",maxN());
+ $("cDots").innerHTML="";
+ $("cWrap").innerHTML='<div style="text-align:center"><div class="hat" style="font-size:90px">🤔</div><div class="sub" style="font-size:20px;font-weight:800">'+t("thinkS")+'</div></div>';
+ $("cBtns").innerHTML="";const r=document.createElement("button");r.className="big";r.textContent=t("ready");r.onclick=()=>{idx=0;askCard()};$("cBtns").appendChild(r);
+}
+function askCard(){
+ const n=order.length;
+ $("cInfo").textContent=t("card")+" "+(idx+1)+"/"+n;
+ $("cSay").textContent=t("ask");
+ $("cDots").innerHTML=order.map((_,i)=>'<i class="'+(i<idx?"on":i===idx?"cur":"")+'"></i>').join("");
+ const c=cards[order[idx]],el=cardEl(c);el.classList.add("in");
+ const w=$("cWrap");w.innerHTML="";w.appendChild(el);
+ $("cBtns").innerHTML="";
+ const bk=document.createElement("button");bk.className="big g";bk.style.minWidth="0";bk.textContent=t("back");bk.onclick=()=>{if(idx===0){thinkScreen();return}idx--;ans.pop();askCard()};
+ const no=document.createElement("button");no.className="big n";no.textContent=t("no");no.onclick=()=>answer(false);
+ const ye=document.createElement("button");ye.className="big y";ye.textContent=t("yes");ye.onclick=()=>answer(true);
+ $("cBtns").append(ye,no,bk);
+}
+function answer(v){
+ ans[idx]=v;idx++;
+ if(idx<order.length){askCard();return}
+ // all answered → drum roll → reveal
+ $("cBtns").innerHTML="";$("cSay").textContent=t("drum");
+ $("cWrap").innerHTML='<div class="drum">🥁</div>';
+ setTimeout(()=>{
+  const used=order.filter((ci,i)=>ans[i]).map(ci=>cards[ci]).sort((a,b)=>a.key-b.key);
+  reveal(used,"comp");
+ },1500);
+}
+
+/* ---------- reveal (shared) ---------- */
+function reveal(used,from){
+ const sum=used.reduce((s,c)=>s+c.key,0);
+ const box=$("resBox");box.innerHTML="";
+ if(sum===0){
+  box.innerHTML='<h2>'+t("none")+'</h2>';
+  const b=document.createElement("button");b.className="big";b.textContent=t("tryOther");b.onclick=()=>{$("res").classList.remove("on");from==="comp"?startComp():startSelf()};
+  const nv=document.createElement("div");nv.id="resNav";box.append(b,nv);$("res").classList.add("on");return;
+ }
+ const h=document.createElement("h2");h.textContent=t("your");
+ const num=document.createElement("div");num.id="num";num.className="pop";num.textContent=sum;
+ const eq=document.createElement("div");eq.className="eq";
+ eq.innerHTML=used.map(c=>'<em>'+c.key+'</em>').join(" + ")+(used.length>1?" = <em>"+sum+"</em>":"");
+ const w=document.createElement("div");w.style.cssText="font-size:26px;font-weight:800";w.textContent=t("wow");
+ const ex=document.createElement("div");ex.className="explain";ex.textContent=t("how");
+ const row=document.createElement("div");row.className="row";
+ const a=document.createElement("button");a.className="big";a.textContent=t("again");a.onclick=()=>{$("res").classList.remove("on");stopConf();from==="comp"?startComp():startSelf()};
+ row.appendChild(a);
+ const nv=document.createElement("div");nv.id="resNav";
+ box.append(h,num,eq,w,ex,row,nv);
+ $("res").classList.add("on");confetti();
+}
+
+/* ---------- self mode ---------- */
+function startSelf(){
+ mode="self";build();keep=cards.map(()=>true);
+ show("self");drawSelf(false);
+}
+function drawSelf(summed){
+ $("sInfo").textContent=t("kept")+": "+keep.filter(Boolean).length+"/"+cards.length;
+ $("sSay").textContent=summed?t("sumSay"):t("selfSay");
+ $("sSub").textContent=summed?"":t("selfSub");
+ const list=$("selfList");list.innerHTML="";
+ cards.forEach((c,i)=>{
+  if(summed&&!keep[i])return;
+  const el=cardEl(c);el.style.removeProperty("--ar");
+  if(!summed){
+   el.classList.toggle("out",!keep[i]);
+   const tag=document.createElement("div");tag.className="tag";tag.textContent=keep[i]?t("keep"):t("drop");el.appendChild(tag);
+   el.onclick=()=>{keep[i]=!keep[i];drawSelf(false)};
+  }
+  list.appendChild(el);
+ });
+ const d=$("sDone");
+ if(summed){d.textContent=t("show");d.onclick=()=>reveal(cards.filter((c,i)=>keep[i]),"self")}
+ else{d.textContent=t("done");d.onclick=()=>{if(!keep.some(Boolean)){reveal([],"self");return}drawSelf(true);list.scrollTop=0}}
+}
+
+/* ---------- confetti ---------- */
+let cf=null,cfT=null;
+function confetti(){
+ const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");
+ const P=[];for(let i=0;i<110;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:COLORS[i%COLORS.length],a:Math.random()*6});
+ const end=Date.now()+3500;cancelAnimationFrame(cf);
+ (function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});
+  if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})();
+}
+function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
+
+$("bComp").onclick=startComp;$("bSelf").onclick=startSelf;
+const sb=+load("annabelle-magic-bits");if(sb>=4&&sb<=6)bits=sb;
+drawMenu();
+</script>
+</body>
+</html>
