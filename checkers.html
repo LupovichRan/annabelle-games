@@ -64,6 +64,7 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px}
 #appr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:45}#appr.on{display:flex}
 #appr .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2{margin:0;font-size:22px;color:#e8862d}#apprN{font-size:64px;font-weight:900;color:#e8862d;letter-spacing:.1em;direction:ltr;line-height:1}
+#weak{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:30;display:none;background:#fff;border:3px solid #f2c94c;border-radius:999px;padding:5px 16px;font-weight:800;font-size:15px;max-width:92vw;text-align:center;pointer-events:none;box-shadow:0 3px 0 #0002}#weak.on{display:block;animation:pop2 .25s}
 #pause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:40}#pause.on{display:flex}
 #pause .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#pause h2{margin:0;font-size:24px;color:#e8862d}
 .khint{display:none}
@@ -115,6 +116,7 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
   <div class="khint" id="kh2"></div>
 </section>
 <div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
+<div id="weak"></div>
 <div id="pause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="pauseT"></h2><div id="pauseS" style="font-weight:700"></div><button class="big g" id="pauseLeave"></button></div></div>
 <div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big" style="background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48" id="apprYes"></button><button class="big g" id="apprNo"></button></div></div></div>
 <canvas id="conf"></canvas>
@@ -122,17 +124,17 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"דמקת חתולים",reconn:"מתחבר מחדש… 🔌",paused:"החברה התנתקה… ממתינים שתתחבר מחדש ⏳",pausedS:"המשחק נשמר וימשיך בדיוק מאותו מקום",leave:"🏠 יציאה מהמשחק",left:"החברה יצאה מהמשחק 👋",roomLeft:"החדר פתוח עוד",expired:"⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש",apprT:"מישהי מבקשת להצטרף למשחק 🔐",apprS:"אשרי רק אם גם אצל החברה שלך מופיע בדיוק המספר הזה",apprYes:"✅ אשרי",apprNo:"❌ דחי",pairMsg:"קוד אימות: N 🔐 מחכים שהחברה תאשר…",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🩶",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
+ he:{title:"דמקת חתולים",weakMsgs:["🛜 החיבור התעטש 🤧 – ממשיכים לשחק!","😴 החתלתול של החברה נרדם על הקו… מחכים רגע","🐟 דג קטן נתקע בכבל – הוא יעבור בקרוב","🧶 הצמר התפתל בחיבור… מסדרים"],reconn:"מתחבר מחדש… 🔌",paused:"החברה התנתקה… ממתינים שתתחבר מחדש ⏳",pausedS:"המשחק נשמר וימשיך בדיוק מאותו מקום",leave:"🏠 יציאה מהמשחק",left:"החברה יצאה מהמשחק 👋",roomLeft:"החדר פתוח עוד",expired:"⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש",apprT:"מישהי מבקשת להצטרף למשחק 🔐",apprS:"אשרי רק אם גם אצל החברה שלך מופיע בדיוק המספר הזה",apprYes:"✅ אשרי",apprNo:"❌ דחי",pairMsg:"קוד אימות: N 🔐 מחכים שהחברה תאשר…",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🩶",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
   rules:["🐾 לחצי על חתלתול ואז על משבצת ירוקה.","😼 אם אפשר לאכול – חובה לקפוץ! אפשר כמה קפיצות ברצף.","🦁 חתלתול שמגיע לצד השני הופך לאריה עם כתר!","🧶 כדור צמר: חתלתול שנוחת עליו משתעשע – ומקבל תור נוסף!","🤪 במצב קל המחשב מתבלבל ועושה מהלכים מצחיקים!"],
   you:"התור שלך 🧡",cpu:"המחשב חושב… 🤔",p1:"תור הכתומים 🧡",p2:"תור האפורים 🩶",bonus:"תור בונוס! 🧶",again:"🔁 עוד משחק",
   winYou:"ניצחת, אנאבל! 🎉",winCpu:"המחשב ניצח… נסי שוב! 💪",winO:"הכתומים ניצחו! 🧡",winG:"האפורים ניצחו! 🩶",
   meow:"מיאו!",yarn:["איזה כיף, צמר! 🧶 עוד תור!","שיחקתי קצת! 🧶 עוד תור!","ווי! צמר! 🧶"],king:"אני מלך! 👑",jump:"עוד קפיצה!",goofy:["אופס, החלקתי! 🙈","הלכתי לאיבוד… 😵","מה עשיתי?! 🤪","ראיתי פרפר! 🦋","אני מתבלבל 😹"],fun:["מיאו!","אוי! 🙀","גלגלתי! 😹","טסתי! 🪁","הצלחת! 👏"]},
- fr:{title:"Dames des chats",reconn:"Reconnexion… 🔌",paused:"Ton ami s'est déconnecté… on attend sa reconnexion ⏳",pausedS:"La partie est sauvegardée et reprendra au même endroit",leave:"🏠 Quitter la partie",left:"Ton ami a quitté la partie 👋",roomLeft:"Salle ouverte encore",expired:"⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle",apprT:"Quelqu'un veut rejoindre la partie 🔐",apprS:"Accepte seulement si ton amie voit exactement ce même nombre",apprYes:"✅ Accepter",apprNo:"❌ Refuser",pairMsg:"Code de vérification : N 🔐 on attend que ton amie accepte…",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🩶",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
+ fr:{title:"Dames des chats",weakMsgs:["🛜 La connexion a éternué 🤧 – on continue !","😴 Le chaton de ton amie s'est endormi sur la ligne… une seconde","🐟 Un petit poisson est coincé dans le câble – il va passer","🧶 La laine s'est emmêlée dans la connexion… on arrange ça"],reconn:"Reconnexion… 🔌",paused:"Ton ami s'est déconnecté… on attend sa reconnexion ⏳",pausedS:"La partie est sauvegardée et reprendra au même endroit",leave:"🏠 Quitter la partie",left:"Ton ami a quitté la partie 👋",roomLeft:"Salle ouverte encore",expired:"⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle",apprT:"Quelqu'un veut rejoindre la partie 🔐",apprS:"Accepte seulement si ton amie voit exactement ce même nombre",apprYes:"✅ Accepter",apprNo:"❌ Refuser",pairMsg:"Code de vérification : N 🔐 on attend que ton amie accepte…",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🩶",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
   rules:["🐾 Touche un chaton puis une case verte.","😼 Si tu peux manger, tu dois sauter ! Plusieurs sauts d'affilée.","🦁 Un chaton qui arrive de l'autre côté devient un lion couronné !","🧶 Pelote : le chaton qui s'y pose joue avec – et gagne un tour en plus !","🤪 En mode facile, l'ordi s'embrouille et fait des coups rigolos !"],
   you:"À toi 🧡",cpu:"L'ordi réfléchit… 🤔",p1:"Tour des oranges 🧡",p2:"Tour des gris 🩶",bonus:"Tour bonus ! 🧶",again:"🔁 Rejouer",
   winYou:"Tu as gagné, Annabelle ! 🎉",winCpu:"L'ordi a gagné… réessaie ! 💪",winO:"Les oranges gagnent ! 🧡",winG:"Les gris gagnent ! 🩶",
   meow:"Miaou !",yarn:["Youpi, une pelote ! 🧶 Encore un tour !","Je joue un peu ! 🧶 Encore !","Wiii ! 🧶"],king:"Je suis roi ! 👑",jump:"Encore un saut !",goofy:["Oups, j'ai glissé ! 🙈","Je suis perdu… 😵","Qu'est-ce que j'ai fait ?! 🤪","Un papillon ! 🦋","Je m'embrouille 😹"],fun:["Miaou !","Aïe ! 🙀","Je roule ! 😹","Je vole ! 🪁","Bravo ! 👏"]},
- en:{title:"Cat Checkers",reconn:"Reconnecting… 🔌",paused:"Your friend disconnected… waiting for them to reconnect ⏳",pausedS:"The game is saved and will continue exactly where it stopped",leave:"🏠 Leave the game",left:"Your friend left the game 👋",roomLeft:"Room open for",expired:"⏰ Time's up, the code is no longer valid. Create a new room",apprT:"Someone wants to join the game 🔐",apprS:"Accept only if your friend sees exactly this same number",apprYes:"✅ Accept",apprNo:"❌ Decline",pairMsg:"Verification code: N 🔐 waiting for your friend to accept…",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🩶",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
+ en:{title:"Cat Checkers",weakMsgs:["🛜 The connection sneezed 🤧 – keep playing!","😴 Your friend's kitten fell asleep on the line… one moment","🐟 A little fish is stuck in the cable – it will pass soon","🧶 The yarn got tangled in the connection… fixing it"],reconn:"Reconnecting… 🔌",paused:"Your friend disconnected… waiting for them to reconnect ⏳",pausedS:"The game is saved and will continue exactly where it stopped",leave:"🏠 Leave the game",left:"Your friend left the game 👋",roomLeft:"Room open for",expired:"⏰ Time's up, the code is no longer valid. Create a new room",apprT:"Someone wants to join the game 🔐",apprS:"Accept only if your friend sees exactly this same number",apprYes:"✅ Accept",apprNo:"❌ Decline",pairMsg:"Verification code: N 🔐 waiting for your friend to accept…",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🩶",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
   rules:["🐾 Tap a kitten, then a green square.","😼 If you can capture, you must jump! Several jumps in a row are OK.","🦁 A kitten reaching the far side becomes a crowned lion!","🧶 Yarn ball: a kitten landing on it plays – and gets an extra turn!","🤪 In easy mode the computer gets confused and makes silly moves!"],
   you:"Your turn 🧡",cpu:"Computer is thinking… 🤔",p1:"Orange's turn 🧡",p2:"Grey's turn 🩶",bonus:"Bonus turn! 🧶",again:"🔁 Play again",
   winYou:"You won, Annabelle! 🎉",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🩶",
@@ -343,6 +345,8 @@ function iceServers(){
   {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:80?transport=tcp","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
  return Array.isArray(own)&&own.length?[...own,...base]:base}
 const PEER_CFG={config:{iceServers:iceServers(),iceCandidatePoolSize:2}};
+const TIMING={soft:9000,cut:25000,hard:30000};   // ms of silence: show "weak connection" (still playable) / drop the link and reconnect / only then pause the game
+const isDown=()=>NET.paused||!!NET.soft;
 const PID="annabelle-ck-",SK="annabelle-ck-session";
 function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
 // --- everything from the network is untrusted: validate & rebuild it, never use it as-is ---
@@ -368,7 +372,14 @@ function applyState(s){
  G.b=s.b;G.turn=s.turn;G.yarn=s.yarn;G.bonus=s.bonus;G.chain=s.chain;G.seq=s.seq;G.sel=null;G.busy=false;G.over=false;NET.q=[];
  $("win").classList.remove("on");$("againBtn").style.display="";draw();updTurn();if(s.over)checkEnd();saveSess();
 }
-function setPaused(on){if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();NET.paused=on;if(G)G.paused=on;$("pause").classList.toggle("on",on);if(!on){clearTimeout(NET.rt);NET.rt=null}}
+function setPaused(on){if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();NET.paused=on;if(G)G.paused=on;$("pause").classList.toggle("on",on);if(!on){clearTimeout(NET.rt);NET.rt=null;NET.soft=0;clearTimeout(NET.hardT);weakBanner(false)}}
+function weakBanner(on){const e=$("weak");clearInterval(NET.weakIv);if(on){const m=t("weakMsgs");let i=Math.random()*m.length|0;e.textContent=m[i];e.classList.add("on");NET.weakIv=setInterval(()=>{i=(i+1)%m.length;e.textContent=m[i]},4500)}else e.classList.remove("on")}
+function softDrop(){ // the link is weak or just dropped: keep playing, reconnect quietly, pause only after a long outage
+ if(!G||!G.online||G.over||isDown())return;NET.soft=Date.now();weakBanner(true);SFX.drop();
+ clearTimeout(NET.hardT);NET.hardT=setTimeout(()=>{if(NET.soft&&G&&G.online&&!G.over){setPaused(true);saveSess()}},TIMING.hard);
+ if(!NET.host)guestLoop();
+}
+function netUp(){if(NET.paused){setPaused(false);return}if(!NET.soft)return;NET.soft=0;clearTimeout(NET.hardT);weakBanner(false);SFX.back()}
 // --- connection plumbing ---
 function stopCd(){clearInterval(NET.cd);NET.cd=null;$("lobCd").textContent="";$("lobCd").classList.remove("low")}
 function startCd(gen){
@@ -409,7 +420,7 @@ function hostPeer(code,gen,resume){
    if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online)){try{p.destroy()}catch(x){}hostPeer(NET.waitCode,gen,"wait")}},2000)}
    else hostRecover();
    return}
-  if(resume||NET.paused){if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.paused){const g=NET.gen;try{p.destroy()}catch(x){}hostPeer(code,g,true)}},3000)}return}
+  if(resume||isDown()){if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&isDown()){const g=NET.gen;try{p.destroy()}catch(x){}hostPeer(code,g,true)}},3000)}return}
   if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
 }
 function hostRecover(){ // phone was in the background (WhatsApp, lock screen…): get the same room back online
@@ -466,7 +477,7 @@ function attach(c,gen,pending){
  const watchIce=()=>{const pc=c.peerConnection;if(!pc||c._w)return;c._w=1;
   pc.addEventListener("iceconnectionstatechange",()=>{const st=pc.iceConnectionState;clearTimeout(c.iceT);
    if(st==="failed"||st==="closed"){gone()}
-   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},6000)}})};
+   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},15000)}})};
  setTimeout(watchIce,0);setTimeout(watchIce,800);
  c.on("open",()=>{watchIce();op()});
  c.on("data",async d=>{
@@ -486,7 +497,7 @@ function attach(c,gen,pending){
    if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanYarn(d.y)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
    return}
   if(NET.conn!==c)return;
-  NET.last=Date.now();onNetData(d)});
+  NET.last=Date.now();if(NET.soft)netUp();onNetData(d)});
  const gone=()=>{NET.pend.delete(c);if(NET.cand===c){NET.cand=null;$("appr").classList.remove("on")}if(gen===NET.gen&&NET.conn===c)onNetClose()};
  c.on("close",gone);c.on("error",gone);
  if(c.open)op();
@@ -533,19 +544,19 @@ function onNetClose(){
  if(!G||!G.online){if(NET.conn||NET.peer)lobFail();return}
  const c=NET.conn;NET.conn=null;try{c&&c.close()}catch(e){}
  if(G.over){netClose();$("winT").textContent=t("left");$("winS").textContent="👋";$("againBtn").style.display="none";$("win").classList.add("on");return}
- if(NET.paused&&!NET.host){return}
- setPaused(true);saveSess();if(!NET.host)guestLoop();
+ if(isDown())return;
+ softDrop();saveSess();
 }
 function guestLoop(){
- clearTimeout(NET.rt);if(!NET.paused||NET.host||!G||!G.online)return;const gen=NET.gen;
- function tryConnect(){if(gen!==NET.gen||!NET.paused||!NET.peer)return;if(NET.conn&&NET.conn.open)return;
+ clearTimeout(NET.rt);if(!isDown()||NET.host||!G||!G.online)return;const gen=NET.gen;
+ function tryConnect(){if(gen!==NET.gen||!isDown()||!NET.peer)return;if(NET.conn&&NET.conn.open)return;
   if(NET.conn){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
   try{attach(NET.peer.connect(PID+NET.code,{reliable:true}),gen)}catch(e){}}
- function go(){if(gen!==NET.gen||!NET.paused)return;const p=NET.peer;
+ function go(){if(gen!==NET.gen||!isDown())return;const p=NET.peer;
   if(!p||p.destroyed||p.disconnected||!p.open){
    try{p&&p.destroy()}catch(e){}
-   loadPeer().then(()=>{if(gen!==NET.gen||!NET.paused)return;const np=new Peer(undefined,PEER_CFG);NET.peer=np;
-    np.on("open",()=>{if(gen===NET.gen&&NET.paused)tryConnect()});np.on("error",()=>{})}).catch(()=>{});
+   loadPeer().then(()=>{if(gen!==NET.gen||!isDown())return;const np=new Peer(undefined,PEER_CFG);NET.peer=np;
+    np.on("open",()=>{if(gen===NET.gen&&isDown())tryConnect()});np.on("error",()=>{})}).catch(()=>{});
   }else tryConnect();
   NET.rt=setTimeout(go,4500)}
  go();
@@ -553,7 +564,7 @@ function guestLoop(){
 function netKick(){ // phone woke up / network is back: retry right away
  if(NET.waitCode&&!(G&&G.online)){hostRecover();return}
  if(!G||!G.online)return;
- if(NET.paused){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
+ if(isDown()){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
  else netSend({t:"ping"});
 }
 function netQ(){ // connection quality dot: green = data flowing, amber = quiet for a few seconds, red = lost / paused
@@ -564,7 +575,7 @@ setInterval(()=>{const now=Date.now();
  NET.tickAt=now;netQ();
  if(!G||!G.online||NET.paused)return;netSend({t:"ping"});
  if(document.hidden)return;
- if(NET.conn&&now-NET.last>11000)onNetClose()},3000);
+ if(NET.conn){const q=now-NET.last;if(q>TIMING.cut)onNetClose();else if(q>TIMING.soft)softDrop()}},3000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){NET.last=Date.now();NET.tickAt=Date.now();netKick()}});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
 function resumeSession(){
  let r=null;try{r=JSON.parse(localStorage.getItem(SK))}catch(e){}
