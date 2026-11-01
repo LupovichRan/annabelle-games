@@ -164,6 +164,17 @@ const SFX={click:()=>tone(560,.08,"triangle",.16),kick:()=>{tone(180,.12,"square
  snore:()=>{tone(95,.55,"sawtooth",.06,70);tone(120,.45,"sawtooth",.05,90,.8);noise(.4,300,"lowpass",.05,150,.05)},
  sneeze:()=>{noise(.1,300,"bandpass",.04,200);noise(.15,2200,"bandpass",.2,900,.2,.6);tone(400,.2,"sawtooth",.1,160,.2)},
  huh:()=>{tone(300,.12,"triangle",.14,420);tone(430,.18,"triangle",.14,330,.14)},
+ /* penalty meters */
+ mTick:(stage,ph)=>{ // a soft blip that follows the moving marker: direction = rounded blip, height = pitch rises with the marker, power = rising "charge" pitch
+  if(stage===0)tone(330+ph*520,.045,"sine",.05);
+  else if(stage===1)tone(420+ph*700,.04,"triangle",.045);
+  else tone(180+ph*900,.05,"square",.035)},
+ mReady:(stage)=>{tone(520+stage*110,.08,"triangle",.09);tone(780+stage*130,.1,"triangle",.08,null,.07)},      // a new meter starts
+ zoneIn:()=>{tone(1320,.06,"sine",.1);tone(1760,.09,"sine",.08,null,.05)},                                       // power marker enters the green zone
+ zoneOut:(strong)=>strong?tone(420,.12,"sawtooth",.08,300):tone(240,.1,"sine",.07,200),                           // leaves it: too strong (buzz) / too weak (dull)
+ lockGood:()=>{[784,988,1319].forEach((f,i)=>tone(f,.16,"triangle",.14,null,i*.06));noise(.08,3500,"highpass",.06)}, // locked in the sweet zone: sparkle
+ lockWeak:()=>{tone(160,.22,"sine",.16,90);noise(.12,300,"lowpass",.1,150)},                                     // too weak: dull thud
+ lockStrong:()=>{tone(300,.25,"sawtooth",.14,120);noise(.2,900,"bandpass",.15,200,0,.8);tone(90,.3,"square",.08,60,.05)}, // too strong: buzzy boom
  lock:(n)=>{tone(700+n*180,.07,"square",.12);tone(1100+n*220,.09,"triangle",.1,null,.05)},
  /* keeper */
  dive:()=>{noise(.3,700,"bandpass",.12,2000,0,.7);tone(140,.15,"sine",.1,90,.28)},
@@ -590,10 +601,10 @@ function startPen(){
 }
 function penAction(){ // one button / tap / key: stops the moving meter (1 direction, 2 height, 3 power) and finally shoots
  const g=G;if(!g||g.mode!=="pen"||g.state!=="aim"||g.pause||g.over)return;ac();
- SFX.lock(g.stage);
+ if(g.stage<2)SFX.lock(g.stage);
  if(g.stage===0){g.lock.x=g.aim.x;g.stage=1;g.mt=0;toast(t("meter1"),1800)}
  else if(g.stage===1){g.lock.y=g.aim.y;g.stage=2;g.mt=0;toast(t("meter2"),1800)}
- else{g.lock.p=g.pw;shoot(g.lock.x,g.lock.y,g.lock.p)}
+ else{g.lock.p=g.pw;const [lo,hi]=g.P.sweet;g.pw<lo-.04?SFX.lockWeak():g.pw>hi+.04?SFX.lockStrong():SFX.lockGood();shoot(g.lock.x,g.lock.y,g.lock.p)}
  updKick();
 }
 function shoot(ax,ay,pw){
@@ -619,6 +630,10 @@ function updPen(dt){
  // aim with keyboard
  if(g.state==="aim"){ // three moving meters: direction (left-right), height (up-down), power (bar) - stop each with one press
   g.mt+=dt;const w=g.stage===0?g.P.mx:g.stage===1?g.P.my:g.P.mp,ph=(1-Math.cos(w*g.mt))/2;g.ph=ph;
+  if(g.mt===dt)SFX.mReady(g.stage);                                          // first frame of a meter
+  g.tickT=(g.tickT||0)-dt;if(g.tickT<=0&&g.mt>.12){g.tickT=g.stage===2?.06:.085;SFX.mTick(g.stage,ph)}
+  if(g.stage===2){const [lo,hi]=g.P.sweet,z=ph<lo?0:ph<=hi?1:2;                 // zone cues for the power meter
+   if(g.zone!==undefined&&z!==g.zone){z===1?SFX.zoneIn():SFX.zoneOut(z===2)}g.zone=z}else g.zone=undefined;
   if(g.stage===0)g.aim.x=GOALM.x0-36+ph*(GOALM.x1-GOALM.x0+72);
   else if(g.stage===1){g.aim.x=g.lock.x;g.aim.y=GOALM.y0-46+ph*(GOALM.y1-GOALM.y0+54)}
   else{g.aim.x=g.lock.x;g.aim.y=g.lock.y;g.pw=ph}}
