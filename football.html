@@ -73,7 +73,7 @@ kbd{background:#fff;border:1px solid #2fa04a;border-radius:5px;padding:0 5px;fon
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"כדורגל חתולים",
+ he:{title:"כדורגל חתולים",unstick:["הכדור התחבא בפינה! 😹 בום!","הקהל עזר לשחרר את הכדור 🧹","השופט שחרר את הכדור! 🐱🟨"],
   rules:["⚽ משחק קטן: גררי את האצבע – החתלתול הכתום רץ אחריה ובועט בכדור. הבקיעי יותר גולים מהחתלתול האפור!","🥅 פנדלים: הקישי איפה לבעוט – ושוער החתול ינסה לתפוס!","🏆 מי שמבקיע ראשון 5 גולים (או יותר בסוף הזמן) מנצח."],
   diff:"איך נשחק?",easy:"🐣 קל וכיפי",normal:"🐯 רגיל",match:"⚽ משחק קטן",pen:"🥅 פנדלים",
   goal:["גוווול! 🎉","איזה גול! ⚽😸","בום! הכדור בפנים!"],conceded:["אוי… נכנס גול 😿","הכדור חמק לרשת!"],
@@ -84,7 +84,7 @@ const TX={
   keeperSilly:["השוער רדף אחרי פרפר 🦋","השוער התעטש! 🤧","השוער נרדם 😴"],round:"בעיטה",final:"סיימנו! ",stars:"כוכבים",
   hintMatch:"<kbd>↑↓←→</kbd>/<kbd>WASD</kbd> תנועה · <kbd>רווח</kbd> בעיטה חזקה · <kbd>Esc</kbd> הפסקה · <kbd>M</kbd> שקט",
   hintPen:"<kbd>↑↓←→</kbd>/עכבר – כיוון · <kbd>רווח</kbd>/קליק – בעיטה · <kbd>Esc</kbd> הפסקה"},
- fr:{title:"Foot des chats",
+ fr:{title:"Foot des chats",unstick:["Le ballon se cachait dans le coin ! 😹 Boum !","Le public a aidé à libérer le ballon 🧹","L'arbitre a relancé le ballon ! 🐱🟨"],
   rules:["⚽ Match : glisse ton doigt – le chaton orange court vers lui et tape dans le ballon. Marque plus de buts que le chaton gris !","🥅 Penalties : touche où tirer – le gardien-chat essaie d'arrêter !","🏆 Le premier à 5 buts (ou le plus de buts à la fin du temps) gagne."],
   diff:"On joue comment ?",easy:"🐣 Facile et rigolo",normal:"🐯 Normal",match:"⚽ Petit match",pen:"🥅 Penalties",
   goal:["BUUUT ! 🎉","Quel but ! ⚽😸","Boum ! Dans la lucarne !"],conceded:["Oh non… but encaissé 😿","Le ballon file au fond !"],
@@ -95,7 +95,7 @@ const TX={
   keeperSilly:["Le gardien court après un papillon 🦋","Le gardien éternue ! 🤧","Le gardien s'endort 😴"],round:"Tir",final:"Fini ! ",stars:"étoiles",
   hintMatch:"<kbd>↑↓←→</kbd>/<kbd>WASD</kbd> bouger · <kbd>Espace</kbd> tir puissant · <kbd>Échap</kbd> pause · <kbd>M</kbd> son",
   hintPen:"<kbd>↑↓←→</kbd>/souris – viser · <kbd>Espace</kbd>/clic – tirer · <kbd>Échap</kbd> pause"},
- en:{title:"Cat Football",
+ en:{title:"Cat Football",unstick:["The ball was hiding in the corner! 😹 Boom!","The crowd helped free the ball 🧹","The ref flicked the ball back into play! 🐱🟨"],
   rules:["⚽ Match: drag your finger – the orange kitten runs to it and kicks the ball. Score more goals than the grey kitten!","🥅 Penalties: tap where to shoot – the cat goalkeeper tries to save!","🏆 First to 5 goals (or most goals when time is up) wins."],
   diff:"How shall we play?",easy:"🐣 Easy & funny",normal:"🐯 Normal",match:"⚽ Mini match",pen:"🥅 Penalties",
   goal:["GOOOAL! 🎉","What a goal! ⚽😸","Boom! Right in the net!"],conceded:["Oh no… a goal against 😿","The ball slipped into the net!"],
@@ -125,6 +125,12 @@ const SFX={click:()=>tone(560,.08,"triangle",.16),kick:()=>{tone(180,.12,"square
  sad:()=>[392,330,262].forEach((f,i)=>tone(f,.28,"triangle",.18,null,i*.16)),meow:()=>{tone(700,.12,"sawtooth",.07,1100);tone(1100,.25,"sawtooth",.07,500,.12)},
  boing:()=>tone(300,.28,"sine",.22,900),save:()=>{tone(300,.1,"square",.15,500);tone(500,.15,"square",.15,300,.1)},silly:()=>{tone(800,.1,"triangle",.14,1200);tone(1200,.1,"triangle",.14,600,.1);tone(600,.15,"triangle",.14,900,.2)}};
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
+/* ambient crowd murmur (band-passed noise) that swells on a goal */
+let crowdNode=null;
+function crowdStart(){if(muted||crowdNode)return;const a=ac();if(!a)return;const len=a.sampleRate*2,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let lp=0;for(let i=0;i<len;i++){lp=lp*.97+(Math.random()*2-1)*.03;d[i]=lp*8}
+ const src=a.createBufferSource();src.buffer=buf;src.loop=true;const f=a.createBiquadFilter();f.type="bandpass";f.frequency.value=650;f.Q.value=.6;const g=a.createGain();g.gain.value=.045;src.connect(f).connect(g).connect(a.destination);src.start();crowdNode={src,g}}
+function crowdStop(){if(crowdNode){try{crowdNode.src.stop()}catch(e){}crowdNode=null}}
+function crowdSwell(){if(!crowdNode||!AC)return;const n=AC.currentTime,g=crowdNode.g.gain;g.cancelScheduledValues(n);g.setValueAtTime(g.value,n);g.linearRampToValueAtTime(.2,n+.3);g.linearRampToValueAtTime(.045,n+2.8)}
 /* ---------- helpers ---------- */
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}
 let toastT=0;function toast(s,ms=1500){const e=$("toast");e.textContent=s;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),ms)}
@@ -143,9 +149,9 @@ document.addEventListener("click",e=>{
  if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawMenu();if(G)setHint()}
  if(D){diff=D.dataset.diff;ls.set("annabelle-football-diff",diff);SFX.click();drawMenu()}
 });
-window.toMenu=function(){G=null;$("over").classList.remove("on");stopConf();show("menu");drawMenu();$("hint").innerHTML=""};
+window.toMenu=function(){crowdStop();G=null;$("over").classList.remove("on");stopConf();show("menu");drawMenu();$("hint").innerHTML=""};
 /* ---------- canvas / geometry (logical 600x900, portrait) ---------- */
-const LW=600,LH=900,cv=$("cv"),cx=cv.getContext("2d");
+const FW=600,FH=900,OX=110,OY=110,LW=FW+2*OX,LH=FH+2*OY,cv=$("cv"),cx=cv.getContext("2d");
 const PX0=30,PX1=570,PY0=70,PY1=830,GX0=205,GX1=395,GD=46; // pitch + goal mouth + goal depth
 let scale=1,dpr=1;
 function fit(){
@@ -153,16 +159,63 @@ function fit(){
  dpr=Math.min(2,devicePixelRatio||1);cv.style.width=s+"px";cv.style.height=s*LH/LW+"px";cv.width=Math.round(s*dpr);cv.height=Math.round(s*LH/LW*dpr);scale=s*dpr/LW;
 }
 addEventListener("resize",fit);
-function toLogical(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*LW,y:(e.clientY-r.top)/r.height*LH}}
+function toLogical(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*LW-OX,y:(e.clientY-r.top)/r.height*LH-OY}}
+/* ---------- audience: kittens in the stands ---------- */
+const CR={t:0,who:-1,kind:""};            // crowd reaction: kind "goal" (fans of `who` cheer, the others sulk) or "oh" (everyone gasps)
+function crowdReact(kind,who){CR.kind=kind;CR.who=who;CR.t=kind==="goal"?2.6:1.6}
+const CROWD=[];
+(function(){
+ const furs=["#f5973a","#9aa3ad","#f2c94c","#f3f3f3","#d6a77a","#4a4a4a","#ff9ec7","#c9b6f2"];
+ const add=(x,y)=>CROWD.push({x,y,c:furs[CROWD.length*7%furs.length],ph:Math.random()*6.28,fan:Math.random()<.5?0:1,flag:Math.random()<.2,hat:Math.random()<.18});
+ for(let r=0;r<2;r++)for(let x=34+(r?22:0);x<LW-24;x+=44){add(x,24+r*40);add(x+(r?0:11),LH-24-r*40)}
+ for(let c=0;c<2;c++)for(let y=118+(c?22:0);y<LH-110;y+=44){add(26+c*40,y);add(LW-26-c*40,y+11)}
+})();
+function crowdKitten(m,tm){
+ const cheer=CR.t>0&&CR.kind==="goal"&&m.fan===CR.who,sad=CR.t>0&&((CR.kind==="goal"&&m.fan!==CR.who)||CR.kind==="oh");
+ const idle=Math.sin(tm*2.2+m.ph)*2.2+Math.sin(tm*.9-m.x*.012-m.y*.01)*1.4; // gentle wave through the stands
+ const jump=cheer?-Math.abs(Math.sin(tm*9+m.ph))*14:0,droop=sad?4:0;
+ cx.save();cx.scale(scale,scale);cx.translate(m.x,m.y+idle+jump+droop);
+ const r=19,dark="#0004";
+ if(m.flag){cx.strokeStyle="#6b4a2b";cx.lineWidth=3;cx.beginPath();cx.moveTo(r*.7,r*.5);cx.lineTo(r*1.05,-r*1.6);cx.stroke();
+  cx.fillStyle=m.fan?"#4a90e2":"#e23b3b";cx.beginPath();const w=Math.sin(tm*7+m.ph)*4;cx.moveTo(r*1.05,-r*1.6);cx.lineTo(r*1.05+16,-r*1.35+w);cx.lineTo(r*1.05,-r*1.05);cx.fill()}
+ cx.fillStyle=m.c;cx.strokeStyle=dark;cx.lineWidth=2;
+ for(const sx of [-1,1]){cx.beginPath();cx.moveTo(sx*r*.85,-r*.4);cx.lineTo(sx*r*.6,-r*1.2);cx.lineTo(sx*r*.12,-r*.78);cx.closePath();cx.fill();cx.stroke()}
+ cx.beginPath();cx.arc(0,0,r,0,7);cx.fill();cx.stroke();
+ // team scarf
+ cx.fillStyle=m.fan?"#4a90e2":"#e23b3b";cx.fillRect(-r*.8,r*.55,r*1.6,r*.34);
+ // eyes / mouth
+ cx.fillStyle="#222";cx.strokeStyle="#222";cx.lineWidth=2;
+ if(sad){for(const sx of [-1,1]){cx.beginPath();cx.moveTo(sx*r*.55,-r*.05);cx.lineTo(sx*r*.2,-r*.2);cx.stroke()}cx.beginPath();cx.arc(0,r*.42,r*.2,Math.PI*1.1,Math.PI*1.9);cx.stroke()}
+ else{for(const sx of [-1,1]){cx.beginPath();cx.ellipse(sx*r*.38,-r*.1,r*.12,r*(cheer?.12:.2),0,0,7);cx.fill()}
+  cx.beginPath();if(cheer){cx.fillStyle="#7a1f2b";cx.arc(0,r*.28,r*.26,0,Math.PI);cx.fill()}else{cx.arc(0,r*.16,r*.2,.2,Math.PI-.2);cx.stroke()}}
+ if(m.hat){cx.fillStyle=m.fan?"#4a90e2":"#e23b3b";cx.beginPath();cx.moveTo(-r*.45,-r*.85);cx.lineTo(0,-r*1.75);cx.lineTo(r*.45,-r*.85);cx.fill()}
+ if(cheer){cx.font="16px serif";cx.textAlign="center";cx.fillText("🎉",0,-r*1.6)}
+ cx.restore();
+}
+function drawStands(tm){
+ cx.save();cx.scale(scale,scale);
+ cx.fillStyle="#3d3358";cx.fillRect(0,0,LW,LH);
+ // concrete steps behind the crowd
+ cx.fillStyle="#4a3f69";for(let i=0;i<2;i++){cx.fillRect(0,i*40+2,LW,34);cx.fillRect(0,LH-i*40-36,LW,34)}
+ for(let i=0;i<2;i++){cx.fillRect(i*40+2,0,34,LH);cx.fillRect(LW-i*40-36,0,34,LH)}
+ // advertising boards around the pitch
+ const ads=["MIAU CUP","🐟 FISH & CHIPS","KITTEN COLA","PURR-FECT","🧶 YARN CO","MEOW TV"],cols=["#e23b3b","#2a8fd0","#f2c94c","#2fb36a","#d6479a","#f5973a"];
+ cx.font="900 13px Rubik,Arial";cx.textAlign="center";cx.textBaseline="middle";
+ for(let i=0;i<6;i++){const w=FW/6;cx.fillStyle=cols[i];cx.fillRect(OX+i*w,OY-18,w,16);cx.fillRect(OX+i*w,OY+FH+2,w,16);cx.fillStyle="#fff";cx.fillText(ads[i],OX+i*w+w/2,OY-10);cx.fillText(ads[(i+3)%6],OX+i*w+w/2,OY+FH+10)}
+ for(let i=0;i<6;i++){const h=FH/6;cx.fillStyle=cols[(i+2)%6];cx.fillRect(OX-18,OY+i*h,16,h);cx.fillRect(OX+FW+2,OY+i*h,16,h)}
+ cx.textBaseline="alphabetic";cx.restore();
+ for(const m of CROWD)crowdKitten(m,tm);
+}
 /* ---------- drawing ---------- */
 function drawPitch(){
- cx.save();cx.scale(scale,scale);
- cx.fillStyle="#3cb356";cx.fillRect(0,0,LW,LH);
+ cx.save();cx.scale(scale,scale);cx.translate(OX,OY);
+ cx.fillStyle="#3cb356";cx.fillRect(0,0,FW,FH);
  for(let i=0;i<10;i++){cx.fillStyle=i%2?"#45bd5f":"#3cb356";cx.fillRect(PX0,PY0+i*(PY1-PY0)/10,PX1-PX0,(PY1-PY0)/10)}
  cx.strokeStyle="#fff";cx.lineWidth=5;cx.strokeRect(PX0,PY0,PX1-PX0,PY1-PY0);
  cx.beginPath();cx.moveTo(PX0,(PY0+PY1)/2);cx.lineTo(PX1,(PY0+PY1)/2);cx.stroke();
- cx.beginPath();cx.arc(LW/2,(PY0+PY1)/2,70,0,7);cx.stroke();
+ cx.beginPath();cx.arc(FW/2,(PY0+PY1)/2,70,0,7);cx.stroke();
  cx.strokeRect(GX0-40,PY0,GX1-GX0+80,90);cx.strokeRect(GX0-40,PY1-90,GX1-GX0+80,90);
+ for(const [fx,fy] of [[PX0,PY0],[PX1,PY0],[PX0,PY1],[PX1,PY1]]){cx.strokeStyle="#fff";cx.lineWidth=3;cx.beginPath();cx.moveTo(fx,fy);cx.lineTo(fx,fy-22);cx.stroke();cx.fillStyle="#ffe14d";cx.beginPath();cx.moveTo(fx,fy-22);cx.lineTo(fx+(fx<FW/2?14:-14),fy-17);cx.lineTo(fx,fy-12);cx.fill()}
  // goals (nets)
  for(const top of [true,false]){
   const y0=top?PY0-GD:PY1,y1=top?PY0:PY1+GD;
@@ -175,20 +228,22 @@ function drawPitch(){
  cx.restore();
 }
 function drawPenScene(){
- cx.save();cx.scale(scale,scale);
- for(let i=0;i<12;i++){cx.fillStyle=i%2?"#45bd5f":"#3cb356";cx.fillRect(0,i*75,LW,75)}
+ cx.save();cx.scale(scale,scale);cx.translate(OX,OY);
+ for(let i=0;i<12;i++){cx.fillStyle=i%2?"#45bd5f":"#3cb356";cx.fillRect(0,i*75,FW,75)}
  const {x0,x1,y0,y1}=GOALM;
  cx.fillStyle="#ffffff55";cx.fillRect(x0,y0,x1-x0,y1-y0);cx.strokeStyle="#ffffffaa";cx.lineWidth=1.5;
  for(let x=x0;x<=x1;x+=16){cx.beginPath();cx.moveTo(x,y0);cx.lineTo(x,y1);cx.stroke()}
  for(let y=y0;y<=y1;y+=16){cx.beginPath();cx.moveTo(x0,y);cx.lineTo(x1,y);cx.stroke()}
- cx.strokeStyle="#fff";cx.lineWidth=5;cx.beginPath();cx.moveTo(20,y1);cx.lineTo(LW-20,y1);cx.stroke();
- cx.strokeRect(70,y1,LW-140,400);cx.beginPath();cx.arc(LW/2,690,6,0,7);cx.fillStyle="#fff";cx.fill();
+ cx.strokeStyle="#fff";cx.lineWidth=5;cx.beginPath();cx.moveTo(20,y1);cx.lineTo(FW-20,y1);cx.stroke();
+ cx.strokeRect(70,y1,FW-140,400);cx.beginPath();cx.arc(FW/2,690,6,0,7);cx.fillStyle="#fff";cx.fill();
  cx.lineWidth=11;cx.lineJoin="round";cx.beginPath();cx.moveTo(x0,y1);cx.lineTo(x0,y0);cx.lineTo(x1,y0);cx.lineTo(x1,y1);cx.stroke();
  cx.restore();
 }
 function drawKitten(x,y,r,col,dark,ang,o={}){
- cx.save();cx.scale(scale,scale);cx.translate(x,y);
+ cx.save();cx.scale(scale,scale);cx.translate(OX,OY);cx.translate(x,y);
  if(o.tilt)cx.rotate(o.tilt);
+ {const w=Math.sin(performance.now()/(o.run?90:240)+x*.01)*(o.run?.5:.25);cx.strokeStyle=col;cx.lineWidth=r*.3;cx.lineCap="round";cx.beginPath();const ta=ang+Math.PI+w,tx0=Math.cos(ang+Math.PI)*r*.85,ty0=Math.sin(ang+Math.PI)*r*.85;cx.moveTo(tx0,ty0);cx.quadraticCurveTo(tx0+Math.cos(ta)*r*.7,ty0+Math.sin(ta)*r*.7-r*.2,tx0+Math.cos(ta+w)*r*1.1,ty0+Math.sin(ta+w)*r*1.1-r*.35);cx.stroke();cx.lineCap="butt";
+  if(o.run){const ph=performance.now()/80;for(const sx of [-1,1]){cx.fillStyle=col;cx.strokeStyle=dark;cx.lineWidth=2;cx.beginPath();cx.ellipse(sx*r*.5,r*.82+Math.sin(ph+(sx>0?0:Math.PI))*r*.16,r*.22,r*.17,0,0,7);cx.fill();cx.stroke()}}}
  // shadow
  cx.fillStyle="#0003";cx.beginPath();cx.ellipse(3,r*.75,r*.95,r*.5,0,0,7);cx.fill();
  // ears
@@ -210,15 +265,18 @@ function drawKitten(x,y,r,col,dark,ang,o={}){
  if(o.emoji){cx.font=(r*.9)+"px serif";cx.textAlign="center";cx.fillText(o.emoji,0,-r*1.5)}
  cx.restore();
 }
-function drawBall(x,y,r,z=0){
- cx.save();cx.scale(scale,scale);
+function drawBall(x,y,r,z=0,rot=0,trail){
+ if(trail&&trail.length>1&&trail[trail.length-1].s>380){cx.save();cx.scale(scale,scale);cx.translate(OX,OY);
+  trail.forEach((q,i)=>{cx.globalAlpha=(i/trail.length)*.28;cx.fillStyle="#fff";cx.beginPath();cx.arc(q.x,q.y,r*(.45+.5*i/trail.length),0,7);cx.fill()});cx.restore()}
+ cx.save();cx.scale(scale,scale);cx.translate(OX,OY);
  cx.fillStyle="#0003";cx.beginPath();cx.ellipse(x+3,y+r*.8+z*.4,r*.95,r*.45,0,0,7);cx.fill();
- cx.translate(x,y-z);cx.fillStyle="#fff";cx.strokeStyle="#333";cx.lineWidth=2;cx.beginPath();cx.arc(0,0,r,0,7);cx.fill();cx.stroke();
+ cx.translate(x,y-z);cx.rotate(rot);cx.fillStyle="#fff";cx.strokeStyle="#333";cx.lineWidth=2;cx.beginPath();cx.arc(0,0,r,0,7);cx.fill();cx.stroke();
  cx.fillStyle="#333";cx.beginPath();for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;cx.lineTo(Math.cos(a)*r*.45,Math.sin(a)*r*.45)}cx.fill();
- for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;cx.beginPath();cx.moveTo(Math.cos(a)*r*.45,Math.sin(a)*r*.45);cx.lineTo(Math.cos(a)*r*.95,Math.sin(a)*r*.95);cx.stroke()}
+ for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;cx.beginPath();cx.moveTo(Math.cos(a)*r*.45,Math.sin(a)*r*.45);cx.lineTo(Math.cos(a)*r*.95,Math.sin(a)*r*.95);cx.stroke();
+  cx.beginPath();cx.arc(Math.cos(a+Math.PI/5)*r*.8,Math.sin(a+Math.PI/5)*r*.8,r*.14,0,7);cx.fill()}
  cx.restore();
 }
-function text(s,x,y,size,col="#fff",stroke="#0006"){cx.save();cx.scale(scale,scale);cx.font=`900 ${size}px Rubik,Arial`;cx.textAlign="center";cx.lineWidth=6;cx.strokeStyle=stroke;cx.strokeText(s,x,y);cx.fillStyle=col;cx.fillText(s,x,y);cx.restore()}
+function text(s,x,y,size,col="#fff",stroke="#0006"){cx.save();cx.scale(scale,scale);cx.translate(OX,OY);cx.font=`900 ${size}px Rubik,Arial`;cx.textAlign="center";cx.direction="ltr";cx.lineWidth=6;cx.strokeStyle=stroke;cx.strokeText(s,x,y);cx.fillStyle=col;cx.fillText(s,x,y);cx.restore()}
 /* ---------- game state ---------- */
 let G=null,raf=0,last=0;
 const keys={};let ptr=null; // pointer target (logical)
@@ -226,10 +284,10 @@ function setHint(){$("hint").innerHTML=G?t(G.mode==="pen"?"hintPen":"hintMatch")
 function startMatch(){
  const P=PRE[diff];
  G={mode:"match",P,s:[0,0],time:P.time,state:"kick",st:0,pause:false,over:false,
-  me:{x:LW/2,y:PY1-170,vx:0,vy:0,r:30,ang:-Math.PI/2,dash:0,cool:0,tilt:0},
-  cpu:{x:LW/2,y:PY0+170,vx:0,vy:0,r:30,ang:Math.PI/2,silly:0,sillyKind:"",sillyT:rr(P.sillyEvery),react:0,tx:LW/2,ty:PY0+170,sleep:false},
-  ball:{x:LW/2,y:(PY0+PY1)/2,vx:0,vy:0,r:16},parts:[],msgT:0};
- show("game");setHint();updHud();SFX.whistle();toast(t("kickoff"));loop();
+  me:{x:FW/2,y:PY1-170,vx:0,vy:0,r:30,ang:-Math.PI/2,dash:0,cool:0,tilt:0},
+  cpu:{x:FW/2,y:PY0+170,vx:0,vy:0,r:30,ang:Math.PI/2,silly:0,sillyKind:"",sillyT:rr(P.sillyEvery),react:0,tx:FW/2,ty:PY0+170,sleep:false},
+  ball:{x:FW/2,y:(PY0+PY1)/2,vx:0,vy:0,r:16},parts:[],msgT:0};
+ show("game");setHint();updHud();SFX.whistle();toast(t("kickoff"));crowdStart();loop();
 }
 const rr=a=>a[0]+Math.random()*(a[1]-a[0]);
 function updHud(){ if(!G)return; if(G.mode==="match"){const m=Math.max(0,Math.ceil(G.time));$("hud").textContent="🧡 "+G.s[0]+" : "+G.s[1]+" 🩶   ⏱ "+Math.floor(m/60)+":"+String(m%60).padStart(2,"0")}
@@ -237,21 +295,74 @@ function updHud(){ if(!G)return; if(G.mode==="match"){const m=Math.max(0,Math.ce
 function loop(){cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(frame)}
 function frame(now){
  if(!G)return;const dt=Math.min(.033,(now-last)/1000);last=now;
+ if(CR.t>0)CR.t-=dt;
  if(!G.pause&&!G.over){G.mode==="match"?updMatch(dt):updPen(dt)}
  render();raf=requestAnimationFrame(frame);
 }
 /* ---------- mini match ---------- */
 function kickoff(who){
- const g=G;g.me.x=LW/2;g.me.y=PY1-170;g.me.vx=g.me.vy=0;g.cpu.x=LW/2;g.cpu.y=PY0+170;g.cpu.vx=g.cpu.vy=0;
- g.ball.x=LW/2;g.ball.y=(PY0+PY1)/2;g.ball.vx=g.ball.vy=0;g.state="kick";g.st=0;SFX.whistle();
+ const g=G;g.me.x=FW/2;g.me.y=PY1-170;g.me.vx=g.me.vy=0;g.cpu.x=FW/2;g.cpu.y=PY0+170;g.cpu.vx=g.cpu.vy=0;
+ g.ball.x=FW/2;g.ball.y=(PY0+PY1)/2;g.ball.vx=g.ball.vy=0;g.state="kick";g.st=0;SFX.whistle();
 }
 function clampK(k){k.x=Math.max(PX0+k.r,Math.min(PX1-k.r,k.x));k.y=Math.max(PY0+k.r,Math.min(PY1-k.r,k.y))}
 function kickBall(k,power,isCpu){
- const b=G.ball,dx=b.x-k.x,dy=b.y-k.y,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d;
+ const b=G.ball,dx=b.x-k.x,dy=b.y-k.y,d=Math.hypot(dx,dy)||1;let nx=dx/d,ny=dy/d;
+ const need=k.r+b.r+1,cx0=FW/2,cy0=(PY0+PY1)/2;
+ // Ball against a wall / wedged in a corner behind the kitten? A real kitten would hook it out sideways along the wall.
+ // So instead of pushing the ball into the wall (which jams it), the ball is slid along the wall to the nearest free spot
+ // next to the kitten and kicked away from the wall.
+ const T=b.r+k.r*.7+8,inMouth=b.x>GX0-b.r&&b.x<GX1+b.r;
+ let ex=0,ey=0;
+ if(b.x-PX0<T)ex=1;else if(PX1-b.x<T)ex=-1;
+ if(!inMouth){if(b.y-PY0<T)ey=1;else if(PY1-b.y<T)ey=-1}
+ const wall=!!(ex||ey),into=nx*ex+ny*ey;
+ let escaped=false;
+ if(wall&&into<.5){
+  const cands=[];
+  if(ex){cands.push([0,1],[0,-1])}               // along a side wall
+  if(ey){cands.push([1,0],[-1,0])}               // along the top / bottom wall
+  if(ex)cands.push([ex,0]);if(ey)cands.push([0,ey]); // straight out from the wall
+  let best=null;
+  for(const [tx,ty] of cands){
+   for(let sft=0;sft<=150;sft+=3){
+    const px=b.x+tx*sft,py=b.y+ty*sft;
+    if(px<PX0+b.r+1||px>PX1-b.r-1||(!inMouth&&(py<PY0+b.r+1||py>PY1-b.r-1)))break;
+    if(Math.hypot(px-k.x,py-k.y)>=need){
+     const towardMid=(cx0-px)*tx+(cy0-py)*ty>0?0:10;   // prefer sliding towards the middle of the pitch
+     const cost=sft+towardMid;if(!best||cost<best.cost)best={cost,px,py,tx,ty};break;
+    }
+   }
+  }
+  if(best){
+   b.x=best.px;b.y=best.py;escaped=true;
+   // kick direction: along the free direction + away from the wall, towards the middle
+   nx=best.tx+ex*.55;ny=best.ty+ey*.55;const l=Math.hypot(nx,ny)||1;nx/=l;ny/=l;
+  } else { // nothing free (very unlikely): drop the ball towards the middle
+   const ax=cx0-b.x,ay=cy0-b.y,l=Math.hypot(ax,ay)||1;nx=ax/l;ny=ay/l;b.x+=nx*need;b.y+=ny*need;escaped=true;
+  }
+ }
  const sp=Math.hypot(k.vx,k.vy),boost=(k.dash>0?1.7:1)*power;
- b.vx=nx*(260+sp*1.25*boost)+k.vx*.35;b.vy=ny*(260+sp*1.25*boost)+k.vy*.35;
+ const base=escaped?360:260;
+ b.vx=nx*(base+sp*1.25*boost)+k.vx*(escaped?.1:.35);b.vy=ny*(base+sp*1.25*boost)+k.vy*(escaped?.1:.35);
  const m=Math.hypot(b.vx,b.vy),mx=860*(isCpu?G.P.cpuPower:1);if(m>mx){b.vx*=mx/m;b.vy*=mx/m}
- b.x=k.x+nx*(k.r+b.r+1);b.y=k.y+ny*(k.r+b.r+1);SFX.kick();
+ if(!escaped){ // normal kick: ball just outside the kitten, kept inside the pitch (the kitten steps back if the wall is in the way)
+  const ox=dx/d,oy=dy/d;b.x=k.x+ox*need;b.y=k.y+oy*need;
+  const bx=b.x,by=b.y;b.x=Math.max(PX0+b.r+1,Math.min(PX1-b.r-1,b.x));if(!inMouth)b.y=Math.max(PY0+b.r+1,Math.min(PY1-b.r-1,b.y));
+  const cdx=b.x-bx,cdy=b.y-by;if(cdx||cdy){k.x-=cdx*1.1;k.y-=cdy*1.1;clampK(k)}
+ }
+ b.stuckT=0;SFX.kick();
+}
+// safety net: if the ball lies still next to a wall/corner while a kitten is close, the "ref" flicks it back into play
+function unstickBall(dt){
+ const g=G,b=g.ball,sp=Math.hypot(b.vx,b.vy);
+ b.stuckT=sp<16?(b.stuckT||0)+dt:0;
+ if(g.state!=="play"||b.stuckT<.9)return;
+ const near=Math.min(b.x-PX0,PX1-b.x,(b.x>GX0&&b.x<GX1)?999:Math.min(b.y-PY0,PY1-b.y))<b.r+g.me.r*1.6;
+ const close=Math.min(Math.hypot(g.me.x-b.x,g.me.y-b.y),Math.hypot(g.cpu.x-b.x,g.cpu.y-b.y))<g.me.r*3.2;
+ if((near&&close)||b.stuckT>3){
+  const ax=FW/2-b.x+(Math.random()-.5)*120,ay=(PY0+PY1)/2-b.y+(Math.random()-.5)*160,l=Math.hypot(ax,ay)||1;
+  b.vx=ax/l*430;b.vy=ay/l*430;b.stuckT=0;SFX.boing();toast(pick(t("unstick")),1500);
+ }
 }
 function updMatch(dt){
  const g=G,me=g.me,cpu=g.cpu,b=g.ball,P=g.P;
@@ -269,7 +380,7 @@ function updMatch(dt){
  // cpu
  cpuThink(dt);
  // ball
- moveBall(dt,false);
+ moveBall(dt,false);unstickBall(dt);
  for(const [kk,isC] of [[me,false],[cpu,true]]){
   const dx=b.x-kk.x,dy=b.y-kk.y,d=Math.hypot(dx,dy);
   if(d<kk.r+b.r){ if(!(isC&&kk.silly>0&&kk.sillyKind==="sleep")) kickBall(kk,isC?P.cpuPower:1,isC) }
@@ -286,10 +397,12 @@ function updMatch(dt){
 }
 function scored(who){
  const g=G;g.s[who]++;g.state="goal";g.st=0;updHud();
+ crowdReact("goal",who);crowdSwell();
  if(who===0){SFX.goal();toast(pick(t("goal")),1800);confetti();SFX.meow()}else{SFX.sad();toast(pick(t("conceded")),1800)}
 }
 function moveBall(dt,frozenGoal){
- const b=G.ball;b.x+=b.vx*dt;b.y+=b.vy*dt;const f=Math.pow(.42,dt);b.vx*=f;b.vy*=f;
+ const b=G.ball;{const sp=Math.hypot(b.vx,b.vy);b.rot=(b.rot||0)+(b.vx>=0?1:-1)*sp*dt/b.r*.8;(b.trail=b.trail||[]).push({x:b.x,y:b.y,s:sp});if(b.trail.length>7)b.trail.shift()}
+ b.x+=b.vx*dt;b.y+=b.vy*dt;const f=Math.pow(.42,dt);b.vx*=f;b.vy*=f;
  const inMouthX=b.x>GX0&&b.x<GX1;
  // side walls
  if(b.x<PX0+b.r&&!(b.y<PY0||b.y>PY1)){b.x=PX0+b.r;b.vx=Math.abs(b.vx)*.8;SFX.bounce()}
@@ -325,7 +438,7 @@ function cpuThink(dt){
   // attack down the pitch (to y=PY1): get behind the ball (above it) then push toward the lower goal
   c.react-=dt;
   if(c.react<=0){c.react=P.cpuReact;
-   const goalX=LW/2+(Math.random()-.5)*60,gx=goalX-b.x,gy=PY1-b.y,gl=Math.hypot(gx,gy)||1,ux=gx/gl,uy=gy/gl;
+   const goalX=FW/2+(Math.random()-.5)*60,gx=goalX-b.x,gy=PY1-b.y,gl=Math.hypot(gx,gy)||1,ux=gx/gl,uy=gy/gl;
    const behind=(c.x-b.x)*ux+(c.y-b.y)*uy; // <0 means cpu is behind ball relative to its attack direction
    if(behind<-6&&Math.abs(((c.x-b.x)*uy-(c.y-b.y)*ux))<46){c.tx=b.x;c.ty=b.y}
    else{c.tx=b.x-ux*(b.r+c.r+34);c.ty=b.y-uy*(b.r+c.r+34)}
@@ -352,19 +465,19 @@ const GOALM={x0:150,x1:450,y0:150,y1:260,keeperY:230};
 function startPen(){
  const P=PRE[diff];
  G={mode:"pen",P,shots:5,log:[],s:[0,0],state:"aim",st:0,pause:false,over:false,
-  aim:{x:LW/2,y:205},ball:{x:LW/2,y:690,r:20,z:0,t:0,from:null,to:null},keeper:{x:LW/2,y:GOALM.keeperY,tx:LW/2,dive:0,silly:0,kind:"",sleep:false},kitten:{x:LW/2+80,y:720,kick:0},msg:"",msgT:0};
- show("game");setHint();updHud();SFX.whistle();toast(t("penIntro"),2200);loop();
+  aim:{x:FW/2,y:205},ball:{x:FW/2,y:690,r:20,z:0,t:0,from:null,to:null},keeper:{x:FW/2,y:GOALM.keeperY,tx:FW/2,dive:0,silly:0,kind:"",sleep:false},kitten:{x:FW/2+80,y:720,kick:0},msg:"",msgT:0};
+ show("game");setHint();updHud();SFX.whistle();toast(t("penIntro"),2200);crowdStart();loop();
 }
 function shoot(ax,ay){
  const g=G,P=g.P;if(g.state!=="aim")return;
  // inaccuracy: the harder (normal) the bigger the error for fast taps; easy has a gentle error
  const ex=(Math.random()-.5)*2*P.aimError,ey=(Math.random()-.5)*2*P.aimError*.7;
  const tx=ax+ex,ty=ay+ey;
- g.ball.from={x:LW/2,y:690};g.ball.to={x:tx,y:ty};g.ball.t=0;g.state="fly";g.st=0;g.kitten.kick=.4;SFX.kick();
+ g.ball.from={x:FW/2,y:690};g.ball.to={x:tx,y:ty};g.ball.t=0;g.state="fly";g.st=0;g.kitten.kick=.4;SFX.kick();
  // keeper behaviour
  const k=g.keeper;k.silly=0;k.sleep=false;
  if(Math.random()<(P===PRE.easy?.28:.12)){k.silly=1;k.kind=pick(["fly","sneeze","sleep"]);k.sleep=k.kind==="sleep";k.tx=k.x;toast(t("keeperSilly")[["fly","sneeze","sleep"].indexOf(k.kind)],1500);SFX.silly()}
- else{ const guess=Math.random()<P.keeperGuess; const side=tx<LW/2?-1:1; k.tx=guess?tx:(LW/2+(-side)*(60+Math.random()*80)+(Math.random()-.5)*40); k.tx=Math.max(GOALM.x0+20,Math.min(GOALM.x1-20,k.tx)) }
+ else{ const guess=Math.random()<P.keeperGuess; const side=tx<FW/2?-1:1; k.tx=guess?tx:(FW/2+(-side)*(60+Math.random()*80)+(Math.random()-.5)*40); k.tx=Math.max(GOALM.x0+20,Math.min(GOALM.x1-20,k.tx)) }
  g.shotTarget={x:tx,y:ty};
 }
 function updPen(dt){
@@ -372,16 +485,16 @@ function updPen(dt){
  if(g.kitten.kick>0)g.kitten.kick-=dt;
  // aim with keyboard
  if(g.state==="aim"){const sp=240*dt;if(keys.ArrowLeft||keys.a)g.aim.x-=sp;if(keys.ArrowRight||keys.d)g.aim.x+=sp;if(keys.ArrowUp||keys.w)g.aim.y-=sp;if(keys.ArrowDown||keys.s)g.aim.y+=sp;
-  g.aim.x=Math.max(70,Math.min(LW-70,g.aim.x));g.aim.y=Math.max(110,Math.min(330,g.aim.y))}
+  g.aim.x=Math.max(70,Math.min(FW-70,g.aim.x));g.aim.y=Math.max(110,Math.min(330,g.aim.y))}
  // keeper idle sway
- if(g.state==="aim"){k.x+=(LW/2+Math.sin(performance.now()/500)*60-k.x)*Math.min(1,dt*3);k.dive=0}
+ if(g.state==="aim"){k.x+=(FW/2+Math.sin(performance.now()/500)*60-k.x)*Math.min(1,dt*3);k.dive=0}
  if(g.state==="fly"){
   g.st+=dt;b.t=Math.min(1,g.st/.55);const e=b.t;
   b.x=b.from.x+(b.to.x-b.from.x)*e;b.y=b.from.y+(b.to.y-b.from.y)*e;b.z=Math.sin(e*Math.PI)*50*(1-e*.3);
   if(!k.silly)k.x+=(k.tx-k.x)*Math.min(1,dt*(g.P===PRE.easy?6:9));k.dive=Math.min(1,k.dive+dt*3);
   if(b.t>=1){resolvePen()}
  }
- if(g.state==="res"){g.st+=dt;if(g.st>1.8){if(g.log.length>=g.shots)endPen();else{g.state="aim";g.ball.x=LW/2;g.ball.y=690;g.ball.z=0;g.keeper.x=LW/2;g.keeper.silly=0;g.keeper.sleep=false}}}
+ if(g.state==="res"){g.st+=dt;if(g.st>1.8){if(g.log.length>=g.shots)endPen();else{g.state="aim";g.ball.x=FW/2;g.ball.y=690;g.ball.z=0;g.keeper.x=FW/2;g.keeper.silly=0;g.keeper.sleep=false}}}
 }
 function resolvePen(){
  const g=G,b=g.ball,k=g.keeper,tg=g.shotTarget;
@@ -390,8 +503,8 @@ function resolvePen(){
  if(!inGoal)res="miss";
  else if(!k.silly&&Math.abs(k.x-tg.x)<g.P.keeperReach*(Math.abs(tg.y-205)<45?1:.8))res="save";
  else res="goal";
- g.state="res";g.st=0;g.res=res;g.log.push(res==="goal"?1:0);if(res==="goal"){g.s[0]++;SFX.goal();toast(pick(t("scored")),1500);confetti()}
- else if(res==="save"){SFX.save();SFX.meow();toast(pick(t("save")),1500)}else{SFX.sad();toast(pick(t("miss")),1500)}
+ g.state="res";g.st=0;g.res=res;g.log.push(res==="goal"?1:0);if(res==="goal"){crowdReact("goal",0);crowdSwell();g.s[0]++;SFX.goal();toast(pick(t("scored")),1500);confetti()}
+ else if(res==="save"){crowdReact("oh");SFX.save();SFX.meow();toast(pick(t("save")),1500)}else{crowdReact("oh");SFX.sad();toast(pick(t("miss")),1500)}
  updHud();
 }
 function endPen(){
@@ -401,25 +514,25 @@ function endPen(){
 }
 /* ---------- render ---------- */
 function render(){
- if(!G)return;cx.clearRect(0,0,cv.width,cv.height);G.mode==="pen"?drawPenScene():drawPitch();
+ if(!G)return;cx.clearRect(0,0,cv.width,cv.height);drawStands(performance.now()/1000);G.mode==="pen"?drawPenScene():drawPitch();
  if(G.mode==="match"){
   const {me,cpu,ball}=G;
-  drawKitten(cpu.x,cpu.y,cpu.r,"#9aa3ad","#6b737c",cpu.ang,{stripes:true,shirt:"#4a90e2",sleep:cpu.sleep,emoji:cpu.silly>0?({fly:"🦋",sleep:"💤",lost:"❓",sneeze:"🤧"})[cpu.sillyKind]:"",tilt:cpu.silly>0&&cpu.sillyKind==="lost"?Math.sin(performance.now()/120)*.3:0});
-  drawKitten(me.x,me.y,me.r,"#f5973a","#c96a14",me.ang,{stripes:true,shirt:"#e23b3b",tilt:me.tilt,emoji:me.dash>0?"💨":""});
-  drawBall(ball.x,ball.y,ball.r,0);
-  if(G.state==="goal")text("⚽ GOAL!",LW/2,LH/2,80,"#ffe14d");
-  if(ptr&&G.state!=="goal"){cx.save();cx.scale(scale,scale);cx.strokeStyle="#fff8";cx.lineWidth=3;cx.setLineDash([6,6]);cx.beginPath();cx.arc(ptr.x,ptr.y,16,0,7);cx.stroke();cx.restore()}
+  drawKitten(cpu.x,cpu.y,cpu.r,"#9aa3ad","#6b737c",cpu.ang,{stripes:true,shirt:"#4a90e2",run:Math.hypot(cpu.vx,cpu.vy)>40&&!cpu.sleep,sleep:cpu.sleep,emoji:cpu.silly>0?({fly:"🦋",sleep:"💤",lost:"❓",sneeze:"🤧"})[cpu.sillyKind]:"",tilt:cpu.silly>0&&cpu.sillyKind==="lost"?Math.sin(performance.now()/120)*.3:0});
+  drawKitten(me.x,me.y,me.r,"#f5973a","#c96a14",me.ang,{stripes:true,shirt:"#e23b3b",tilt:me.tilt,run:Math.hypot(me.vx,me.vy)>40,emoji:me.dash>0?"💨":""});
+  drawBall(ball.x,ball.y,ball.r,0,ball.rot||0,ball.trail);
+  if(G.state==="goal")text("⚽ GOAL!",FW/2,FH/2,80,"#ffe14d");
+  if(ptr&&G.state!=="goal"){cx.save();cx.scale(scale,scale);cx.translate(OX,OY);cx.strokeStyle="#fff8";cx.lineWidth=3;cx.setLineDash([6,6]);cx.beginPath();cx.arc(ptr.x,ptr.y,16,0,7);cx.stroke();cx.restore()}
  } else {
   const {ball,keeper:k,aim,kitten}=G;
   // keeper
-  const kx=k.x,ky=k.y+(k.dive?10*k.dive:0),tilt=k.dive*(k.tx<LW/2?-1:1)*(k.silly?0:1)*.9;
+  const kx=k.x,ky=k.y+(k.dive?10*k.dive:0),tilt=k.dive*(k.tx<FW/2?-1:1)*(k.silly?0:1)*.9;
   drawKitten(kx,ky,36,"#9aa3ad","#6b737c",Math.PI/2,{stripes:true,shirt:"#4a90e2",tilt,sleep:k.sleep,emoji:k.silly?({fly:"🦋",sneeze:"🤧",sleep:"💤"})[k.kind]:""});
   // shooter kitten
   drawKitten(kitten.x,kitten.y,34,"#f5973a","#c96a14",-Math.PI/2,{stripes:true,shirt:"#e23b3b",tilt:kitten.kick>0?-.35:0});
   // aim marker
-  if(G.state==="aim"){cx.save();cx.scale(scale,scale);cx.strokeStyle="#ffe14d";cx.lineWidth=4;cx.beginPath();cx.arc(aim.x,aim.y,24,0,7);cx.moveTo(aim.x-34,aim.y);cx.lineTo(aim.x+34,aim.y);cx.moveTo(aim.x,aim.y-34);cx.lineTo(aim.x,aim.y+34);cx.stroke();cx.restore()}
+  if(G.state==="aim"){cx.save();cx.scale(scale,scale);cx.translate(OX,OY);cx.strokeStyle="#ffe14d";cx.lineWidth=4;cx.beginPath();cx.arc(aim.x,aim.y,24,0,7);cx.moveTo(aim.x-34,aim.y);cx.lineTo(aim.x+34,aim.y);cx.moveTo(aim.x,aim.y-34);cx.lineTo(aim.x,aim.y+34);cx.stroke();cx.restore()}
   const sc=G.state==="fly"?1-ball.t*.45:1;drawBall(ball.x,ball.y,ball.r*sc,ball.z||0);
-  if(G.state==="res"){const r=G.res;text(r==="goal"?"GOAL! ⚽":r==="save"?"SAVE! 🧤":"WIDE! 🌙",LW/2,430,72,r==="goal"?"#ffe14d":"#fff")}
+  if(G.state==="res"){const r=G.res;text(r==="goal"?"GOAL! ⚽":r==="save"?"SAVE! 🧤":"WIDE! 🌙",FW/2,430,72,r==="goal"?"#ffe14d":"#fff")}
  }
 }
 /* ---------- input ---------- */
@@ -430,7 +543,7 @@ cv.addEventListener("pointerdown",e=>{if(!G||G.pause||G.over)return;ac();try{cv.
 cv.addEventListener("pointermove",e=>{if(!G||G.pause||G.over)return;const p=toLogical(e);
  if(G.mode==="match"){if(e.buttons||e.pointerType!=="mouse")ptr=p}else if(G.state==="aim"&&e.pointerType==="mouse"){G.aim.x=p.x;G.aim.y=Math.max(110,Math.min(330,p.y))}});
 // the kitten keeps running to the last touched spot (tap-to-run is friendlier for little fingers)
-function doPause(on){if(!G||G.over)return;G.pause=on;if(on){showPause()}else hidePause()}
+function doPause(on){if(!G||G.over)return;G.pause=on;if(on){crowdStop();showPause()}else{hidePause();crowdStart()}}
 function showPause(){$("overT").textContent=t("paused");$("overS").textContent="⏸";$("overD").textContent="";$("againBtn").textContent=t("resume");$("againBtn").dataset.mode="resume";$("over").classList.add("on")}
 function hidePause(){$("over").classList.remove("on");$("againBtn").textContent=t("again");delete $("againBtn").dataset.mode;last=performance.now()}
 $("pauseBtn").addEventListener("click",()=>{SFX.click();doPause(!G.pause)});
@@ -438,12 +551,12 @@ $("againBtn").addEventListener("click",()=>{SFX.click();if($("againBtn").dataset
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
 $("bMatch").addEventListener("click",()=>{ac();SFX.click();startMatch()});
 $("bPen").addEventListener("click",()=>{ac();SFX.click();startPen()});
-$("muteBtn").addEventListener("click",()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});
+$("muteBtn").addEventListener("click",()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(muted)crowdStop();else{SFX.click();if(G&&!G.pause&&!G.over)crowdStart()}});
 const KEYMAP={ArrowLeft:"ArrowLeft",ArrowRight:"ArrowRight",ArrowUp:"ArrowUp",ArrowDown:"ArrowDown"};
 addEventListener("keydown",e=>{
  if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
  const k=e.key.length===1?e.key.toLowerCase():e.key,menu=$("menu").classList.contains("active"),btn=e.target&&e.target.closest&&e.target.closest("button,a");
- if(k==="m"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();return}
+ if(k==="m"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(muted)crowdStop();else if(G&&!G.pause&&!G.over)crowdStart();return}
  if(menu){if(k==="1"){e.preventDefault();$("bMatch").click()}else if(k==="2"){e.preventDefault();$("bPen").click()}else if((k==="Enter"||k===" ")&&!btn){e.preventDefault();$("bMatch").click()}return}
  if(!G)return;
  if(k==="Escape"||k==="p"){e.preventDefault();if($("over").classList.contains("on")&&!G.pause){toMenu()}else doPause(!G.pause);return}
