@@ -474,7 +474,7 @@ function drawRoom(){
 }
 
 /* ================= Game state ================= */
-const ROUND=120, MAXMISS=3;
+const ROUND=120; let MAXMISS=3;
 let G=null, running=false, paused=false, ending=false;
 let soyaSvg=null, lastCls='';
 function newGame(){
@@ -885,6 +885,42 @@ addEventListener('keydown',e=>{
 addEventListener('blur',()=>{ if(running&&!paused&&!ending) pause(true); });
 // cursor feedback on the things you can interact with
 setInterval(()=>{ if(!G||!G.s) return; const s=G.s; soyaEl.classList.toggle('warn',s.st==='warn'||s.st==='chew'); soyaEl.style.cursor=(s.st==='warn'||s.st==='chew'||s.st==='push')?'pointer':''; footEl.classList.toggle('hot',!!G.foot.out); },150);
+})();
+</script>
+
+<script>
+/* ===== Difficulty: easy (default, friendly for a small child) / normal (original numbers) ===== */
+(()=>{
+const DK='soyahome-diff';
+const DFS={easy:{lives:5,warn:1.7,chew:1.45,push:1.4,peb:1.5,idle:1.4,speed:.8,ramp:.6,maxPeb:2,silly:.25,every:150},
+ normal:{lives:3,warn:1,chew:1,push:1,peb:1,idle:1,speed:1,ramp:1,maxPeb:3,silly:0,every:0}};
+let diff='easy'; try{ const d=localStorage.getItem(DK); if(DFS[d]) diff=d; }catch(e){}
+const F=()=>DFS[diff];
+const TD={he:{lbl:'רמת קושי:',easy:'🐣 קל',normal:'🐱 רגיל',life:'חיים נוספים! 💖',lose:['סויה ניצח הפעם… אבל הוא כזה חמוד 😹 נסי שוב!','איזה בלגן מצחיק! 😹 בואי ננסה עוד פעם!','סויה צוחק מהחוטם 😸 עוד פעם?'],
+  silly:['סויה התעטש! 🤧','סויה מסתבך בזנב של עצמו! 😹','סויה נרדם לשנייה… 😴','סויה ראה פרפר! 🦋','אופס, סויה מחליק על הרצפה! 🛼']},
+ fr:{lbl:'Difficulté :',easy:'🐣 Facile',normal:'🐱 Normal',life:'Une vie en plus ! 💖',lose:['Soya a gagné cette fois… mais il est trop mignon 😹 Réessaie !','Quel drôle de bazar ! 😹 On recommence ?','Soya rigole dans sa moustache 😸 Encore une fois ?'],
+  silly:['Soya éternue ! 🤧','Soya s’emmêle dans sa queue ! 😹','Soya s’endort une seconde… 😴','Soya a vu un papillon ! 🦋','Oups, Soya glisse sur le sol ! 🛼']},
+ en:{lbl:'Difficulty:',easy:'🐣 Easy',normal:'🐱 Normal',life:'Extra life! 💖',lose:['Soya won this time… but he is so cute 😹 Try again!','What a funny mess! 😹 Shall we try again?','Soya is giggling in his whiskers 😸 One more time?'],
+  silly:['Soya sneezed! 🤧','Soya got tangled in his own tail! 😹','Soya dozed off for a second… 😴','Soya saw a butterfly! 🦋','Oops, Soya is sliding on the floor! 🛼']}};
+const td=()=>TD[lang]||TD.he;
+const dp=document.createElement('div'); dp.id='diffPick'; $('roomPick').after(dp);
+const st=document.createElement('style'); st.textContent='#diffPick{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px 0}#diffPick span{font-weight:800;font-size:15px}#diffPick button{min-height:44px;padding:6px 14px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px}#diffPick button.on{background:#fff;box-shadow:0 0 0 3px #c8306f}'; document.head.appendChild(st);
+function drawDiff(){ dp.innerHTML='<span>'+td().lbl+'</span>'+['easy','normal'].map(k=>`<button data-d="${k}" class="${k===diff?'on':''}">${td()[k]}</button>`).join(''); }
+dp.onclick=e=>{ const b=e.target.closest('[data-d]'); if(!b) return; diff=b.dataset.d; try{ localStorage.setItem(DK,diff); }catch(err){} try{ SFX.click(); }catch(err){} drawDiff(); };
+addEventListener('keydown',e=>{ if(e.code==='KeyD'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&$('menu').classList.contains('show')&&!(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))){ diff=diff==='easy'?'normal':'easy'; try{ localStorage.setItem(DK,diff); }catch(err){} drawDiff(); } });
+// gentler timings
+const wrap=(n,f)=>{ const o=P[n]; P[n]=()=>o()*f(); };
+wrap('warn',()=>F().warn); wrap('chew',()=>F().chew); wrap('push',()=>F().push); wrap('peb',()=>F().peb); wrap('idle',()=>F().idle); wrap('speed',()=>F().speed);
+const nP=P.nPeb; P.nPeb=()=>Math.min(F().maxPeb,nP());
+const D1=D; D=function(){ return Math.min(1,D1()*F().ramp+(1-F().ramp)*0); };
+// lives + free hearts every N points
+const ng2=newGame; newGame=function(){ MAXMISS=F().lives; ng2(); G.nextLife=F().every||1e9; hud(); };
+const hud1=hud; hud=function(){ if(G&&running&&!ending&&G.miss>0&&G.score>=G.nextLife){ G.nextLife+=F().every; G.miss--; try{ pop(L.W/2,L.H*.28,td().life,true); SFX.good(); }catch(e){} } hud1(); };
+// silly foe moments: Soya fumbles and gives a little extra time
+const sw2=startWarn; startWarn=function(t){ sw2(t); const s=G.s; if(F().silly&&G.t>6&&s.st==='warn'&&t!=='toe'&&Math.random()<F().silly){ s.t+=1.3; pop(s.x,s.y-L.h*1.2,pick(td().silly),true); try{ meow(1.7,0,.18); tone('square',500,900,.12,.06); }catch(e){} } };
+const fn2=finish; finish=function(win){ fn2(win); if(!win) $('endSub').textContent=pick(td().lose); };
+const al3=applyLang; applyLang=function(){ al3(); drawDiff(); };
+drawDiff();
 })();
 </script>
 
