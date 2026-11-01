@@ -92,9 +92,32 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .err{color:#d2462b;font-size:14px;font-weight:700}
 .note{font-size:13px;opacity:.8}
 
+/* desktop: keyboard hints, hover, wide layout */
+.keyhint{display:none}
+.hot::after{content:attr(data-key);display:none}
+@media (min-width:700px){
+.desk .keyhint{display:block;font-size:13px;font-weight:700;opacity:.7;text-align:center;margin-top:2px}
+.desk .hot::after{display:block;position:absolute;top:3px;inset-inline-start:3px;min-width:20px;padding:0 5px;border-radius:6px;background:rgba(74,44,107,.8);color:#fff;font-size:13px;line-height:20px;font-weight:700}
+.desk .opts .big::before{content:attr(data-n);display:inline-block;min-width:1.6em;margin-inline-end:10px;border-radius:8px;background:rgba(255,255,255,.3);font-size:.8em;padding:0 5px}
+.desk .card{width:min(100%,520px)}
+}
+.desk .hot:hover{background:rgba(255,214,79,.35);border-color:#ffd64f;opacity:1;animation:none}
+.desk .iconbtn:hover,.desk .tabs button:hover,.desk .langs button:hover{transform:translateY(-1px)}
+.desk .big:hover{filter:brightness(1.08)}
+@media (min-width:860px) and (min-height:520px) and (orientation:landscape){
+#game{max-width:1280px}
+#game.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,430px);grid-template-rows:auto 1fr auto;align-items:stretch;column-gap:16px;padding:0 16px}
+#game>.stage{grid-column:1;grid-row:1/4}
+#game>.top{grid-column:2;grid-row:1}
+#game>.say{grid-column:2;grid-row:2;height:auto;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#game>.say img{height:clamp(150px,30vh,300px);max-height:none}
+#game>.say .bubble{flex:none;align-self:stretch;min-height:96px;font-size:clamp(18px,2.4vh,24px);padding:12px 16px}
+#game>.keyhint{grid-column:2;grid-row:3;padding-bottom:8px}
+}
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){#pause{overflow-y:auto!important;align-items:safe center!important;justify-content:safe center!important}#pause>*{max-height:none!important;margin:auto}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/escape.webmanifest"><meta name="theme-color" content="#ffd6b8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="בית העץ"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/escape-apple-180.png"><script src="pwa.js" data-app="escape" data-slots='[["#langS", "after"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langS" data-pauseslot="#pause .card" data-relabel="#paHome" defer></script><script src="share.js" data-slot="#langS" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -106,6 +129,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <div class="langs" id="langS"></div>
     <div class="paws" id="sPaws"></div>
     <div class="btns"><button class="big" id="goBtn"></button><button class="big soft" id="againBtn"></button></div>
+    <div class="keyhint" data-k="start"></div>
   </section>
   <section class="screen" id="game">
     <div class="top">
@@ -115,6 +139,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     </div>
     <div class="stage" id="stage"><div class="box" id="box"><img id="scene" alt=""></div></div>
     <div class="say"><img id="tigG" alt="Tigero"><div class="bubble" id="bubble"></div></div>
+    <div class="keyhint" data-k="game"></div>
   </section>
 
   <div class="ov" id="puz"><div class="card">
@@ -124,6 +149,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <div class="msg" id="pMsg"></div>
     <button class="hintbtn" id="hintBtn"></button>
     <div class="hint" id="pHint" style="display:none"></div>
+    <div class="keyhint" data-k="puz"></div>
     <button class="link" id="pClose"></button>
   </div></div>
 
@@ -133,6 +159,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <p id="wP" style="font-size:17px"></p>
     <button class="big" id="wBtn"></button>
     <button class="link" id="wHome"></button>
+    <div class="keyhint" data-k="won"></div>
   </div></div>
 
   <div class="ov" id="pause"><div class="card">
@@ -145,6 +172,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
       <button class="big soft" id="paHome"></button>
     </div>
     <button class="link" id="paGrown"></button>
+    <div class="keyhint" data-k="pause"></div>
   </div></div>
 
   <div class="ov" id="ed"><div class="card">
@@ -318,7 +346,7 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.to
   document.body.classList.toggle('sea',id==='game'&&SCENES[S.room]==='coral'); if(id==='game')layout();}
 
 // ---------- i18n ----------
-function langButtons(el){el.innerHTML='';for(const k of ['he','fr','en']){const b=document.createElement('button');b.textContent=T[k].name;b.dataset.lang=k;b.className=k===lang?'sel':'';b.onclick=()=>{setLang(k);sfx('tap');};el.appendChild(b);}}
+function langButtons(el){const fk=el.contains(document.activeElement)&&document.activeElement.dataset?document.activeElement.dataset.lang:null;el.innerHTML='';for(const k of ['he','fr','en']){const b=document.createElement('button');b.textContent=T[k].name;b.dataset.lang=k;b.className=k===lang?'sel':'';b.onclick=()=>{setLang(k);sfx('tap');};el.appendChild(b);if(fk===k)b.focus();}}
 function setLang(k){lang=k;localStorage.setItem(LKEY,k);applyLang();}
 function applyLang(){const t=T[lang];document.documentElement.lang=lang;document.documentElement.dir=t.dir;
   langButtons($('langS'));langButtons($('langP'));
@@ -329,7 +357,7 @@ function applyLang(){const t=T[lang];document.documentElement.lang=lang;document
   $('hintBtn').textContent=t.hintBtn;$('pClose').textContent=t.close;
   $('paT').textContent=t.paused;$('paResume').textContent=t.resume;$('paRestart').textContent=t.restart;$('paHome').textContent=t.home;$('paGrown').textContent=t.grown;
   $('wHome').textContent=t.home;
-  updateSound();renderHUD();$('bubble').textContent=sayText();
+  updateSound();renderHUD();$('bubble').textContent=sayText();kHints();
   if(S.puzzle)renderPuzzle(); if(S.wonOpen)renderWon(); if($('ed').classList.contains('on'))renderEd();
   document.title=t.title+' · Annabelle';}
 function updateSound(){const t=T[lang];$('muteS').textContent=muted?'🔇':'🔊';$('paSound').textContent=muted?t.soundOff:t.soundOn;}
@@ -341,7 +369,7 @@ function renderHUD(){const t=T[lang];$('rNum').textContent=t.room(S.room+1);$('r
   $('stars').textContent=[0,1,2].map(i=>i<S.stars.length?'⭐':'☆').join('')+(S.key?' 🔑':'');}
 function buildRoom(){const sc=SCENES[S.room];$('scene').src=IMG[sc];$('scene').alt=T[lang].rooms[S.room];
   const box=$('box');box.querySelectorAll('.hot').forEach(h=>h.remove());
-  for(const [id,[l,tp,w,h]] of Object.entries(HS[sc])){const b=document.createElement('button');b.className='hot';b.dataset.spot=id;b.setAttribute('aria-label',LABEL[id]);
+  for(const [id,[l,tp,w,h]] of Object.entries(HS[sc])){const b=document.createElement('button');b.className='hot';b.dataset.spot=id;b.setAttribute('aria-label',LABEL[id]);b.dataset.key=Object.keys(HS[sc]).indexOf(id)+1;b.title=LABEL[id]+' ['+b.dataset.key+']';
     b.style.left=l+'%';b.style.top=tp+'%';b.style.width=w+'%';b.style.height=h+'%';b.onclick=()=>tap(id);box.appendChild(b);}
   renderHUD();}
 function layout(){const st=$('stage'),box=$('box');if(!st.clientHeight)return;const W=st.clientWidth-12,H=st.clientHeight-4,ar=768/1344;let w=W,h=w/ar;if(h>H){h=H;w=h*ar;}box.style.width=Math.floor(w)+'px';box.style.height=Math.floor(h)+'px';}
@@ -353,11 +381,11 @@ function tap(id){sfx(id==='door'&&S.key?'roar':'tap');
   if(id==='door'){if(!S.key)return say('doorLocked');prog.completed=Math.max(prog.completed,S.room+1);saveProg();return openWon();}
   if(S.stars.includes(id))return say('already');
   S.puzzle=id;S.wrong=false;S.hint=false;S.no=[];renderPuzzle();$('puz').classList.add('on');speak(getPuzzle(S.room,id).q);}
-function renderPuzzle(){const p=getPuzzle(S.room,S.puzzle),t=T[lang];$('pCustom').textContent=p.custom?t.customTag:'';$('pCustom').style.display=p.custom?'':'none';
+function renderPuzzle(){const hadF=$('pOpts').contains(document.activeElement);const p=getPuzzle(S.room,S.puzzle),t=T[lang];$('pCustom').textContent=p.custom?t.customTag:'';$('pCustom').style.display=p.custom?'':'none';
   $('pQ').textContent=p.q;const o=$('pOpts');o.innerHTML='';
-  p.opts.forEach((txt,i)=>{const b=document.createElement('button');b.className='big'+(S.no.includes(i)?' no':'');b.textContent=txt;b.dataset.i=i;b.onclick=()=>answer(i);o.appendChild(b);});
+  p.opts.forEach((txt,i)=>{const b=document.createElement('button');b.className='big'+(S.no.includes(i)?' no':'');b.textContent=txt;b.dataset.i=i;b.dataset.n=i+1;b.onclick=()=>answer(i);o.appendChild(b);});
   $('pMsg').textContent=S.wrong?t.wrong:'';$('pMsg').style.display=S.wrong?'':'none';
-  $('pHint').textContent=p.hint;$('pHint').style.display=S.hint?'':'none';$('hintBtn').style.display=S.hint?'none':'';}
+  $('pHint').textContent=p.hint;$('pHint').style.display=S.hint?'':'none';$('hintBtn').style.display=S.hint?'none':'';if(hadF){const f=o.querySelector('.big:not(.no)')||o.querySelector('.big');if(f)f.focus();}}
 function answer(i){const p=getPuzzle(S.room,S.puzzle);
   if(i===p.ans){sfx('win');S.stars.push(S.puzzle);const slot=S.puzzle;S.puzzle=null;$('puz').classList.remove('on');renderHUD();markGot();
     if(p.custom){S.sayKey='customWin';S.sayArg=null;say('customWin');}else say('win',slot);}
@@ -408,7 +436,58 @@ $('wBtn').onclick=()=>{sfx('tap');S.wonOpen=false;if(S.room===3){prog.completed=
 $('wHome').onclick=()=>{sfx('tap');S.wonOpen=false;stopSpeak();applyLang();show('start');};
 window.addEventListener('resize',layout);
 if(window.visualViewport)visualViewport.addEventListener('resize',layout);
+// ---------- keyboard / mouse (laptop) ----------
+const KH={he:{start:'Enter להתחלה · M קול',game:'1–6 חפצים · חיצים לניווט · Enter בחירה · Esc הפסקה · M קול',puz:'1–4 תשובה · H רמז · Esc סגירה',won:'Enter להמשך',pause:'Esc להמשך משחק · M קול'},
+ fr:{start:'Entrée pour jouer · M son',game:'1–6 objets · flèches pour naviguer · Entrée choisir · Échap pause · M son',puz:'1–4 réponse · H indice · Échap fermer',won:'Entrée pour continuer',pause:'Échap pour reprendre · M son'},
+ en:{start:'Enter to play · M sound',game:'1–6 objects · arrows to move · Enter select · Esc pause · M sound',puz:'1–4 answer · H hint · Esc close',won:'Enter to continue',pause:'Esc to resume · M sound'}};
+function kHints(){document.querySelectorAll('.keyhint').forEach(e=>{e.textContent=KH[lang][e.dataset.k]||'';});}
+const isDesk=()=>!!(window.AnnabelleDesk&&window.AnnabelleDesk.isDesk());
+const OVS=['ed','pause','won','puz'];
+const openOv=()=>OVS.find(id=>$(id).classList.contains('on'));
+const gameOn=()=>$('game').classList.contains('on');
+function navHot(dx,dy){const hs=[...$('box').querySelectorAll('.hot')];if(!hs.length)return;const cur=hs.includes(document.activeElement)?document.activeElement:null;
+  if(!cur){hs[0].focus();return;}
+  const cr=cur.getBoundingClientRect(),cx=cr.left+cr.width/2,cy=cr.top+cr.height/2;let best=null,bd=1e9;
+  for(const h of hs){if(h===cur)continue;const r=h.getBoundingClientRect(),x=r.left+r.width/2-cx,y=r.top+r.height/2-cy,al=x*dx+y*dy;if(al<=0)continue;const d=al+Math.abs(x*dy-y*dx)*2;if(d<bd){bd=d;best=h;}}
+  (best||cur).focus();}
+function focusables(root){return [...root.querySelectorAll('button,input,textarea,[tabindex]')].filter(e=>!e.disabled&&e.offsetParent!==null&&e.tabIndex>=0);}
+let lastFocus=null;
+const ovSeen={};
+new MutationObserver(ms=>{for(const m of ms){const el=m.target,on=el.classList.contains('on');if(ovSeen[el.id]===on)continue;ovSeen[el.id]=on;
+  if(!isDesk())continue;
+  if(OVS.includes(el.id)){
+    if(on){if(!lastFocus||!document.contains(lastFocus))lastFocus=null;
+      const pf=document.activeElement;if(pf&&pf!==document.body&&!el.contains(pf))lastFocus=pf;
+      const first=({puz:'#pOpts .big',won:'#wBtn',pause:'#paResume',ed:'#edRooms button'})[el.id];setTimeout(()=>{const f=el.querySelector(first);f&&f.focus();},30);}
+    else if(!openOv()&&lastFocus){const f=lastFocus;lastFocus=null;setTimeout(()=>{document.contains(f)&&f.focus();},30);}
+  }else if(el.id==='start'&&on){setTimeout(()=>$('goBtn').focus(),30);}}}
+).observe($('app'),{attributes:true,attributeFilter:['class'],subtree:true});
+$('game').addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('click',e=>{if(e.detail>0){const b=e.target.closest&&e.target.closest('button.hot');if(b)b.blur();}});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key,ov=openOv(),typing=window.AnnabelleDesk?window.AnnabelleDesk.typing(e):false;
+  if(k==='Tab'&&ov){const fs=focusables($(ov));if(fs.length){const i=fs.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();fs[fs.length-1].focus();}else if(!e.shiftKey&&(i===fs.length-1||i<0)){e.preventDefault();fs[0].focus();}}return;}
+  if(typing){if(k==='Escape'&&ov==='ed'){e.preventDefault();$('edX').click();}return;}
+  const onBtn=!!(e.target.closest&&e.target.closest('button')),lk=k.length===1?k.toLowerCase():k;
+  if(lk==='m'&&!e.repeat){e.preventDefault();toggleMute();return;}
+  if(ov==='ed'){if(k==='Escape'){e.preventDefault();$('edX').click();}return;}
+  if(ov==='pause'){if(k==='Escape'){e.preventDefault();$('paResume').click();}return;}
+  if(ov==='won'){if(k==='Enter'&&!onBtn){e.preventDefault();$('wBtn').click();}return;}
+  if(ov==='puz'){
+    if(k==='Escape'){e.preventDefault();$('pClose').click();}
+    else if(/^[1-4]$/.test(k)){const b=$('pOpts').children[+k-1];if(b){e.preventDefault();b.click();}}
+    else if(lk==='h'&&$('hintBtn').style.display!=='none'){e.preventDefault();$('hintBtn').click();}
+    return;}
+  if(gameOn()){
+    if(k==='Escape'||lk==='p'){e.preventDefault();if(!e.repeat)$('pauseBtn').click();}
+    else if(/^[1-6]$/.test(k)){const h=$('box').querySelector('.hot[data-key="'+k+'"]');if(h){e.preventDefault();h.click();}}
+    else if(k.startsWith('Arrow')){e.preventDefault();navHot(k==='ArrowRight'?1:k==='ArrowLeft'?-1:0,k==='ArrowDown'?1:k==='ArrowUp'?-1:0);}
+    return;}
+  if($('start').classList.contains('on')&&k==='Enter'&&!onBtn){e.preventDefault();$('goBtn').click();}
+});
 applyLang();
+if(isDesk())setTimeout(()=>$('goBtn').focus(),50);
 // test hook (read-only helpers)
 window.__esc={state:S,prog:()=>prog,answer:(slot)=>getPuzzle(S.room,slot).ans,puzzle:(r,slot)=>getPuzzle(r,slot),all:()=>PUZ};
 </script>

@@ -82,8 +82,27 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 #endScore{font-size:clamp(22px,6vw,30px);font-weight:900;color:#c8306f}
 
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.ov{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}}
+.kdesk{display:none}
+html.desk .kdesk{display:block}
+.kdesk{font-size:13px;font-weight:700;opacity:.8;max-width:640px;margin:0 auto;line-height:1.35}
+html.desk .iconbtn{width:50px;height:50px}
+html.desk .iconbtn:hover,html.desk .big:hover,html.desk .lang:hover,html.desk #roomPick button:not(:disabled):hover,html.desk #perks button:hover{transform:translateY(-2px)}
+html.desk .peb:hover{transform-box:fill-box}
+html.desk #foot.hot,html.desk #cup,html.desk #soya.hot{cursor:pointer}
+html.desk #soya.warn{cursor:grab}
+html.desk .iconbtn:focus-visible,html.desk .big:focus-visible,html.desk .lang:focus-visible,html.desk #roomPick button:focus-visible,html.desk #perks button:focus-visible{outline:4px solid #2a8fd0;outline-offset:3px}
+html.desk #perks button{max-width:110px;height:68px}
+html.desk #perks button::after{content:attr(data-k);position:absolute;top:3px;inset-inline-start:6px;font-size:11px;font-weight:900;opacity:.45}
+@media (min-width:700px) and (orientation:landscape){
+ html.desk #menu{gap:2px;justify-content:center}
+ html.desk #menuArt{height:clamp(90px,20dvh,200px)}
+ html.desk #how{max-width:640px;gap:3px}
+ html.desk #how li{font-size:14px;padding:4px 10px}
+ html.desk #menu h1{font-size:clamp(32px,6dvh,54px)}
+}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/soyahome.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="icon" type="image/png" sizes="192x192" href="icons/soyahome-192.png"><meta name="apple-mobile-web-app-title" content="סויה בבית"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/soyahome-apple-180.png"><script src="pwa.js" data-app="soyahome" data-slots='[["#langs", "after"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn],#homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <div id="app">
@@ -813,6 +832,59 @@ const of=otherFail; otherFail=function(){ const s=G.s, t=s.type, p=PR[t]; if(!p)
  mistake(); s.st='flee'; s.pt=0; s.from={x:s.x,y:s.y}; s.to=randFloor(a); s.face=s.to.x>s.x?1:-1; setCat('stand','e-wide flat'); };
 layout(); newGame(); applyLang();
 window.__props={PR,startWarn:t=>startWarn(t)};
+})();
+</script>
+
+<script>
+/* ---------------- laptop: keyboard + mouse ---------------- */
+(()=>{
+const KK={he:{play:'⌨️ רווח / Enter – לעשות את הדבר הדחוף (להחזיר אבן, למשוך רגל, להציל) · F – למשוך רגל · 1–5 – מתנות · Esc / P – הפסקה · M – שקט',menu:'⌨️ Enter – התחלה · 1–3 – בחירת חדר · Tab – ניווט',pause:'Esc / P – להמשיך · Enter – להמשיך'},
+ fr:{play:'⌨️ Espace / Entrée – agir sur l\'urgence (caillou, pied, sauver) · F – retirer le pied · 1–5 – cadeaux · Échap / P – pause · M – muet',menu:'⌨️ Entrée – jouer · 1–3 – choisir la pièce · Tab – naviguer',pause:'Échap / P – reprendre · Entrée – reprendre'},
+ en:{play:'⌨️ Space / Enter – handle the most urgent thing (pebble, foot, rescue) · F – pull foot away · 1–5 – gifts · Esc / P – pause · M – mute',menu:'⌨️ Enter – play · 1–3 – pick a room · Tab – navigate',pause:'Esc / P – resume · Enter – resume'}};
+const mk=(id,parent,before)=>{ const d=document.createElement('div'); d.id=id; d.className='kdesk'; if(before) before.before(d); else parent.appendChild(d); return d; };
+const mK=mk('mKeys',null,$('best')), pK=mk('pKeys',$('pause').querySelector('.card')), gK=mk('gKeys',null,$('perks')||null);
+if(gK.parentNode===null) $('app').appendChild(gK);
+gK.style.cssText='flex:none;text-align:center;padding:2px 8px;background:#ffd6b8;max-width:none;width:100%;margin:0;opacity:1;font-size:12px;color:#6b4a60';
+const al2=applyLang; applyLang=function(){ al2.apply(this,arguments); const k=KK[lang]||KK.he; mK.textContent=k.menu+' · '+k.play; pK.textContent=k.pause; gK.textContent=k.play; };
+applyLang();
+const PKS=['box','cover','slip','treat','net'];
+function drawKeys(){ document.querySelectorAll('#perks button[data-p]').forEach(b=>{ b.dataset.k=PKS.indexOf(b.dataset.p)+1; }); }
+const ob=new MutationObserver(drawKeys); ob.observe($('perks'),{childList:true}); drawKeys();
+// keyboard / click activation of perk buttons (pointerdown covers mouse+touch)
+$('perks').addEventListener('click',e=>{ if(e.detail!==0) return; const b=e.target.closest('[data-p]'); if(!b||!running||paused) return; document.dispatchEvent(new CustomEvent('perk',{detail:b.dataset.p})); });
+const typing=e=>{ const t=e.target; return !!(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)); };
+function menuOpen(){ return $('menu').classList.contains('show'); }
+function usePerk(k){ const b=$('perks').querySelector('[data-p="'+k+'"]'); if(!b) return; b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'mouse'})); }
+document.addEventListener('perk',e=>usePerk(e.detail));
+function keyAct(){ const s=G.s;
+  if(s.type==='toe'){ if(G.foot.out&&(s.st==='warn'||s.st==='pounce')){ tapFoot(); return true; } }
+  else if(s.st==='warn'||s.st==='chew'||s.st==='push'){ if(s.st==='push') s.st='warn'; shoo(false); return true; }
+  let best=null; pebs.forEach(p=>{ if(p.state==='floor'&&(!best||p.max-p.life<best.max-best.life)) best=p; });
+  if(best){ returnPeb(best); return true; }
+  if(G.foot.out&&s.type==='toe'&&s.st!=='held'){ tapFoot(); return true; }
+  return false; }
+addEventListener('keydown',e=>{
+  if(typing(e)||e.ctrlKey||e.metaKey||e.altKey) return;
+  const c=e.code, onBtn=!!(e.target&&e.target.tagName==='BUTTON'&&e.target.matches(':focus-visible'));
+  if(c==='KeyM'){ $('muteBtn').click(); return; }
+  if(menuOpen()){
+    if((c==='Enter'||c==='NumpadEnter'||c==='Space')&&!onBtn){ e.preventDefault(); if(!e.repeat) $('playBtn').click(); return; }
+    const d=/^(Digit|Numpad)([1-3])$/.exec(c); if(d){ const b=$('roomPick').querySelector('[data-r="'+(d[2]-1)+'"]'); if(b&&!b.disabled){ e.preventDefault(); b.click(); } } return; }
+  if($('end').classList.contains('show')){
+    if((c==='Enter'||c==='NumpadEnter'||c==='Space')&&!onBtn){ e.preventDefault(); if(!e.repeat) $('againBtn').click(); }
+    else if(c==='Escape'){ e.preventDefault(); $('eMenuBtn').click(); } return; }
+  if(!running) return;
+  if(c==='Escape'||c==='KeyP'){ e.preventDefault(); if(!e.repeat) pause(!paused); return; }
+  if(paused){ if((c==='Enter'||c==='NumpadEnter'||c==='Space')&&!onBtn){ e.preventDefault(); if(!e.repeat) pause(false); } return; }
+  if(ending) return;
+  if(onBtn&&(c==='Enter'||c==='Space')) return;
+  if(c==='Space'||c==='Enter'||c==='NumpadEnter'||c==='ArrowDown'||c==='ArrowUp'){ e.preventDefault(); if(!e.repeat) keyAct(); return; }
+  if(c==='KeyF'){ e.preventDefault(); if(!e.repeat) tapFoot(); return; }
+  const d=/^(Digit|Numpad)([1-5])$/.exec(c); if(d){ e.preventDefault(); if(!e.repeat) usePerk(PKS[d[2]-1]); }
+});
+addEventListener('blur',()=>{ if(running&&!paused&&!ending) pause(true); });
+// cursor feedback on the things you can interact with
+setInterval(()=>{ if(!G||!G.s) return; const s=G.s; soyaEl.classList.toggle('warn',s.st==='warn'||s.st==='chew'); soyaEl.style.cursor=(s.st==='warn'||s.st==='chew'||s.st==='push')?'pointer':''; footEl.classList.toggle('hot',!!G.foot.out); },150);
 })();
 </script>
 

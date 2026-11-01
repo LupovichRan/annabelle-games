@@ -88,9 +88,25 @@ html.aired .app{height:calc(100dvh - 40px)}
 .sparkle{animation:sp .6s ease-in-out infinite alternate}
 @keyframes sp{0%{opacity:.35}100%{opacity:1}}
 
+/* ---- desktop (mouse + keyboard) ---- */
+.kd,.kh{display:none}
+.desk .kd{display:block}
+.desk .stage{cursor:crosshair}.desk .stage.zoomed{cursor:grab}.desk .stage.zoomed:active{cursor:grabbing}
+.kh{position:absolute;top:8px;inset-inline-start:8px;z-index:6;max-width:210px;pointer-events:none;background:#ffffffd0;color:var(--ink);border-radius:14px;padding:6px 10px;font-size:13px;font-weight:700;line-height:1.45;box-shadow:0 2px 0 #0002}
+.desk .kh.show{display:block}
+.kd{font-size:14px;font-weight:700;opacity:.75;text-align:center;margin:0;max-width:560px}
+.kret{position:absolute;z-index:5;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:4px solid #7c5cff;box-shadow:0 0 0 3px #fff,inset 0 0 0 2px #fff;pointer-events:none;display:none}
+.kret.on{display:block}
+.kret::before,.kret::after{content:"";position:absolute;background:#7c5cff;left:50%;top:50%}
+.kret::before{width:16px;height:3px;margin:-1.5px 0 0 -8px}.kret::after{width:3px;height:16px;margin:-8px 0 0 -1.5px}
+.desk .timer{font-size:16px}.desk .bar .lvname{font-size:15px}
+.desk .iconbtn:hover,.desk .hintbtn:not(:disabled):hover,.desk .card:not(.locked):hover{transform:translateY(-2px)}
+@media (max-height:620px){.kd{display:none !important}}
+
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){#pauseOv{overflow-y:auto!important;align-items:safe center!important;justify-content:safe center!important}#pauseOv>*{max-height:none!important;margin:auto}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/hiddencats.webmanifest"><meta name="theme-color" content="#ffe3c4"><meta name="apple-mobile-web-app-title" content="מצאי חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/hiddencats-apple-180.png"><script src="pwa.js" data-app="hiddencats" data-slots='[["#langs1", "after"], ["#pauseOv .panel", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs1" data-pauseslot="#pauseOv .panel" data-relabel="#pMenu" defer></script><script src="share.js" data-slot="#langs1" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -104,6 +120,7 @@ html.aired .app{height:calc(100dvh - 40px)}
   <button class="big" id="playBtn"><span>▶</span><span data-t="play"></span></button>
   <button class="big alt" id="levelsBtn"><span>🗺️</span><span data-t="levels"></span></button>
   <div class="totals" id="totals"></div>
+  <p class="kd" id="kMenu" dir="auto"></p>
 </section>
 
 <section class="screen" id="levels">
@@ -124,6 +141,7 @@ html.aired .app{height:calc(100dvh - 40px)}
   </div>
   <div class="stage" id="stage">
     <div class="world" id="world"></div>
+    <div class="kh" id="kh" dir="auto"></div><div class="kret" id="kret"></div>
   </div>
   <div class="tools"><button class="iconbtn" id="zout" aria-label="zoom out">－</button><div class="paws" id="paws"></div><button class="iconbtn" id="zin" aria-label="zoom in">＋</button><div class="toast hide" id="toast"></div></div>
 </section>
@@ -135,6 +153,7 @@ html.aired .app{height:calc(100dvh - 40px)}
   <button class="big" id="resumeBtn"><span>▶</span><span data-t="resume"></span></button>
   <div class="row2"><button class="big alt" id="restartBtn"><span>🔄</span><span data-t="restart"></span></button><button class="big alt" id="pLevels"><span>🗺️</span><span data-t="levels"></span></button></div>
   <button class="big soft" id="pMenu"><span>🏠</span><span data-t="menu"></span></button>
+  <p class="kd" id="kPause" dir="auto"></p>
 </div></div>
 
 <div class="ov" id="winOv"><div class="panel">
@@ -491,7 +510,7 @@ function stageExtra(){ const R=stage.getBoundingClientRect(); if(!R.width||!R.he
 
 /* ---------------- DOM / screens ---------------- */
 const $=id=>document.getElementById(id);
-function show(id){ if(id!=="game"){ const cf=document.getElementById("confetti"); if(cf) cf.innerHTML=""; } document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); }
+function show(id){ if(window.kbdFocusScreen) setTimeout(()=>kbdFocusScreen(id),30); if(id!=="game"){ const cf=document.getElementById("confetti"); if(cf) cf.innerHTML=""; } document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); }
 function applyLang(){ const L=t(); document.documentElement.lang=lang; document.documentElement.dir=lang==="he"?"rtl":"ltr"; document.title=L.title;
  document.querySelectorAll("[data-t]").forEach(el=>{ const v=L[el.dataset.t]; if(typeof v==="string") el.textContent=v; });
  ["langs1","langs2"].forEach(id=>{ $(id).innerHTML=LANGS.map(([k,n])=>`<button class="lang${k===lang?" sel":""}" data-lang="${k}">${n}</button>`).join(""); });
@@ -529,7 +548,7 @@ function updateCount(){ const n=G.lv.cats.filter(c=>c.found).length; $("count").
 function fit(){ const R=stage.getBoundingClientRect(); view.base=Math.min(R.width/G.lv.w,R.height/G.lv.h); view.z=1; clamp(); apply(); }
 function clamp(){ const R=stage.getBoundingClientRect(), s=view.base*view.z, W=G.lv.w*s, H=G.lv.h*s;
  view.tx=W<=R.width?(R.width-W)/2:Math.min(0,Math.max(R.width-W,view.tx)); view.ty=H<=R.height?(R.height-H)/2:Math.min(0,Math.max(R.height-H,view.ty)); }
-function apply(){ world.style.transform=`translate(${view.tx}px,${view.ty}px) scale(${view.base*view.z})`; }
+function apply(){ world.style.transform=`translate(${view.tx}px,${view.ty}px) scale(${view.base*view.z})`; stage.classList.toggle("zoomed",view.z>1.001); if(window.kbdLayout) kbdLayout(); }
 function zoomAt(px,py,nz){ nz=Math.max(1,Math.min(5,nz)); const s0=view.base*view.z, s1=view.base*nz; const sx=(px-view.tx)/s0, sy=(py-view.ty)/s0; view.z=nz; view.tx=px-sx*s1; view.ty=py-sy*s1; clamp(); apply(); }
 function toScene(px,py){ const s=view.base*view.z; return [(px-view.tx)/s,(py-view.ty)/s+G.lv.oy]; }
 function toScreen(x,y){ const R=stage.getBoundingClientRect(), s=view.base*view.z; return [R.left+view.tx+x*s, R.top+view.ty+(y-G.lv.oy)*s]; }
@@ -599,6 +618,85 @@ function win(){ G.done=true; const i=G.i, stars=Math.max(1,3-G.used);
 function confetti(){ const c=$("confetti"); c.innerHTML=""; const em=["🐱","⭐","💖","🐾","🌸","🐯","🦁"]; for(let k=0;k<26;k++){ const s=document.createElement("span"); s.textContent=em[k%em.length]; s.style.left=(Math.random()*100)+"%"; s.style.animationDuration=(2.2+Math.random()*2)+"s"; s.style.animationDelay=(Math.random()*.8)+"s"; c.appendChild(s); } setTimeout(()=>c.innerHTML="",5000); }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&G&&$("game").classList.contains("active")&&!G.done){ G.paused?$("resumeBtn").click():$("pauseBtn").click(); } });
 document.addEventListener("visibilitychange",()=>{ if(document.hidden&&G&&!G.done&&$("game").classList.contains("active")&&!G.paused) $("pauseBtn").click(); });
+
+/* ---------------- keyboard + mouse extras for laptops ---------------- */
+const KDT={
+ he:{game:"חיצים / WASD – הזיזי את הסמן<br>רווח / Enter – בחרי<br>+ / − (או גלגלת) – זום · 0 – איפוס<br>H – רמז · P / Esc – הפסקה · M – שקט<br>קליק ימני – זום",
+     menu:"Tab / חיצים לבחירה · Enter לאישור · M – שקט",pause:"Esc – המשיכי · H רמז · M שקט"},
+ fr:{game:"Flèches / WASD : déplacer le curseur<br>Espace / Entrée : choisir<br>+ / − (ou molette) : zoom · 0 : réinitialiser<br>H : indice · P / Échap : pause · M : son<br>Clic droit : zoom",
+     menu:"Tab / flèches : choisir · Entrée : valider · M : son",pause:"Échap : reprendre · H indice · M son"},
+ en:{game:"Arrows / WASD: move the cursor<br>Space / Enter: select<br>+ / − (or wheel): zoom · 0: reset<br>H: hint · P / Esc: pause · M: sound<br>Right-click: zoom",
+     menu:"Tab / arrows: choose · Enter: confirm · M: sound",pause:"Esc: resume · H hint · M sound"}};
+function kbdTexts(){ const k=KDT[lang]||KDT.en; $("kh").innerHTML=k.game; $("kMenu").textContent=k.menu; $("kPause").textContent=k.pause; }
+kbdTexts(); setInterval(kbdTexts,1000);
+const KB={x:0,y:0,on:false,keys:{},g:null};
+const kret=$("kret");
+function gameActive(){ return G&&$("game").classList.contains("active"); }
+function kbdLayout(){ if(!G||!gameActive()) return; const R=stage.getBoundingClientRect(), s=view.base*view.z, ww=G.lv.w*s;
+ const room=(R.width-ww)/2; $("kh").classList.toggle("show",room>=230); }
+function kbdPlace(){ kret.style.left=KB.x+"px"; kret.style.top=KB.y+"px"; kret.classList.toggle("on",KB.on&&gameActive()&&!G.paused&&!G.done); }
+function kbdReset(){ const R=stage.getBoundingClientRect(); KB.x=R.width/2; KB.y=R.height/2; KB.on=false; kbdPlace(); kbdLayout(); }
+function playing(){ return gameActive()&&!G.paused&&!G.done; }
+let kbdLast=performance.now();
+(function loop(now){ const dt=Math.min(.05,(now-kbdLast)/1000); kbdLast=now;
+ if(KB.g!==G){ KB.g=G; if(G) kbdReset(); }
+ if(playing()){ const k=KB.keys, dx=(k.ArrowRight||k.KeyD?1:0)-(k.ArrowLeft||k.KeyA?1:0), dy=(k.ArrowDown||k.KeyS?1:0)-(k.ArrowUp||k.KeyW?1:0);
+  if(dx||dy){ const R=stage.getBoundingClientRect(); if(!KB.on){ KB.on=true; }
+   const n=Math.hypot(dx,dy), sp=Math.min(R.width,R.height)*(k.ShiftLeft||k.ShiftRight?.25:.7)*dt;
+   let nx=KB.x+dx/n*sp, ny=KB.y+dy/n*sp; const m=Math.min(60,R.width/6,R.height/6);
+   if(view.z>1.001){ // push the picture instead when the cursor reaches the edge area
+    let px=0,py=0; if(nx<m){ px=m-nx; nx=m; } else if(nx>R.width-m){ px=(R.width-m)-nx; nx=R.width-m; }
+    if(ny<m){ py=m-ny; ny=m; } else if(ny>R.height-m){ py=(R.height-m)-ny; ny=R.height-m; }
+    if(px||py){ view.tx+=px; view.ty+=py; clamp(); apply(); } }
+   KB.x=Math.min(R.width-2,Math.max(2,nx)); KB.y=Math.min(R.height-2,Math.max(2,ny)); kbdPlace(); } }
+ requestAnimationFrame(loop); })(kbdLast);
+function kbdClear(){ KB.keys={}; }
+addEventListener("blur",kbdClear); document.addEventListener("visibilitychange",kbdClear);
+stage.addEventListener("pointermove",e=>{ if(e.pointerType==="mouse"&&KB.on){ KB.on=false; const R=stage.getBoundingClientRect(); KB.x=e.clientX-R.left; KB.y=e.clientY-R.top; kbdPlace(); } });
+// right click = zoom in/out at the pointer (touch needs pinch / double-tap; this is the mouse way); only on the picture
+stage.addEventListener("contextmenu",e=>{ e.preventDefault(); if(!playing()) return; const R=stage.getBoundingClientRect(); zoomAt(e.clientX-R.left,e.clientY-R.top,view.z<2?2.5:1); });
+// after a mouse click on a button, return focus to the game so Space/Enter act on the picture
+document.addEventListener("pointerup",e=>{ if(e.pointerType==="mouse"&&gameActive()){ const a=document.activeElement; if(a&&a.tagName==="BUTTON"&&a.closest(".bar,.tools")) a.blur(); } },true);
+function visBtns(root){ return [...root.querySelectorAll("button:not(:disabled)")].filter(b=>b.getClientRects().length); }
+function navFocus(root,dir){ const f=visBtns(root); if(!f.length) return false; const a=document.activeElement; if(!f.includes(a)){ f[0].focus(); return true; }
+ const r=a.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2; let best=null,bs=1e9;
+ for(const b of f){ if(b===a) continue; const q=b.getBoundingClientRect(), bx=q.left+q.width/2-cx, by=q.top+q.height/2-cy;
+  const along=dir==="r"?bx:dir==="l"?-bx:dir==="d"?by:-by, across=(dir==="r"||dir==="l")?Math.abs(by):Math.abs(bx);
+  if(along<=4) continue; const sc=along+across*2.2; if(sc<bs){ bs=sc; best=b; } }
+ if(best) best.focus(); return true; }
+function activeContainer(){
+ if($("winOv").classList.contains("active")) return $("winOv"); if($("pauseOv").classList.contains("active")) return $("pauseOv");
+ const sc=document.querySelector(".screen.active"); return sc&&sc.id!=="game"?sc:null; }
+window.kbdFocusScreen=function(id){ try{ if(!(window.AnnabelleDesk&&AnnabelleDesk.isDesk())) return; const b=id==="menu"?$("playBtn"):id==="levels"?document.querySelector("#grid .card:not(.locked)")||$("lvBack"):null; if(b) b.focus({preventScroll:true}); else if(id==="game"){ const a=document.activeElement; if(a&&a.blur) a.blur(); } }catch(_){} };
+new MutationObserver(m=>{ try{ if(!(window.AnnabelleDesk&&AnnabelleDesk.isDesk())) return; for(const o of ["pauseOv","winOv"]){ const el=$(o); if(el.classList.contains("active")&&!el.dataset.kf){ el.dataset.kf="1"; setTimeout(()=>{ const b=o==="pauseOv"?$("resumeBtn"):$("nextBtn"); b.focus({preventScroll:true}); },60); } else if(!el.classList.contains("active")) el.dataset.kf=""; }
+  if(!$("pauseOv").classList.contains("active")&&!$("winOv").classList.contains("active")&&gameActive()){ const a=document.activeElement; if(a&&a.tagName==="BUTTON"&&a.closest(".ov")) a.blur(); } }catch(_){} }).observe(document.body,{subtree:true,attributes:true,attributeFilter:["class"]});
+document.addEventListener("keydown",e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey) return; if(window.AnnabelleDesk&&AnnabelleDesk.typing(e)) return;
+ const c=e.code;
+ if(c==="KeyM"){ e.preventDefault(); $("muteMenu").click(); return; }
+ const ov=activeContainer();
+ if(playing()){
+  const a=document.activeElement, onBtn=a&&a.tagName==="BUTTON"&&a.closest(".bar,.tools");
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","KeyW","KeyA","KeyS","KeyD"].includes(c)){ e.preventDefault(); KB.keys[c]=true; return; }
+  if(c==="ShiftLeft"||c==="ShiftRight"){ KB.keys[c]=true; return; }
+  if((c==="Space"||c==="Enter")&&!onBtn){ e.preventDefault(); if(e.repeat) return; if(!KB.on){ KB.on=true; kbdPlace(); } hideTips(); onTap(KB.x,KB.y); return; }
+  if(c==="Equal"||c==="NumpadAdd"||c==="KeyE"){ e.preventDefault(); SFX.click(); zoomAt(KB.on?KB.x:stage.clientWidth/2,KB.on?KB.y:stage.clientHeight/2,view.z*1.4); return; }
+  if(c==="Minus"||c==="NumpadSubtract"||c==="KeyQ"){ e.preventDefault(); SFX.click(); zoomAt(KB.on?KB.x:stage.clientWidth/2,KB.on?KB.y:stage.clientHeight/2,view.z/1.4); return; }
+  if(c==="Digit0"||c==="Numpad0"){ e.preventDefault(); fit(); return; }
+  if(c==="KeyH"){ e.preventDefault(); if($("hintBtn").disabled) toast(t().noHints,1500); else $("hintBtn").click(); return; }
+  if(c==="KeyP"){ e.preventDefault(); $("pauseBtn").click(); return; }
+  return; }
+ if(ov){
+  if(ov.id==="pauseOv"&&(c==="KeyP")){ e.preventDefault(); $("resumeBtn").click(); return; }
+  if(ov.id==="winOv"&&c==="Escape"){ e.preventDefault(); $("wLevels").click(); return; }
+  if(ov.id==="menu"&&c==="Escape") return;
+  if(ov.id==="levels"&&c==="Escape"){ e.preventDefault(); $("lvBack").click(); return; }
+  const d={ArrowRight:"r",ArrowLeft:"l",ArrowDown:"d",ArrowUp:"u",KeyD:"r",KeyA:"l",KeyS:"d",KeyW:"u"}[c];
+  if(d){ e.preventDefault(); navFocus(ov,d); } }
+});
+document.addEventListener("keyup",e=>{ if(KB.keys[e.code]) KB.keys[e.code]=false; });
+try{ if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) $("playBtn").focus({preventScroll:true}); }catch(_){}
+
 // test hooks
 window.__hc={get G(){return G;},toScreen,start:startLevel,save:()=>save,build:buildLevel,compose,rng,stageExtra,catScale,scenes:SCENES,KINDCOL,CATCOL};
 applyLang();

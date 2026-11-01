@@ -101,9 +101,24 @@
   .mine{font-size:20px;font-weight:900}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%}
 
+  /* ---------- desktop (mouse + keyboard) ---------- */
+  #kh{display:none;font-size:12.5px;font-weight:700;line-height:1.25;color:var(--ink);opacity:.85;padding:0 8px;text-align:center;overflow:hidden;max-height:36px}
+  .desk #kh{display:block}
+  @media (max-width:760px){ #kh{display:none !important} }
+  #kcur{position:fixed;z-index:16;pointer-events:none;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:4px solid #7c5cff;box-shadow:0 0 0 3px #fff,inset 0 0 0 2px #fff;display:none}
+  #kcur.on{display:block} #kcur.held{background:#7c5cff44;transform:scale(.85)}
+  #kcur::before,#kcur::after{content:"";position:absolute;background:#7c5cff;left:50%;top:50%}
+  #kcur::before{width:14px;height:3px;margin:-1.5px 0 0 -7px} #kcur::after{width:3px;height:14px;margin:-7px 0 0 -1.5px}
+  .desk #cv{cursor:pointer}
+  .desk #hud .iconbtn{width:48px;height:48px}
+  .desk .iconbtn:hover{transform:translateY(-1px)}
+  .desk .tool:hover:not(.sel){transform:translateY(-3px)}
+  .desk .x{width:38px;height:38px}
+
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.ov{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/streetcats.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/streetcats-192.png"><meta name="apple-mobile-web-app-title" content="חתולי שכונה"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/streetcats-apple-180.png"><script src="pwa.js" data-app="streetcats" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -113,7 +128,7 @@
   <button class="iconbtn pausebtn" id="pauseBtn" aria-label="pause"></button>
   <div class="pill" id="heartPill">❤️<b id="hearts" dir="ltr">0</b></div>
   <div class="pill" id="dayPill"><span id="dayIcon">☀️</span><span id="dayTxt"></span></div>
-  <div class="grow"></div>
+  <div class="grow"><div id="kh" dir="auto"></div></div>
   <button class="iconbtn" id="albumBtn" aria-label="album">📖</button>
   <button class="iconbtn" id="shopBtn" aria-label="shop">🎁</button>
   <button class="iconbtn" id="muteBtn2" aria-label="sound">🔊</button>
@@ -170,6 +185,7 @@
   </div>
 </section>
 <canvas id="confetti"></canvas>
+<div id="kcur"></div>
 
 <script>
 "use strict";
@@ -990,7 +1006,9 @@ function render(){
 }
 
 /* ===================== UI ===================== */
-function show(id){ ["menu","pause","album","shop"].forEach(k=>$(k).classList.toggle("show",k===id)); }
+function show(id){ ["menu","pause","album","shop"].forEach(k=>$(k).classList.toggle("show",k===id));
+  try{ if(!id){ const a=document.activeElement; if(a&&a.blur&&a!==document.body) a.blur(); }
+    else if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ const b=id==="menu"?$("playBtn"):id==="pause"?$("resumeBtn"):id==="album"?$("alClose"):$("shClose"); setTimeout(()=>b&&b.focus({preventScroll:true}),30); } }catch(_){} }
 function buildTools(){ const t=L(); $("tools").innerHTML=TOOLS.map(([k,e],i)=>`<button class="tool ${k===tool?"sel":""}" data-tool="${k}" title="${t.tools[k]} (${i+1})"><span>${e}</span><small>${t.tools[k]}</small></button>`).join(""); }
 function setTool(k,quiet){ tool=k; document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("sel",b.dataset.tool===k)); if(!quiet){ SFX.click(); hint(L().hints[k]); } }
 function applyLang(){ const t=L(); document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
@@ -1087,6 +1105,72 @@ document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());
 document.addEventListener("contextmenu",e=>e.preventDefault());
 
+/* ===================== KEYBOARD (laptop): virtual cursor + shortcuts ===================== */
+const KHT={
+  he:"חיצים/WASD – הזיזי · רווח/Enter – הקישי (החזיקי ושפשפי ללטף) · 1–8 / Q E – כלי · C – חתול · B ספר · G מתנות · P/Esc הפסקה · M שקט",
+  fr:"Flèches/WASD : bouger · Espace/Entrée : toucher (maintenir pour caresser) · 1–8 / Q E : outil · C : chat · B livre · G cadeaux · P/Échap pause · M son",
+  en:"Arrows/WASD: move · Space/Enter: tap (hold + move to pet) · 1–8 / Q E: tool · C: cat · B album · G shop · P/Esc pause · M sound"};
+function updateKH(){ const e=$("kh"); if(e){ const t=KHT[lang]||KHT.en; if(e.textContent!==t) e.textContent=t; } }
+setInterval(updateKH,700); updateKH();
+const KC={x:0,y:0,on:false,held:false,id:97}, kkeys={};
+function kcPlace(){ const e=$("kcur"); e.style.left=KC.x+"px"; e.style.top=KC.y+"px"; e.classList.toggle("on",KC.on&&state==="play"); e.classList.toggle("held",KC.held); }
+function kcEv(type){ cv.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:KC.id,pointerType:"mouse",isPrimary:true,clientX:KC.x,clientY:KC.y,button:0,buttons:type==="pointerup"?0:1})); }
+function kcDown(){ if(state!=="play"||KC.held) return; if(!KC.on){ KC.on=true; } KC.held=true; kcEv("pointerdown"); kcPlace(); }
+function kcUp(){ if(!KC.held) return; KC.held=false; kcEv("pointerup"); kcPlace(); }
+function kcCenter(){ KC.x=W/2; KC.y=(TOPH+FLOOR)/2; }
+let kcLast=performance.now();
+(function kcLoop(now){ const dt=Math.min(.05,(now-kcLast)/1000); kcLast=now;
+  if(state==="play"){
+    const dx=(kkeys.ArrowRight||kkeys.KeyD?1:0)-(kkeys.ArrowLeft||kkeys.KeyA?1:0), dy=(kkeys.ArrowDown||kkeys.KeyS?1:0)-(kkeys.ArrowUp||kkeys.KeyW?1:0);
+    if(dx||dy){ if(!KC.on){ KC.on=true; if(!KC.x&&!KC.y) kcCenter(); }
+      const n=Math.hypot(dx,dy), sp=(kkeys.ShiftLeft||kkeys.ShiftRight?.5:1)*U*(KC.held?9:12);
+      KC.x=Math.min(W-6,Math.max(6,KC.x+dx/n*sp*dt)); KC.y=Math.min(FLOOR-6,Math.max(TOPH+6,KC.y+dy/n*sp*dt));
+      if(KC.held) kcEv("pointermove"); kcPlace(); } }
+  else if(KC.held){ KC.held=false; ptr.down=false; kcPlace(); }
+  requestAnimationFrame(kcLoop); })(kcLast);
+function clearKKeys(){ for(const k in kkeys) kkeys[k]=false; kcUp(); }
+addEventListener("blur",clearKKeys); document.addEventListener("visibilitychange",clearKKeys);
+// a real mouse takes over: hide the keyboard cursor
+cv.addEventListener("pointermove",e=>{ if(e.pointerId!==KC.id&&e.pointerType==="mouse"){ KC.on=false; KC.x=e.clientX; KC.y=e.clientY; kcPlace(); } });
+// after a mouse click on a toolbar button, give focus back to the game so Space/Enter act on the scene
+document.addEventListener("pointerup",e=>{ if(e.pointerType==="mouse"&&state==="play"){ const a=document.activeElement; if(a&&a!==document.body&&a.closest&&a.closest("#tools,#hud,#card")) a.blur(); } },true);
+function toolStep(d){ const i=TOOLS.findIndex(x=>x[0]===tool); setTool(TOOLS[(i+d+TOOLS.length)%TOOLS.length][0]); }
+function nextCat(){ const ps=present(); if(!ps.length) return; const i=ps.findIndex(c=>c.id===sel); const c=ps[(i+1)%ps.length]; selectCat(c); const q=catCenter(c); KC.x=q.x; KC.y=q.y; KC.on=true; kcPlace(); }
+function ovButtons(id){ const el=$(id); return el?[...el.querySelectorAll("button:not(:disabled)")].filter(b=>b.getClientRects().length):[]; }
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(window.AnnabelleDesk&&AnnabelleDesk.typing(e)) return;
+  const c=e.code, jy=$("jy").classList.contains("show");
+  if(jy){ // town-to-town journey screen: buttons work with Tab/Enter; Esc = back
+    if(c==="Escape"){ const x=$("jyX"); if(x){ e.preventDefault(); x.click(); } }
+    e.stopPropagation(); return; }
+  const arrows=["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(c)||["KeyW","KeyA","KeyS","KeyD"].includes(c);
+  if(state==="play"){
+    const a=document.activeElement, onBtn=a&&a.tagName==="BUTTON"&&a.closest("#tools,#hud,#card");
+    if(arrows){ e.preventDefault(); e.stopPropagation(); kkeys[c]=true; return; }
+    if(c==="ShiftLeft"||c==="ShiftRight"){ kkeys[c]=true; return; }
+    if((c==="Space"||c==="Enter")&&!onBtn){ e.preventDefault(); e.stopPropagation(); if(!e.repeat) kcDown(); return; }
+    if(c==="KeyQ"){ e.preventDefault(); toolStep(-1); return; }
+    if(c==="KeyE"){ e.preventDefault(); toolStep(1); return; }
+    if(c==="KeyC"){ e.preventDefault(); nextCat(); return; }
+    if(c==="KeyB"){ e.preventDefault(); $("albumBtn").click(); return; }
+    if(c==="KeyG"){ e.preventDefault(); $("shopBtn").click(); return; }
+    if(/^Digit[1-8]$/.test(c)){ e.preventDefault(); e.stopPropagation(); setTool(TOOLS[+c.slice(5)-1][0]); return; }
+    return; }
+  if(state==="menu"){
+    const a=document.activeElement;
+    // Enter/Space on a focused button must activate that button, not start the game
+    if((c==="Enter"||c==="Space")&&a&&a.tagName==="BUTTON"&&a.id!=="playBtn"){ e.stopPropagation(); return; }
+    if(/^Arrow/.test(c)){ const f=ovButtons("menu"); if(f.length){ e.preventDefault(); let i=f.indexOf(a); const rtl=document.documentElement.dir==="rtl";
+      let st=(c==="ArrowRight"||c==="ArrowDown")?1:-1; if(rtl&&(c==="ArrowRight"||c==="ArrowLeft")) st=-st; i=i<0?0:(i+st+f.length)%f.length; f[i].focus(); } return; }
+    return; }
+  if(state==="paused"){
+    const ov=["pause","album","shop"].find(k=>$(k).classList.contains("show"));
+    if(/^Arrow/.test(c)&&ov){ const f=ovButtons(ov); if(f.length){ e.preventDefault(); const a=document.activeElement; let i=f.indexOf(a); const st=(c==="ArrowRight"||c==="ArrowDown")?1:-1; i=i<0?0:(i+st+f.length)%f.length; f[i].focus(); } }
+  }
+},true);
+document.addEventListener("keyup",e=>{ const c=e.code; if(c in kkeys) kkeys[c]=false; if(c==="Space"||c==="Enter") kcUp(); });
+
 /* ===================== CONFETTI ===================== */
 let confRaf=null;
 function confetti(n=150){ const c=$("confetti"), x=c.getContext("2d"); c.width=innerWidth*DPR; c.height=innerHeight*DPR; x.setTransform(DPR,0,0,DPR,0,0);
@@ -1116,7 +1200,7 @@ window.__sc={
 S=load()||freshState(); S.cats.forEach(initCat);
 buildCard(); layout(); updateMute(); applyLang();
 S.cats.forEach(c=>{ if(c.present&&shyLow(c)){ const h=hideSpot(c), p=fromScr(h.x,h.y); c.nx=p.x; c.ny=p.y; setSt(c,"hide",2); } });
-requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1";
+requestAnimationFrame(t=>{ lastT=t; frame(t); }); document.body.dataset.ready="1"; try{ if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) $("playBtn").focus({preventScroll:true}); }catch(_){}
 
 </script>
 <style>

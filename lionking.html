@@ -83,8 +83,16 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 #toast{white-space:pre-line;width:max-content;max-width:96vw;text-align:center;position:fixed;left:50%;top:calc(var(--sat) + 76px);transform:translate(-50%,-8px);z-index:20;background:#fff8ee;border:3px solid #8a4b1c;border-radius:18px;padding:7px 16px;font-weight:900;font-size:clamp(14px,4vw,20px);box-shadow:0 4px 0 #0003;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:min(92vw,560px);text-align:center;line-height:1.3}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){#playBtn{animation:none}}
+.keys{display:none;font-size:14px;font-weight:700;opacity:.8;background:#fff8eee6;border-radius:14px;padding:5px 12px;line-height:1.35}
+.desk .keys{display:block}
+.desk #cv{cursor:default}
+.desk .iconbtn{width:50px;height:50px}
+.desk #pad{opacity:.7}
+.desk .arrow{width:64px;height:64px}
+.desk .pb{cursor:pointer}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/lionking.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/lionking-192.png"><meta name="apple-mobile-web-app-title" content="האריה הקטן"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/lionking-apple-180.png"><script src="pwa.js" data-app="lionking" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -111,6 +119,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
   <div class="row"><button class="big go" id="resumeBtn"></button></div>
   <div class="row"><button class="big orange" id="pCpBtn"></button><button class="big orange" id="restartBtn"></button></div>
   <div class="row"><button class="big home" id="pMenuBtn"></button></div>
+  <div class="keys" id="keysPause"></div>
 </div></div>
 <div class="ov" id="over"><div class="card">
   <h2 id="tOver"></h2><div class="sub" id="tOverS"></div>
@@ -1103,11 +1112,12 @@ function render(){ const c=ctx; c.direction="ltr";
 }
 /* ===== UI, input, loop ===== */
 const OVS=["menu","pause","over","win"];
-function showOv(id){ OVS.forEach(o=>$(o).classList.toggle("show",o===id)); const play=!id; $("pad").classList.toggle("hidden",!play&&id!=="pause"); $("topb").classList.toggle("hidden",!play); resize(); }
+function showOv(id){ OVS.forEach(o=>$(o).classList.toggle("show",o===id)); const play=!id; if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ const pb={menu:"playBtn",pause:"resumeBtn",over:"cpBtn",win:"wAgainBtn"}[id]; if(pb) setTimeout(()=>{ try{ $(pb).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); }
+  $("pad").classList.toggle("hidden",!play&&id!=="pause"); $("topb").classList.toggle("hidden",!play); resize(); }
 function applyLang(){ const L=t(); document.documentElement.lang=lang; document.documentElement.dir=L.dir; document.title=L.title;
   $("tTitle").textContent=L.title; $("tSub").textContent=L.sub; $("playBtn").textContent=L.play;
   const best=lsGet(BEST_KEY), bp=lsGet(PAWS_KEY); $("tBest").innerHTML=(best?"<span>"+L.best.replace("{n}",best)+"</span>":"")+(bp?"<span>"+L.pawsBest.replace("{n}",bp)+"</span>":"");
-  $("tTip").innerHTML=L.tip+(matchMedia("(pointer:fine)").matches?"<br><small>"+L.keys+"</small>":""); $("tRot").textContent=L.rot;
+  $("tTip").innerHTML=L.tip+(matchMedia("(pointer:fine)").matches?"<br><small>"+L.keys+"</small>":""); $("tRot").textContent=L.rot; $("keysPause").textContent=L.keys.replace("⌨️ ","")+" · Esc/P = "+({he:"הפסקה",fr:"pause",en:"pause"})[lang]+" · M = "+({he:"שקט",fr:"son",en:"mute"})[lang];
   $("tPause").textContent=L.pause; $("resumeBtn").textContent=L.resume; $("pCpBtn").textContent=L.fromCp; $("restartBtn").textContent=L.restart; $("pMenuBtn").textContent=L.menu;
   $("tOver").textContent=L.over; $("tOverS").textContent=L.overS; $("cpBtn").textContent=L.retry; $("againBtn").textContent=L.restart; $("oMenuBtn").textContent=L.menu;
   $("tWin").textContent=L.win; $("tWinS").textContent=L.winS; $("wAgainBtn").textContent=L.again; $("wMenuBtn").textContent=L.menu;
@@ -1140,8 +1150,13 @@ $("pauseBtn").onclick=pauseGame; $("muteBtn").onclick=()=>{ setMuted(!muted); $(
 const KM={ArrowLeft:"l",KeyA:"l",ArrowRight:"r",KeyD:"r",Space:"j",ArrowUp:"j",KeyW:"j",KeyZ:"j",KeyX:"roar",KeyK:"roar",ShiftLeft:"roar",ArrowDown:"roll",KeyS:"roll",KeyC:"roll"};
 function press(k,v){ if(v&&!keys[k]){ if(k==="j") jEdge=1; if(k==="roar") roarEdge=1; if(k==="roll") rollEdge=1; } keys[k]=v?1:0; }
 function releaseAll(){ Object.keys(keys).forEach(k=>keys[k]=0); document.querySelectorAll(".pb.on").forEach(b=>b.classList.remove("on")); }
-addEventListener("keydown",e=>{ if(e.code==="Escape"||e.code==="KeyP"){ state==="play"?pauseGame():state==="pause"&&resumeGame(); return; }
-  if(state==="menu"&&(e.code==="Enter"||e.code==="Space")){ e.preventDefault(); startGame(false); return; }
+addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e))) return;
+  const onBtn=e.target&&e.target.closest&&e.target.closest("button");
+  if(e.code==="KeyM"){ if(!e.repeat){ setMuted(!muted); $("muteBtn").textContent=muted?"🔇":"🔊"; ac(); } return; }
+  if(e.code==="Escape"||e.code==="KeyP"){ e.preventDefault(); if(e.repeat) return; if(state==="play") pauseGame(); else if(state==="pause") resumeGame(); else if(state==="over"||state==="win") toMenu(); return; }
+  if((e.code==="Enter"||e.code==="Space")&&!onBtn&&state!=="play"){ e.preventDefault(); if(e.repeat) return; ac();
+    if(state==="menu") startGame(false); else if(state==="pause") resumeGame(); else if(state==="over") startGame(!!cp); else if(state==="win"){ cp=null; startGame(false); } return; }
   const k=KM[e.code]; if(k&&state==="play"){ e.preventDefault(); if(!e.repeat) ac(); press(k,1); } });
 addEventListener("keyup",e=>{ const k=KM[e.code]; if(k) press(k,0); });
 /* touch: d-pad (slide between arrows) + action buttons */
@@ -1155,7 +1170,10 @@ dp.addEventListener("pointermove",e=>{ if(dpadPtr.has(e.pointerId)){ dpadPtr.set
   b.addEventListener("pointerdown",e=>{ e.preventDefault(); ac(); try{ b.setPointerCapture(e.pointerId); }catch(_){} ptrs.add(e.pointerId); press(k,1); b.classList.add("on"); });
   const up=e=>{ ptrs.delete(e.pointerId); if(!ptrs.size){ press(k,0); b.classList.remove("on"); } };
   ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>b.addEventListener(ev,up)); b.addEventListener("contextmenu",e=>e.preventDefault()); });
-document.addEventListener("visibilitychange",()=>{ if(document.hidden) pauseGame(); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) pauseGame(); releaseAll(); });
+addEventListener("blur",()=>{ releaseAll(); dpadPtr.clear(); dpadUpdate(); if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) pauseGame(); });
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+$("pad").addEventListener("contextmenu",e=>e.preventDefault());
 addEventListener("resize",resize); addEventListener("load",()=>setTimeout(resize,50)); addEventListener("orientationchange",()=>setTimeout(resize,200));
 /* title cub */
 const tc=$("tcub"), tctx=tc.getContext("2d");

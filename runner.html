@@ -74,8 +74,13 @@
   .jumpers svg{width:clamp(90px,26vw,140px);height:auto;animation:jump .6s ease-in-out infinite alternate}
   @keyframes jump{0%{transform:translateY(0) scale(1.1,.9)}100%{transform:translateY(-36px) scale(.95,1.05) rotate(8deg)}}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%}
+.keys{display:none;font-size:15px;font-weight:700;opacity:.75;background:#fff9;border-radius:14px;padding:5px 14px;max-width:560px}
+  .desk .keys{display:block}
+  .desk .iconbtn,.desk #hud .iconbtn{width:48px;height:48px}
+  .desk .lang{padding:10px 18px}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/runner.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/runner-192.png"><meta name="apple-mobile-web-app-title" content="מרוץ סוואנה"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/runner-apple-180.png"><script src="pwa.js" data-app="runner" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -99,6 +104,7 @@
   <div class="bestline" id="bestLine"></div>
   <div class="how" id="tHow"></div>
   <div class="ctrl" id="tCtrl"></div>
+  <div class="keys" id="keysMenu"></div>
   <div class="label" id="tWatch"></div>
   <div class="foes" id="foes"></div>
 </section>
@@ -107,6 +113,7 @@
   <div class="card">
     <h2 id="pauseTitle"></h2>
     <button class="big go" id="resumeBtn"></button>
+    <div class="keys" id="keysPause"></div>
     <div class="row"><button class="big orange" id="restartBtn"></button><button class="big home" id="pMenuBtn"></button></div>
   </div>
 </section>
@@ -489,7 +496,10 @@ function update(dt){
 }
 
 /* ============ FLOW ============ */
-function show(id){ ["menu","pause","over"].forEach(o=>$(o).classList.toggle("show",o===id)); }
+const KEYHINT={he:"רווח / ↑ / W – קפיצה (פעמיים באוויר) · ↓ / S – גלישה · Esc/P – הפסקה · M – שקט",fr:"Espace / ↑ / W – sauter (2x en l'air) · ↓ / S – glisser · Échap/P – pause · M – son",en:"Space / ↑ / W – jump (twice in the air) · ↓ / S – slide · Esc/P – pause · M – mute"};
+const PRIMARY={menu:"playBtn",pause:"resumeBtn",over:"againBtn"};
+function show(id){ ["menu","pause","over"].forEach(o=>$(o).classList.toggle("show",o===id));
+  if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
 function startGame(){ resetRun(); stopConfetti(); state="play"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
 function toMenu(){ state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); renderMenu(); show("menu"); }
 function pause(){ if(state==="play"||state==="fall"){ prevState=state; state="paused"; show("pause"); } }
@@ -737,7 +747,7 @@ let toastT=null;
 function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto"; el.style.boxShadow=`0 0 0 4px ${col},0 6px 0 #0002`; el.style.color=col; el.style.top=(($("hud").offsetHeight||56)+8)+"px";
   el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1500); }
 function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
-  $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("tCtrl").textContent=t.ctrl; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch; $("tM").textContent=t.m;
+  $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("tCtrl").textContent=t.ctrl; $("keysMenu").textContent=$("keysPause").textContent=KEYHINT[lang]; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch; $("tM").textContent=t.m;
   $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu; $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu; renderMenu(); }
 function renderMenu(){ const t=T[lang], best=LS.best();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
@@ -763,20 +773,34 @@ $("muteBtn").onclick=$("muteBtn2").onclick=()=>{ muted=!muted; localStorage.setI
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) pause(); });
 
 /* ============ INPUT ============ */
+function clearKeys(){ if(pl) pl.slideHold=false; rmb=false; }
 addEventListener("keydown",e=>{
-  const c=e.code;
-  if(c==="Space"||c==="ArrowUp"||c==="KeyW"){ e.preventDefault(); ac(); if(state==="menu"&&c==="Space"){ startGame(); return; } if(state==="over"&&c==="Space"){ startGame(); return; } if(!e.repeat) jump(); return; }
+  if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e))) return;
+  const c=e.code, onBtn=e.target&&e.target.closest&&e.target.closest("button");
+  if(c==="KeyM"){ if(!e.repeat){ muted=!muted; localStorage.setItem("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); } return; }
+  if(c==="KeyP"||c==="Escape"){ e.preventDefault(); if(e.repeat) return;
+    if(state==="paused") resume(); else if(state==="over") toMenu(); else pause(); return; }
+  if(c==="Space"||c==="Enter"){
+    if(onBtn) return; // let the focused button handle it natively
+    e.preventDefault(); ac();
+    if(state==="menu"||state==="over"){ if(!e.repeat) startGame(); return; }
+    if(state==="paused"){ if(!e.repeat) resume(); return; }
+    if(c==="Space"&&!e.repeat) jump(); return; }
+  if(c==="ArrowUp"||c==="KeyW"){ e.preventDefault(); ac(); if(state==="menu"||state==="over"||state==="paused") return; if(!e.repeat) jump(); return; }
   if(c==="ArrowDown"||c==="KeyS"){ e.preventDefault(); if(!e.repeat) slide(true); return; }
-  if(c==="KeyP"||c==="Escape"){ if(state==="paused") resume(); else pause(); }
-  if(c==="Enter"&&(state==="menu"||state==="over")){ e.preventDefault(); ac(); startGame(); }
+  if(state==="menu"&&(c==="ArrowLeft"||c==="ArrowRight"||c==="KeyA"||c==="KeyD")&&!(onBtn&&onBtn.dataset.lang)){
+    e.preventDefault(); const ks=CHAR_KEYS.filter(k=>LS.best()>=CHAR_NEED[k]); let d=(c==="ArrowRight"||c==="KeyD")?1:-1; if(T[lang].dir==="rtl") d=-d;
+    const i=ks.indexOf(hero); hero=ks[(i+d+ks.length)%ks.length]; localStorage.setItem("annabelle-runner-char",hero); SFX.meow(); renderMenu(); }
 });
 addEventListener("keyup",e=>{ if((e.code==="ArrowDown"||e.code==="KeyS")&&pl) pl.slideHold=false; });
+addEventListener("blur",()=>{ clearKeys(); if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) pause(); });
+let rmb=false;
 let ptr=null;
-cv.addEventListener("pointerdown",e=>{ ac(); if(state!=="play") return; e.preventDefault(); if(ptr&&!ptr.done){ ptr.done=true; jump(); } ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
+cv.addEventListener("pointerdown",e=>{ ac(); if(state!=="play") return; e.preventDefault(); if(e.button===2){ rmb=true; slide(true); return; } if(ptr&&!ptr.done){ ptr.done=true; jump(); } ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
 addEventListener("pointermove",e=>{ if(!ptr||e.pointerId!==ptr.id) return; const dy=e.clientY-ptr.y, dx=e.clientX-ptr.x;
   if(dy>22&&dy>Math.abs(dx)&&!ptr.slid){ ptr.slid=true; ptr.done=true; slide(); }
   else if(dy<-22&&!ptr.done){ ptr.done=true; jump(); } });
-addEventListener("pointerup",e=>{ if(ptr&&e.pointerId===ptr.id){ if(!ptr.done) jump(); ptr=null; } });
+addEventListener("pointerup",e=>{ if(e.button===2&&rmb){ rmb=false; if(pl) pl.slideHold=false; return; } if(ptr&&e.pointerId===ptr.id){ if(!ptr.done) jump(); ptr=null; } });
 addEventListener("pointercancel",()=>{ ptr=null; });
 document.addEventListener("touchmove",e=>{ if(!e.target.closest(".ov")) e.preventDefault(); },{passive:false});
 document.addEventListener("touchstart",e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});

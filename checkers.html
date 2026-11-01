@@ -65,9 +65,19 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #appr .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2{margin:0;font-size:22px;color:#e8862d}#apprN{font-size:64px;font-weight:900;color:#e8862d;letter-spacing:.1em;direction:ltr;line-height:1}
 #pause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008;z-index:40}#pause.on{display:flex}
 #pause .card{background:#fff6d6;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#pause h2{margin:0;font-size:24px;color:#e8862d}
+.khint{display:none}
+.khint kbd{font:800 12px Rubik,Arial;background:#fff;border:1px solid #c9a36a;border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 1px}
+.desk #menu .khint,.desk #lobby .khint{display:block;max-width:560px;font-size:14px;font-weight:700;opacity:.85;text-align:center;line-height:1.5}
+@media(min-aspect-ratio:3/2) and (min-width:1000px){.desk #game .khint{display:block;position:fixed;bottom:12px;inset-inline-start:14px;max-width:calc((100vw - 100vh + 60px)/2 - 30px);font-size:13px;font-weight:700;opacity:.8;line-height:1.8;pointer-events:none}}
+.kc{position:absolute;width:12.5%;height:12.5%;display:none;pointer-events:none;border-radius:10px}
+#kcur{border:4px solid #2a8fd0;box-shadow:0 0 0 3px #fff,0 0 14px 4px #2a8fd088;z-index:4}
+#khov{background:#ffe14d44;border:3px solid #ffe14d;z-index:3}
+.desk #boardBox.kb #kcur,.desk #khov.on{display:block}
+.desk .iconbtn{width:52px;height:52px}
 a.big{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/checkers.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/checkers-192.png"><meta name="apple-mobile-web-app-title" content="דמקת חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/checkers-apple-180.png"><script src="pwa.js" data-app="checkers" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -82,6 +92,7 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <button class="big p" data-mode="two" id="bTwo"></button>
   </div>
   <div class="row"><button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button></div>
+  <div class="khint" id="kh"></div>
 </section>
 <section class="screen" id="lobby">
   <h1 id="lobT"></h1>
@@ -99,7 +110,8 @@ a.big{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <button class="iconbtn" id="undoBtn" aria-label="undo">↩️</button>
     <div style="width:48px"></div>
   </div>
-  <div id="wrap"><div id="boardBox"><svg id="board" viewBox="0 0 800 800"></svg></div></div>
+  <div id="wrap"><div id="boardBox"><svg id="board" viewBox="0 0 800 800"></svg><div class="kc" id="khov"></div><div class="kc" id="kcur"></div></div></div>
+  <div class="khint" id="kh2"></div>
 </section>
 <div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
 <div id="pause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="pauseT"></h2><div id="pauseS" style="font-weight:700"></div><button class="big g" id="pauseLeave"></button></div></div>
@@ -134,6 +146,7 @@ function applyLang(){
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
  $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("apprT").textContent=t("apprT");$("apprS").textContent=t("apprS");$("apprYes").textContent=t("apprYes");$("apprNo").textContent=t("apprNo");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
  if(G)updTurn();
+ kbHints();
 }
 // ---- sound ----
 let AC=null,muted=localStorage.getItem("annabelle-muted")==="1";
@@ -261,6 +274,44 @@ function tap(r,c){
 }
 window.__tap=tap;window.__G=()=>G;window.__legal=()=>legal(G.b,G.turn,G.chain,G.bonus);
 $("undoBtn").addEventListener("click",()=>{if(!G||G.busy||G.chain||!G.hist.length||isCPU(G.turn))return;const s=JSON.parse(G.hist.pop());Object.assign(G,s,{sel:null,chain:null,over:false});SFX.click();draw();updTurn()});
+// ---- laptop: keyboard cursor, hover feedback, shortcuts (UI only) ----
+const KT={he:{m:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> שני שחקנים · <kbd>4</kbd> אונליין · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> בחירה · <kbd>U</kbd> ביטול מהלך · <kbd>Esc</kbd> ביטול בחירה / תפריט",g:"<kbd>←↑↓→</kbd> תזוזה<br><kbd>רווח</kbd> / <kbd>Enter</kbd> בחירה<br><kbd>U</kbd> ביטול מהלך<br><kbd>Esc</kbd> ביטול בחירה / תפריט"},
+ fr:{m:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Deux joueurs · <kbd>4</kbd> En ligne · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> choisir · <kbd>U</kbd> annuler · <kbd>Échap</kbd> désélectionner / menu",g:"<kbd>←↑↓→</kbd> bouger<br><kbd>Espace</kbd> / <kbd>Entrée</kbd> choisir<br><kbd>U</kbd> annuler<br><kbd>Échap</kbd> désélectionner / menu"},
+ en:{m:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Two players · <kbd>4</kbd> Online · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> select · <kbd>U</kbd> undo · <kbd>Esc</kbd> deselect / menu",g:"<kbd>←↑↓→</kbd> move<br><kbd>Space</kbd> / <kbd>Enter</kbd> select<br><kbd>U</kbd> undo<br><kbd>Esc</kbd> deselect / menu"}};
+function kbHints(){const k=KT[lang]||KT.he;$("kh").innerHTML=k.m;$("kh2").innerHTML=k.g}
+let kv={r:5,c:0},kvG=null;
+const canPlay=()=>G&&!G.over&&!G.busy&&!G.paused&&!isCPU(G.turn)&&!(G.online&&G.turn!==G.me);
+function placeKC(el,r,c){el.style.left=c*12.5+"%";el.style.top=r*12.5+"%"}
+function interactive(r,c){ // r,c = board coords: is this square clickable right now?
+ if(!canPlay())return false;const L=legal(G.b,G.turn,G.chain,G.bonus);
+ if(G.sel&&L.some(x=>x.fr===G.sel[0]&&x.fc===G.sel[1]&&x.r===r&&x.c===c))return true;
+ if(G.chain)return false;const pc=G.b[r][c];return !!(pc&&pc.p===G.turn&&L.some(x=>x.fr===r&&x.fc===c))}
+$("board").addEventListener("pointermove",e=>{if(e.pointerType!=="mouse"||!G)return;
+ const rc=$("board").getBoundingClientRect(),vc=Math.floor((e.clientX-rc.left)/rc.width*8),vr=Math.floor((e.clientY-rc.top)/rc.height*8);
+ if(vc<0||vc>7||vr<0||vr>7)return;kv={r:vr,c:vc};kvG=G;$("boardBox").classList.remove("kb");
+ const ok=interactive(V(vr),V(vc));$("board").style.cursor=ok?"pointer":"default";$("khov").classList.toggle("on",ok);if(ok)placeKC($("khov"),vr,vc)});
+$("board").addEventListener("pointerleave",()=>$("khov").classList.remove("on"));
+$("board").addEventListener("click",()=>$("khov").classList.remove("on"),true);
+$("board").addEventListener("contextmenu",e=>e.preventDefault());
+document.addEventListener("keydown",e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
+ const k=e.key,kk=k.length===1?k.toLowerCase():k,act=k==="Enter"||k===" ",btn=e.target&&e.target.closest&&e.target.closest("button,a,input");
+ const on=id=>$(id).classList.contains("on"),click=el=>{if(el){e.preventDefault();el.click()}};
+ if(on("appr")||on("pause"))return;
+ if(on("win")){if(act&&!btn)click($("againBtn"));else if(k==="Escape"){e.preventDefault();toMenu()}return}
+ if($("menu").classList.contains("active")){if(kk==="1")click($("bEasy"));else if(kk==="2")click($("bNorm"));else if(kk==="3")click($("bTwo"));else if(kk==="4")click($("bOnline"));return}
+ if($("lobby").classList.contains("active")){if(k==="Escape")click($("lobBack"));else if($("lobMain").style.display!=="none"){if(kk==="1")click($("bCreate"));else if(kk==="2")click($("bJoin"))}return}
+ if(!G||!$("game").classList.contains("active"))return;
+ let dr=0,dc=0;if(k==="ArrowUp")dr=-1;else if(k==="ArrowDown")dr=1;else if(k==="ArrowLeft")dc=-1;else if(k==="ArrowRight")dc=1;
+ if(dr||dc){e.preventDefault();if(btn&&btn.tagName==="BUTTON")btn.blur();if(kvG!==G){kvG=G;kv={r:5,c:0}}
+  kv={r:Math.min(7,Math.max(0,kv.r+dr)),c:Math.min(7,Math.max(0,kv.c+dc))};
+  placeKC($("kcur"),kv.r,kv.c);$("boardBox").classList.add("kb");$("khov").classList.remove("on");return}
+ if(act){if(btn)return;e.preventDefault();if(kvG!==G){kvG=G;kv={r:5,c:0}}placeKC($("kcur"),kv.r,kv.c);$("boardBox").classList.add("kb");
+  if(canPlay()){const r=V(kv.r),c=V(kv.c);if(inb(r,c))tap(r,c)}return}
+ if(kk==="u"){if(!G.online)click($("undoBtn"));return}
+ if(k==="Escape"){e.preventDefault();if(G.sel&&!G.chain&&!G.busy){G.sel=null;draw()}else if(!G.online)$("menuBtn").click()}
+});
+document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
 // idle twitches
 setInterval(()=>{if(!G||!$("game").classList.contains("active"))return;const els=$("board").querySelectorAll("g.pc");if(!els.length)return;const el=els[Math.random()*els.length|0];el.classList.remove("wag");void el.getBBox();el.classList.add("wag");setTimeout(()=>el.classList.remove("wag"),1600)},1800);
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}

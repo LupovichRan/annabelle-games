@@ -58,9 +58,19 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .tl.awake{z-index:12;box-shadow:0 0 0 5px #e23b3b,0 0 18px 6px #e23b3b;animation:aw .6s infinite alternate}@keyframes aw{to{transform:scale(1.25)}}
 .heartbreak{position:fixed;font-size:44px;z-index:16;pointer-events:none;transform:translate(-50%,-50%);animation:hb 1.6s forwards}@keyframes hb{60%{transform:translate(-50%,-50%) scale(1.6)}to{transform:translate(-50%,40px) scale(1);opacity:0}}
 .shake{animation:sh .12s 5}@keyframes sh{50%{transform:translateX(5px)}}
+.khint,.khg{display:none}
+.desk .khint{display:block;max-width:560px;font-size:14px;font-weight:700;opacity:.85;text-align:center;line-height:1.5}
+.khint kbd,.khg kbd{font:800 12px Rubik,Arial;background:#fff;border:1px solid #c9a36a;border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 1px}
+@media(min-width:1000px){.desk .khg{display:block;position:fixed;bottom:12px;inset-inline-start:14px;max-width:min(300px,calc(50vw - 360px));font-size:13px;font-weight:700;opacity:.8;line-height:1.7;pointer-events:none}}
+.desk .tl:not(.o){cursor:pointer}
+.desk .tl:not(.o):not(.d):not(.awake):hover{filter:brightness(1.12)}
+.desk .tl.o:not(.d){cursor:default}
+.desk #grid.kb .tl.cur{outline:4px solid #2a8fd0;outline-offset:-3px;z-index:3;box-shadow:0 0 0 3px #fff,0 0 12px 4px #2a8fd088}
+.desk .iconbtn{width:52px;height:52px}
 @media(max-width:420px){.lbl{display:none}#flagBtn{min-width:54px;font-size:22px}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/minesweeper.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/minesweeper-192.png"><meta name="apple-mobile-web-app-title" content="גינת החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/minesweeper-apple-180.png"><script src="pwa.js" data-app="minesweeper" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -74,6 +84,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
     <button class="big p" data-mode="normal" id="bNorm"></button>
   </div>
   <div class="best" id="bestT"></div>
+  <div class="khint" id="kh"></div>
 </section>
 <section class="screen" id="game">
   <div class="bar">
@@ -84,6 +95,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
     <div style="width:48px"></div>
   </div>
   <div id="wrap"><div id="grid"></div></div>
+  <div class="khg" id="kh2"></div>
 </section>
 <div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><div id="winB" class="best"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
 <div id="oops"><div class="card"><div style="font-size:64px" class="dance">🐶</div><h2 id="oopsT"></h2><div id="oopsS" style="font-size:20px;font-weight:800"></div><button class="big" id="oopsBtn"></button></div></div>
@@ -94,15 +106,15 @@ const $=id=>document.getElementById(id);
 const TX={
  he:{title:"גינת החתולים",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
   rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","🌿 פתחי את כל המשבצות בלי כלבים כדי לנצח!","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
-  dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
+  keys:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · בלוח: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> חפירה · <kbd>X</kbd> סימון · <kbd>F</kbd> מצב סימון · <kbd>H</kbd> רמז · <kbd>Esc</kbd> תפריט · קליק ימני = סימון",dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
   winT:"ניצחת, אנאבל! 🎉",lose:"אופס! הכלבים התעוררו 🐶",again:"🔁 עוד משחק",retry:"🔁 נסי שוב",best:"שיא",newBest:"שיא חדש! 🏆",sec:"שנ׳"},
  fr:{title:"Le jardin des chats",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","🌿 Ouvre toutes les cases sans chien pour gagner !","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
-  dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
+  keys:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · Sur le plateau : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> creuser · <kbd>X</kbd> marquer · <kbd>F</kbd> mode patte · <kbd>H</kbd> indice · <kbd>Échap</kbd> menu · clic droit = marquer",dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
   winT:"Tu as gagné, Annabelle ! 🎉",lose:"Oups ! Les chiens se sont réveillés 🐶",again:"🔁 Rejouer",retry:"🔁 Réessaie",best:"Record",newBest:"Nouveau record ! 🏆",sec:"s"},
  en:{title:"Cat Garden",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","🌿 Open all the tiles without dogs to win!","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
-  dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
+  keys:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · On the board: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> dig · <kbd>X</kbd> mark · <kbd>F</kbd> mark mode · <kbd>H</kbd> hint · <kbd>Esc</kbd> menu · right-click = mark",dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
   winT:"You won, Annabelle! 🎉",lose:"Oops! The dogs woke up 🐶",again:"🔁 Play again",retry:"🔁 Try again",best:"Best",newBest:"New record! 🏆",sec:"s"}};
 const LV={easy:{c:8,r:8,d:8,l:3},normal:{c:9,r:11,d:14,l:2}};
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
@@ -117,6 +129,7 @@ function applyLang(){
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
  $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("againBtn").textContent=t("again");
  const b=getBest();$("bestT").textContent=["easy","normal"].filter(k=>b[k]).map(k=>`🏆 ${t(k).split("·")[0].trim()}: ${b[k]} ${t("sec")}`).join("   ");
+ $("kh").innerHTML=t("keys");$("kh2").innerHTML=t("keys").split(" · ").slice(2).join("<br>").replace(/^[^:：]*[:：] ?/,"");
  if(G)hud();
 }
 let AC=null,muted=localStorage.getItem("annabelle-muted")==="1";
@@ -127,14 +140,15 @@ const SFX={click:()=>tone(600,.08,"triangle",.15),dig:()=>tone(320,.1,"triangle"
  meow:()=>{tone(700,.12,"sawtooth",.08,1100);setTimeout(()=>tone(1100,.25,"sawtooth",.08,500),120)},
  win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.25,"triangle",.2),i*140))};
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
-let G=null,timer=null;
+let G=null,timer=null,cur=0;
 function newGame(mode){
  const L=LV[mode],land=innerWidth>innerHeight;
  const C=land?Math.max(L.c,L.r):L.c,R=land?Math.min(L.c,L.r):L.r;
  G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:3};
  for(let i=0;i<C*R;i++)G.cells.push({dog:false,n:0,o:false,f:false});
  const g=$("grid");g.innerHTML="";g.style.gridTemplateColumns=`repeat(${C},1fr)`;
- for(let i=0;i<C*R;i++){const b=document.createElement("button");b.className="tl";b.dataset.i=i;g.appendChild(b)}
+ cur=(R>>1)*C+(C>>1);
+ for(let i=0;i<C*R;i++){const b=document.createElement("button");b.className="tl"+(i===cur?" cur":"");b.dataset.i=i;b.tabIndex=-1;g.appendChild(b)}
  clearInterval(timer);timer=setInterval(()=>{if(G&&G.started&&!G.over){G.sec=Math.floor((Date.now()-G.t0)/1000);hud()}},500);
  show("game");setFlag(false);hud();
 }
@@ -145,7 +159,7 @@ function plant(safe){const ban=new Set([safe,...nb(safe)]);const pool=[];for(let
 function hud(){const f=G.cells.filter(c=>c.f||(c.o&&c.dog)).length;
  const left=G.cells.filter(c=>!c.dog&&!c.o).length;$("info").textContent=`🌿${left} 🐶${Math.max(0,G.D-f)} ⏱️${G.sec}`;$("hintBtn").textContent=`💡${G.hints}`;$("hintBtn").disabled=!G.hints;$("hintBtn").style.opacity=G.hints?1:.4;$("hearts").textContent=G.lives?"❤️"+G.lives:"🤍"}
 function setFlag(v){G.flagMode=v;const b=$("flagBtn");b.classList.toggle("on",v);const L=(v?t("flag"):t("dig")).split(" ");b.innerHTML=`${L[0]}<span class="lbl"> ${L.slice(1).join(" ")}</span>`}
-function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl";b.innerHTML="";
+function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl"+(i===cur?" cur":"");b.innerHTML="";
  if(c.o){if(c.dog){b.classList.add("d");b.textContent="🐶"}else{b.classList.add("o");if(c.n)b.innerHTML=`<span class="n n${c.n}"><i>🐾</i>${c.n}</span>`;else if(i%5===2)b.innerHTML='<span style="opacity:.6;font-size:.7em">🐟</span>'}}
  else if(c.f){b.classList.add("f");b.textContent="🐾"}}
 function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
@@ -182,10 +196,37 @@ function checkWin(){const closed=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog
 function lose(){G.cells.forEach((c,i)=>{if(c.dog){c.o=true;render(i)}});$("winT").textContent=t("lose");$("winS").innerHTML='<span class="dance">🙀</span> 🐶🐶';$("winB").textContent="";$("againBtn").textContent=t("retry");$("win").classList.add("on")}
 // input: tap + long press
 let lp=null,lpFired=false;
-$("grid").addEventListener("pointerdown",e=>{const b=e.target.closest(".tl");if(!b)return;lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;tap(+b.dataset.i,true);if(navigator.vibrate)navigator.vibrate(30)},450)});
+let lastPT="touch";
+$("grid").addEventListener("mousedown",e=>e.preventDefault());
+$("grid").addEventListener("pointerdown",e=>{lastPT=e.pointerType;const b=e.target.closest(".tl");if(!b)return;lpFired=false;clearTimeout(lp);if(e.pointerType==="mouse")return;lp=setTimeout(()=>{lpFired=true;tap(+b.dataset.i,true);if(navigator.vibrate)navigator.vibrate(30)},450)});
 ["pointerup","pointercancel","pointerleave"].forEach(ev=>$("grid").addEventListener(ev,()=>clearTimeout(lp)));
 $("grid").addEventListener("click",e=>{const b=e.target.closest(".tl");if(!b)return;if(lpFired){lpFired=false;return}tap(+b.dataset.i)});
-$("grid").addEventListener("contextmenu",e=>e.preventDefault());
+$("grid").addEventListener("contextmenu",e=>{e.preventDefault();const b=e.target.closest(".tl");if(b&&lastPT==="mouse")tap(+b.dataset.i,true)});
+$("grid").addEventListener("auxclick",e=>{const b=e.target.closest(".tl");if(b&&e.button===1){e.preventDefault();tap(+b.dataset.i)}});
+$("grid").addEventListener("pointermove",e=>{if(e.pointerType!=="mouse")return;const b=e.target.closest(".tl");$("grid").classList.remove("kb");if(b)setCur(+b.dataset.i)});
+function setCur(i){if(!G||i===cur)return;const ch=$("grid").children,o=ch[cur];if(o)o.classList.remove("cur");cur=i;if(ch[i])ch[i].classList.add("cur")}
+// keyboard (laptop)
+document.addEventListener("keydown",e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
+ const k=e.key,on=id=>$(id).classList.contains("on"),btn=e.target&&e.target.closest&&e.target.closest("button,a,input");
+ const act=k==="Enter"||k===" ";
+ if(on("oops")){if(act||k==="ArrowRight"||k==="ArrowLeft"){if(!btn||btn.id!=="oopsBtn"){e.preventDefault();$("oopsBtn").click()}}else if(k==="Escape"){e.preventDefault();$("oopsBtn").click();$("menuBtn").click()}return}
+ if(on("win")){if(act){if(!btn){e.preventDefault();$("againBtn").click()}}else if(k==="Escape"){e.preventDefault();toMenu()}return}
+ if($("menu").classList.contains("active")){const m=k==="1"?"easy":k==="2"?"normal":null;if(m){e.preventDefault();ac();SFX.click();newGame(m)}return}
+ if(!G||!$("game").classList.contains("active"))return;
+ const kk=k.length===1?k.toLowerCase():k,rtl=document.documentElement.dir==="rtl";
+ let dr=0,dc=0;
+ if(kk==="ArrowUp"||kk==="w")dr=-1;else if(kk==="ArrowDown"||kk==="s")dr=1;else if(kk==="ArrowLeft"||kk==="a")dc=rtl?1:-1;else if(kk==="ArrowRight"||kk==="d")dc=rtl?-1:1;
+ if(dr||dc){e.preventDefault();if(btn&&!btn.classList.contains("tl"))btn.blur();
+  const r=Math.min(G.R-1,Math.max(0,Math.floor(cur/G.C)+dr)),c=Math.min(G.C-1,Math.max(0,cur%G.C+dc));
+  $("grid").classList.add("kb");setCur(r*G.C+c);return}
+ if(act){if(btn&&!btn.classList.contains("tl"))return;e.preventDefault();$("grid").classList.add("kb");tap(cur);return}
+ if(kk==="x"){e.preventDefault();$("grid").classList.add("kb");tap(cur,true)}
+ else if(kk==="f"){e.preventDefault();SFX.click();setFlag(!G.flagMode)}
+ else if(kk==="h"){e.preventDefault();hint()}
+ else if(k==="Escape"){e.preventDefault();$("menuBtn").click()}
+});
+document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
 $("hintBtn").addEventListener("click",hint);
 $("flagBtn").addEventListener("click",()=>{SFX.click();setFlag(!G.flagMode)});
 window.__G=()=>G;window.__tap=tap;

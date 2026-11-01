@@ -113,9 +113,19 @@
   @keyframes flash{0%{opacity:1}100%{opacity:0}}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%}
 
+  /* ---------- desktop (mouse + keyboard) ---------- */
+  #keyhint{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:8;pointer-events:none;display:none;background:#ffffffc8;color:var(--ink);
+    border-radius:999px;padding:4px 14px;font-size:13px;font-weight:700;box-shadow:0 2px 0 #0002;white-space:nowrap;max-width:96vw;overflow:hidden;text-overflow:ellipsis}
+  .desk #keyhint{display:block}
+  .desk .pausebtn{width:52px;height:52px}
+  .desk .iconbtn:hover{transform:translateY(-1px)}
+  .desk #cv{cursor:crosshair}
+  .desk .lvl:not(:disabled):hover,.desk .big:hover{transform:translateY(-2px)}
+
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.ov{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/bubbles.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/bubbles-192.png"><meta name="apple-mobile-web-app-title" content="בועות"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/bubbles-apple-180.png"><script src="pwa.js" data-app="bubbles" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="#pMenuBtn,#eMenuBtn,#wMenuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -192,6 +202,7 @@
 
 <div id="banner"><div class="h" id="bannerH"></div><div class="bigicons" id="bannerIcons"></div><b class="tgtname" id="bannerName" dir="auto" style="font-size:24px"></b></div>
 <canvas id="confetti"></canvas>
+<div id="keyhint" dir="auto"></div>
 
 <script>
 "use strict";
@@ -794,14 +805,17 @@ function frame(now){
     if(timeLeft<=0){ timeLeft=0; if(!ending){ ending=true; endLevel(); } }
     updateHUDTimer();
   }
-  render();
+  kcUpdate(dt);
+  render(); drawKC();
   requestAnimationFrame(frame);
 }
 let lastShown="";
 function updateHUDTimer(){ const s=fmt(timeLeft); if(s!==lastShown){ lastShown=s; $("timer").textContent=s; $("timerPill").classList.toggle("low",timeLeft<=10); } }
 
 /* ============ FLOW / SCREENS ============ */
-function showOv(id){ ["menu","ready","pause","end","win"].forEach(k=>$(k).classList.toggle("show",k===id)); }
+function showOv(id){ ["menu","ready","pause","end","win"].forEach(k=>$(k).classList.toggle("show",k===id));
+  try{ if(!id){ if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); }
+       else if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ const f=ovFocusables(id)[0]; if(f) setTimeout(()=>{ if(!f.disabled) f.focus({preventScroll:true}); },30); } }catch(e){} }
 function starsFor(s){ return s>=L.goal*2?3:s>=L.goal*1.5?2:s>=L.goal?1:0; }
 function starHTML(n){ return [0,1,2].map(i=>`<span class="${i<n?"on":""}">★</span>`).join(""); }
 function endLevel(){
@@ -884,6 +898,72 @@ function confetti(){
 }
 function stopConfetti(){ cancelAnimationFrame(confRaf); const c=$("confetti"); c.getContext("2d").clearRect(0,0,c.width,c.height); }
 
+
+/* ============ KEYBOARD (laptop): virtual cursor + shortcuts ============ */
+const KH={
+  he:"חיצים / WASD – הזיזי סמן · רווח / Enter – פוצצי · P / Esc – הפסקה · M – שקט",
+  fr:"Flèches / WASD : viser · Espace / Entrée : éclater · P / Échap : pause · M : son",
+  en:"Arrows / WASD: aim · Space / Enter: pop · P / Esc: pause · M: sound"};
+const KHM={ he:"Tab / חיצים לבחירה · Enter לאישור · 1-5 שלב · M – שקט", fr:"Tab / flèches : choisir · Entrée : valider · 1-5 : niveau · M : son", en:"Tab / arrows: choose · Enter: confirm · 1-5: level · M: sound"};
+function updateKeyHint(){ $("keyhint").textContent=(state==="play"||state==="paused"?KH:KHM)[lang]||KH.en; }
+const kc={x:0,y:0,on:false}, keys={};
+function ovFocusables(id){ const el=$(id); return el?[...el.querySelectorAll("button:not(:disabled)")].filter(b=>b.offsetParent!==null||b.getClientRects().length):[]; }
+function curOv(){ return ["menu","ready","pause","end","win"].find(k=>$(k).classList.contains("show")); }
+function kcInit(){ if(!kc.x&&!kc.y){ kc.x=(A.x0+A.x1)/2; kc.y=(A.y0+A.y1)/2; } }
+function kcUpdate(dt){
+  if(state!=="play"){ return; }
+  let dx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0), dy=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
+  if(dx||dy){ kcInit(); const n=Math.hypot(dx,dy), sp=(keys.Shift?1.8:1)*Math.max(420,Math.min(W,H)*1.0);
+    kc.x=Math.min(A.x1-4,Math.max(A.x0+4,kc.x+dx/n*sp*dt)); kc.y=Math.min(A.y1-4,Math.max(A.y0+4,kc.y+dy/n*sp*dt)); kc.on=true;
+    pointer.x=kc.x; pointer.y=kc.y; pointer.until=performance.now()+400; pointer.type="mouse"; }
+}
+function drawKC(){
+  if(!kc.on||state!=="play") return;
+  ctx.save(); ctx.setTransform(DPR,0,0,DPR,0,0);
+  const r=22*Math.max(.8,Math.min(1.4,S)); ctx.lineWidth=4; ctx.strokeStyle="#fff"; ctx.beginPath(); ctx.arc(kc.x,kc.y,r+2,0,7); ctx.stroke();
+  ctx.lineWidth=3; ctx.strokeStyle="#7c5cff"; ctx.beginPath(); ctx.arc(kc.x,kc.y,r,0,7); ctx.moveTo(kc.x-r-7,kc.y); ctx.lineTo(kc.x-r+8,kc.y); ctx.moveTo(kc.x+r-8,kc.y); ctx.lineTo(kc.x+r+7,kc.y);
+  ctx.moveTo(kc.x,kc.y-r-7); ctx.lineTo(kc.x,kc.y-r+8); ctx.moveTo(kc.x,kc.y+r-8); ctx.lineTo(kc.x,kc.y+r+7); ctx.stroke();
+  ctx.restore();
+}
+cv.addEventListener("pointermove",e=>{ if(e.pointerType==="mouse"){ kc.on=false; kc.x=e.clientX; kc.y=e.clientY; } });
+function clearKeys(){ for(const k in keys) keys[k]=false; }
+addEventListener("blur",clearKeys);
+document.addEventListener("visibilitychange",clearKeys);
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(window.AnnabelleDesk&&AnnabelleDesk.typing(e)) return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  // layout-independent WASD (Hebrew keyboard layout) via e.code
+  const wasd={KeyW:"w",KeyA:"a",KeyS:"s",KeyD:"d"}[e.code];
+  if(k==="m"||e.code==="KeyM"){ e.preventDefault(); $("muteBtn").click(); return; }
+  const ov=curOv();
+  if(state==="play"){
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","Enter","Shift"].includes(k)||wasd) e.preventDefault();
+    if(k==="Escape"||e.code==="KeyP"){ e.preventDefault(); pause(); return; }
+    if(k==="Shift"){ keys.Shift=true; return; }
+    if(k.startsWith("Arrow")) keys[k]=true; else if(wasd) keys[wasd]=true;
+    else if((k===" "||k==="Enter")&&!e.repeat){ e.preventDefault(); const p=kc.on?kc:pointer; if(p.x>-100){ ac(); pointer.until=performance.now()+400; tapAt(p.x,p.y); } }
+    return;
+  }
+  if(!ov) return;
+  if(state==="paused"&&(k==="Escape"||e.code==="KeyP")){ e.preventDefault(); SFX.click(); resume(); return; }
+  if(k==="Escape"&&ov!=="menu"){ e.preventDefault(); SFX.click(); toMenu(); return; }
+  if(ov==="menu"&&/^[1-5]$/.test(k)){ const b=document.querySelector(`[data-lv="${+k-1}"]`); if(b&&!b.disabled){ e.preventDefault(); b.click(); } return; }
+  if(k.startsWith("Arrow")||wasd){
+    const f=ovFocusables(ov); if(!f.length) return; e.preventDefault();
+    let i=f.indexOf(document.activeElement); const dir=(k==="ArrowRight"||k==="ArrowDown"||wasd==="d"||wasd==="s")?1:-1;
+    const rtl=document.documentElement.dir==="rtl"; let step=dir;
+    if(ov==="menu"&&(k==="ArrowLeft"||k==="ArrowRight")&&rtl) step=-dir; // visual order in RTL grids
+    i = i<0 ? 0 : (i+step+f.length)%f.length; f[i].focus({preventScroll:true});
+  }
+});
+document.addEventListener("keyup",e=>{
+  const k=e.key.length===1?e.key.toLowerCase():e.key; const wasd={KeyW:"w",KeyA:"a",KeyS:"s",KeyD:"d"}[e.code];
+  if(k.startsWith("Arrow")) keys[k]=false; if(wasd) keys[wasd]=false; if(k==="Shift") keys.Shift=false;
+});
+// keep the hint text in sync
+setInterval(updateKeyHint,500);
+
 /* ============ test hook (read-only info + time control) ============ */
 window.__bubbles={
   info:()=>({state,level:lvI+1,score,timeLeft,goal:L.goal,target:L.targets[tgtI],targetKeys:tgt().keys,combo,stats:{...stats},
@@ -893,7 +973,7 @@ window.__bubbles={
 
 /* ============ BOOT ============ */
 applyLang();
-buildSprites().then(()=>{ menuBubbles(); requestAnimationFrame(t=>{lastT=t;frame(t);}); document.body.dataset.ready="1"; });
+buildSprites().then(()=>{ menuBubbles(); requestAnimationFrame(t=>{lastT=t;frame(t);}); document.body.dataset.ready="1"; try{ if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) $("playBtn").focus({preventScroll:true}); }catch(e){} });
 </script>
 </body>
 </html>

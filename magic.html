@@ -75,9 +75,19 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 #conf{position:fixed;inset:0;pointer-events:none;z-index:30}
 .corner{position:fixed;top:8px;left:8px;z-index:10}
 .best{font-size:14px;opacity:.8}
+.khg{display:none}
+.khg kbd{font:800 12px Rubik,Arial;background:#fff;border:1px solid #b9a3e0;border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 2px}
+@media(min-width:1000px){.desk .khg{display:block;position:fixed;bottom:12px;inset-inline-start:14px;max-width:min(300px,calc(50vw - 300px));font-size:13px;font-weight:700;opacity:.85;line-height:1.9;pointer-events:none}}
+.desk .iconbtn{width:52px;height:52px}
+.desk .pickwrap .card{width:min(94vw,calc((var(--app-h,100vh) - 300px)*var(--ar,1)),700px)}
+.desk #selfList{max-width:1500px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));align-content:center}
+.desk #selfList .card:hover:not(.out){transform:translateY(-3px)}
+.desk #selfList .card:focus-visible{border-radius:16px}
+.desk .rng .big:hover:not(.sel){background:#f4ebff}
 .explain{max-width:420px;font-size:15px;line-height:1.4;text-align:right;background:#fff;border-radius:14px;padding:8px 12px}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/magic.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic-192.png"><meta name="apple-mobile-web-app-title" content="קסם הקלפים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic-apple-180.png"><script src="pwa.js" data-app="magic" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 
@@ -116,13 +126,14 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 
 <!-- RESULT -->
 <div id="res"><div class="box" id="resBox"></div></div>
+<div class="khg" id="kh"></div>
 <canvas id="conf"></canvas>
 
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"קסם הקלפים",
+ he:{title:"קסם הקלפים",k_menu:"<kbd>1</kbd> המחשב מנחש<br><kbd>2</kbd> אני עושה את הקסם<br><kbd>R</kbd> שינוי טווח",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> כן<br><kbd>N</kbd> לא<br><kbd>←</kbd><kbd>→</kbd> כן / לא<br><kbd>Backspace</kbd> חזרה<br><kbd>Esc</kbd> תפריט",k_self:"<kbd>Tab</kbd> מעבר בין קלפים<br><kbd>Enter</kbd> הרחקה / החזרה<br><kbd>1</kbd>–<kbd>6</kbd> קלף לפי מספר<br><kbd>R</kbd> איפוס · <kbd>Esc</kbd> תפריט",
   rules:["🎩 חשבי על מספר – ואני אנחש אותו!","🃏 המחשב מראה קלפים, ואת עונה אם המספר שלך נמצא בקלף.","🧠 או שאת עושה את הקסם בעצמך – והמחשב רק מגלה!"],
   range:"עד איזה מספר?",comp:"🪄 המחשב מנחש",self:"🧠 אני עושה את הקסם",
   think:"חשבי על מספר בין 1 ל־N",thinkS:"אל תגידי לי אותו! 🤫",ready:"חשבתי! ▶",
@@ -135,7 +146,7 @@ const TX={
   sumSay:"עכשיו חברי את המספרים שבפינה השמאלית העליונה של הקלפים שנשארו",
   show:"גלי לי את המספר ✨",none:"לא נשאר אף קלף – המספר שלך הוא… 0? 😄 נסי מספר מ־1",
   tryOther:"נסי שוב",reveal:"המספר שלך הוא"},
- fr:{title:"Magie des cartes",
+ fr:{title:"Magie des cartes",k_menu:"<kbd>1</kbd> L'ordi devine<br><kbd>2</kbd> Je fais la magie<br><kbd>R</kbd> changer l'intervalle",k_comp:"<kbd>Y</kbd> / <kbd>Entrée</kbd> oui<br><kbd>N</kbd> non<br><kbd>←</kbd><kbd>→</kbd> oui / non<br><kbd>Retour</kbd> revenir<br><kbd>Échap</kbd> menu",k_self:"<kbd>Tab</kbd> changer de carte<br><kbd>Entrée</kbd> écarter / remettre<br><kbd>1</kbd>–<kbd>6</kbd> carte par numéro<br><kbd>R</kbd> remise à zéro · <kbd>Échap</kbd> menu",
   rules:["🎩 Pense à un nombre – je le devine !","🃏 L'ordinateur montre des cartes et tu réponds si ton nombre y est.","🧠 Ou fais la magie toi-même – et l'ordinateur te révèle le résultat !"],
   range:"Jusqu'à quel nombre ?",comp:"🪄 L'ordinateur devine",self:"🧠 Je fais la magie",
   think:"Pense à un nombre entre 1 et N",thinkS:"Ne me le dis pas ! 🤫",ready:"J'y suis ! ▶",
@@ -148,7 +159,7 @@ const TX={
   sumSay:"Maintenant additionne les nombres en haut à gauche des cartes gardées",
   show:"Révèle le nombre ✨",none:"Plus aucune carte – ton nombre est… 0 ? 😄 Choisis un nombre dès 1",
   tryOther:"Réessaie",reveal:"Ton nombre est"},
- en:{title:"Card Magic",
+ en:{title:"Card Magic",k_menu:"<kbd>1</kbd> Computer guesses<br><kbd>2</kbd> I do the magic<br><kbd>R</kbd> change range",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> yes<br><kbd>N</kbd> no<br><kbd>←</kbd><kbd>→</kbd> yes / no<br><kbd>Backspace</kbd> back<br><kbd>Esc</kbd> menu",k_self:"<kbd>Tab</kbd> move between cards<br><kbd>Enter</kbd> put away / bring back<br><kbd>1</kbd>–<kbd>6</kbd> card by number<br><kbd>R</kbd> reset · <kbd>Esc</kbd> menu",
   rules:["🎩 Think of a number – and I'll guess it!","🃏 The computer shows cards and you answer if your number is on the card.","🧠 Or do the magic yourself – the computer just reveals it!"],
   range:"Up to which number?",comp:"🪄 Computer guesses",self:"🧠 I do the magic",
   think:"Think of a number from 1 to N",thinkS:"Don't tell me! 🤫",ready:"Got it! ▶",
@@ -184,7 +195,7 @@ const SFX={
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id))}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=t("k_"+id)||""}
 function maxN(){return (1<<bits)-1}
 
 /* build the cards: card b holds every number 1..max whose bit b is set; the first one is 2^b */
@@ -196,7 +207,8 @@ function cardEl(c){
  const el=document.createElement("div");el.className="card";el.style.setProperty("--c",c.color);
  const cols=c.nums.length<=8?4:c.nums.length<=16?4:8; // 8 → 4×2, 16 → 4×4, 32 → 8×4
  const g=document.createElement("div");g.className="g";g.style.gridTemplateColumns="repeat("+cols+",1fr)";
- const fs=cols===8?"clamp(11px,2.6vw,18px)":"clamp(16px,4.4vw,26px)";el.style.setProperty("--fs",fs);
+ const big=window.AnnabelleDesk&&AnnabelleDesk.isDesk();
+ const fs=cols===8?"clamp(11px,2.6vw,"+(big?26:18)+"px)":"clamp(16px,4.4vw,"+(big?38:26)+"px)";el.style.setProperty("--fs",fs);
  c.nums.forEach((n,i)=>{const b=document.createElement("b");b.textContent=n;g.appendChild(b)});
  el.appendChild(g);el.style.setProperty("--ar",cols/Math.ceil(c.nums.length/cols));
  return el;
@@ -216,6 +228,7 @@ function drawMenu(){
  LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
   x.onclick=()=>{lang=c;save("annabelle-lang",c);document.documentElement.lang=c;document.documentElement.dir=c==="he"?"rtl":"ltr";drawMenu()};$("flags").appendChild(x)});
  document.documentElement.dir=lang==="he"?"rtl":"ltr";
+ if($("menu").classList.contains("active"))$("kh").innerHTML=t("k_menu");
 }
 function toMenu(){$("res").classList.remove("on");stopConf();show("menu");drawMenu()}
 window.toMenu=toMenu;
@@ -297,7 +310,8 @@ function drawSelf(summed){summed=false;
   if(!summed){
    el.classList.toggle("out",!keep[i]);
    const tag=document.createElement("div");tag.className="tag";tag.textContent=keep[i]?t("keep"):t("drop");el.appendChild(tag);
-   el.onclick=()=>{keep[i]=!keep[i];keep[i]?SFX.keep():SFX.away();drawSelf(false)};
+   el.tabIndex=0;el.setAttribute("role","button");el.dataset.i=i;
+   el.onclick=ev=>{keep[i]=!keep[i];keep[i]?SFX.keep():SFX.away();drawSelf(false);if(ev&&ev.detail===0){const n=$("selfList").children[i];if(n)n.focus()}};
   }
   list.appendChild(el);
  });
@@ -315,6 +329,30 @@ function confetti(){
 }
 function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
 
+// keyboard (laptop)
+const isOn=id=>$(id).classList.contains("active");
+document.addEventListener("keydown",e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
+ const k=e.key,kk=k.length===1?k.toLowerCase():k,act=k==="Enter"||k===" ",btn=e.target&&e.target.closest&&e.target.closest("button,a,input"),card=e.target&&e.target.closest&&e.target.closest("#selfList .card");
+ const click=el=>{if(el){e.preventDefault();el.click()}};
+ if($("res").classList.contains("on")){if(act&&!btn)click($("resBox").querySelector("button.big:not(.g)"));else if(k==="Escape"){e.preventDefault();toMenu()}return}
+ if(isOn("menu")){if(kk==="1")click($("bComp"));else if(kk==="2")click($("bSelf"));else if(kk==="r"){e.preventDefault();bits=bits>=6?4:bits+1;save("annabelle-magic-bits",bits);SFX.click();drawMenu()}return}
+ if(k==="Escape"&&(isOn("comp")||isOn("self"))){e.preventDefault();toMenu();return}
+ if(isOn("comp")){
+  const ye=$("cBtns").querySelector(".big.y"),no=$("cBtns").querySelector(".big.n"),bk=$("cBtns").querySelector(".big.g"),rd=$("cBtns").querySelector(".big:not(.y):not(.n):not(.g)");
+  const rtl=document.documentElement.dir==="rtl";
+  if(ye){ if(kk==="y"||(act&&!btn))click(ye);else if(kk==="n")click(no);else if(k==="ArrowRight")click(rtl?ye:no);else if(k==="ArrowLeft")click(rtl?no:ye);else if(k==="Backspace")click(bk)}
+  else if(rd&&act&&!btn)click(rd);
+  return}
+ if(isOn("self")){
+  if(kk==="r"){click($("sDone"));return}
+  if(/^[1-9]$/.test(k)){const c=$("selfList").children[+k-1];if(c){c.click();return}}
+  if(card&&act){click(card);return}
+  const nav={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[k];
+  if(nav){e.preventDefault();const L=[...$("selfList").children],j=Math.max(0,Math.min(L.length-1,(card?L.indexOf(card):-1)+nav));if(L[j])L[j].focus()}
+ }
+});
+document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
 $("bComp").onclick=()=>{SFX.click();startComp()};$("bSelf").onclick=()=>{SFX.click();startSelf()};
 $("muteBtn").addEventListener("click",()=>{muted=!muted;save("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});updMute();
 const sb=+load("annabelle-magic-bits");if(sb>=4&&sb<=6)bits=sb;

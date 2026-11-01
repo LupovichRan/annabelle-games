@@ -80,8 +80,27 @@
   .fact{font-size:clamp(15px,4vw,20px);font-weight:700;background:#e9f7ff;border-radius:18px;padding:8px 14px;max-width:480px;line-height:1.35}
   .foe b{color:#e8487f}
   .menu{background:#ffffff8a}
+  .deskonly{display:none}
+  html.desk .deskonly{display:block}
+  html.desk #cv.play{cursor:pointer}
+  html.desk .iconbtn:hover{transform:translateY(-1px)}
+  html.desk .ch:hover,html.desk .lang:hover{transform:translateY(-2px)}
+  html.desk .ch:focus-visible,html.desk .lang:focus-visible,html.desk .big:focus-visible,html.desk .iconbtn:focus-visible{outline:4px solid #2a8fd0;outline-offset:3px}
+  html.desk .big:focus-visible{transform:scale(1.04)}
+  @media (min-width:700px) and (orientation:landscape){
+    html.desk .ov{gap:min(1.2vh,10px)}
+    html.desk .title{font-size:clamp(30px,6vh,52px)}
+    html.desk .how{font-size:15px;max-width:760px;padding:6px 14px}
+    html.desk .ctrl{font-size:14px;max-width:760px;padding:4px 12px}
+    html.desk .big{padding:9px 30px}
+    html.desk .ch{width:clamp(96px,14vh,120px)}
+    html.desk .foe{width:84px;font-size:12px}html.desk .foe canvas{width:46px;height:46px}
+    html.desk .foes{max-width:900px;flex-wrap:nowrap}
+    html.desk .label{font-size:17px}
+  }
 </style>
 <!--pwa--><link rel="manifest" href="manifests/fishing.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/fishing-192.png"><meta name="apple-mobile-web-app-title" content="דיג"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/fishing-apple-180.png"><script src="pwa.js" data-app="fishing" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -105,6 +124,7 @@
   <div class="bestline" id="bestLine"></div>
   <div class="how" id="tHow"></div>
   <div class="ctrl" id="tCtrl"></div>
+  <div class="ctrl deskonly" id="tKeys"></div>
   <div class="label" id="tWatch"></div>
   <div class="foes" id="foes"></div>
 </section>
@@ -323,6 +343,7 @@ const T={
  he:{dir:"rtl",title:"הדיג של אנאבל",
    how:"החתול הגדול שלך יצא לדוג בסירה! החכה מתנדנדת ימינה ושמאלה – הקישי בדיוק בזמן כדי לשלוח את הקרס למטה. דגים גדולים שווים יותר, אבל כבדים לגרירה. הגיעי ליעד לפני שהזמן נגמר! ⏰ שעון מעורר נותן עוד זמן.",
    ctrl:"👆 הקשה = שליחת הקרס · במחשב: מקש רווח לשליחה, מקש P להפסקה",
+   keys:"⌨️ רווח / Enter / ↓ / S / לחיצה בעכבר – שליחת הקרס · ←→ – בחירת דמות · Esc / P – הפסקה · M – שקט",
    play:"▶ יוצאים לדוג!",choose:"מי דג היום?",watch:"מה יש במים:",best:"שיא",paused:"הפסקה",resume:"▶ המשך",restart:"🔁 מההתחלה",menu:"🏠 תפריט",
    go:"שלב {n}: אספי {t} ⭐",ldT:"כל הכבוד, אנאבל!",ldS:"עברת את שלב {n}! 🎣",next:"▶ לשלב הבא",
    overT:"אוי, נגמר הזמן! ⏰",overS:"אספת {s} מתוך {t} ⭐. בואי ננסה שוב!",again:"🔁 נסי שוב",win:"כל הכבוד, אנאבל!",winS:"סיימת את כל 5 השלבים! ניקוד: {s} ⭐",rec:"שיא חדש! 🏆",
@@ -336,6 +357,7 @@ const T={
  fr:{dir:"ltr",title:"La pêche d'Annabelle",
    how:"Ton grand félin part pêcher en bateau ! La ligne se balance à gauche et à droite : touche l'écran au bon moment pour lancer l'hameçon. Les gros poissons valent plus, mais ils sont lourds à remonter. Atteins l'objectif avant la fin du temps ! ⏰ Le réveil donne du temps en plus.",
    ctrl:"👆 Touche = lancer l'hameçon · Ordinateur : Espace ou ↓ · P = pause",
+   keys:"⌨️ Espace / Entrée / ↓ / S / clic – lancer · ←→ – personnage · Échap / P – pause · M – muet",
    play:"▶ On va pêcher !",choose:"Qui pêche aujourd'hui ?",watch:"Dans l'eau :",best:"Record",paused:"Pause",resume:"▶ Continuer",restart:"🔁 Recommencer",menu:"🏠 Menu",
    go:"Niveau {n} : attrape {t} ⭐",ldT:"Bravo, Annabelle !",ldS:"Niveau {n} réussi ! 🎣",next:"▶ Niveau suivant",
    overT:"Oh non, plus de temps ! ⏰",overS:"Tu as {s} sur {t} ⭐. On réessaie ?",again:"🔁 Réessaie",win:"Bravo, Annabelle !",winS:"Tu as fini les 5 niveaux ! Score : {s} ⭐",rec:"Nouveau record ! 🏆",
@@ -349,6 +371,7 @@ const T={
  en:{dir:"ltr",title:"Annabelle's Fishing Trip",
    how:"Your big cat is going fishing in a boat! The line swings left and right – tap at just the right moment to send the hook down. Big fish are worth more, but they're heavy to pull up. Reach the goal before time runs out! ⏰ The alarm clock gives extra time.",
    ctrl:"👆 Tap = drop the hook · Computer: Space or ↓ · P = pause",
+   keys:"⌨️ Space / Enter / ↓ / S / click – drop the hook · ←→ – pick character · Esc / P – pause · M – mute",
    play:"▶ Let's go fishing!",choose:"Who's fishing today?",watch:"In the water:",best:"Best",paused:"Paused",resume:"▶ Resume",restart:"🔁 Restart",menu:"🏠 Menu",
    go:"Level {n}: catch {t} ⭐",ldT:"Well done, Annabelle!",ldS:"Level {n} complete! 🎣",next:"▶ Next level",
    overT:"Oh no, time's up! ⏰",overS:"You got {s} of {t} ⭐. Let's try again!",again:"🔁 Try again",win:"Well done, Annabelle!",winS:"You finished all 5 levels! Score: {s} ⭐",rec:"New record! 🏆",
@@ -487,7 +510,7 @@ function retry(){ stopConfetti(); total=startTotal; startLevel(); }
 function toMenu(){ state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); renderMenu(); show("menu"); }
 function pause(){ if(state==="play"){ prevState=state; state="paused"; show("pause"); } }
 function resume(){ if(state==="paused"){ state=prevState; show(null); } }
-function show(id){ ["menu","pause","over","lvlDone"].forEach(k=>$(k).classList.toggle("show",k===id)); }
+function show(id){ ["menu","pause","over","lvlDone"].forEach(k=>$(k).classList.toggle("show",k===id));  cv.classList.toggle("play",id===null); }
 function addFloat(x,y,txt,col){ floats.push({x,y,txt,col,life:1.1,max:1.1}); }
 
 function update(dt){
@@ -648,7 +671,7 @@ function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto";
   el.style.top=Math.max(hud+el.offsetHeight/2,Math.min(SURF-U*1.9,SURF-8-el.offsetHeight/2))+"px";
   el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1500); }
 function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
-  $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("tCtrl").textContent=t.ctrl; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch;
+  $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("tCtrl").textContent=t.ctrl; $("tKeys").textContent=t.keys; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch;
   $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu; $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu; $("nextBtn").textContent=t.next; renderMenu(); }
 function renderMenu(){ const t=T[lang], best=LS.best();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
@@ -674,13 +697,22 @@ $("muteBtn").onclick=$("muteBtn2").onclick=()=>{ muted=!muted; localStorage.setI
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) pause(); });
 
 /* ============ INPUT ============ */
+function typing(e){ const t=e.target; return !!(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable)); }
+function cycleHero(d){ const i=CHAR_KEYS.indexOf(hero); const n=CHAR_KEYS[(i+d+CHAR_KEYS.length)%CHAR_KEYS.length]; hero=n; localStorage.setItem("annabelle-fishing-char",hero); SFX.click(); renderMenu(); }
 addEventListener("keydown",e=>{
+  if(typing(e)||e.ctrlKey||e.metaKey||e.altKey) return;
   const c=e.code;
-  if(c==="Space"||c==="ArrowDown"||c==="KeyS"){ e.preventDefault(); ac(); if(e.repeat) return;
-    if(state==="menu"){ startGame(); return; } if(state==="over"){ $("againBtn").click(); return; } if(state==="lvl"){ $("nextBtn").click(); return; } drop(); return; }
-  if(c==="KeyP"||c==="Escape"){ if(state==="paused") resume(); else pause(); }
-  if(c==="Enter"){ e.preventDefault(); ac(); if(state==="menu") startGame(); else if(state==="over") $("againBtn").click(); else if(state==="lvl") $("nextBtn").click(); }
+  const btn=e.target&&e.target.tagName==="BUTTON";
+  // keyboard-focused button on a menu/dialog: let Enter/Space activate it natively
+  if(btn&&state!=="play"&&(c==="Enter"||c==="Space")&&e.target.matches(":focus-visible")){ ac(); return; }
+  if(c==="KeyM"){ $("muteBtn").click(); return; }
+  if(c==="KeyP"||c==="Escape"){ e.preventDefault(); if(e.repeat) return; if(state==="paused") resume(); else if(state==="play") pause(); else if(c==="Escape"&&(state==="over"||state==="lvl")) toMenu(); return; }
+  if((c==="ArrowLeft"||c==="ArrowRight"||c==="KeyA"||c==="KeyD")&&state==="menu"&&!(btn&&e.target.matches(":focus-visible"))){ e.preventDefault(); const rtl=T[lang].dir==="rtl"; cycleHero((c==="ArrowRight"||c==="KeyD")!==rtl?1:-1); return; }
+  if(c==="Space"||c==="ArrowDown"||c==="KeyS"||c==="Enter"||c==="NumpadEnter"){ e.preventDefault(); ac(); if(e.repeat) return;
+    if(state==="paused"){ if(c==="Enter"||c==="Space") resume(); return; }
+    if(state==="menu"){ startGame(); return; } if(state==="over"){ $("againBtn").click(); return; } if(state==="lvl"){ $("nextBtn").click(); return; } if(c==="Enter"||c==="NumpadEnter"){ if(state==="play") drop(); return; } drop(); return; }
 });
+addEventListener("blur",()=>{ if(state==="play") pause(); });
 cv.addEventListener("pointerdown",e=>{ ac(); if(state!=="play") return; e.preventDefault(); drop(); });
 document.addEventListener("touchmove",e=>{ if(!e.target.closest(".ov")) e.preventDefault(); },{passive:false});
 document.addEventListener("touchstart",e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});

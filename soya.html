@@ -119,8 +119,21 @@ body.sleeping #night{opacity:.55}
 
 @media (max-width:400px){.act .l{font-size:11px}#bar{gap:4px;padding-left:4px;padding-right:4px}}
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){.panel{overflow-y:auto;align-items:safe center;-webkit-overflow-scrolling:touch}.panel .card{max-height:none}#start{overflow-y:auto!important;justify-content:flex-start!important}#start>*{flex-shrink:0}#prev{max-height:30dvh}}
+.kdesk{display:none}
+html.desk .kdesk{display:block}
+html.desk #soya{cursor:grab}html.desk #soya:active{cursor:grabbing}
+html.desk .act{max-width:124px;height:clamp(56px,9dvh,72px);position:relative}
+html.desk .act .l{font-size:13px}
+html.desk .act::after{content:attr(data-k);position:absolute;top:3px;inset-inline-start:7px;font-size:11px;font-weight:900;opacity:.45}
+html.desk .iconbtn:hover{transform:translateY(-1px)}
+html.desk .act:hover,html.desk .wi:hover,html.desk .lang:hover{transform:translateY(-2px)}
+html.desk .act:focus-visible,html.desk .wi:focus-visible,html.desk .big:focus-visible,html.desk .iconbtn:focus-visible,html.desk .lang:focus-visible,html.desk #toyRow button:focus-visible{outline:4px solid #2a8fd0;outline-offset:2px;z-index:5}
+html.desk #start .btns{flex-direction:row;flex-wrap:wrap;justify-content:center}
+@media (min-width:700px) and (orientation:landscape){html.desk #prev{height:clamp(110px,24dvh,260px)}html.desk #start{gap:min(1.2dvh,10px)}html.desk #start h1{font-size:clamp(34px,6dvh,56px)}}
+#keyTip{font-size:13px;font-weight:700;opacity:.8;max-width:760px}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/soya.webmanifest"><meta name="apple-mobile-web-app-title" content="סויה"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/soya-apple-180.png"><script src="pwa.js" data-app="soya" data-slots='[["#langs", "after"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="" data-relabel="#homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
 </head>
 <body>
 <div id="room"></div>
@@ -197,6 +210,7 @@ body.sleeping #night{opacity:.55}
     <button class="big pu" id="goNoCam"></button>
   </div>
   <div id="tipBox"></div>
+  <div id="keyTip" class="kdesk"></div>
 </section>
 <script>
 /* ============================================================
@@ -618,6 +632,7 @@ stage.addEventListener('pointerdown',e=>{ ac(); ptrs.set(e.pointerId,{x:e.client
   if(ptrs.size>=2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.max(20,dist(a,b)),s:S.pinch}; cancelTouch(); return; }
   if(laser.on){ laser.x=e.clientX; laser.y=e.clientY; laser.moved=performance.now(); laser.until=performance.now()+25000; return; }
   if(e.target.closest('#soya')){ touch={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),d:0,mode:null,acc:0,ox:S.x-e.clientX,oy:S.y-e.clientY,was:S.state};
+    if(e.pointerType==='mouse'&&e.button===2){ touch.mode='held'; pickUp(); return; }
     touch.hold=setTimeout(()=>{ if(touch&&!touch.mode&&touch.d<14){ touch.mode='held'; pickUp(); } },330); } });
 stage.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; const p=ptrs.get(e.pointerId); const d=Math.hypot(e.clientX-p.x,e.clientY-p.y); p.x=e.clientX; p.y=e.clientY;
   if(pinch&&ptrs.size>=2){ const [a,b]=[...ptrs.values()]; S.pinch=clamp(pinch.s*dist(a,b)/pinch.d,.5,2.2); return; }
@@ -853,6 +868,58 @@ function playToy(k){ if(S.state==='sleep') wake(true); const tok=interrupt(); P.
     if(!ok()) return; clearInterval(iv); bump('happy',15); const [hx,hy]=headXY(); fx('+15💖',hx,hy-30,0); fx('⭐',hx-30,hy-10); fx('⭐',hx+30,hy-10); try{SFX.unlock();}catch(e){}
     setPose('sit'); setFace('happy'); say(x().toyEnd,1800); save(); await wait(900); o.el.remove(); extra=extra.filter(q=>q!==o); if(ok()) idle(3000); })(); }
 window.__so={playToy,goal:()=>P.goal};
+})();
+</script>
+
+<script>
+/* ---------------- laptop: keyboard + mouse ---------------- */
+(()=>{
+const KX={he:'⌨️ ←↑↓→ / WASD – הליכה · רווח – ללטף · 1–8 – פעולות · E – ליטוף ארוך · F – תמונה · +/- – זום · M – שקט · Esc – חזרה · קליק ימני על סויה – להרים',
+ fr:'⌨️ ←↑↓→ / WASD – marcher · Espace – caresser · 1–8 – actions · E – câlin · F – photo · +/- – zoom · M – muet · Échap – retour · clic droit sur Soya – le porter',
+ en:'⌨️ ←↑↓→ / WASD – walk · Space – pet · 1–8 – actions · E – long cuddle · F – photo · +/- – zoom · M – mute · Esc – back · right-click Soya – pick up'};
+const ACTS=['feed','drink','play','laser','sleep','trick','toys','dress'];
+document.querySelectorAll('.act').forEach(b=>{ const i=ACTS.indexOf(b.dataset.a); if(i>=0) b.dataset.k=i+1; });
+const al=applyLang; applyLang=function(){ al.apply(this,arguments); $('keyTip').textContent=KX[lang]||KX.he;
+  document.querySelectorAll('.act').forEach(b=>{ b.title=(b.querySelector('.l').textContent||'')+' ['+b.dataset.k+']'; }); };
+applyLang();
+const held=new Set();
+const MOVE={ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0],ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1]};
+function panelOpen(){ return document.querySelector('.panel.show'); }
+function startVisible(){ return !$('start').classList.contains('hide'); }
+function typing(e){ const t=e.target; return !!(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)); }
+// focus first control of a freshly opened panel (keyboard users)
+new MutationObserver(ms=>{ ms.forEach(m=>{ const el=m.target; if(el.classList&&el.classList.contains('panel')&&el.classList.contains('show')&&!m.oldValue.includes('show')){ const b=el.querySelector('button:not(.lock),a[href]'); if(b) setTimeout(()=>b.focus({preventScroll:true}),30); } }); })
+  .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class'],attributeOldValue:true});
+function moving(){ return running&&!panelOpen()&&!startVisible()&&held.size&&['idle','walk','rest','chase'].includes(S.state); }
+let wasMoving=false;
+(function loop(){
+  if(moving()){ let dx=0,dy=0; held.forEach(c=>{ dx+=MOVE[c][0]; dy+=MOVE[c][1]; });
+    if(dx||dy){ if(!wasMoving){ interrupt(); wasMoving=true; } if(dx) S.dir=dx>0?1:-1; const k=BASE*.5; goTo(S.x+dx*k, S.y+dy*k*.5, 1.5); } }
+  else if(wasMoving){ wasMoving=false; if(S.state==='walk'&&!S.cb){ S.tx=S.x; S.ty=S.y; } }
+  requestAnimationFrame(loop); })();
+function clearKeys(){ held.clear(); }
+addEventListener('blur',clearKeys); document.addEventListener('visibilitychange',clearKeys);
+addEventListener('keyup',e=>{ held.delete(e.code); });
+function longPet(){ if(!running||panelOpen()||S.state==='sleep'||S.state==='held') return; interrupt(); startPet(); let n=0; const iv=setInterval(()=>{ if(S.state!=='pet'||++n>6){ clearInterval(iv); if(S.state==='pet'){ purrStop(); setFace('happy'); setTimeout(()=>{ if(S.state==='idle') setFace('open'); },900); idle(1800); } return; } stroke(); },280); }
+addEventListener('keydown',e=>{
+  if(typing(e)||e.ctrlKey||e.metaKey||e.altKey) return;
+  const c=e.code, onBtn=e.target&&e.target.tagName==='BUTTON'&&e.target.matches(':focus-visible');
+  if(c==='Escape'){ e.preventDefault(); if(e.repeat) return;
+    const p=panelOpen(); if(p){ const cl=p.querySelector('#wardClose,#toysClose,#photoClose'); if(cl) cl.click(); else p.classList.remove('show'); return; }
+    if(running&&!startVisible()) $('homeBtn').click(); return; }
+  if(c==='KeyM'){ $('muteBtn').click(); return; }
+  if(startVisible()){ if((c==='Enter'||c==='NumpadEnter')&&!onBtn){ e.preventDefault(); $('goNoCam').click(); } return; }
+  if(panelOpen()||!running) return;
+  if(MOVE[c]){ e.preventDefault(); held.add(c); return; }
+  const d=/^(Digit|Numpad)([1-8])$/.exec(c); if(d){ e.preventDefault(); if(!e.repeat){ const b=document.querySelector('.act[data-a="'+ACTS[d[2]-1]+'"]'); if(b) b.click(); } return; }
+  if(onBtn&&(c==='Space'||c==='Enter')) return;
+  if(c==='Space'||c==='Enter'||c==='NumpadEnter'){ e.preventDefault(); if(!e.repeat) tapSoya(); return; }
+  if(c==='KeyE'){ e.preventDefault(); if(!e.repeat) longPet(); return; }
+  if(c==='KeyF'){ e.preventDefault(); if(!e.repeat) $('photoBtn').click(); return; }
+  if(c==='Equal'||c==='NumpadAdd'||c==='Minus'||c==='NumpadSubtract'){ e.preventDefault(); const up=(c==='Equal'||c==='NumpadAdd'); S.pinch=clamp(S.pinch*(up?1.12:1/1.12),.5,2.2); return; }
+});
+// mouse hover moves the laser dot (no button needed)
+$('stage').addEventListener('pointermove',e=>{ if(e.pointerType==='mouse'&&e.buttons===0&&laser.on){ laser.x=e.clientX; laser.y=e.clientY; laser.moved=performance.now(); laser.until=performance.now()+25000; } });
 })();
 </script>
 
