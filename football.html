@@ -120,10 +120,40 @@ const PRE={
 let AC=null,muted=ls.get("annabelle-muted")==="1";
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
 function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(a.destination);o.start(n);o.stop(n+d)}
+function noise(d,f,type="bandpass",v=.2,f2,delay=0,q=1){ // filtered white noise burst: swishes, thuds, claps, crowd
+ if(muted)return;const a=ac();if(!a)return;const n=a.currentTime+delay,len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),dat=buf.getChannelData(0);
+ for(let i=0;i<len;i++)dat[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=buf;const fl=a.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,n);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,n+d);fl.Q.value=q;
+ const g=a.createGain();g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(v,n+Math.min(.02,d/4));g.gain.exponentialRampToValueAtTime(.0008,n+d);s.connect(fl).connect(g).connect(a.destination);s.start(n)}
 const SFX={click:()=>tone(560,.08,"triangle",.16),kick:()=>{tone(180,.12,"square",.2,70);tone(900,.05,"triangle",.1)},bounce:()=>tone(300,.06,"sine",.12,200),
  whistle:()=>{tone(2200,.18,"sine",.12,2500);tone(2400,.3,"sine",.12,2200,.2)},goal:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.25,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6)},
  sad:()=>[392,330,262].forEach((f,i)=>tone(f,.28,"triangle",.18,null,i*.16)),meow:()=>{tone(700,.12,"sawtooth",.07,1100);tone(1100,.25,"sawtooth",.07,500,.12)},
- boing:()=>tone(300,.28,"sine",.22,900),save:()=>{tone(300,.1,"square",.15,500);tone(500,.15,"square",.15,300,.1)},silly:()=>{tone(800,.1,"triangle",.14,1200);tone(1200,.1,"triangle",.14,600,.1);tone(600,.15,"triangle",.14,900,.2)}};
+ boing:()=>tone(300,.28,"sine",.22,900),save:()=>{tone(300,.1,"square",.15,500);tone(500,.15,"square",.15,300,.1)},silly:()=>{tone(800,.1,"triangle",.14,1200);tone(1200,.1,"triangle",.14,600,.1);tone(600,.15,"triangle",.14,900,.2)},
+ /* ball + pitch */
+ kickPow:(sp)=>{const p=Math.min(1,sp/800);tone(150+80*(1-p),.1+.08*p,"square",.12+.16*p,60);noise(.07+.06*p,1400+1200*p,"bandpass",.14+.2*p,500,0,.8);if(p>.6)tone(1100,.05,"triangle",.08)},
+ tap:()=>{noise(.05,900,"lowpass",.11,300);tone(220,.05,"sine",.08,140)},                       // soft dribble touch
+ thump:(sp)=>{const p=Math.min(1,sp/700);if(p<.12)return;tone(130,.1,"sine",.07+.14*p,70);noise(.06,500,"lowpass",.07+.1*p,200)},
+ post:()=>{[1245,1870,2490].forEach((f,i)=>tone(f,.5-.1*i,"triangle",.14-.03*i,f*.995));noise(.04,3000,"highpass",.12)},   // metallic clang
+ net:()=>{noise(.5,2800,"bandpass",.2,700,0,.5);noise(.35,400,"lowpass",.18,150,.03);tone(110,.25,"sine",.12,70)},         // net swish + soft thud
+ step:()=>{noise(.035,650+Math.random()*250,"lowpass",.045,250)},
+ whoosh:()=>noise(.28,500,"bandpass",.16,2600,0,.7),
+ dash:()=>{noise(.3,400,"bandpass",.2,3000,0,.6);tone(180,.2,"sawtooth",.05,520)},
+ /* crowd */
+ cheer:()=>{noise(1.5,800,"bandpass",.26,1500,0,.5);[0,.12,.26].forEach((d,i)=>tone(520+i*140,.5,"triangle",.07,900+i*160,d));[1800,2100,2600].forEach((f,i)=>tone(f,.12,"sine",.05,f*1.3,.1+i*.19))},
+ aww:()=>{noise(1.1,600,"bandpass",.18,300,0,.6);tone(520,.9,"triangle",.1,260);tone(390,.9,"triangle",.07,200,.05)},
+ ooh:()=>{noise(.9,700,"bandpass",.17,1100,0,.7);tone(330,.8,"sine",.1,540);tone(440,.8,"sine",.06,720,.05)},
+ /* referee + clock */
+ tick:()=>tone(1500,.04,"square",.07),
+ beepLow:()=>tone(880,.12,"square",.1),
+ final:()=>{[0,.45,.9].forEach(d=>{tone(2200,.28,"sine",.15,2350,d);tone(2330,.28,"sine",.1,2200,d)});noise(.9,2500,"bandpass",.04,3000,0,.5)},
+ /* silly moments */
+ flutter:()=>{for(let i=0;i<7;i++)tone(1700+Math.random()*500,.05,"sine",.05,2400,i*.07)},
+ snore:()=>{tone(95,.55,"sawtooth",.06,70);tone(120,.45,"sawtooth",.05,90,.8);noise(.4,300,"lowpass",.05,150,.05)},
+ sneeze:()=>{noise(.1,300,"bandpass",.04,200);noise(.15,2200,"bandpass",.2,900,.2,.6);tone(400,.2,"sawtooth",.1,160,.2)},
+ huh:()=>{tone(300,.12,"triangle",.14,420);tone(430,.18,"triangle",.14,330,.14)},
+ /* keeper */
+ dive:()=>{noise(.3,700,"bandpass",.12,2000,0,.7);tone(140,.15,"sine",.1,90,.28)},
+ glove:()=>{noise(.07,1800,"bandpass",.3,1200,0,1.2);tone(210,.12,"square",.14,110)}};
+function sillySfx(kind){({fly:SFX.flutter,sleep:SFX.snore,sneeze:SFX.sneeze,lost:SFX.huh})[kind]?.()||SFX.silly()}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 /* ambient crowd murmur (band-passed noise) that swells on a goal */
 let crowdNode=null;
@@ -350,7 +380,7 @@ function kickBall(k,power,isCpu){
   const bx=b.x,by=b.y;b.x=Math.max(PX0+b.r+1,Math.min(PX1-b.r-1,b.x));if(!inMouth)b.y=Math.max(PY0+b.r+1,Math.min(PY1-b.r-1,b.y));
   const cdx=b.x-bx,cdy=b.y-by;if(cdx||cdy){k.x-=cdx*1.1;k.y-=cdy*1.1;clampK(k)}
  }
- b.stuckT=0;SFX.kick();
+ b.stuckT=0;{const sp2=Math.hypot(b.vx,b.vy);sp2<330?SFX.tap():SFX.kickPow(sp2)}
 }
 // safety net: if the ball lies still next to a wall/corner while a kitten is close, the "ref" flicks it back into play
 function unstickBall(dt){
@@ -375,6 +405,8 @@ function updMatch(dt){
  if(ix||iy){const l=Math.hypot(ix,iy);tx=ix/l*spd;ty=iy/l*spd;ptr=null}
  else if(ptr){const dx=ptr.x-me.x,dy=ptr.y-me.y,d=Math.hypot(dx,dy);if(d>6){const s=Math.min(spd,d*9);tx=dx/d*s;ty=dy/d*s}}
  me.cool-=dt;if(me.dash>0)me.dash-=dt;
+ g.stepT=(g.stepT||0)-dt;if(g.state!=="goal"&&Math.hypot(me.vx,me.vy)>70&&g.stepT<=0){g.stepT=me.dash>0?.1:.17;SFX.step()}
+ if(g.state==="play"){const left=Math.ceil(g.time);if(left<=10&&left>0&&left!==g.lastSec){g.lastSec=left;left<=3?SFX.beepLow():SFX.tick()}}
  const k=1-Math.exp(-12*dt);me.vx+=(tx*(me.dash>0?1.5:1)-me.vx)*k;me.vy+=(ty*(me.dash>0?1.5:1)-me.vy)*k;
  me.x+=me.vx*dt;me.y+=me.vy*dt;clampK(me);if(Math.hypot(me.vx,me.vy)>20)me.ang=Math.atan2(me.vy,me.vx);me.tilt=Math.sin(performance.now()/90)*Math.min(.25,Math.hypot(me.vx,me.vy)/1200);
  // cpu
@@ -397,20 +429,20 @@ function updMatch(dt){
 }
 function scored(who){
  const g=G;g.s[who]++;g.state="goal";g.st=0;updHud();
- crowdReact("goal",who);crowdSwell();
- if(who===0){SFX.goal();toast(pick(t("goal")),1800);confetti();SFX.meow()}else{SFX.sad();toast(pick(t("conceded")),1800)}
+ crowdReact("goal",who);crowdSwell();SFX.net();
+ if(who===0){SFX.goal();SFX.cheer();toast(pick(t("goal")),1800);confetti();SFX.meow()}else{SFX.sad();setTimeout(SFX.aww,250);toast(pick(t("conceded")),1800)}
 }
 function moveBall(dt,frozenGoal){
  const b=G.ball;{const sp=Math.hypot(b.vx,b.vy);b.rot=(b.rot||0)+(b.vx>=0?1:-1)*sp*dt/b.r*.8;(b.trail=b.trail||[]).push({x:b.x,y:b.y,s:sp});if(b.trail.length>7)b.trail.shift()}
  b.x+=b.vx*dt;b.y+=b.vy*dt;const f=Math.pow(.42,dt);b.vx*=f;b.vy*=f;
  const inMouthX=b.x>GX0&&b.x<GX1;
  // side walls
- if(b.x<PX0+b.r&&!(b.y<PY0||b.y>PY1)){b.x=PX0+b.r;b.vx=Math.abs(b.vx)*.8;SFX.bounce()}
- if(b.x>PX1-b.r&&!(b.y<PY0||b.y>PY1)){b.x=PX1-b.r;b.vx=-Math.abs(b.vx)*.8;SFX.bounce()}
+ if(b.x<PX0+b.r&&!(b.y<PY0||b.y>PY1)){b.x=PX0+b.r;b.vx=Math.abs(b.vx)*.8;SFX.thump(Math.abs(b.vx))}
+ if(b.x>PX1-b.r&&!(b.y<PY0||b.y>PY1)){b.x=PX1-b.r;b.vx=-Math.abs(b.vx)*.8;SFX.thump(Math.abs(b.vx))}
  // top / bottom walls (except goal mouths); inside goals bounce off back & posts
  if(!inMouthX||(b.y>PY0-GD&&b.y<PY1+GD)===false){}
- if(b.y<PY0+b.r&&!inMouthX){b.y=PY0+b.r;b.vy=Math.abs(b.vy)*.8;SFX.bounce()}
- if(b.y>PY1-b.r&&!inMouthX){b.y=PY1-b.r;b.vy=-Math.abs(b.vy)*.8;SFX.bounce()}
+ if(b.y<PY0+b.r&&!inMouthX){b.y=PY0+b.r;b.vy=Math.abs(b.vy)*.8;SFX.thump(Math.abs(b.vy))}
+ if(b.y>PY1-b.r&&!inMouthX){b.y=PY1-b.r;b.vy=-Math.abs(b.vy)*.8;SFX.thump(Math.abs(b.vy))}
  if(b.y<PY0){ // inside top goal
   if(b.y<PY0-GD+b.r){b.y=PY0-GD+b.r;b.vy=Math.abs(b.vy)*.3}
   if(b.x<GX0+b.r){b.x=GX0+b.r;b.vx=Math.abs(b.vx)*.3}if(b.x>GX1-b.r){b.x=GX1-b.r;b.vx=-Math.abs(b.vx)*.3}
@@ -420,14 +452,14 @@ function moveBall(dt,frozenGoal){
   if(b.x<GX0+b.r){b.x=GX0+b.r;b.vx=Math.abs(b.vx)*.3}if(b.x>GX1-b.r){b.x=GX1-b.r;b.vx=-Math.abs(b.vx)*.3}
  }
  // post bounce: ball hitting the posts' tops from the pitch side near the mouth edge
- for(const px of [GX0,GX1])for(const py of [PY0,PY1]){const dx=b.x-px,dy=b.y-py,d=Math.hypot(dx,dy);if(d<b.r+4){const nx=dx/d,ny=dy/d,vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.8*vn*nx;b.vy-=1.8*vn*ny;b.x=px+nx*(b.r+4);b.y=py+ny*(b.r+4);SFX.bounce()}}}
+ for(const px of [GX0,GX1])for(const py of [PY0,PY1]){const dx=b.x-px,dy=b.y-py,d=Math.hypot(dx,dy);if(d<b.r+4){const nx=dx/d,ny=dy/d,vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.8*vn*nx;b.vy-=1.8*vn*ny;b.x=px+nx*(b.r+4);b.y=py+ny*(b.r+4);SFX.post()}}}
 }
 function cpuThink(dt){
  const g=G,c=g.cpu,b=g.ball,P=g.P;
  if(g.state==="goal"||g.state==="kick"){c.vx*=.9;c.vy*=.9;return}
  c.sillyT-=dt;
  if(c.silly>0){c.silly-=dt;if(c.silly<=0){c.sleep=false;c.sillyKind=""}}
- else if(c.sillyT<=0){c.sillyT=rr(P.sillyEvery);c.silly=P.sillyLen;c.sillyKind=pick(["fly","sleep","lost","sneeze"]);c.sleep=c.sillyKind==="sleep";SFX.silly();toast(t("silly")[["fly","sleep","lost","sneeze"].indexOf(c.sillyKind)],1700)}
+ else if(c.sillyT<=0){c.sillyT=rr(P.sillyEvery);c.silly=P.sillyLen;c.sillyKind=pick(["fly","sleep","lost","sneeze"]);c.sleep=c.sillyKind==="sleep";sillySfx(c.sillyKind);toast(t("silly")[["fly","sleep","lost","sneeze"].indexOf(c.sillyKind)],1700)}
  let tx,ty,sp=P.cpuSpeed;
  if(c.silly>0){
   if(c.sillyKind==="sleep"){c.vx*=.8;c.vy*=.8;c.x+=c.vx*dt;c.y+=c.vy*dt;return}
@@ -453,7 +485,7 @@ function cpuThink(dt){
  c.x+=c.vx*dt;c.y+=c.vy*dt;clampK(c);if(Math.hypot(c.vx,c.vy)>20)c.ang=Math.atan2(c.vy,c.vx);
 }
 function endMatch(){
- const g=G;if(g.over)return;g.over=true;SFX.whistle();
+ const g=G;if(g.over)return;g.over=true;SFX.final();
  const a=g.s[0],b=g.s[1],w=a>b?"win":a<b?"lose":"draw";
  $("overT").textContent=t(w==="win"?"winT":w==="lose"?"loseT":"drawT");$("overS").textContent="🧡 "+a+" : "+b+" 🩶";$("overD").textContent=w==="win"?"🦁🏆🦁":"";
  const best=+ls.get("annabelle-football-best")||0;if(w==="win"&&a-b>best)ls.set("annabelle-football-best",a-b);
@@ -473,10 +505,10 @@ function shoot(ax,ay){
  // inaccuracy: the harder (normal) the bigger the error for fast taps; easy has a gentle error
  const ex=(Math.random()-.5)*2*P.aimError,ey=(Math.random()-.5)*2*P.aimError*.7;
  const tx=ax+ex,ty=ay+ey;
- g.ball.from={x:FW/2,y:690};g.ball.to={x:tx,y:ty};g.ball.t=0;g.state="fly";g.st=0;g.kitten.kick=.4;SFX.kick();
+ g.ball.from={x:FW/2,y:690};g.ball.to={x:tx,y:ty};g.ball.t=0;g.state="fly";g.st=0;g.kitten.kick=.4;SFX.kickPow(620);SFX.whoosh();setTimeout(()=>{if(G===g&&!g.keeper.silly)SFX.dive()},120);
  // keeper behaviour
  const k=g.keeper;k.silly=0;k.sleep=false;
- if(Math.random()<(P===PRE.easy?.28:.12)){k.silly=1;k.kind=pick(["fly","sneeze","sleep"]);k.sleep=k.kind==="sleep";k.tx=k.x;toast(t("keeperSilly")[["fly","sneeze","sleep"].indexOf(k.kind)],1500);SFX.silly()}
+ if(Math.random()<(P===PRE.easy?.28:.12)){k.silly=1;k.kind=pick(["fly","sneeze","sleep"]);k.sleep=k.kind==="sleep";k.tx=k.x;toast(t("keeperSilly")[["fly","sneeze","sleep"].indexOf(k.kind)],1500);sillySfx(k.kind)}
  else{ const guess=Math.random()<P.keeperGuess; const side=tx<FW/2?-1:1; k.tx=guess?tx:(FW/2+(-side)*(60+Math.random()*80)+(Math.random()-.5)*40); k.tx=Math.max(GOALM.x0+20,Math.min(GOALM.x1-20,k.tx)) }
  g.shotTarget={x:tx,y:ty};
 }
@@ -503,8 +535,8 @@ function resolvePen(){
  if(!inGoal)res="miss";
  else if(!k.silly&&Math.abs(k.x-tg.x)<g.P.keeperReach*(Math.abs(tg.y-205)<45?1:.8))res="save";
  else res="goal";
- g.state="res";g.st=0;g.res=res;g.log.push(res==="goal"?1:0);if(res==="goal"){crowdReact("goal",0);crowdSwell();g.s[0]++;SFX.goal();toast(pick(t("scored")),1500);confetti()}
- else if(res==="save"){crowdReact("oh");SFX.save();SFX.meow();toast(pick(t("save")),1500)}else{crowdReact("oh");SFX.sad();toast(pick(t("miss")),1500)}
+ g.state="res";g.st=0;g.res=res;g.log.push(res==="goal"?1:0);if(res==="goal"){crowdReact("goal",0);crowdSwell();g.s[0]++;SFX.net();SFX.goal();SFX.cheer();toast(pick(t("scored")),1500);confetti()}
+ else if(res==="save"){crowdReact("oh");SFX.glove();SFX.ooh();setTimeout(SFX.save,120);SFX.meow();toast(pick(t("save")),1500)}else{crowdReact("oh");(tg.y<GOALM.y0+8&&tg.y>GOALM.y0-40&&Math.abs(tg.x-FW/2)<GOALM.x1-FW/2+30)?SFX.post():SFX.whoosh();SFX.sad();setTimeout(SFX.aww,200);toast(pick(t("miss")),1500)}
  updHud();
 }
 function endPen(){
@@ -563,7 +595,7 @@ addEventListener("keydown",e=>{
  if($("over").classList.contains("on")){if((k==="Enter"||k===" ")&&!btn){e.preventDefault();$("againBtn").click()}return}
  if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key))e.preventDefault();
  if(KEYMAP[e.key]||"wasd".includes(k)&&k.length===1)keys[KEYMAP[e.key]||k]=true;
- if(k===" "&&!e.repeat){if(G.mode==="match"){if(G.me.cool<=0&&G.state==="play"){G.me.dash=.28;G.me.cool=.9;SFX.boing()}}else shoot(G.aim.x,G.aim.y)}
+ if(k===" "&&!e.repeat){if(G.mode==="match"){if(G.me.cool<=0&&G.state==="play"){G.me.dash=.28;G.me.cool=.9;SFX.dash()}}else shoot(G.aim.x,G.aim.y)}
 });
 addEventListener("keyup",e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;delete keys[KEYMAP[e.key]||k]});
 addEventListener("blur",()=>{for(const k in keys)delete keys[k];if(G&&!G.over&&!G.pause&&window.AnnabelleDesk&&AnnabelleDesk.isDesk())doPause(true)});
