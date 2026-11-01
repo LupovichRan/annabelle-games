@@ -53,7 +53,27 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 .pickwrap .card.in{animation:cin .3s}
 @keyframes cin{from{transform:translateX(-60px) rotate(-6deg);opacity:0}}
 
-/* self mode */
+/* friend-magic (hand the phone over) */
+.stage{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.bigemoji{font-size:clamp(80px,26vw,150px);line-height:1;filter:drop-shadow(0 6px 0 #0002)}
+.float{animation:flo 1.6s ease-in-out infinite alternate}@keyframes flo{to{transform:translateY(-14px) rotate(4deg)}}
+.pass{display:flex;align-items:center;gap:6px;font-size:clamp(54px,18vw,100px);direction:ltr}
+.pass .ph{animation:pass 1.4s ease-in-out infinite}@keyframes pass{0%{transform:translateX(-40px) rotate(-10deg)}50%{transform:translateX(40px) rotate(10deg)}100%{transform:translateX(-40px) rotate(-10deg)}}
+.pass .sp{animation:spk .7s infinite alternate;font-size:.5em}@keyframes spk{to{transform:scale(1.4) rotate(20deg);opacity:.5}}
+.curtain{position:fixed;inset:0;z-index:25;display:flex;pointer-events:none}
+.curtain i{flex:1;background:repeating-linear-gradient(90deg,#b0203f 0 18px,#8a1830 18px 36px);box-shadow:inset 0 0 40px #0006;transition:transform .7s cubic-bezier(.6,0,.2,1)}
+.curtain.open i:first-child{transform:translateX(-101%)}.curtain.open i:last-child{transform:translateX(101%)}
+.pickwrap .card.flip{animation:flipin .45s ease-out}
+@keyframes flipin{from{transform:perspective(700px) rotateY(90deg) scale(.8);opacity:0}}
+.pickwrap .card.bye{animation:flipout .22s ease-in forwards}
+@keyframes flipout{to{transform:perspective(700px) rotateY(-90deg) scale(.8);opacity:0}}
+.pickwrap .card.mark{box-shadow:0 0 0 6px #2fb36a,0 0 26px 8px #2fb36a88}
+.pickwrap .card .tag{position:absolute;top:-14px;right:12px;background:#2fb36a;color:#fff;border-radius:999px;padding:2px 12px;font-weight:800;font-size:15px;direction:rtl;animation:cin .2s}
+.pickwrap .card{cursor:pointer}
+#peek{min-height:44px;font-weight:900;font-size:26px;color:#8a4fd8;direction:ltr;background:#fff;border-radius:14px;padding:4px 14px;box-shadow:0 3px 0 #0002}
+.hatbtn{background:none;border:none;font-size:clamp(90px,28vw,160px);line-height:1;padding:0;touch-action:none;-webkit-touch-callout:none;animation:flo 1.4s ease-in-out infinite alternate}
+.sparks{position:fixed;inset:0;pointer-events:none;z-index:22}
+/* self mode (old) */
 #selfList{flex:1;width:100%;max-width:980px;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px;padding:8px 8px 12px;align-content:start}
 #selfList .card{cursor:pointer}
 #selfList .card.out{opacity:.28;filter:grayscale(1);transform:scale(.94)}
@@ -120,8 +140,9 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
   <div class="bar"><button class="iconbtn homeBtn" aria-label="menu">🏠</button><div class="pill" id="sInfo"></div><div style="width:48px"></div></div>
   <div class="say" id="sSay"></div>
   <div class="sub" id="sSub"></div>
-  <div id="selfList"></div>
-  <div class="foot"><button class="big y" id="sDone"></button></div>
+  <div class="dots" id="sDots"></div>
+  <div class="pickwrap" id="sWrap"></div>
+  <div class="yn" id="sBtns"></div>
 </section>
 
 <!-- RESULT -->
@@ -133,9 +154,13 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"קסם הקלפים",k_menu:"<kbd>1</kbd> המחשב מנחש<br><kbd>2</kbd> אני עושה את הקסם<br><kbd>R</kbd> שינוי טווח",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> כן<br><kbd>N</kbd> לא<br><kbd>←</kbd><kbd>→</kbd> כן / לא<br><kbd>Backspace</kbd> חזרה<br><kbd>Esc</kbd> תפריט",k_self:"<kbd>Tab</kbd> מעבר בין קלפים<br><kbd>Enter</kbd> הרחקה / החזרה<br><kbd>1</kbd>–<kbd>6</kbd> קלף לפי מספר<br><kbd>R</kbd> איפוס · <kbd>Esc</kbd> תפריט",
-  rules:["🎩 חשבי על מספר – ואני אנחש אותו!","🃏 המחשב מראה קלפים, ואת עונה אם המספר שלך נמצא בקלף.","🧠 או שאת עושה את הקסם בעצמך – והמחשב רק מגלה!"],
-  range:"עד איזה מספר?",comp:"🪄 המחשב מנחש",self:"🧠 אני עושה את הקסם",
+ he:{title:"קסם הקלפים",k_menu:"<kbd>1</kbd> המחשב מנחש<br><kbd>2</kbd> אני עושה את הקסם<br><kbd>R</kbd> שינוי טווח",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> כן<br><kbd>N</kbd> לא<br><kbd>←</kbd><kbd>→</kbd> כן / לא<br><kbd>Backspace</kbd> חזרה<br><kbd>Esc</kbd> תפריט",k_self:"<kbd>Space</kbd> מסמן / מבטל \"יש כאן\"<br><kbd>Enter</kbd> / <kbd>→</kbd> הבא<br><kbd>H</kbd> רמז לקוסם (בסוף)<br><kbd>Esc</kbd> תפריט",
+  rules:["🎩 חשבי על מספר – ואני אנחש אותו!","🃏 המחשב מראה קלפים, ואת עונה אם המספר שלך נמצא בקלף.","🎭 או קסם לחברה: חושבים על מספר, מעבירים את הטלפון – והמחשב רק מתפעל את הקלפים!"],
+  sThinkSay:"חשבי על מספר בין 1 ל־N",sThinkSub:"אל תגידי אותו לאף אחד! 🤫 אחר כך תני את הטלפון לחברה",sThinkBtn:"💭 חשבתי!",
+  sHandSay:"🎩 מעבירים את הטלפון לחברה!",sHandSub:"הקוסמת: לחצי כשאת מוכנה. 🤫 אל תראי את המסך למי שחשבה! (בסוף: לחיצה ארוכה על 🎩 = רמז)",sHandBtn:"🧙 אני הקוסמת!",
+  sAsk:"שאלי: המספר שלך נמצא בקלף? אם כן – הקישי על הקלף ✨",sMark:"✅ יש כאן",sNext:"הבא ▶",sLast:"סיום 🎩",
+  sFinSay:"🎩 הקסם הושלם!",sFinSub:"עכשיו הקוסמת מגלה את המספר… 😉",sPeek:"🤫 רמז לקוסמת: ",sNone:"אף קלף",sAgain:"🔁 עוד קסם",
+  range:"עד איזה מספר?",comp:"🪄 המחשב מנחש",self:"🎭 קסם לחברה",
   think:"חשבי על מספר בין 1 ל־N",thinkS:"אל תגידי לי אותו! 🤫",ready:"חשבתי! ▶",
   ask:"המספר שלך נמצא בקלף הזה?",yes:"כן ✅",no:"לא ❌",back:"◀ חזרה",card:"קלף",
   drum:"מנחש... 🥁",your:"המספר שלך הוא",wow:"נכון? 🎉",
@@ -146,9 +171,13 @@ const TX={
   sumSay:"עכשיו חברי את המספרים שבפינה השמאלית העליונה של הקלפים שנשארו",
   show:"גלי לי את המספר ✨",none:"לא נשאר אף קלף – המספר שלך הוא… 0? 😄 נסי מספר מ־1",
   tryOther:"נסי שוב",reveal:"המספר שלך הוא"},
- fr:{title:"Magie des cartes",k_menu:"<kbd>1</kbd> L'ordi devine<br><kbd>2</kbd> Je fais la magie<br><kbd>R</kbd> changer l'intervalle",k_comp:"<kbd>Y</kbd> / <kbd>Entrée</kbd> oui<br><kbd>N</kbd> non<br><kbd>←</kbd><kbd>→</kbd> oui / non<br><kbd>Retour</kbd> revenir<br><kbd>Échap</kbd> menu",k_self:"<kbd>Tab</kbd> changer de carte<br><kbd>Entrée</kbd> écarter / remettre<br><kbd>1</kbd>–<kbd>6</kbd> carte par numéro<br><kbd>R</kbd> remise à zéro · <kbd>Échap</kbd> menu",
-  rules:["🎩 Pense à un nombre – je le devine !","🃏 L'ordinateur montre des cartes et tu réponds si ton nombre y est.","🧠 Ou fais la magie toi-même – et l'ordinateur te révèle le résultat !"],
-  range:"Jusqu'à quel nombre ?",comp:"🪄 L'ordinateur devine",self:"🧠 Je fais la magie",
+ fr:{title:"Magie des cartes",k_menu:"<kbd>1</kbd> L'ordi devine<br><kbd>2</kbd> Je fais la magie<br><kbd>R</kbd> changer l'intervalle",k_comp:"<kbd>Y</kbd> / <kbd>Entrée</kbd> oui<br><kbd>N</kbd> non<br><kbd>←</kbd><kbd>→</kbd> oui / non<br><kbd>Retour</kbd> revenir<br><kbd>Échap</kbd> menu",k_self:"<kbd>Espace</kbd> marquer / démarquer « ici »<br><kbd>Entrée</kbd> / <kbd>→</kbd> suivante<br><kbd>H</kbd> indice pour le magicien (à la fin)<br><kbd>Échap</kbd> menu",
+  rules:["🎩 Pense à un nombre – je le devine !","🃏 L'ordinateur montre des cartes et tu réponds si ton nombre y est.","🎭 Ou fais de la magie à un ami : il pense à un nombre, tu passes le téléphone – l'ordinateur ne fait que montrer les cartes !"],
+  sThinkSay:"Pense à un nombre entre 1 et N",sThinkSub:"Ne le dis à personne ! 🤫 Puis passe le téléphone à ton amie",sThinkBtn:"💭 J'y suis !",
+  sHandSay:"🎩 On passe le téléphone à ton amie !",sHandSub:"La magicienne : appuie quand tu es prête. 🤫 Ne montre pas l'écran à celui qui a pensé ! (À la fin : appui long sur 🎩 = indice)",sHandBtn:"🧙 Je suis la magicienne !",
+  sAsk:"Demande : ton nombre est sur la carte ? Si oui – touche la carte ✨",sMark:"✅ Ici",sNext:"Suivante ▶",sLast:"Fin 🎩",
+  sFinSay:"🎩 La magie est faite !",sFinSub:"Maintenant la magicienne révèle le nombre… 😉",sPeek:"🤫 Indice : ",sNone:"aucune carte",sAgain:"🔁 Encore un tour",
+  range:"Jusqu'à quel nombre ?",comp:"🪄 L'ordinateur devine",self:"🎭 Magie pour un ami",
   think:"Pense à un nombre entre 1 et N",thinkS:"Ne me le dis pas ! 🤫",ready:"J'y suis ! ▶",
   ask:"Ton nombre est sur cette carte ?",yes:"Oui ✅",no:"Non ❌",back:"◀ Retour",card:"Carte",
   drum:"Je devine... 🥁",your:"Ton nombre est",wow:"C'est ça ? 🎉",
@@ -159,9 +188,13 @@ const TX={
   sumSay:"Maintenant additionne les nombres en haut à gauche des cartes gardées",
   show:"Révèle le nombre ✨",none:"Plus aucune carte – ton nombre est… 0 ? 😄 Choisis un nombre dès 1",
   tryOther:"Réessaie",reveal:"Ton nombre est"},
- en:{title:"Card Magic",k_menu:"<kbd>1</kbd> Computer guesses<br><kbd>2</kbd> I do the magic<br><kbd>R</kbd> change range",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> yes<br><kbd>N</kbd> no<br><kbd>←</kbd><kbd>→</kbd> yes / no<br><kbd>Backspace</kbd> back<br><kbd>Esc</kbd> menu",k_self:"<kbd>Tab</kbd> move between cards<br><kbd>Enter</kbd> put away / bring back<br><kbd>1</kbd>–<kbd>6</kbd> card by number<br><kbd>R</kbd> reset · <kbd>Esc</kbd> menu",
-  rules:["🎩 Think of a number – and I'll guess it!","🃏 The computer shows cards and you answer if your number is on the card.","🧠 Or do the magic yourself – the computer just reveals it!"],
-  range:"Up to which number?",comp:"🪄 Computer guesses",self:"🧠 I do the magic",
+ en:{title:"Card Magic",k_menu:"<kbd>1</kbd> Computer guesses<br><kbd>2</kbd> I do the magic<br><kbd>R</kbd> change range",k_comp:"<kbd>Y</kbd> / <kbd>Enter</kbd> yes<br><kbd>N</kbd> no<br><kbd>←</kbd><kbd>→</kbd> yes / no<br><kbd>Backspace</kbd> back<br><kbd>Esc</kbd> menu",k_self:"<kbd>Space</kbd> mark / unmark \"here\"<br><kbd>Enter</kbd> / <kbd>→</kbd> next<br><kbd>H</kbd> magician's peek (at the end)<br><kbd>Esc</kbd> menu",
+  rules:["🎩 Think of a number – and I'll guess it!","🃏 The computer shows cards and you answer if your number is on the card.","🎭 Or do magic for a friend: think of a number, hand over the phone – the computer just runs the cards!"],
+  sThinkSay:"Think of a number from 1 to N",sThinkSub:"Don't tell anyone! 🤫 Then hand the phone to your friend",sThinkBtn:"💭 I've got it!",
+  sHandSay:"🎩 Pass the phone to your friend!",sHandSub:"Magician: tap when you're ready. 🤫 Don't show the screen to who thought of the number! (At the end: long-press 🎩 = peek)",sHandBtn:"🧙 I'm the magician!",
+  sAsk:"Ask: is your number on this card? If yes – tap the card ✨",sMark:"✅ Here",sNext:"Next ▶",sLast:"Finish 🎩",
+  sFinSay:"🎩 The magic is done!",sFinSub:"Now the magician reveals the number… 😉",sPeek:"🤫 Peek: ",sNone:"no cards",sAgain:"🔁 Another trick",
+  range:"Up to which number?",comp:"🪄 Computer guesses",self:"🎭 Magic for a friend",
   think:"Think of a number from 1 to N",thinkS:"Don't tell me! 🤫",ready:"Got it! ▶",
   ask:"Is your number on this card?",yes:"Yes ✅",no:"No ❌",back:"◀ Back",card:"Card",
   drum:"Guessing... 🥁",your:"Your number is",wow:"Right? 🎉",
@@ -295,30 +328,63 @@ function reveal(used,from){
  $("res").classList.add("on");confetti();SFX.win();
 }
 
-/* ---------- self mode ---------- */
+/* ---------- friend magic: think -> hand the phone over -> cards one at a time ---------- */
+let sOrder=[],sIdx=0,sMarks=[],sStage="",peekT=null;
+function sClear(){["sSay","sSub"].forEach(i=>$(i).textContent="");$("sDots").innerHTML="";$("sWrap").innerHTML="";$("sBtns").innerHTML=""}
+function sBtn(txt,cls,fn){const b=document.createElement("button");b.className="big "+(cls||"");b.textContent=txt;b.onclick=fn;$("sBtns").appendChild(b);return b}
 function startSelf(){
- mode="self";build();keep=cards.map(()=>true);
- show("self");drawSelf(false);
+ mode="self";build();sOrder=shuffle(cards.map((_,i)=>i));sMarks=cards.map(()=>false);sIdx=0;
+ show("self");sThink();
 }
-function drawSelf(summed){summed=false;
- $("sInfo").textContent=t("kept")+": "+keep.filter(Boolean).length+"/"+cards.length;
- $("sSay").textContent="";$("sSub").textContent="";
- const list=$("selfList");list.innerHTML="";
- cards.forEach((c,i)=>{
-  if(summed&&!keep[i])return;
-  const el=cardEl(c);el.style.removeProperty("--ar");
-  if(!summed){
-   el.classList.toggle("out",!keep[i]);
-   const tag=document.createElement("div");tag.className="tag";tag.textContent=keep[i]?t("keep"):t("drop");el.appendChild(tag);
-   el.tabIndex=0;el.setAttribute("role","button");el.dataset.i=i;
-   el.onclick=ev=>{keep[i]=!keep[i];keep[i]?SFX.keep():SFX.away();drawSelf(false);if(ev&&ev.detail===0){const n=$("selfList").children[i];if(n)n.focus()}};
-  }
-  list.appendChild(el);
- });
- const d=$("sDone");d.textContent=t("reset");d.onclick=()=>{SFX.click();keep=cards.map(()=>true);drawSelf(false)};
+function sThink(){ // the thinker: pick a number, don't tell, press
+ sStage="think";sClear();$("sInfo").textContent="💭";
+ $("sSay").textContent=t("sThinkSay").replace("N",maxN());$("sSub").textContent=t("sThinkSub");
+ $("sWrap").innerHTML='<div class="stage"><div class="bigemoji float">🤔</div><div class="bigemoji" style="font-size:44px">💭 ? ? ?</div></div>';
+ sBtn(t("sThinkBtn"),"",()=>{SFX.click();sHandoff()});
+}
+function sHandoff(){ // hand the phone to the friend (the magician)
+ sStage="hand";sClear();$("sInfo").textContent="📱➡️";SFX.swish();
+ $("sSay").textContent=t("sHandSay");$("sSub").textContent=t("sHandSub");
+ $("sWrap").innerHTML='<div class="stage"><div class="pass"><span class="sp">✨</span><span class="ph">📱</span><span class="sp">✨</span></div><div class="bigemoji float" style="font-size:70px">🧙</div></div>';
+ sBtn(t("sHandBtn"),"o",()=>{SFX.drum();curtain(()=>{sIdx=0;sCard()})});
+}
+function curtain(then){ // theatre curtain closes, the step changes behind it, then it opens
+ let c=document.querySelector(".curtain");if(c)c.remove();
+ c=document.createElement("div");c.className="curtain open";c.innerHTML="<i></i><i></i>";document.body.appendChild(c);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{c.classList.remove("open");setTimeout(()=>{then();requestAnimationFrame(()=>c.classList.add("open"));setTimeout(()=>c.remove(),900)},760)}));
+}
+function sCard(){ // one card at a time; the previous ones are already hidden
+ sStage="card";sClear();const n=sOrder.length,ci=sOrder[sIdx],c=cards[ci];
+ $("sInfo").textContent="🃏 "+(sIdx+1)+"/"+n;$("sSay").textContent=t("sAsk");
+ $("sDots").innerHTML=sOrder.map((_,i)=>'<i class="'+(i<sIdx?"on":i===sIdx?"cur":"")+'"></i>').join("");
+ const el=cardEl(c);el.classList.add("flip");el.tabIndex=0;el.setAttribute("role","button");
+ const paint=()=>{el.classList.toggle("mark",sMarks[ci]);let tg=el.querySelector(".tag");if(sMarks[ci]){if(!tg){tg=document.createElement("div");tg.className="tag";tg.textContent=t("sMark");el.appendChild(tg)}}else if(tg)tg.remove()};
+ el.onclick=()=>{sMarks[ci]=!sMarks[ci];sMarks[ci]?SFX.keep():SFX.away();paint()};paint();
+ $("sWrap").appendChild(el);SFX.swish();
+ sBtn(sIdx===n-1?t("sLast"):t("sNext"),"y",sNextCard);
+}
+function sNextCard(){
+ SFX.click();const el=$("sWrap").querySelector(".card");
+ const go=()=>{sIdx++;if(sIdx>=sOrder.length)sFinish();else sCard()};
+ if(el){el.classList.remove("flip");el.classList.add("bye");setTimeout(go,230)}else go();
+}
+function sFinish(){
+ sStage="done";sClear();$("sInfo").textContent="🎩";
+ $("sSay").textContent=t("sFinSay");$("sSub").textContent=t("sFinSub");
+ $("sWrap").innerHTML='<div class="stage"><button class="hatbtn" id="hatBtn" aria-label="🎩">🎩</button><div id="peek" style="display:none"></div></div>';
+ const hb=$("hatBtn"),tm={t:null};
+ hb.addEventListener("pointerdown",e=>{e.preventDefault();clearTimeout(tm.t);tm.t=setTimeout(peek,650)});
+ ["pointerup","pointerleave","pointercancel"].forEach(ev=>hb.addEventListener(ev,()=>clearTimeout(tm.t)));
+ hb.addEventListener("contextmenu",e=>e.preventDefault());
+ SFX.win();confetti();
+ sBtn(t("sAgain"),"",()=>{stopConf();SFX.click();startSelf()});
+}
+function peek(){ // secret hint for the magician only: the corner numbers of the cards that were marked
+ const ks=cards.filter((c,i)=>sMarks[i]).map(c=>c.key).sort((a,b)=>a-b),pk=$("peek");if(!pk)return;
+ pk.textContent=t("sPeek")+(ks.length?ks.join(" + "):t("sNone"));pk.style.display="";SFX.keep();
+ clearTimeout(peekT);peekT=setTimeout(()=>{if(pk)pk.style.display="none"},3000);
 }
 
-/* ---------- confetti ---------- */
 let cf=null,cfT=null;
 function confetti(){
  const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");
@@ -345,11 +411,13 @@ document.addEventListener("keydown",e=>{
   else if(rd&&act&&!btn)click(rd);
   return}
  if(isOn("self")){
-  if(kk==="r"){click($("sDone"));return}
-  if(/^[1-9]$/.test(k)){const c=$("selfList").children[+k-1];if(c){c.click();return}}
-  if(card&&act){click(card);return}
-  const nav={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[k];
-  if(nav){e.preventDefault();const L=[...$("selfList").children],j=Math.max(0,Math.min(L.length-1,(card?L.indexOf(card):-1)+nav));if(L[j])L[j].focus()}
+  const st=sStage;
+  if(btn)return; // a focused button handles Enter/Space itself
+  if(st==="think"||st==="hand"){if(act)click($("sBtns").querySelector("button"));return}
+  if(st==="card"){const rtl=document.documentElement.dir==="rtl";
+   if(k===" "){e.preventDefault();click($("sWrap").querySelector(".card"))}
+   else if(k==="Enter"||kk==="n"||k===(rtl?"ArrowLeft":"ArrowRight"))click($("sBtns").querySelector("button"));return}
+  if(st==="done"){if(kk==="h"){e.preventDefault();peek()}else if(act)click($("sBtns").querySelector("button"))}
  }
 });
 document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
