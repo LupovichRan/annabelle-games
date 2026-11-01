@@ -55,7 +55,7 @@
   .pill b{color:var(--accent);font-size:1.1em}
   .grow{flex:1 0 auto;justify-content:center}
   #hud .iconbtn{width:42px;height:42px}
-  .hearts svg{width:24px;height:24px;transition:transform .3s}
+  .hearts svg{width:20px;height:20px;transition:transform .3s}
   .hearts svg.lost{opacity:.22;transform:scale(.8)}
   .pausebtn{font-size:0}
   .pausebtn::before,.pausebtn::after{content:"";width:6px;height:18px;border-radius:3px;background:var(--ink);margin:0 3px}
@@ -98,6 +98,8 @@
 <section class="ov show menu" id="menu">
   <h1 class="title" id="tTitle"></h1>
   <div class="langs" id="langs"></div>
+  <div class="label" id="tDiffT"></div>
+  <div class="langs" id="diffs"></div>
   <div class="label" id="tChoose"></div>
   <div class="chars" id="chars"></div>
   <button class="big go" id="playBtn"></button>
@@ -315,6 +317,8 @@ const SFX={
   tryagain(){ [523,466,440].forEach((f,i)=>tone(f,i*.16,.25,"sine",.12)); },
   ready(){ [392,523,659].forEach((f,i)=>tone(f,i*.15,.14,"triangle",.12)); },
   win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach(f=>tone(f,.9,.8,"triangle",.08)); },
+  boing(){ boingSnd(); tone(700,.1,.1,"sine",.08,1100); },
+  power2(){ [659,784,988,1319].forEach((f,i)=>tone(f,i*.07,.14,"sine",.1)); },
   meow(){ meow(560,0,.4); }
 };
 
@@ -331,7 +335,8 @@ const T={
    hit:{rock:["אאוץ'! סלע עקשן! 🪨","בום! מי שם פה סלע?"],log:["אופס! מעדתי על בול עץ! 🪵","טראח! גלגול של אלופים!"],puddle:["פלאש! רגליים רטובות 💦","איכס, בוץ על הזנב! 💦"],
         branch:["בונג! ענף בראש 🌿","אוי, עלים באוזניים! 🍃"],croc:["סליחה, תנין! תמשיך לישון 😴","אופס! דרכתי על התנין! 🐊"],coco:["בונק! קוקוס! 🥥","קוקוס בפרצוף! 🥥"]},
    power:{magnet:"גרררר! מגנט חטיפים! 🧲",shield:"גרררר! מגן קסם! 🛡️"},shieldSave:"המגן הציל אותי! ✨",
-   mile:"{d} מטר! איזה ספרינט! 🏃‍♀️",cheer:["רצף מדהים! 🔥","את אלופה! ⭐","איזו זריזות! ⚡"],yum:["יאמי! 😋","מממ, טעים!","עוד חטיף!"],zzz:"זזז... 😴",hop:"הופה!"},
+   mile:"{d} מטר! איזה ספרינט! 🏃‍♀️",cheer:["רצף מדהים! 🔥","את אלופה! ⭐","איזו זריזות! ⚡"],yum:["יאמי! 😋","מממ, טעים!","עוד חטיף!"],zzz:"זזז... 😴",hop:"הופה!",diffT:"איך רצים?",diff_easy:"🐣 קל וכיפי",diff_normal:"🐯 רגיל",extra:"לב נוסף! 💖",
+   silly:["הסלע צחק ונתגלגל הצידה! 🪨😄","הופה! הכל בסדר, אפילו לא כואב 🎈","האף שלי מדגדג… אפצ'י! 🤧","בוינג! קפצתי כמו כדור 🏀","התנין פיהק ושכח לנשוך 🥱","הנמלה צחקה: היי, זה אני! 🐜"]},
  fr:{dir:"ltr",title:"La course dans la savane d'Annabelle",
    how:"Ton bébé félin court dans la savane ! Saute par-dessus les rochers, les troncs, les flaques, les crocodiles endormis et les noix de coco qui roulent, et glisse sous les branches basses. Attrape les étoiles ⭐ et les en-cas 🍖🐟, l'aimant 🧲 et le bouclier 🛡️.",
    ctrl:"👆 Touche = sauter · touche encore en l'air = double saut · 👇 glisse le doigt vers le bas = glissade · Ordinateur : Espace ou ↑ pour sauter, ↓ pour glisser",
@@ -343,7 +348,8 @@ const T={
    hit:{rock:["Aïe ! Un rocher têtu ! 🪨","Boum ! Qui a mis ce rocher là ?"],log:["Oups ! J'ai trébuché sur un tronc ! 🪵","Patatras ! Une roulade de champion !"],puddle:["Plouf ! Pattes mouillées 💦","Beurk, de la boue sur ma queue ! 💦"],
         branch:["Bong ! Une branche sur la tête 🌿","Oh, des feuilles dans les oreilles ! 🍃"],croc:["Pardon, crocodile ! Rendors-toi 😴","Oups ! J'ai marché sur le croco ! 🐊"],coco:["Bonk ! Une noix de coco ! 🥥","Coco en pleine figure ! 🥥"]},
    power:{magnet:"GRRRR ! Aimant à en-cas ! 🧲",shield:"GRRRR ! Bouclier magique ! 🛡️"},shieldSave:"Le bouclier m'a sauvé ! ✨",
-   mile:"{d} mètres ! Quel sprint ! 🏃‍♀️",cheer:["Super série ! 🔥","Tu es une championne ! ⭐","Quelle agilité ! ⚡"],yum:["Miam ! 😋","Mmm, délicieux !","Encore un en-cas !"],zzz:"Zzz... 😴",hop:"Hop !"},
+   mile:"{d} mètres ! Quel sprint ! 🏃‍♀️",cheer:["Super série ! 🔥","Tu es une championne ! ⭐","Quelle agilité ! ⚡"],yum:["Miam ! 😋","Mmm, délicieux !","Encore un en-cas !"],zzz:"Zzz... 😴",hop:"Hop !",diffT:"On court comment ?",diff_easy:"🐣 Facile et rigolo",diff_normal:"🐯 Normal",extra:"Un cœur en plus ! 💖",
+   silly:["Le rocher a ri et roulé de côté ! 🪨😄","Hop là ! Même pas mal 🎈","Mon nez chatouille… atchoum ! 🤧","Boing ! Je rebondis comme un ballon 🏀","Le croco a bâillé et oublié de mordre 🥱","La fourmi rigole : coucou, c'est moi ! 🐜"]},
  en:{dir:"ltr",title:"Annabelle's Savanna Run",
    how:"Your big-cat cub is racing across the savanna! Jump over rocks, logs, puddles, sleepy crocodiles and rolling coconuts, and slide under low branches. Grab stars ⭐ and snacks 🍖🐟, plus the magnet 🧲 and the shield 🛡️.",
    ctrl:"👆 Tap = jump · tap again in the air = double jump · 👇 swipe down = slide · Computer: Space or ↑ to jump, ↓ to slide",
@@ -355,7 +361,8 @@ const T={
    hit:{rock:["Ouch! A stubborn rock! 🪨","Bonk! Who put a rock here?"],log:["Oops! Tripped on a log! 🪵","Whoops! A champion somersault!"],puddle:["Splash! Soggy paws 💦","Eww, mud on my tail! 💦"],
         branch:["Bong! Branch on the head 🌿","Oh no, leaves in my ears! 🍃"],croc:["Sorry, croc! Go back to sleep 😴","Oops! I stepped on the crocodile! 🐊"],coco:["Bonk! Coconut! 🥥","Coconut to the face! 🥥"]},
    power:{magnet:"RAWR! Snack magnet! 🧲",shield:"RAWR! Magic shield! 🛡️"},shieldSave:"The shield saved me! ✨",
-   mile:"{d} metres! What a sprint! 🏃‍♀️",cheer:["Amazing streak! 🔥","You're a champion! ⭐","So speedy! ⚡"],yum:["Yum! 😋","Mmm, tasty!","Another snack!"],zzz:"Zzz... 😴",hop:"Hop!"}
+   mile:"{d} metres! What a sprint! 🏃‍♀️",cheer:["Amazing streak! 🔥","You're a champion! ⭐","So speedy! ⚡"],yum:["Yum! 😋","Mmm, tasty!","Another snack!"],zzz:"Zzz... 😴",hop:"Hop!",diffT:"How shall we run?",diff_easy:"🐣 Easy & funny",diff_normal:"🐯 Normal",extra:"Extra heart! 💖",
+   silly:["The rock giggled and rolled away! 🪨😄","Whoopsie! Didn't hurt a bit 🎈","My nose tickles… achoo! 🤧","Boing! I bounced like a ball 🏀","The croc yawned and forgot to bite 🥱","The ant laughed: hi, it's me! 🐜"]}
 };
 const LANGS=[["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
 const fmt=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
@@ -370,7 +377,15 @@ const HERO={
 const CHAR_KEYS=["lion","tiger","snow"], CHAR_NEED={lion:0,tiger:500,snow:1500};
 const OBS=["rock","log","puddle","branch","croc","coco"];
 const OB={rock:{w:.95,h:.75},log:{w:1.5,h:.55},puddle:{w:1.7,h:.1},croc:{w:2.3,h:.5},branch:{w:1.3,h:20,y0:.62},coco:{w:.66,h:.66}};
-const G=40, JV=13.5, JV2=11.5, SPD0=5.5, SPDMAX=11.5, TUMBLE=.9, PH=.9, PHS=.42;
+const G=40, JV=13.5, JV2=11.5, PH=.9, PHS=.42;
+/* difficulty presets: easy (default, for little players) / normal (the original tuning) */
+const PRESETS={
+ easy:  {hearts:4,hmax:5,spd0:4.6,spdmax:8.4,ramp:2200,gap:1.45,margin:.18,inv:3.2,tumble:.6,slow:.7,heartEvery:170,silly:.22,sillyInv:1.2},
+ normal:{hearts:3,hmax:4,spd0:5.5,spdmax:11.5,ramp:1400,gap:1,margin:0,inv:2.1,tumble:.9,slow:.45,heartEvery:380,silly:0,sillyInv:1.2}
+};
+let diff=(()=>{ try{ const d=localStorage.getItem("annabelle-runner-diff"); return PRESETS[d]?d:"easy"; }catch(e){ return "easy"; } })();
+let D=PRESETS[diff], SPD0=D.spd0, SPDMAX=D.spdmax, TUMBLE=D.tumble, lastHeart=0;
+function setDiff(d){ diff=PRESETS[d]?d:"easy"; D=PRESETS[diff]; SPD0=D.spd0; SPDMAX=D.spdmax; TUMBLE=D.tumble; try{ localStorage.setItem("annabelle-runner-diff",diff); }catch(e){} }
 
 /* ============ STATE ============ */
 const $=id=>document.getElementById(id);
@@ -381,13 +396,13 @@ const LS={best:()=>parseInt(localStorage.getItem("annabelle-runner-best"))||0,
 let hero=LS.char();
 let state="menu", prevState=null, stateT=0, gtime=0, bgOff=0;
 let W=0,H=0,DPR=1,U=40,GY=300,PX=1.6;
-let pl=null, objs=[], parts=[], floats=[], hearts=3, dist=0, pts=0, score=0, speed=SPD0, slowF=1, nextSpawn=8, lastPower=0, nextMile=250, streak=0, shakeT=0, lastWarn=0, goT=0;
+let pl=null, objs=[], parts=[], floats=[], hearts=4, dist=0, pts=0, score=0, speed=SPD0, slowF=1, nextSpawn=8, lastPower=0, nextMile=250, streak=0, shakeT=0, lastWarn=0, goT=0;
 const stats={jumps:0,doubleJumps:0,slides:0,hits:0,collected:0,powers:0,shieldBlocks:0,frames:0};
 const TEST={noSpawn:false,god:false};
 
 function resetRun(){
   pl={y:0,vy:0,jumps:0,onGround:true,slideT:0,slideHold:false,tumble:0,inv:0,ph:0,roar:0,shield:0,magnet:0,flip:0,blink:0};
-  objs=[]; parts=[]; floats=[]; hearts=3; dist=0; pts=0; score=0; speed=SPD0; slowF=1; nextSpawn=9; lastPower=0; nextMile=250; streak=0; shakeT=0; goT=1.4;
+  objs=[]; parts=[]; floats=[]; D=PRESETS[diff]; SPD0=D.spd0; SPDMAX=D.spdmax; TUMBLE=D.tumble; hearts=D.hearts; lastHeart=0; dist=0; pts=0; score=0; speed=SPD0; slowF=1; nextSpawn=9; lastPower=0; nextMile=250; streak=0; shakeT=0; goT=1.4;
   for(const k in stats) stats[k]=0;
 }
 
@@ -422,19 +437,24 @@ function spawnPattern(){
   if(TEST.noSpawn){ nextSpawn=4; return; }
   const sx=spawnX();
   if(dist>70&&dist-lastPower>200+Math.random()*120){ lastPower=dist; objs.push({k:Math.random()<.5?"magnet":"shield",x:sx,y:1.7,col:true,pw:true}); nextSpawn=speed*.9; return; }
+  if(hearts<D.hmax&&dist-lastHeart>D.heartEvery&&dist>60){ lastHeart=dist+Math.random()*60; objs.push({k:"heart",x:sx,y:1.6,col:true}); nextSpawn=speed*.8; return; }
   const pool=[["rock",3],["log",3],["puddle",2]]; if(dist>90) pool.push(["branch",3]); if(dist>200) pool.push(["croc",2.5]); if(dist>300) pool.push(["coco",2]);
   const k=wpick(pool), o=mkObs(k,k==="coco"?sx+4:sx); objs.push(o);
   const air=2*JV/G*speed;
   if(k==="branch"){ for(let i=0;i<4;i++) objs.push(item(sx-.3+i*.6,.3,"star")); }
   else if(k!=="coco"&&Math.random()<.7){ const xc=o.x+o.w/2; for(let i=0;i<5;i++){ const f=(i/4)*2-1; objs.push(item(xc+f*air*.3,.45+2.1*(1-f*f*.36))); } }
-  let gap=o.w+speed*(1.2+Math.random()*.9)+(k==="coco"?4:0)+(k==="croc"?1:0);
+  let gap=(o.w+speed*(1.2+Math.random()*.9))*D.gap+(k==="coco"?4:0)+(k==="croc"?1:0);
   if(Math.random()<.45){ const n=3+(Math.random()*3|0), y=Math.random()<.5?.45:1.5, x0=sx+o.w+speed*.55+(k==="coco"?4:0); for(let i=0;i<n;i++) objs.push(item(x0+i*.6,y)); gap=Math.max(gap,(x0-sx)+n*.6+speed*.6); }
   nextSpawn=gap;
 }
 function hit(o){
   o.hit=true; if(TEST.god) return;
   if(pl.shield>0){ pl.shield=0; pl.inv=1.1; stats.shieldBlocks++; SFX.pop(); toast(T[lang].shieldSave,"#3fa9ff"); for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; parts.push({x:PX,y:pl.y+.5,vx:Math.cos(a)*4,vy:Math.sin(a)*4,life:.6,max:.6,r:.12,col:"#9fd8ff",star:true}); } return; }
-  hearts--; stats.hits++; pl.tumble=TUMBLE; pl.inv=2.1; pl.slideT=0; pl.slideHold=false; slowF=.45; shakeT=.3; streak=0;
+  if(D.silly&&Math.random()<D.silly){ /* silly moment: the obstacle is goofy and nothing hurts */
+    pl.inv=D.sillyInv; stats.sillies=(stats.sillies||0)+1; SFX.boing(); pl.roar=.5; addFloat(PX,pl.y+1.6,"😄","#ff7a3d",1);
+    for(let i=0;i<8;i++) parts.push({x:PX,y:pl.y+.5,vx:(Math.random()-.5)*4,vy:Math.random()*3,life:.6,max:.6,r:.09,col:pick(["#ffd23f","#ff9fbf","#9fd8ff"]),star:true});
+    toast(pick(T[lang].silly),"#ff7a3d"); return; }
+  hearts--; stats.hits++; pl.tumble=TUMBLE; pl.inv=D.inv; pl.slideT=0; pl.slideHold=false; slowF=D.slow; shakeT=.3; streak=0;
   if(pl.onGround){ pl.vy=7; pl.onGround=false; } else pl.vy=Math.max(pl.vy,3);
   ({puddle:SFX.splash,branch:SFX.leaves,coco:SFX.bonk}[o.k]||SFX.hit)();
   if(o.k==="puddle") for(let i=0;i<14;i++) parts.push({x:PX+.2,y:.1,vx:(Math.random()-.3)*4,vy:2+Math.random()*4,life:.7,max:.7,r:.09,col:"#5ab8ff",drop:true,gr:1});
@@ -444,7 +464,8 @@ function hit(o){
 }
 function collect(o){
   o.got=true; stats.collected++;
-  if(o.pw){ stats.powers++; pl.roar=.9; SFX.power(); toast(T[lang].power[o.k],"#ff7a3d"); if(o.k==="magnet") pl.magnet=9; else pl.shield=12; pts+=50; addFloat(o.x,o.y+.6,"+50","#ff7a3d",1); }
+  if(o.k==="heart"){ if(hearts<D.hmax) hearts++; SFX.power2(); toast(T[lang].extra,"#ff4d6d"); pl.roar=.6; addFloat(o.x,o.y+.6,"+💖","#ff4d6d",1); updateHUD(); }
+  else if(o.pw){ stats.powers++; pl.roar=.9; SFX.power(); toast(T[lang].power[o.k],"#ff7a3d"); if(o.k==="magnet") pl.magnet=9; else pl.shield=12; pts+=50; addFloat(o.x,o.y+.6,"+50","#ff7a3d",1); }
   else if(o.k==="star"){ pts+=10; SFX.star(); addFloat(o.x,o.y+.5,"+10","#f2a800",.7); }
   else { pts+=25; SFX.snack(); addFloat(o.x,o.y+.5,"+25","#e8487f",.8); if(Math.random()<.3) toast(pick(T[lang].yum),"#34c47c"); }
   for(let i=0;i<6;i++) parts.push({x:o.x,y:o.y,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:.4,max:.4,r:.07,col:o.k==="star"?"#ffd23f":"#ff9fbf",star:true});
@@ -455,7 +476,7 @@ function update(dt){
   if(state!=="play"&&state!=="fall") return;
   stateT+=dt; if(goT>0) goT-=dt;
   slowF=Math.min(1,slowF+dt*.6);
-  const target=SPD0+(SPDMAX-SPD0)*(1-Math.exp(-dist/1400));
+  const target=SPD0+(SPDMAX-SPD0)*(1-Math.exp(-dist/D.ramp));
   speed=target*slowF*(state==="fall"?Math.max(0,1-stateT*1.2):1);
   const dx=speed*dt; dist+=dx; bgOff+=dx;
   // player
@@ -478,7 +499,7 @@ function update(dt){
     }
     if(o.ob&&!o.hit&&state==="play"){
       const sl=sliding(), pb=pl.y, pt=pl.y+(sl?PHS:PH), pL=PX-.3, pR=PX+.3;
-      const m=o.k==="puddle"?.2:.12, oL=o.x+m, oR=o.x+o.w-m, ob=o.y0, ot=o.y0+o.h;
+      const m=(o.k==="puddle"?.2:.12)+D.margin, oL=o.x+m, oR=o.x+o.w-m, ob=o.y0, ot=o.y0+o.h;
       const overlapX=pR>oL&&pL<oR, overlapY=o.k==="puddle"?pb<.06:(pt>ob+.05&&pb<ot-.05);
       if(overlapX&&overlapY&&pl.inv<=0) hit(o);
       if(o.k==="coco"&&o.x>W/U&&o.x<W/U+5&&gtime-lastWarn>1.2&&!o.warned){ o.warned=true; lastWarn=gtime; SFX.warn(); }
@@ -628,6 +649,7 @@ function drawObs(o,u){
 function drawItem(o,u){
   const k=o.k, t=gtime;
   if(k==="star"){ const s=Math.cos(t*4+o.x)*.25+.85; g.save(); g.scale(s,1); starPath(0,0,.27*u,.12*u); g.fillStyle="#ffd23f"; g.fill(); g.strokeStyle="#f2a800"; g.lineWidth=u*.035; g.stroke(); ell(-.06*u,-.08*u,.05*u,.03*u,"#fff9"); g.restore(); }
+  else if(k==="heart"){ const b=1+Math.sin(t*6)*.1; g.font=`${.8*u*b}px sans-serif`; g.textAlign="center"; g.textBaseline="middle"; g.fillText("💖",0,0); }
   else if(k==="fish"){ const f=.17*u; g.rotate(Math.sin(t*5+o.x)*.2); g.fillStyle="#ff9f5a"; g.strokeStyle="#d9692a"; g.lineWidth=u*.025;
     g.beginPath(); g.moveTo(-f*1.05,0); g.lineTo(-f*2,-f*.8); g.lineTo(-f*2,f*.8); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.ellipse(0,0,f*1.25,f*.8,0,0,7); g.fill(); g.stroke();
     circ(f*.55,-f*.15,f*.2,"#3a2a20"); }
@@ -741,7 +763,7 @@ function render(){
 /* ============ HUD / UI ============ */
 const HEART=cls=>`<svg viewBox="0 0 24 24" class="${cls}"><path d="M12 21C5 16 2 12.2 2 8.6 2 5.6 4.3 3.5 7 3.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 2.7 0 5 2.1 5 5.1 0 3.6-3 7.4-10 12.4z" fill="#ff4d6d" stroke="#c9184a" stroke-width="1.3"/><ellipse cx="7.5" cy="8" rx="2" ry="1.2" fill="#fff9" transform="rotate(-30 7.5 8)"/></svg>`;
 let lastHud="";
-function updateHUD(){ $("hearts").innerHTML=[0,1,2].map(i=>HEART(i<hearts?"":"lost")).join(""); lastHud=""; updateHUDnum(); }
+function updateHUD(){ $("hearts").innerHTML=Array.from({length:D.hmax},(_,i)=>HEART(i<hearts?"":"lost")).join(""); lastHud=""; updateHUDnum(); }
 function updateHUDnum(){ const s=Math.floor(dist)+"|"+score; if(s===lastHud) return; lastHud=s; $("dist").textContent=Math.floor(dist); $("score").textContent=score; }
 let toastT=null;
 function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto"; el.style.boxShadow=`0 0 0 4px ${col},0 6px 0 #0002`; el.style.color=col; el.style.top=(($("hud").offsetHeight||56)+8)+"px";
@@ -752,12 +774,14 @@ function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; docum
 function renderMenu(){ const t=T[lang], best=LS.best();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
   $("chars").innerHTML=CHAR_KEYS.map(k=>{ const lock=best<CHAR_NEED[k]; return `<button class="ch ${k===hero?"sel":""} ${lock?"locked":""}" data-ch="${k}">${face(HERO[k].face)}<span>${t.chars[k]}</span>${lock?`<small>${fmt(t.lock,{n:CHAR_NEED[k]})}</small>`:""}</button>`; }).join("");
+  $("tDiffT").textContent=t.diffT; $("diffs").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
   $("bestLine").textContent=best?`🏆 ${t.best}: ${best}`:"";
   $("foes").innerHTML=OBS.map(k=>`<div class="foe"><canvas data-obs="${k}" width="128" height="128"></canvas><span>${t.obs[k]}</span></div>`).join("");
   document.querySelectorAll("[data-obs]").forEach(c=>{ const x=c.getContext("2d"), og=g; g=x; const k=c.dataset.obs, d=OB[k];
     const u=k==="croc"?54:k==="branch"?62:k==="log"||k==="puddle"?70:88; x.translate(64-d.w*u/2,k==="branch"?78+(d.y0+.33)*u:k==="croc"?90:100);
     const saveGY=GY; GY=200; drawObs({k,w:d.w,y0:d.y0||0,t:1},u); GY=saveGY; g=og; }); }
 document.addEventListener("click",e=>{
+  const df=e.target.closest("[data-diff]"); if(df){ setDiff(df.dataset.diff); SFX.click(); renderMenu(); return; }
   const l=e.target.closest("[data-lang]"), ch=e.target.closest("[data-ch]");
   if(l){ lang=l.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
   if(ch){ const k=ch.dataset.ch; if(LS.best()>=CHAR_NEED[k]){ hero=k; localStorage.setItem("annabelle-runner-char",k); SFX.meow(); renderMenu(); } else SFX.click(); }
@@ -833,7 +857,7 @@ window.__run={
   info:()=>({state,hearts,dist,score,pts,speed,hero,U,GY,PX,W,H,player:pl&&{y:pl.y,vy:pl.vy,onGround:pl.onGround,jumps:pl.jumps,sliding:sliding(),tumble:pl.tumble,inv:pl.inv,shield:pl.shield,magnet:pl.magnet},
     objs:objs.map(o=>({k:o.k,x:o.x,y:o.y,hit:!!o.hit})),stats:{...stats}}),
   spawn:(k,x,y)=>{ const o=OB[k]?mkObs(k,x):{k,x,y,col:true,pw:k==="magnet"||k==="shield"}; objs.push(o); return objs.length; },
-  clear:()=>{ objs=[]; }, test:TEST, setInv:v=>{ pl.inv=v; }, setDist:d=>{ dist=d; nextMile=Math.ceil((d+1)/250)*250; }
+  clear:()=>{ objs=[]; }, test:TEST, setInv:v=>{ pl.inv=v; }, setDiff:d=>setDiff(d), setDist:d=>{ dist=d; nextMile=Math.ceil((d+1)/250)*250; }
 };
 
 /* ============ BOOT ============ */
