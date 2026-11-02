@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="cups"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#5b2a8c">
+<title>איפה הכדור?</title><script src="safe.js"></script>
+<style>
+:root{--ink:#3b2a14}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#4a2379;font-family:"Rubik","Varela Round","IBM Plex Sans Hebrew",Arial,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action:manipulation}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#conf{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:25}
+.iconbtn{width:48px;height:48px;border-radius:50%;background:#fff;color:#4a2379;box-shadow:0 4px 0 #0003;font-size:23px;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
+.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0003}
+.corner{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-end:12px;z-index:60}
+#top{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-start:12px;inset-inline-end:70px;z-index:20;display:none;gap:8px;align-items:center;flex-wrap:wrap}
+body.play #top{display:flex}
+.pill{background:#fff;color:#4a2379;border-radius:999px;padding:6px 12px;font-weight:900;font-size:clamp(15px,4.2vw,20px);box-shadow:0 3px 0 #0003;white-space:nowrap}
+#cap{position:fixed;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));z-index:19;text-align:center;font:900 clamp(22px,6.4vw,36px)/1.15 Rubik,Arial;text-shadow:0 3px 0 #0008;padding:0 16px;pointer-events:none;min-height:44px}
+#picks{position:fixed;left:0;right:0;bottom:max(70px,calc(env(safe-area-inset-bottom) + 70px));z-index:21;display:none;justify-content:center;gap:10px;padding:0 10px;direction:ltr}
+#picks.show{display:flex}
+#picks button{flex:1;max-width:96px;min-height:64px;border-radius:20px;font:900 28px Rubik,Arial;color:#4a2379;background:#fff;box-shadow:0 5px 0 #0004}
+#picks button:active{transform:translateY(4px);box-shadow:0 1px 0 #0004}
+.ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));z-index:30;text-align:center;overflow-y:auto}
+.ov.show{display:flex}
+#menu{justify-content:space-between;background:linear-gradient(#0000,#0000 30%,#2a0f4acc)}
+#menu .top{padding-top:8px}
+#menu .bot{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;max-width:440px}
+h1{margin:0;font-size:clamp(34px,10.5vw,60px);color:#ffe14d;text-shadow:0 4px 0 #a2410f,0 0 26px #ffe14d88;line-height:1.05;padding:0 44px}
+h2{margin:0;font-size:30px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
+.sub{font-size:17px;font-weight:700;text-shadow:0 2px 0 #000a}
+.big{min-width:200px;min-height:64px;border-radius:22px;font:900 25px Rubik,Arial;padding:8px 24px;box-shadow:0 6px 0 #0005;color:#fff;width:100%}
+.big:active{transform:translateY(4px);box-shadow:0 2px 0 #0005}
+.g{background:linear-gradient(#5fd38d,#2fb36a)}.o{background:linear-gradient(#ffb84d,#ff7a1f)}.p{background:linear-gradient(#a58bff,#7c5cff)}.s{background:linear-gradient(#8aa0b8,#5b6f88)}
+.row{display:flex;gap:10px;width:100%}.row .big{min-width:0;font-size:19px;padding:8px 10px}
+.row .big.sel{box-shadow:0 0 0 5px #fff,0 6px 0 #0005}
+.row .big.off{filter:saturate(.35) brightness(.8)}
+.langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.lang{padding:7px 14px;border-radius:999px;background:#fff3;font:800 15px Rubik,Arial;min-height:40px}
+.lang.sel{background:#fff;color:#4a2379}
+.rules{font-size:15px;font-weight:600;line-height:1.35;text-shadow:0 2px 0 #000a;max-width:420px}
+.card{background:#4a2379ee;border:3px solid #ffe14d;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px;align-items:center;max-width:min(94vw,420px);width:100%}
+#pause,#over{background:#000b;justify-content:center}
+#nogl{position:fixed;inset:0;z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#4a2379;padding:24px;text-align:center;font-size:20px;font-weight:700}
+#nogl.show{display:flex}
+.desk .corner{top:14px}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/cups.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/cups-192.png"><meta name="apple-mobile-web-app-title" content="איפה הכדור?"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/cups-apple-180.png"><script src="pwa.js" data-app="cups" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+</head>
+<body>
+<canvas id="cv"></canvas><canvas id="conf"></canvas>
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pHe"></span><span class="pill" id="pSc"></span><span class="pill" id="pLv"></span></div>
+<div id="cap"></div>
+<div id="picks"></div>
+
+<div class="ov show" id="menu"><div class="top"><h1 id="mT"></h1><div class="sub" id="mS"></div></div>
+ <div class="bot"><div class="sub" id="mBest"></div>
+  <div class="row"><button class="big o" id="mEasy"></button><button class="big p" id="mNorm"></button></div>
+  <button class="big g" id="playBtn"></button>
+  <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
+<div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div class="sub" id="oS" style="font-size:22px"></div><div class="sub" id="oB"></div><button class="big g" id="againBtn"></button><button class="big s" id="oMenu"></button></div></div>
+<div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
+<div id="nogl"><div style="font-size:70px">🐱</div><div id="nglT"></div><button class="big g" id="nglB" style="max-width:260px"></button></div>
+
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+const $=id=>document.getElementById(id);
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+/* ============ i18n ============ */
+const TX={
+he:{title:"איפה הכדור?",sub:"עקבי אחרי הכדור – החתול קוסם מבלבל! 🎩",play:"▶ שחקי",easy:"🐣 קל ומצחיק",norm:"🐯 רגיל",
+ rules:"רואים איפה הכדור, הכוסות מתערבבות – ומנחשים מתחת לאיזו כוס הוא! אפשר ללחוץ על כוס או על המספר שלה. יש 3 לבבות.",
+ watch:"תסתכלי טוב על הכדור! 👀",shuf:"עכשיו עוקבים… 🌀",pick:"איפה הכדור? בחרי כוס!",drum:"…",
+ yes:["יפה!! מצאת! 🎉","וואו, עיניים של נץ! 🦅","בול! 😻","קוסמת אמיתית! ✨","מיאו-ווו! 🎊"],
+ no:["אופס! הוא התחבא 🙈","כמעט! נסי שוב 😸","הכדור ערמומי! 😜","הוא ברח לכוס אחרת! 💨","חחח הקוסם הערים עלייך 🎩"],
+ hearts:"❤️",lvl:"שלב",score:"⭐",oT:"נגמרו הלבבות!",oS:"הגעת לשלב {l} · {s} נקודות",best:"שיא חדש! 🎉",bestIs:"שיא: {b}",
+ again:"🔁 עוד פעם",menu:"☰ לתפריט",paused:"הפסקה",resume:"▶ המשך",noGL:"המשחק הזה צריך תלת־ממד (WebGL) והדפדפן שלך לא תומך. נסי דפדפן אחר 🐱",home:"🏠 לכל המשחקים",cup:"כוס"},
+fr:{title:"Où est la balle ?",sub:"Suis la balle – le chat magicien te mélange ! 🎩",play:"▶ Jouer",easy:"🐣 Facile et rigolo",norm:"🐯 Normal",
+ rules:"Tu vois où est la balle, les gobelets se mélangent – devine sous lequel elle est ! Touche un gobelet ou son numéro. Tu as 3 cœurs.",
+ watch:"Regarde bien la balle ! 👀",shuf:"Maintenant, suis-la… 🌀",pick:"Où est la balle ? Choisis !",drum:"…",
+ yes:["Bravo !! Trouvé ! 🎉","Des yeux d'aigle ! 🦅","Pile ! 😻","Une vraie magicienne ! ✨","Miaouuu ! 🎊"],
+ no:["Oups ! Elle s'est cachée 🙈","Presque ! Réessaie 😸","La balle est rusée ! 😜","Elle a filé sous l'autre ! 💨","Haha le magicien t'a eue ! 🎩"],
+ hearts:"❤️",lvl:"Niv.",score:"⭐",oT:"Plus de cœurs !",oS:"Niveau {l} · {s} points",best:"Nouveau record ! 🎉",bestIs:"Record : {b}",
+ again:"🔁 Encore",menu:"☰ Menu",paused:"Pause",resume:"▶ Reprendre",noGL:"Ce jeu a besoin de la 3D (WebGL) et ton navigateur ne la gère pas. Essaie un autre 🐱",home:"🏠 Tous les jeux",cup:"Gobelet"},
+en:{title:"Cup Shuffle",sub:"Follow the ball – the magician cat is tricky! 🎩",play:"▶ Play",easy:"🐣 Easy & funny",norm:"🐯 Normal",
+ rules:"You see where the ball is, the cups get shuffled – then guess which cup hides it! Tap a cup or its number. You have 3 hearts.",
+ watch:"Watch the ball closely! 👀",shuf:"Now follow it… 🌀",pick:"Where is the ball? Pick a cup!",drum:"…",
+ yes:["Yay!! You found it! 🎉","Eagle eyes! 🦅","Bullseye! 😻","A real magician! ✨","Meow-wow! 🎊"],
+ no:["Oops! It was hiding 🙈","So close! Try again 😸","Sneaky ball! 😜","It ran to another cup! 💨","Haha the magician tricked you! 🎩"],
+ hearts:"❤️",lvl:"Lv.",score:"⭐",oT:"Out of hearts!",oS:"Level {l} · {s} points",best:"New best! 🎉",bestIs:"Best: {b}",
+ again:"🔁 Again",menu:"☰ Menu",paused:"Paused",resume:"▶ Resume",noGL:"This game needs 3D (WebGL) and your browser doesn't support it. Try another one 🐱",home:"🏠 All games",cup:"Cup"}};
+const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
+let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
+const t=k=>TX[lang][k]??TX.he[k],pick=a=>a[Math.random()*a.length|0];
+/* ============ sound ============ */
+let AC=null,muted=ls.get("annabelle-muted")==="1";
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(v,n+.01);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+d+.05)}
+function noise(d,f,type="bandpass",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const n=a.currentTime+delay,len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),dat=buf.getChannelData(0);for(let i=0;i<len;i++)dat[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=buf;const fl=a.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,n);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,n+d);const g=a.createGain();g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);s.connect(fl);fl.connect(g);g.connect(a.destination);s.start(n);s.stop(n+d+.05)}
+const SFX={click(){tone(560,.08,"triangle",.16)},lift(){tone(520,.12,"triangle",.2,900)},lower(){tone(300,.14,"triangle",.18,170);noise(.08,300,"lowpass",.12)},
+ swap(i=0){noise(.18,700+i*60,"bandpass",.13,1700);tone(300+i*40,.12,"sine",.07,420+i*40)},
+ drum(){for(let i=0;i<18;i++)noise(.07,180,"lowpass",.22+i*.012,120,i*.055)},
+ yes(){[523,659,784,1046,1318].forEach((f,i)=>tone(f,.22,"triangle",.22,null,i*.08));noise(.6,3500,"highpass",.08,7000,.3)},
+ no(){tone(330,.25,"sawtooth",.15,160);tone(220,.4,"sine",.25,500,.22)},tick(){tone(880,.05,"square",.06)},over(){[392,330,262,196].forEach((f,i)=>tone(f,.3,"triangle",.2,null,i*.16))}};
+/* ============ three.js ============ */
+let R=null,glOK=true;
+const cvEl=$("cv");
+try{R=new THREE.WebGLRenderer({canvas:cvEl,antialias:true,alpha:false,powerPreference:"high-performance"});if(!R.getContext())throw 0}catch(e){glOK=false}
+if(!glOK){$("nglT").textContent=t("noGL");$("nglB").textContent=t("home");$("nglB").onclick=()=>{location.href="index.html"};$("nogl").classList.add("show")}
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,1,.1,200);
+if(glOK){R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));R.shadowMap.enabled=false}
+scene.background=new THREE.Color(0x4a2379);scene.fog=new THREE.Fog(0x4a2379,26,60);
+scene.add(new THREE.HemisphereLight(0xffffff,0x8a6aa8,1.5));
+const sun=new THREE.DirectionalLight(0xfff2cc,1.2);sun.position.set(-5,12,9);scene.add(sun);
+const matC={};const M=(c,o)=>{const k=c+(o?JSON.stringify(o):"");return matC[k]||(matC[k]=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})))};
+const sphG={},sph=(r,c,w=14,h=10)=>{const k=w+"_"+h;const g=sphG[k]||(sphG[k]=new THREE.SphereGeometry(1,w,h));const m=new THREE.Mesh(g,M(c));m.scale.setScalar(r);return m};
+const cone=(r,h,c,s=8)=>new THREE.Mesh(new THREE.ConeGeometry(r,h,s),M(c));
+const cyl=(rt,rb,h,c,s=20)=>new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),M(c));
+const put=(m,x,y,z)=>{m.position.set(x,y,z);return m};
+/* stage: back wall + curtains + table */
+const wall=new THREE.Mesh(new THREE.PlaneGeometry(70,30),M(0x5b2a8c));wall.position.set(0,12,-14);scene.add(wall);
+for(const sx of[-1,1]){const c=new THREE.Mesh(new THREE.BoxGeometry(5,24,1.4),M(0xc4243e));c.position.set(sx*11,10,-12);scene.add(c);const c2=new THREE.Mesh(new THREE.BoxGeometry(3,24,1.4),M(0xa81c34));c2.position.set(sx*7.2,10,-12.3);scene.add(c2)}
+const floor=cyl(30,30,.2,0x3a1a63,32);floor.position.y=-2.2;scene.add(floor);
+const table=new THREE.Group();scene.add(table);
+table.add(put(cyl(7.4,7.4,.5,0x8a5a2a,40),0,-.25,0));
+table.add(put(cyl(7.0,7.0,.08,0x2f9d6a,40),0,.04,0));
+table.add(put(cyl(1.4,2.2,1.9,0x6b431c,16),0,-1.45,0));
+/* mascot kitten magician */
+const mas=new THREE.Group();mas.position.set(0,.1,-5.2);mas.scale.setScalar(1.15);scene.add(mas);
+const body=put(sph(1,0xff9a3c),0,1.05,0);body.scale.set(1.05,1.15,.95);mas.add(body);
+const belly=put(sph(.62,0xffe2b8),0,.95,.55);belly.scale.set(.9,1.05,.4);mas.add(belly);
+const head=new THREE.Group();head.position.set(0,2.55,.1);mas.add(head);
+head.add(sph(.95,0xff9a3c,18,12));
+for(const sx of[-1,1]){const e=put(cone(.34,.62,0xff9a3c),sx*.62,.78,0);e.rotation.z=-sx*.35;head.add(e);const ei=put(cone(.2,.4,0xff7a9a),sx*.6,.74,.12);ei.rotation.z=-sx*.35;head.add(ei);
+ head.add(put(sph(.2,0xffffff),sx*.36,.12,.8));head.add(put(sph(.11,0x1a1a1a),sx*.36,.12,.95));head.add(put(sph(.04,0xffffff),sx*.4,.17,1.04));
+ for(const dy of[-.08,.1]){const w=put(cyl(.012,.012,.9,0xffffff,4),sx*.62,-.28+dy,.82);w.rotation.z=Math.PI/2+sx*dy*.7;head.add(w)}}
+head.add(put(sph(.38,0xffe2b8,12,8),0,-.3,.68));head.add(put(sph(.1,0xff6f91),0,-.12,.98));
+const smile=new THREE.Mesh(new THREE.TorusGeometry(.14,.025,6,10,Math.PI),M(0x7a2b1b));smile.position.set(0,-.34,.98);smile.rotation.z=Math.PI;head.add(smile);
+const hat=new THREE.Group();hat.position.set(0,.88,0);head.add(hat);hat.add(put(cyl(.95,.95,.1,0x15101e,20),0,0,0));hat.add(put(cyl(.58,.62,.9,0x15101e,20),0,.5,0));hat.add(put(cyl(.64,.64,.2,0xe23b6a,20),0,.2,0));
+const armL=new THREE.Group(),armR=new THREE.Group();armL.position.set(-.95,1.5,.2);armR.position.set(.95,1.5,.2);mas.add(armL,armR);
+for(const [a,s] of[[armL,-1],[armR,1]]){const m=put(cyl(.2,.24,1.0,0xff9a3c,8),0,-.5,0);a.add(m);a.add(put(sph(.28,0xffe2b8,10,8),0,-1.05,0))}
+const wand=put(cyl(.04,.04,1.3,0x222222,6),0,-1.3,.2);wand.rotation.x=.4;armR.add(wand);wand.add(put(sph(.09,0xffffff,8,6),0,.66,0));
+for(const sx of[-1,1])mas.add(put(sph(.38,0xffe2b8,10,8),sx*.5,.12,.45));
+mas.add(put(sph(.2,0xff9a3c,8,6),0,.1,-1.05));
+/* cups */
+const cupGeo=new THREE.LatheGeometry([new THREE.Vector2(.84,0),new THREE.Vector2(.66,1.98),new THREE.Vector2(.58,2.1),new THREE.Vector2(0,2.1)],22);
+const bandGeo=new THREE.CylinderGeometry(.74,.77,.34,22);
+const blobGeo=new THREE.CircleGeometry(1,16);
+const blobMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28,depthWrite:false});
+const CCOL=[0xe23b6a,0xffb43b,0x2fb8c0,0x8a6bff,0x4cc47c];
+let cups=[];
+function mkCup(i){const g=new THREE.Group();const c=new THREE.Mesh(cupGeo,M(CCOL[i%5]));c.name="body";g.add(c);const b=new THREE.Mesh(bandGeo,M(0xffffff));b.position.y=.7;g.add(b);
+ const num=new THREE.Mesh(new THREE.CircleGeometry(.3,12),M(0xffffff));g.add(num);
+ const blob=new THREE.Mesh(blobGeo,blobMat);blob.rotation.x=-Math.PI/2;blob.position.y=.07;scene.add(blob);scene.add(g);
+ return {g,blob,id:i,slot:i,x:0,z:0,lift:0,tl:0,jit:0,col:CCOL[i%5]}}
+const ball=new THREE.Group();scene.add(ball);ball.add(sph(.5,0xffd23f,14,10));ball.add(put(sph(.09,0x222222,6,5),-.18,.12,.43));ball.add(put(sph(.09,0x222222,6,5),.18,.12,.43));ball.add(put(sph(.06,0xff6f91,6,5),0,-.02,.48));ball.position.y=.52;ball.visible=false;
+const blobB=new THREE.Mesh(blobGeo,blobMat);blobB.rotation.x=-Math.PI/2;blobB.position.y=.06;blobB.scale.setScalar(.6);scene.add(blobB);blobB.visible=false;
+/* ============ game state ============ */
+let ph="menu",pt=0,paused=false,mode=ls.get("annabelle-cups-mode")==="easy"?"easy":"norm";
+let level=1,hearts=3,score=0,streak=0,best=+ls.get("annabelle-cups-best")||0,ballCup=0,cupAt=[],X=[],sel=0,over=false;
+let steps=[],stepI=0,stepT=0,swapLog=[],gapT=0,rv=null,resultT=0,wasCorrect=false,idleT=0,mood=0,moodK="";
+const cfg=()=>{const e=mode==="easy";const n=level<=2?3:level<=5?4:5;return{n:e?Math.min(n,4):n,swaps:Math.min(e?12:18,Math.round((3+level*1.6)*(e?.75:1))),dur:Math.max(e?.5:.3,(.92-.06*level)*(e?1.4:1)),decoy:level>=4,dbl:level>=6&&!e,same:level>=8&&!e}};
+function layout(n){X=[];const sp=n===3?2.2:n===4?1.95:1.7;for(let i=0;i<n;i++)X.push((i-(n-1)/2)*sp)}
+function buildCups(n){cups.forEach(c=>{scene.remove(c.g);scene.remove(c.blob)});cups=[];for(let i=0;i<n;i++)cups.push(mkCup(i));layout(n);cupAt=cups.map((c,i)=>i);cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;positionCup(c)});
+ cups.forEach(c=>{const num=c.g.children[2];num.visible=false});buildPicks(n)}
+function buildPicks(n){$("picks").innerHTML=Array.from({length:n},(_,i)=>`<button data-slot="${i}" aria-label="${t("cup")} ${i+1}">${i+1}</button>`).join("")}
+function positionCup(c){c.g.position.set(c.x,c.lift*2.4+(c.jit?Math.sin(performance.now()/22)*.05*c.jit:0),c.z);c.blob.position.set(c.x,.07,c.z);c.blob.scale.setScalar(.95-c.lift*.12)}
+/* ===== round flow ===== */
+function say(s){$("cap").textContent=s||""}
+function hud(){$("pHe").textContent=t("hearts").repeat(hearts)+"🤍".repeat(Math.max(0,3-hearts));$("pSc").textContent=t("score")+" "+score;$("pLv").textContent=t("lvl")+" "+level}
+function startGame(){ac();over=false;level=1;hearts=3;score=0;streak=0;document.body.classList.add("play");$("menu").classList.remove("show");$("over").classList.remove("show");startRound();hud()}
+function startRound(){const c=cfg();if(cups.length!==c.n)buildCups(c.n);else{layout(c.n);cupAt=cups.map((_,i)=>i);cups.forEach((q,i)=>{q.slot=i;q.x=X[i];q.z=0;q.lift=0;q.tl=0;q.jit=0;positionCup(q)})}
+ cups.forEach((q,i)=>{const col=c.same?0xe23b6a:CCOL[i%5];q.g.children[0].material=M(col)});
+ ballCup=Math.random()*c.n|0;ph="intro";pt=0;sel=0;steps=[];swapLog=[];rv=null;$("picks").classList.remove("show");say(t("watch"));hud();
+ // build the swap plan (slot pairs, simultaneous pairs in one step)
+ const n=c.n;let made=0;
+ while(made<c.swaps){const a=Math.random()*n|0;let b=Math.random()*n|0;if(a===b)continue;
+  if(c.decoy&&Math.random()<.25&&made+2<=c.swaps){steps.push({p:[[a,b]],d:c.dur*.7});steps.push({p:[[a,b]],d:c.dur*.7});made+=2;continue}
+  if(c.dbl&&n>=4&&Math.random()<.3){const rest=[...Array(n).keys()].filter(k=>k!==a&&k!==b);const x=rest[Math.random()*rest.length|0],y=rest.filter(k=>k!==x)[Math.random()*(rest.length-1)|0];steps.push({p:[[a,b],[x,y]],d:c.dur*1.1});made+=2;continue}
+  steps.push({p:[[a,b]],d:c.dur});made++}}
+const sm=u=>u<=0?0:u>=1?1:u*u*(3-2*u);
+function updateGame(dt){
+ idleT+=dt;
+ // cups lift easing
+ cups.forEach(c=>{const d=c.tl-c.lift;c.lift+=Math.max(-dt*4.5,Math.min(dt*4.5,d))});
+ if(ph==="intro"){pt+=dt;const bc=cups[ballCup];
+  if(pt<.4)bc.tl=0;else if(pt<1.9){if(bc.tl===0&&pt>=.4){bc.tl=1;SFX.lift()}}else if(pt<2.5){if(bc.tl===1){bc.tl=0;SFX.lower()}}
+  else{ph="shuffle";stepI=0;stepT=0;gapT=.25;say(t("shuf"))}}
+ else if(ph==="shuffle"){
+  if(gapT>0){gapT-=dt}else{const s=steps[stepI];if(!s){ph="choose";pt=0;say(t("pick"));$("picks").classList.add("show");sel=0}else{
+    if(stepT===0){s.p.forEach(([a,b],k)=>{swapLog.push([a,b]);SFX.swap(k+stepI%5)})}
+    stepT+=dt;const u=Math.min(1,stepT/s.d),e=sm(u);
+    cups.forEach(c=>{c.z=0;c.x=X[c.slot]});
+    s.p.forEach(([a,b])=>{const ca=cupAt[a],cb=cupAt[b];const A=cups[ca],B=cups[cb];A.x=X[a]+(X[b]-X[a])*e;B.x=X[b]+(X[a]-X[b])*e;const arc=1.25*Math.sin(Math.PI*e);A.z=arc;B.z=-arc});
+    if(u>=1){s.p.forEach(([a,b])=>{const ca=cupAt[a],cb=cupAt[b];cupAt[a]=cb;cupAt[b]=ca;cups[ca].slot=b;cups[cb].slot=a});cups.forEach(c=>{c.x=X[c.slot];c.z=0});stepI++;stepT=0;gapT=.06}}}}
+ else if(ph==="reveal"){rv.t+=dt;const c=cups[rv.cup],bc=cups[ballCup];
+  if(rv.t<1.0){c.jit=1}else{c.jit=0;if(c.tl===0){c.tl=1;SFX.lift();if(rv.ok){SFX.yes();confetti();mood=2.6;moodK="yes"}}}
+  if(!rv.ok){if(rv.t>2.0&&bc.tl===0){bc.tl=1;SFX.lift();SFX.no();mood=2.2;moodK="no"}}
+  const end=rv.ok?3.2:4.2;if(rv.t>end){endRound()}}
+ else if(ph==="result"){resultT-=dt;if(resultT<=0){if(hearts<=0)gameOver();else startRound()}}
+ // ball follows its cup
+ const bc=cups[ballCup];const vis=!!bc&&(ph==="intro"||ph==="reveal")&&bc.lift>.55;ball.visible=vis;blobB.visible=vis;if(bc){ball.position.set(bc.x,.52+Math.abs(Math.sin(idleT*6))*(ph==="reveal"&&rv&&rv.ok?.25:0),bc.z);blobB.position.set(bc.x,.06,bc.z)}
+ // selection highlight (hover / keyboard)
+ cups.forEach(c=>{const hi=ph==="choose"&&cupAt[sel]===c.id;c.g.scale.setScalar(hi?1.07:1)});
+ cups.forEach(positionCup);
+}
+function pickCupId(id){if(ph!=="choose")return;const ok=id===ballCup;ph="reveal";rv={cup:id,ok,t:0};$("picks").classList.remove("show");say("");SFX.drum();wasCorrect=ok;
+ setTimeout(()=>{},0)}
+function endRound(){const ok=rv.ok;say(pick(ok?t("yes"):t("no")));
+ if(ok){streak++;score+=10+level*2+Math.min(streak,6)*2;level++;if(score>best){best=score;ls.set("annabelle-cups-best",String(best))}}else{streak=0;hearts--}hud();ph="result";resultT=1.6}
+function gameOver(){over=true;ph="over";say("");$("picks").classList.remove("show");SFX.over();
+ const nb=score>best-0&&score>0&&score>=best;$("oT").textContent=t("oT");$("oS").textContent=t("oS").replace("{l}",level).replace("{s}",score);$("oB").textContent=nb&&score>0?t("best"):t("bestIs").replace("{b}",best);$("over").classList.add("show")}
+function toMenu(){paused=false;ph="menu";over=false;$("pause").classList.remove("show");$("over").classList.remove("show");$("picks").classList.remove("show");document.body.classList.remove("play");$("menu").classList.add("show");say("");ball.visible=false;blobB.visible=false;if(cups.length!==3)buildCups(3);else{layout(3);cupAt=[0,1,2];cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;c.lift=0;c.tl=0;c.jit=0})}drawTexts()}
+window.toMenu=toMenu;
+function doPause(on){if(ph==="menu"||ph==="over")return;paused=on;$("pause").classList.toggle("show",on)}
+/* ============ confetti (2D overlay) ============ */
+const cf=$("conf"),cx=cf.getContext("2d");let P=[],cfRun=false;
+function confetti(){const w=cf.width=innerWidth,h=cf.height=innerHeight;P=[];const cols=["#ff5d73","#ffd23f","#5fd38d","#4aa8ff","#b07cff","#ff9f43"];for(let i=0;i<140;i++)P.push({x:w/2+(Math.random()-.5)*w*.3,y:h*.45,vx:(Math.random()-.5)*14,vy:-6-Math.random()*10,s:5+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[i%6]});if(!cfRun){cfRun=true;requestAnimationFrame(cfStep)}}
+function cfStep(){cx.clearRect(0,0,cf.width,cf.height);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});P=P.filter(p=>p.y<cf.height+20);if(P.length)requestAnimationFrame(cfStep);else{cfRun=false;cx.clearRect(0,0,cf.width,cf.height)}}
+/* ============ camera / mascot / render ============ */
+let camD=14,vw=1,vh=1,lookY=3.3;
+function resize(){vw=innerWidth;vh=innerHeight;if(glOK)R.setSize(vw,vh,false);cam.aspect=vw/vh;cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+function frameCam(dt){const n=cups.length||3,spread=(n-1)*(n===3?2.2:n===4?1.95:1.7)+3.4,tn=Math.tan(cam.fov*Math.PI/360)*cam.aspect;const want=Math.max(15,spread/2/tn*1.05);camD+=(want-camD)*Math.min(1,dt*3);
+ cam.position.set(0,camD*.46,camD*.89);const ly=ph==='menu'?3.3:1.35;lookY+=(ly-lookY)*Math.min(1,dt*3);cam.lookAt(0,lookY,-1.2)}
+function animMascot(dt){const tt=idleT;mas.position.y=.1+Math.abs(Math.sin(tt*2))*.04;head.rotation.z=Math.sin(tt*1.6)*.06;armL.rotation.z=.15+Math.sin(tt*1.7)*.05;armR.rotation.z=-.15;armR.rotation.x=Math.sin(tt*3)*.15;
+ if(mood>0){mood-=dt;if(moodK==="yes"){mas.position.y=.1+Math.abs(Math.sin(tt*14))*.9;armL.rotation.z=2.4+Math.sin(tt*18)*.3;armR.rotation.z=-2.4-Math.sin(tt*18)*.3;head.rotation.z=Math.sin(tt*10)*.15}
+  else{head.rotation.z=.5;armL.rotation.z=2.2;armL.rotation.x=0;head.rotation.x=.25}}else{head.rotation.x=0}
+ if(ph==="shuffle"){armR.rotation.z=-.5+Math.sin(tt*9)*.6;armL.rotation.z=.5-Math.sin(tt*9)*.6}}
+let last=performance.now(),acc=0;
+function frame(now){requestAnimationFrame(frame);if(document.hidden){last=now;return}const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)tick(dt);if(glOK)R.render(scene,cam)}
+function tick(dt){updateGame(dt);animMascot(dt);frameCam(dt)
+ if(ph==="menu"){const q=cups;q.forEach((c,i)=>{c.x=X[c.slot]+Math.sin(idleT*1.1+i)*.15;c.z=Math.cos(idleT*1.3+i)*.2;c.tl=Math.sin(idleT*1.8+i*2)>.85?.5:0})}}
+if(glOK)requestAnimationFrame(frame);
+/* ============ UI ============ */
+function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("mEasy").textContent=t("easy");$("mNorm").textContent=t("norm");
+ $("mEasy").classList.toggle("sel",mode==="easy");$("mNorm").classList.toggle("sel",mode==="norm");$("mEasy").classList.toggle("off",mode!=="easy");$("mNorm").classList.toggle("off",mode!=="norm");
+ $("rules").textContent=t("rules");$("mBest").textContent=best?t("bestIs").replace("{b}",best):"";$("againBtn").textContent=t("again");$("oMenu").textContent=t("menu");$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");
+ $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");hud();buildPicks(cups.length||3)}
+function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
+$("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()};
+document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts()}});
+$("mEasy").onclick=()=>{mode="easy";ls.set("annabelle-cups-mode","easy");SFX.click();drawTexts()};$("mNorm").onclick=()=>{mode="norm";ls.set("annabelle-cups-mode","norm");SFX.click();drawTexts()};
+$("playBtn").onclick=()=>{SFX.click();startGame()};$("againBtn").onclick=()=>{SFX.click();startGame()};
+$("oMenu").onclick=()=>{SFX.click();toMenu()};$("pMenu").onclick=()=>{SFX.click();toMenu()};$("homeBtn").onclick=()=>{SFX.click();toMenu()};
+$("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};
+$("picks").addEventListener("pointerdown",e=>{const b=e.target.closest("button");if(!b)return;e.preventDefault();ac();pickSlot(+b.dataset.slot)});
+function pickSlot(s){if(ph!=="choose"||s<0||s>=cups.length)return;sel=s;SFX.click();pickCupId(cupAt[s])}
+/* tap/click a cup in 3D */
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();
+cvEl.addEventListener("pointerdown",e=>{ac();if(ph!=="choose"||paused)return;ptr.set(e.clientX/vw*2-1,-(e.clientY/vh)*2+1);ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(cups.map(c=>c.g),true)[0];if(hit){let o=hit.object;while(o&&!cups.some(c=>c.g===o))o=o.parent;const c=cups.find(c=>c.g===o);if(c){e.preventDefault();SFX.click();pickCupId(c.id)}}});
+cvEl.addEventListener("pointermove",e=>{if(ph!=="choose"||paused)return;ptr.set(e.clientX/vw*2-1,-(e.clientY/vh)*2+1);ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(cups.map(c=>c.g),true)[0];if(hit){let o=hit.object;while(o&&!cups.some(c=>c.g===o))o=o.parent;const c=cups.find(c=>c.g===o);if(c)sel=c.slot}});
+addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
+ if(e.code==="KeyM"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();return}
+ if(e.code==="Escape"||e.code==="KeyP"){e.preventDefault();if(ph==="menu")return;if(ph==="over"){toMenu();return}doPause(!paused);return}
+ const btn=e.target&&e.target.closest&&e.target.closest("button");
+ if(ph==="menu"){if((e.key==="Enter"||e.key===" ")&&!btn){e.preventDefault();startGame()}return}
+ if(ph==="over"){if((e.key==="Enter"||e.key===" ")&&!btn){e.preventDefault();startGame()}return}
+ if(ph==="choose"&&!paused){const n=cups.length;
+  if(/^[1-5]$/.test(e.key)&&+e.key<=n){e.preventDefault();pickSlot(+e.key-1)}
+  else if(e.key==="ArrowLeft"){e.preventDefault();sel=(sel+n-1)%n;SFX.tick()}else if(e.key==="ArrowRight"){e.preventDefault();sel=(sel+1)%n;SFX.tick()}
+  else if((e.key==="Enter"||e.key===" ")&&!btn){e.preventDefault();pickSlot(sel)}}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&ph!=="menu"&&ph!=="over"&&!paused)doPause(true)});
+/* ============ test hooks ============ */
+window.__cups={step(sec){const n=Math.ceil(sec*30);for(let i=0;i<n;i++)tick(1/30);if(glOK)R.render(scene,cam)},
+ start(m){if(m)mode=m;startGame()},
+ info(){return{ph,level,hearts,score,streak,n:cups.length,ballCup,cupAt:[...cupAt],swapLog:swapLog.map(p=>[...p]),slotX:[...X],cupX:cups.map(c=>c.x),cupLift:cups.map(c=>c.lift),ballX:ball.position.x,ballVisible:ball.visible,rv:rv&&{...rv},steps:steps.length,over,mode,caption:$("cap").textContent}},
+ pickSlot,pickCup:pickCupId,setMode(m){mode=m},setLevel(l){level=l},toMenu};
+updMute();drawTexts();buildCups(3);toMenu();
+</script>
+</body>
+</html>
