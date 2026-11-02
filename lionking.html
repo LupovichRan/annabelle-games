@@ -693,7 +693,11 @@ function updatePlayer(dt){
   // carry on giraffe
   if(p.plat&&p.plat.k==="g"){ const ny=giraffeY(p.plat.g); p.y=ny; }
   // move X
-  const h=ph(); let nx=p.x+p.vx*dt; const sx=overlapSolid(nx,p.y,h);
+  const h=ph();
+  { // never stay stuck inside a rock/mountain (boss knock-back, roll, etc.): pop out sideways to the nearest edge
+    const em=overlapSolid(p.x,p.y-1,h);
+    if(em){ const L=em[0]-PW-.5, R=em[0]+em[2]+PW+.5; p.x=(p.x-L<=R-p.x)?L:R; p.x=Math.max(10,Math.min(LEN-10,p.x)); p.vx=0; if(p.roll>0&&overlapSolid(p.x,p.y-1,h)) p.roll=0; if(overlapSolid(p.x,p.y-1,h)){ p.x=p.lastSafe.x; p.y=p.lastSafe.y; p.vy=0; } } }
+  let nx=p.x+p.vx*dt; const sx=overlapSolid(nx,p.y,h);
   if(sx){ nx=p.vx>0?sx[0]-PW-.01:sx[0]+sx[2]+PW+.01; if(p.roll>0&&Math.abs(p.vx)>0){ p.roll=0; } p.vx=0; }
   p.x=Math.max(10,Math.min(LEN-10,nx));
   // rhino side
@@ -834,7 +838,7 @@ function updateBoss(dt){ const B=BOSS; if(!B){ if(P.x>ARENA_L+40&&P.mode==="norm
     const stompy=P.vy>60&&P.y<B.y-bh+18;
     if(bossVulnerable()&&B.inv<=0&&(stompy||P.roll>0)){ hitBoss(); }
     else if(stompy){ P.vy=-420; P.on=false; SFX.bounce(); P.x+=(P.x<B.x?-1:1)*4; }
-    else if(bossVulnerable()||B.st==="hit"){ P.x=B.x+(P.x<B.x?-1:1)*(bw+PW+.5); P.vx=0; }
+    else if(bossVulnerable()||B.st==="hit"){ P.x=Math.max(ARENA_L+PW+2,Math.min(ARENA_R-PW-2,B.x+(P.x<B.x?-1:1)*(bw+PW+.5))); P.vx=0; }   // never shove the cub into the arena walls / Pride Rock
     else hurtPlayer(B.x);
   }
 }
