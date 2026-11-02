@@ -124,7 +124,7 @@ var known={};SH.forEach(function(s){(s.g||[]).forEach(function(h){known[h]=1})})
 all.forEach(function(h){if(!known[h])SH[1].g.push(h)}); // new games land on cats shelf end
 var favs=(S.favs||[]).filter(function(h){return src[h]}),ord=S.ord||{};
 SH.forEach(function(s){if(s.id=='fav')return;var o=(ord[s.id]||[]).filter(function(h){return s.g.indexOf(h)>=0});s.g.forEach(function(h){if(o.indexOf(h)<0)o.push(h)});s.g=o});
-var cur=Math.min(+S.cur||0,SH.length-1);
+var cur=+S.cur||0;
 function save(){var o={};SH.forEach(function(s){if(s.g)o[s.id]=s.g});try{localStorage.setItem(K,JSON.stringify({favs:favs,ord:o,cur:cur}))}catch(e){}}
 var sh=document.getElementById('sh'),edit=false,nl=document.getElementById('nl'),nr=document.getElementById('nr');
 function tile(h,list){var a=src[h].cloneNode(true),f=document.createElement('button');
@@ -148,18 +148,25 @@ function secScroll(d,abs){var secs=[].slice.call(sh.querySelectorAll('.sec'));if
  var y=sh.scrollTop+4,i=0;secs.forEach(function(e,k){if(e.offsetTop-sh.offsetTop<=y)i=k});
  var n=abs!=null?Math.min(secs.length-1,abs):Math.max(0,Math.min(secs.length-1,i+d));
  sh.scrollTop=secs[n].offsetTop-sh.offsetTop;var a=secs[n].querySelector('a[class^=g]');if(a)a.focus({preventScroll:true})}
+var PG=[];
+function pages(){ // phone/tablet view: every shelf is split into pages that fit the screen, so no game is hidden below the fold
+ var land=matchMedia('(orientation:landscape)').matches,per=land?6:3,th=Math.min(innerHeight*(land?.30:.19),150),rows=Math.max(1,Math.floor((innerHeight-220)/(th+32))),cap=rows*per;PG=[];
+ SH.forEach(function(sh0,si){var L=sh0.id=='fav'?favs:sh0.g,n=Math.max(1,Math.ceil(L.length/cap));
+  var ch=Math.ceil(Math.ceil(L.length/per)/n)*per; // balanced pages (e.g. 10 games -> 6 + 4, not 9 + 1)
+  for(var k=0;k<n;k++)PG.push({s:sh0,from:k*ch,to:(k+1)*ch,t:sh0.t+(n>1?' '+(k+1)+'/'+n:'')})});
+ cur=Math.max(0,Math.min(cur,PG.length-1))}
 function draw(){if(wide()){HE.classList.add('allview');drawAll();return}HE.classList.remove('allview');sh.style.removeProperty('--per');
- var s=SH[cur],L=s.id=='fav'?favs:s.g;sh.className='shelf'+(s.id=='fav'?' fs':'');sh.innerHTML='';
- document.getElementById('sg').textContent=s.t;
+ pages();var pg=PG[cur],s=pg.s,L=s.id=='fav'?favs:s.g;sh.className='shelf'+(s.id=='fav'?' fs':'');sh.innerHTML='';
+ document.getElementById('sg').textContent=pg.t;
  if(!L.length){sh.innerHTML='<div class="empty">עוד אין מועדפים 🙂<br>לחצי על ⭐ במשחק שאת אוהבת</div><div class="row" style="padding:0"></div>'}
  var per=matchMedia('(orientation:landscape)').matches?6:3;
- for(var i=0;i<L.length;i+=per){var r=document.createElement('div');r.className='row';L.slice(i,i+per).forEach(function(h){r.appendChild(tile(h,L))});sh.appendChild(r)}
- document.getElementById('dt').innerHTML=SH.map(function(s,i){return '<button class="'+(i==cur?'on':'')+'" data-n="'+i+'" aria-label="'+s.t+'"></button>'}).join('');
- nl.disabled=cur>=SH.length-1;nr.disabled=cur<=0}
-function go(d,step,key){var n=cur+(step||d);if(n<0||n>=SH.length)return;cur=n;save();draw();sh.classList.add(d>0?'out-l':'out-r');sh.offsetWidth;sh.classList.remove('out-l','out-r');if(key)focusTile(0)}
+ var LP=L.slice(pg.from,pg.to);for(var i=0;i<LP.length;i+=per){var r=document.createElement('div');r.className='row';LP.slice(i,i+per).forEach(function(h){r.appendChild(tile(h,L))});sh.appendChild(r)}
+ document.getElementById('dt').innerHTML=PG.map(function(g,i){return '<button class="'+(i==cur?'on':'')+'" data-n="'+i+'" aria-label="'+g.t+'"></button>'}).join('');
+ nl.disabled=cur>=PG.length-1;nr.disabled=cur<=0}
+function go(d,step,key){var n=cur+(step||d);if(n<0||n>=PG.length)return;cur=n;save();draw();sh.classList.add(d>0?'out-l':'out-r');sh.offsetWidth;sh.classList.remove('out-l','out-r');if(key)focusTile(0)}
 nl.onclick=function(){go(1)};nr.onclick=function(){go(-1)};
 document.getElementById('dt').addEventListener('click',function(e){var b=e.target.closest('button[data-n]');if(b)goTo(+b.dataset.n)});
-function goTo(n){if(n==cur||n<0||n>=SH.length)return;go(n>cur?1:-1,n-cur)}
+function goTo(n){if(n==cur||n<0||n>=PG.length)return;go(n>cur?1:-1,n-cur)}
 // keyboard (laptop)
 function tiles(){return [].slice.call(sh.querySelectorAll('a[class^=g]'))}
 function focusTile(i){var t=tiles();if(t.length)t[Math.max(0,Math.min(t.length-1,i))].focus()}
