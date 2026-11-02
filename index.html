@@ -69,6 +69,18 @@ body{padding-top:calc(58px + env(safe-area-inset-top))}body.edit a[class^=g]{pad
  .desk .shelf{max-height:calc(100dvh - 190px)}
 }
 @media (orientation:landscape) and (min-height:640px){.desk body{padding-top:calc(58px + 6vh);gap:min(2.2vh,20px)}}
+/* laptop / desktop: ALL shelves at once, stacked, with the page scrolling inside #sh (no hidden shelves) */
+html.allview .nav,html.allview .dots{display:none}
+html.allview .stage{perspective:none;width:min(100%,1320px);flex:1 1 auto;min-height:0;display:flex}
+html.allview #sh{flex:1;background:none;box-shadow:none;max-height:none;padding:0 6px 0;overflow-y:auto;overflow-x:hidden;border-radius:0;transform:none;scrollbar-width:thin;scroll-behavior:smooth}
+html.allview .sec{margin:0 0 14px}html.allview #sh{padding-bottom:34px}
+html.allview .sec-t{display:inline-block;margin:4px 0 8px;background:#fff8ec;border:2px solid #c9925e;border-radius:10px;padding:3px 16px;font-weight:900;font-size:clamp(16px,2.4vh,21px);color:#6b4a3a}
+html.allview .sec-b{background:#f7e6cf;border-radius:16px;padding:12px 12px 0;box-shadow:inset 0 0 0 3px #d9b48a}
+html.allview .sec-b.fs{background:#fff6d6;box-shadow:inset 0 0 0 3px #f1c14b}
+html.allview .row{grid-template-columns:repeat(var(--per,6),minmax(0,1fr));gap:12px}
+html.allview a[class^=g]{height:clamp(104px,17vh,170px);font-size:clamp(14px,2.2vh,20px)}
+html.allview body{padding-top:calc(52px + 2vh);gap:6px}
+html.allview .khint{position:static;display:block;padding:2px 0}
 </style>
 <script src="desktop.js"></script>
 </head><body>
@@ -120,7 +132,23 @@ function tile(h,list){var a=src[h].cloneNode(true),f=document.createElement('but
  [['l','◀',1],['r','▶',-1]].forEach(function(m){var b=document.createElement('button');b.className='mv '+m[0];b.textContent=m[1];
   b.onclick=function(e){e.preventDefault();e.stopPropagation();var i=list.indexOf(h),j=i+m[2];if(j<0||j>=list.length)return;list[i]=list[j];list[j]=h;save();draw()};a.appendChild(b)});
  a.addEventListener('click',function(e){if(edit)e.preventDefault()});return a}
-function draw(){var s=SH[cur],L=s.id=='fav'?favs:s.g;sh.className='shelf'+(s.id=='fav'?' fs':'');sh.innerHTML='';
+var HE=document.documentElement;
+function wide(){return HE.classList.contains('desk')&&matchMedia('(min-width:760px) and (orientation:landscape)').matches}
+function drawAll(){var top=sh.scrollTop;sh.className='';sh.innerHTML='';
+ var per=innerWidth>=1500?8:innerWidth>=1100?6:4;sh.style.setProperty('--per',per);
+ SH.forEach(function(s,n){var L=s.id=='fav'?favs:s.g;if(!L.length)return;
+  var sec=document.createElement('section');sec.className='sec';sec.dataset.n=n;
+  var t=document.createElement('div');t.className='sec-t';t.textContent=s.t;sec.appendChild(t);
+  var b=document.createElement('div');b.className='sec-b'+(s.id=='fav'?' fs':'');
+  for(var i=0;i<L.length;i+=per){var r=document.createElement('div');r.className='row';L.slice(i,i+per).forEach(function(h){r.appendChild(tile(h,L))});b.appendChild(r)}
+  sec.appendChild(b);sh.appendChild(sec)});
+ sh.style.scrollBehavior='auto';sh.scrollTop=top;sh.style.scrollBehavior=''}
+function secScroll(d,abs){var secs=[].slice.call(sh.querySelectorAll('.sec'));if(!secs.length)return;
+ var y=sh.scrollTop+4,i=0;secs.forEach(function(e,k){if(e.offsetTop-sh.offsetTop<=y)i=k});
+ var n=abs!=null?Math.min(secs.length-1,abs):Math.max(0,Math.min(secs.length-1,i+d));
+ sh.scrollTop=secs[n].offsetTop-sh.offsetTop;var a=secs[n].querySelector('a[class^=g]');if(a)a.focus({preventScroll:true})}
+function draw(){if(wide()){HE.classList.add('allview');drawAll();return}HE.classList.remove('allview');sh.style.removeProperty('--per');
+ var s=SH[cur],L=s.id=='fav'?favs:s.g;sh.className='shelf'+(s.id=='fav'?' fs':'');sh.innerHTML='';
  document.getElementById('sg').textContent=s.t;
  if(!L.length){sh.innerHTML='<div class="empty">עוד אין מועדפים 🙂<br>לחצי על ⭐ במשחק שאת אוהבת</div><div class="row" style="padding:0"></div>'}
  var per=matchMedia('(orientation:landscape)').matches?6:3;
@@ -144,12 +172,12 @@ document.addEventListener('keydown',function(e){
  if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
  var k=e.key,a=document.activeElement,c=a&&a.closest&&a.closest('#sh a[class^=g]');
  if(k.indexOf('Arrow')==0){e.preventDefault();
-  if(e.shiftKey&&(k=='ArrowLeft'||k=='ArrowRight')){go(k=='ArrowLeft'?1:-1,0,true);return}
+  if(e.shiftKey&&(k=='ArrowLeft'||k=='ArrowRight')){if(HE.classList.contains('allview'))return;go(k=='ArrowLeft'?1:-1,0,true);return}
   if(a&&a.blur&&a.closest&&a.closest('.tools,.nav,.dots')){a.blur()}
   move(k=='ArrowRight'?1:k=='ArrowLeft'?-1:0,k=='ArrowDown'?1:k=='ArrowUp'?-1:0);return}
- if(k=='PageDown'||k=='PageUp'){e.preventDefault();go(k=='PageDown'?1:-1,0,true);return}
+ if(k=='PageDown'||k=='PageUp'){e.preventDefault();if(HE.classList.contains('allview')){secScroll(k=='PageDown'?1:-1);return}go(k=='PageDown'?1:-1,0,true);return}
  if(k=='Home'||k=='End'){e.preventDefault();focusTile(k=='Home'?0:999);return}
- if(/^[1-9]$/.test(k)&&+k<=SH.length){e.preventDefault();var n=+k-1;if(n!=cur){cur=n;save();draw();focusTile(0)}return}
+ if(/^[1-9]$/.test(k)&&+k<=SH.length){e.preventDefault();if(HE.classList.contains('allview')){var q=sh.querySelector('.sec[data-n="'+(+k-1)+'"]');if(q){sh.scrollTop=q.offsetTop-sh.offsetTop;var a0=q.querySelector('a[class^=g]');if(a0)a0.focus({preventScroll:true})}return}var n=+k-1;if(n!=cur){cur=n;save();draw();focusTile(0)}return}
  if(k==' '&&c){e.preventDefault();c.click();return}
  if(k=='f'||k=='F'){if(c){e.preventDefault();var h=c.getAttribute('href');var i=favs.indexOf(h);if(i<0)favs.push(h);else favs.splice(i,1);save();draw();focusHref(h)}return}
  if(k=='e'||k=='E'){e.preventDefault();ed.click();return}
@@ -160,7 +188,7 @@ var x0=null,st=document.getElementById('st');
 st.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
 st.addEventListener('touchend',function(e){if(x0==null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)go(dx>0?1:-1)});
 var ed=document.getElementById('ed');ed.onclick=function(){edit=!edit;document.body.classList.toggle('edit',edit);ed.textContent=edit?'✔ סיימתי':'✏️ סידור'};
-matchMedia('(orientation:landscape)').addEventListener('change',draw);
+matchMedia('(orientation:landscape)').addEventListener('change',draw);addEventListener('resize',function(){var w=wide();if(w!==HE.classList.contains('allview')||w)draw()});
 draw();})();
 </script>
 </body></html>
