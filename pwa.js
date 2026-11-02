@@ -98,7 +98,12 @@
   function place() {
     if (APP === 'launcher') {
       if (!document.querySelector('.pwa-launch')) {
-        var paws = document.querySelector('.paws'); if (!paws) return;
+        var paws = document.querySelector('.paws');
+        if (!paws) { // the shelves home page has no .paws: put the install pill under the title
+          var h1 = document.querySelector('h1'); if (!h1) return;
+          if (!document.querySelector('.pwa-launch')) { var bx = document.createElement('div'); bx.className = 'pwa-launch'; bx.style.margin = '4px 0 2px'; bx.appendChild(makeBtn()); h1.insertAdjacentElement('afterend', bx); }
+          return;
+        }
         var box = document.createElement('div'); box.className = 'pwa-launch';
         box.appendChild(makeBtn());
         var p = document.createElement('p'); p.className = 'pwa-hint'; box.appendChild(p);
