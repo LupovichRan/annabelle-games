@@ -141,7 +141,7 @@ const TX={
   round:"סבב",fight:"קרב!",ko:"נוקאאוט!",timeUp:"נגמר הזמן!",perfect:"מושלם!",
   hit:["פאו!","בום!","זאפ!","וואם!"],finish:"🧶 סיום מצחיק!",finT:"הקרב נגמר!",
   win:"ניצחה!",youWin:"ניצחת! 🏆",youLose:"הפעם הם ניצחו 😸",again:"🔁 עוד קרב",paused:"הפסקה ⏸",resume:"המשך ▶",p1:"שחקנית 1",p2:"שחקנית 2",cpu:"המחשב",
-  hintK:"<kbd>A</kbd><kbd>D</kbd> תנועה · <kbd>W</kbd> קפיצה · <kbd>J</kbd> אגרוף · <kbd>K</kbd> בעיטה · <kbd>L</kbd>/<kbd>S</kbd> הגנה · <kbd>G</kbd> הגנה קבועה · <kbd>U</kbd> מיוחד · <kbd>Esc</kbd> הפסקה",
+  hintK:"<kbd>A</kbd><kbd>D</kbd> תנועה · <kbd>W</kbd> קפיצה · <kbd>J</kbd> אגרוף · <kbd>K</kbd> בעיטה · <kbd>L</kbd>/<kbd>S</kbd> הגנה · <kbd>U</kbd> מיוחד · <kbd>Esc</kbd> הפסקה",
   hintK2:"שחקנית 2: <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd> · <kbd>,</kbd> אגרוף · <kbd>.</kbd> בעיטה · <kbd>/</kbd> הגנה · <kbd>;</kbd> מיוחד"},
  fr:{title:"Guerriers de la Foudre",guardTip:"🛡️ Maintiens le bouclier pour te protéger – mais il se fatigue ! Quand la barre bleue est vide, il se brise un instant",sub:"Combat de chatons épique ! ⚡",
   rules:["⚡ Choisis un combattant et gagne 2 manches sur 3.","👊 Coup de poing rapide · 🦶 Coup de pied fort · 🛡️ Garde · joystick vers le haut = saut","⚡ Jauge pleine = attaque spéciale ! (on gagne aussi de l'énergie en frappant)","🧶 À la fin : une fin rigolote – le perdant devient une pelote de laine ! Sans sang, sans douleur 😸"],
@@ -152,7 +152,7 @@ const TX={
   round:"Manche",fight:"Combat !",ko:"K.O. !",timeUp:"Temps écoulé !",perfect:"Parfait !",
   hit:["Pow !","Boum !","Zap !","Wham !"],finish:"🧶 Fin rigolote !",finT:"Combat terminé !",
   win:"gagne !",youWin:"Tu as gagné ! 🏆",youLose:"Cette fois ils ont gagné 😸",again:"🔁 Un autre combat",paused:"Pause ⏸",resume:"Reprendre ▶",p1:"Joueur 1",p2:"Joueur 2",cpu:"L'ordi",
-  hintK:"<kbd>A</kbd><kbd>D</kbd> bouger · <kbd>W</kbd> saut · <kbd>J</kbd> poing · <kbd>K</kbd> pied · <kbd>L</kbd>/<kbd>S</kbd> garde · <kbd>G</kbd> garde permanente · <kbd>U</kbd> spécial · <kbd>Échap</kbd> pause",
+  hintK:"<kbd>A</kbd><kbd>D</kbd> bouger · <kbd>W</kbd> saut · <kbd>J</kbd> poing · <kbd>K</kbd> pied · <kbd>L</kbd>/<kbd>S</kbd> garde · <kbd>U</kbd> spécial · <kbd>Échap</kbd> pause",
   hintK2:"Joueur 2 : <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd> · <kbd>,</kbd> poing · <kbd>.</kbd> pied · <kbd>/</kbd> garde · <kbd>;</kbd> spécial"},
  en:{title:"Lightning Kittens",guardTip:"🛡️ Hold the shield to guard – but it gets tired! When the blue bar runs out the guard breaks for a moment",sub:"Epic kitten fighting! ⚡",
   rules:["⚡ Pick a fighter and win 2 rounds out of 3.","👊 Quick punch · 🦶 Strong kick · 🛡️ Block · joystick up = jump","⚡ Full meter = special move! (you also gain energy by hitting)","🧶 At the end: a silly finisher – the loser turns into a ball of yarn! No blood, no pain 😸"],
@@ -412,41 +412,79 @@ function bg(x,g,tm){
  x.fillStyle=S.ground;x.fillRect(0,GY,W,H-GY);x.strokeStyle=S.line;x.lineWidth=3;x.beginPath();x.moveTo(0,GY+1);x.lineTo(W,GY+1);x.stroke();
  x.strokeStyle=S.line+"44";x.lineWidth=1;for(let i=0;i<9;i++){x.beginPath();x.moveTo(i*100,GY);x.lineTo(i*100-(i-4)*60,H);x.stroke()}
 }
-function drawFighterTo(x,f,k=1){ // draws a cartoon kitten warrior; used both in the arena and in the picker
- const C=CHARS[f.ch],tm=f.t||0,st=f.st||"idle";
+const LP=[0,0,0,0];
+function limb2(x,sx,sy,a1,l1,a2,l2,w,col){const ex=sx+Math.cos(a1)*l1,ey=sy+Math.sin(a1)*l1;LP[0]=ex+Math.cos(a2)*l2;LP[1]=ey+Math.sin(a2)*l2;LP[2]=ex;LP[3]=ey;x.strokeStyle=col;x.lineWidth=w;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(sx,sy);x.lineTo(ex,ey);x.lineTo(LP[0],LP[1]);x.stroke()}
+const lerp=(a,b,t)=>a+(b-a)*t,eo=t=>1-(1-t)*(1-t),eio=t=>t<.5?2*t*t:1-2*(1-t)*(1-t);
+// attack phase: -0.35 (wind-up, pulling back) -> 1 (fully extended at the hit frame) -> 0 (recovered); uses only f.t and the ATK timings so a guest renders the same pose from the synced state/time
+function atkW(a,t){const s=a.s,e=a.e,d=a.dur;if(t<s)return -.35*eio(Math.max(0,t)/s);if(t<e){const u=Math.min(1,(t-s)/Math.max(.001,(e-s)*.55));return lerp(-.35,1,eo(u))}return Math.max(0,1-eio(Math.min(1,(t-e)/Math.max(.001,d-e))))}
+const PS={rest:[1.15,-.8],wind:[2.1,-1.3],ext:[-.06,-.02],gF:[.5,-1.45],gB:[.85,-1.2],up:[-1.2,-1.57],upB:[-1.9,-1.57],fly:[2.4,2.0],flyB:[2.75,2.3],limp:[2.0,2.3],tuckF:[-.5,-1.1],tuckB:[2.5,1.9]};
+const LEGP={stand:[1.2,1.95],crouch:[1.0,2.15],tuck:[.35,1.9],tuckB:[1.15,2.3],drop:[1.45,1.6],chamber:[.15,1.75],kickEx:[-.28,-.12],guardF:[.95,2.2],guardB:[1.9,1.45],stag:[1.0,1.9],ko:[1.55,1.9]};
+function drawFighterTo(x,f,k=1){ // draws a cartoon kitten warrior with two-segment arms and legs; used both in the arena and in the picker
+ const C=CHARS[f.ch],tm=f.t||0,st=f.st||"idle",now=performance.now();
+ // render-side memory (never synced): which hand throws, landing squash, rising/falling
+ if(st==="atk"&&(f._ds!=="atk"||tm<(f._dt||0)))f._pn=((f._pn|0)+1)&1;
+ if(f._ds==="jump"&&st!=="jump"&&st!=="atk"&&st!=="sp")f._lt=now;
+ const rising=f._py!=null&&f.y<f._py-.2;f._py=f.y;f._ds=st;f._dt=tm;
+ const land=f._lt&&now-f._lt<130?(1-(now-f._lt)/130):0;
  x.save();x.translate(f.x,f.y);x.scale(f.face*k,k);
- let lean=0,armF=0,legF=0,up=0,rot=0,mouth=0;
- const bob=st==="idle"?Math.sin(performance.now()/300+f.x)*2:0;
- if(st==="walk"){legF=Math.sin(f.anim||0)*18}
- if(st==="jump"){legF=-14;up=0}
- if(st==="atk"){const a=f.atk,p=Math.min(1,f.t/a.dur);mouth=1;if(a.k==="punch"){armF=Math.sin(Math.min(1,p*1.6)*Math.PI)*56;lean=armF*.12}else{legF=Math.sin(Math.min(1,p*1.3)*Math.PI)*70;lean=-legF*.1}}
- if(st==="sp"){mouth=1;armF=50;lean=8;x.shadowColor="#ffe14d";x.shadowBlur=24}
- if(st==="block"){lean=-6;if(Math.abs(f.vx||0)>20)legF=Math.sin(f.anim||0)*10}
- if(st==="hurt"){lean=-16;mouth=1}
- if(st==="ko"){rot=Math.min(1,(f.t||0)*3)*-1.5;up=-6}
- if(st==="win"){up=-Math.abs(Math.sin(performance.now()/160))*16;armF=-60}
- x.fillStyle="#0004";x.beginPath();x.ellipse(0,2,36,8,0,0,7);x.fill();
+ let lean=0,rot=0,up=0,mouth=0,tilt=0,tailUp=0,w=0,punch=0,kick=0;
+ const ph=f.anim||0,bob=st==="idle"?Math.sin(now/300+f.x)*1.6:0,breath=st==="idle"?Math.sin(now/420+f.x)*.05:0;
+ // arms: [upper,fore] angles for front (A1) and back (A2) arm; legs likewise (L1 front hip, L2 back hip). 0 = forward, PI/2 = down, -PI/2 = up
+ let A1=PS.rest,A2=PS.rest,L1=LEGP.stand,L2=LEGP.stand,stretchA=1,stretchL=1,aF=0,aB=0,lF=0,lB=0;
+ const hand=f._pn?1:0;   // 0: lead (front) arm, 1: rear arm
+ if(st==="idle"){const sw=Math.sin(now/520+f.x)*.06;aF=aB=sw;lF=Math.sin(now/520+f.x)*.05;lB=-lF;A1=PS.rest;A2=PS.rest;L1=LEGP.stand;L2=LEGP.stand}
+ else if(st==="walk"){const s1=Math.sin(ph),s2=Math.sin(ph+Math.PI);aF=s2*.5;aB=s1*.5;lF=s1*.5;lB=s2*.5;L1=LEGP.stand;L2=LEGP.stand;tilt=.05}
+ else if(st==="jump"){if(rising){A1=PS.tuckF;A2=PS.tuckB;L1=LEGP.tuck;L2=LEGP.tuckB}else{A1=PS.rest;A2=PS.tuckB;L1=LEGP.drop;L2=LEGP.drop;lF=.2;lB=-.25}tilt=rising?.06:-.04}
+ else if(st==="atk"){const a=f.atk;mouth=1;w=atkW(a,tm);const pw=w<0?-w/.35:w;
+  if(a.k==="punch"){punch=1;
+   const pose=w<0?[lerp(PS.rest[0],PS.wind[0],pw),lerp(PS.rest[1],PS.wind[1],pw)]:[lerp(PS.rest[0],PS.ext[0],pw),lerp(PS.rest[1],PS.ext[1],pw)];
+   if(hand===0){A1=pose;A2=PS.gB;stretchA=1+.3*Math.max(0,w)}else{A2=pose;A1=PS.gF;stretchA=1+.42*Math.max(0,w)}
+   tilt=hand===0?w*.1:w*.16;lean=w*(hand===0?8:11);L1=w>0?LEGP.crouch:LEGP.stand;L2=LEGP.crouch;lF=w*.12;lB=-w*.12}
+  else{kick=1;
+   // chamber (knee up) during wind-up, then snap out; blend chamber -> extension with w
+   let l1,l2;if(w<0){const u=-w/.35;l1=lerp(LEGP.stand[0],LEGP.chamber[0],u);l2=lerp(LEGP.stand[1],LEGP.chamber[1],u)}else{l1=lerp(LEGP.chamber[0],LEGP.kickEx[0],w);l2=lerp(LEGP.chamber[1],LEGP.kickEx[1],w)}
+   L1=[l1,l2];L2=[1.0,2.1];stretchL=1+.5*Math.max(0,w);A1=[lerp(PS.rest[0],.9,Math.abs(w)),lerp(PS.rest[1],-.9,Math.abs(w))];A2=[lerp(PS.rest[0],2.4,Math.abs(w)),lerp(PS.rest[1],1.5,Math.abs(w))];
+   tilt=-w*.2;lean=-w*5;tailUp=w*26;up=-Math.max(0,w)*4}}
+ else if(st==="sp"){mouth=1;A1=PS.ext;A2=[.25,.12];lean=8;tilt=.08;L1=LEGP.crouch;L2=LEGP.crouch;x.shadowColor="#ffe14d";x.shadowBlur=24}
+ else if(st==="block"){A1=PS.gF;A2=PS.gB;L1=LEGP.guardF;L2=LEGP.guardB;lean=-4;tilt=-.05;if(Math.abs(f.vx||0)>20){lF=Math.sin(ph)*.3;lB=-lF}}
+ else if(st==="hurt"){mouth=1;A1=PS.fly;A2=PS.flyB;L1=LEGP.stag;L2=LEGP.guardB;lean=-14;tilt=-.3+Math.sin(tm*40)*.03}
+ else if(st==="ko"){const pr=Math.min(1,tm*3);rot=pr*-1.5;up=-6;A1=PS.limp;A2=PS.limp;L1=LEGP.ko;L2=LEGP.stand}
+ else if(st==="win"){up=-Math.abs(Math.sin(now/160))*16;A1=PS.up;A2=PS.upB;L1=LEGP.tuck;L2=LEGP.drop;mouth=1}
+ // legs first (they carry the weight); lower the body so the planted foot stays on the floor
+ const T1=17*stretchL,T2=17*stretchL,h1=-34,h2=-34;
+ const v1=(T1*Math.sin(L1[0]+lF)+T2*Math.sin(L1[1]+lF)),v2=(T2*Math.sin(L2[0]+lB)+T2*Math.sin(L2[1]+lB));
+ const planted=st==="jump"||st==="win"||st==="ko"?0:34-Math.max(kick?v2:Math.max(v1,v2),0);
+ x.fillStyle="#0004";x.beginPath();x.ellipse(0,2,36*(1+land*.1),8,0,0,7);x.fill();
  x.rotate(rot);x.translate(0,bob+up);x.translate(lean,0);
- // tail
- x.strokeStyle=C.col;x.lineWidth=11;x.lineCap="round";x.beginPath();x.moveTo(-18,-52);x.quadraticCurveTo(-52,-60+Math.sin(performance.now()/200)*10,-44,-98);x.stroke();
+ x.translate(0,planted+land*5);
+ // tail (counter-balances kicks, whips up on punches)
+ x.strokeStyle=C.col;x.lineWidth=11;x.lineCap="round";x.beginPath();x.moveTo(-18,-52);x.quadraticCurveTo(-52,-60-tailUp*.6+Math.sin(now/200)*(st==="idle"?10:4),-44,-98-tailUp);x.stroke();
  if(C.stripes){x.strokeStyle=C.dark;x.lineWidth=3;x.beginPath();x.moveTo(-34,-70);x.lineTo(-44,-66);x.moveTo(-40,-86);x.lineTo(-50,-84);x.stroke()}
- // back leg + front leg
- const leg=(ox,ph,front)=>{x.fillStyle=C.dark;x.beginPath();x.roundRect(ox-9+(front&&st==="atk"&&f.atk.k==="kick"?legF*.9:ph),-34,18,front&&st==="atk"&&f.atk.k==="kick"?22:34,8);x.fill();x.fillStyle=C.col;x.beginPath();x.ellipse(ox+(front&&st==="atk"&&f.atk.k==="kick"?legF:ph),front&&st==="atk"&&f.atk.k==="kick"?-22:-2,15,9,0,0,7);x.fill()};
- leg(-12,-legF*.6,false);leg(14,legF*.6,true);
+ const foot=(hx,hy,a2,len,front)=>{x.fillStyle=C.col;x.beginPath();x.ellipse(hx+Math.cos(a2)*3+5,hy+1,len,6.5,a2*.25,0,7);x.fill()};
+ // back leg, then front leg (thigh + shin + foot)
+ limb2(x,-10,h2+0,L2[0]+lB,T2,L2[1]+lB,T2,13,C.dark);foot(LP[0],LP[1],L2[1]+lB,10,false);
+ limb2(x,12,h1+0,L1[0]+lF,T1,L1[1]+lF,T2,13,C.dark);foot(LP[0],LP[1],L1[1]+lF,kick?11:10,true);
+ const kfx=LP[0],kfy=LP[1];
+ // upper body tilts around the hips
+ x.translate(0,-34);x.rotate(tilt);x.translate(0,34);
+ // far arm
+ const armDraw=(sx,sy,ang,sw,l,col,glove,fist)=>{limb2(x,sx,sy,ang[0]+sw,17*l,ang[1]+sw,19*l,12,col);x.fillStyle=glove;x.beginPath();x.arc(LP[0],LP[1],fist?11:9,0,7);x.fill();if(fist){x.fillStyle="#ffffff55";x.beginPath();x.arc(LP[0]-3,LP[1]-3,3.5,0,7);x.fill()}};
+ const farPunch=punch&&hand===1,nearPunch=punch&&hand===0;
+ if(!farPunch)armDraw(-16,-72,A2,aB,1,C.col,C.band,false);
  // body
+ x.save();x.translate(0,-34);x.scale(1,1+breath);x.translate(0,34);
  x.fillStyle=C.col;x.beginPath();x.roundRect(-24,-86,50,56,16);x.fill();
  x.fillStyle=C.dark+"55";x.beginPath();x.roundRect(-14,-70,30,34,10);x.fill();
  if(C.stripes){x.strokeStyle=C.dark;x.lineWidth=4;for(let i=0;i<3;i++){x.beginPath();x.moveTo(-22,-80+i*14);x.lineTo(-10,-76+i*14);x.stroke()}}
  if(C.spots){x.fillStyle=C.dark;for(const[px,py]of[[-14,-76],[8,-70],[-4,-52],[14,-44],[-16,-40]]){x.beginPath();x.arc(px,py,3.2,0,7);x.fill()}}
- // belt
  x.fillStyle=C.band;x.fillRect(-24,-52,50,8);x.fillStyle="#ffe14d";x.fillRect(-4,-53,10,10);
- // arms
- const arm=(front)=>{x.save();x.translate(front?18:-18,-72);let ang=front?-.15:.25;let ext=0;
-  if(st==="atk"&&f.atk.k==="punch"&&front)ext=armF;if(st==="sp")ext=front?armF:armF*.6;if(st==="win")ang=-2.2*(front?1:-1);
-  if(st==="block"){ang=front?-1.2:-1.0}
-  x.rotate(ang);x.fillStyle=C.col;x.beginPath();x.roundRect(-8,-4,16+(ext?ext:6)+14,16,8);x.fill();
-  x.fillStyle=C.band;x.beginPath();x.arc(16+(ext?ext:6)+12,4,10,0,7);x.fill();x.restore()};
- arm(false);arm(true);
+ x.restore();
+ // near arm (+ the rear arm when it throws the cross, drawn over the body)
+ if(farPunch)armDraw(-12+Math.max(0,w)*14,-73,A2,0,stretchA,C.col,C.band,w>.5);
+ armDraw(18,-72,A1,aF,nearPunch?stretchA:1,C.col,C.band,nearPunch&&w>.5);
+ // motion smear: an arc / speed lines behind the striking limb while it is fast
+ if(punch&&w>.25&&w<1.01&&tm<(f.atk.e+.06)){const hx=LP[0],hy=LP[1];x.save();x.globalAlpha=.55*Math.min(1,(w-.2)*2);x.strokeStyle="#fff";x.lineCap="round";x.lineWidth=4;for(let i=0;i<3;i++){x.beginPath();x.moveTo(hx-26-i*7,hy-6+i*6);x.lineTo(hx-10-i*3,hy-6+i*6);x.stroke()}x.restore()}
+ if(kick&&w>.25&&tm<(f.atk.e+.06)){x.save();x.globalAlpha=.5*Math.min(1,(w-.2)*2);x.strokeStyle="#fff";x.lineCap="round";x.lineWidth=5;x.beginPath();x.arc(8,-30,kfx>0?Math.hypot(kfx-8,kfy+30)*.92:50,-.9+w*.35,.2,false);x.stroke();x.restore()}
  // head
  if(C.mane){x.fillStyle=C.mane;x.beginPath();x.arc(4,-108,36,0,7);x.fill();x.fillStyle=C.mane+"cc";for(let i=0;i<8;i++){const a=i*.8;x.beginPath();x.arc(4+Math.cos(a)*34,-108+Math.sin(a)*34,10,0,7);x.fill()}}
  x.fillStyle=C.col;x.strokeStyle=C.dark;x.lineWidth=3;
