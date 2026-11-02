@@ -132,7 +132,8 @@ table.add(put(cyl(7.4,7.4,.5,0x8a5a2a,40),0,-.25,0));
 table.add(put(cyl(7.0,7.0,.08,0x2f9d6a,40),0,.04,0));
 table.add(put(cyl(1.4,2.2,1.9,0x6b431c,16),0,-1.45,0));
 /* mascot kitten magician */
-const mas=new THREE.Group();mas.position.set(0,.1,-5.2);mas.scale.setScalar(1.15);scene.add(mas);
+const mas=new THREE.Group();const MY=2.6;mas.position.set(0,MY,-5.9);mas.scale.setScalar(1.15);scene.add(mas);
+const pod=new THREE.Mesh(new THREE.CylinderGeometry(1.9,2.2,MY+.1,24),M(0x7a3fb0));pod.position.set(0,(MY+.1)/2-.05,-5.9);scene.add(pod);const podTop=new THREE.Mesh(new THREE.CylinderGeometry(1.95,1.95,.12,24),M(0xffd24a));podTop.position.set(0,MY-.02,-5.9);scene.add(podTop);
 const body=put(sph(1,0xff9a3c),0,1.05,0);body.scale.set(1.05,1.15,.95);mas.add(body);
 const belly=put(sph(.62,0xffe2b8),0,.95,.55);belly.scale.set(.9,1.05,.4);mas.add(belly);
 const head=new THREE.Group();head.position.set(0,2.55,.1);mas.add(head);
@@ -228,10 +229,10 @@ let camD=14,vw=1,vh=1,lookY=3.3;
 function resize(){vw=innerWidth;vh=innerHeight;if(glOK)R.setSize(vw,vh,false);cam.aspect=vw/vh;cam.updateProjectionMatrix()}
 addEventListener("resize",resize);resize();
 function frameCam(dt){const n=cups.length||3,spread=(n-1)*(n===3?2.2:n===4?1.95:1.7)+3.4,tn=Math.tan(cam.fov*Math.PI/360)*cam.aspect;const want=Math.max(15,spread/2/tn*1.05);camD+=(want-camD)*Math.min(1,dt*3);
- cam.position.set(0,camD*.46,camD*.89);const ly=ph==='menu'?3.3:1.35;lookY+=(ly-lookY)*Math.min(1,dt*3);cam.lookAt(0,lookY,-1.2)}
-function animMascot(dt){const tt=idleT;mas.position.y=.1+Math.abs(Math.sin(tt*2))*.04;head.rotation.z=Math.sin(tt*1.6)*.06;armL.rotation.z=.15+Math.sin(tt*1.7)*.05;armR.rotation.z=-.15;armR.rotation.x=Math.sin(tt*3)*.15;
- if(mood>0){mood-=dt;if(moodK==="yes"){mas.position.y=.1+Math.abs(Math.sin(tt*14))*.9;armL.rotation.z=2.4+Math.sin(tt*18)*.3;armR.rotation.z=-2.4-Math.sin(tt*18)*.3;head.rotation.z=Math.sin(tt*10)*.15}
-  else{head.rotation.z=.5;armL.rotation.z=2.2;armL.rotation.x=0;head.rotation.x=.25}}else{head.rotation.x=0}
+ cam.position.set(0,camD*.46,camD*.89);const ly=ph==="menu"?4.6:3.0;lookY+=(ly-lookY)*Math.min(1,dt*3);cam.lookAt(0,lookY,-1.2)}
+function animMascot(dt){const tt=idleT;mas.position.y=MY+Math.abs(Math.sin(tt*2))*.04;head.rotation.z=Math.sin(tt*1.6)*.06;armL.rotation.z=.15+Math.sin(tt*1.7)*.05;armR.rotation.z=-.15;armR.rotation.x=Math.sin(tt*3)*.15;
+ if(mood>0){mood-=dt;if(moodK==="yes"){mas.position.y=MY+Math.abs(Math.sin(tt*14))*.9;armL.rotation.z=2.4+Math.sin(tt*18)*.3;armR.rotation.z=-2.4-Math.sin(tt*18)*.3;head.rotation.z=Math.sin(tt*10)*.15}
+  else{head.rotation.z=.3;armL.rotation.z=2.2;armL.rotation.x=0;head.rotation.x=.12}}else{head.rotation.x=0}
  if(ph==="shuffle"){armR.rotation.z=-.5+Math.sin(tt*9)*.6;armL.rotation.z=.5-Math.sin(tt*9)*.6}}
 let last=performance.now(),acc=0;
 function frame(now){requestAnimationFrame(frame);if(document.hidden){last=now;return}const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)tick(dt);if(glOK)R.render(scene,cam)}
