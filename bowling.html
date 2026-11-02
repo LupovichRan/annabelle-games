@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><!--pt--><script src="playtime.js" data-app="bowling"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="bowling"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -71,6 +71,19 @@ h1{margin:0;font-size:clamp(30px,9vw,52px);color:#ffe14d;text-shadow:0 3px 0 #b6
 .rules p{margin:3px 0}
 .card{background:#2c2150;border:3px solid #ffe14d;border-radius:22px;padding:18px;text-align:center;max-width:92vw;display:flex;flex-direction:column;gap:10px;align-items:center}
 .card h2{margin:0;font-size:28px;color:#ffe14d}
+.lobpane{display:none;flex-direction:column;align-items:center;gap:10px}.lobpane.on{display:flex}
+#lobby{background:radial-gradient(circle at 50% 20%,#6a35b8,#2a1458 72%)}
+#lobCode{font-size:clamp(40px,13vw,72px);font-weight:900;letter-spacing:.12em;color:#ffe14d;direction:ltr;text-shadow:0 4px 0 #0006;line-height:1}
+#lobIn{width:min(80vw,300px);height:70px;border-radius:18px;border:3px solid #ffe14d;background:#fff;text-align:center;font:900 34px Rubik,Arial;color:#2c2150;letter-spacing:.12em;direction:ltr;user-select:text;-webkit-user-select:text}
+#lobCd{font-weight:900;font-size:26px;color:#9fe0ff;direction:ltr;min-height:32px}#lobCd.low{color:#ff7a7a;animation:pulse2 .6s infinite alternate}@keyframes pulse2{to{transform:scale(1.12)}}
+#lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px;max-width:90vw}
+a.big{display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff}
+#weak{position:fixed;left:50%;top:14%;transform:translateX(-50%);background:#fff8dc;color:#4a3300;border:2px solid #f2a900;border-radius:999px;padding:3px 12px;font-weight:800;font-size:14px;z-index:15;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 2px 0 #0002;animation:wk 1.6s infinite alternate}
+#weak.on{display:block}@keyframes wk{from{opacity:.75}to{opacity:1}}
+#appr,#npause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008}#appr{z-index:45}#npause{z-index:40}#appr.on,#npause.on{display:flex}
+#appr .card,#npause .card{background:#2c2150;border:3px solid #ffe14d;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2,#npause h2{margin:0;font-size:22px;color:#ffe14d}#apprN{font-size:64px;font-weight:900;color:#ffe14d;letter-spacing:.1em;direction:ltr;line-height:1}
+.dance{display:inline-block;animation:dn .6s infinite alternate}@keyframes dn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+#netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s;align-self:center}
 .corner{position:fixed;top:max(8px,env(safe-area-inset-top));inset-inline-end:10px;z-index:40}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/bowling.webmanifest"><meta name="theme-color" content="#3a1d6e"><link rel="icon" type="image/png" sizes="192x192" href="icons/bowling-192.png"><meta name="apple-mobile-web-app-title" content="באולינג חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/bowling-apple-180.png"><script src="pwa.js" data-app="bowling" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
@@ -78,7 +91,7 @@ h1{margin:0;font-size:clamp(30px,9vw,52px);color:#ffe14d;text-shadow:0 3px 0 #b6
 </head>
 <body>
 <canvas id="cv"></canvas>
-<div id="top"><div id="bar"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button></div><div id="sb"></div></div>
+<div id="top"><div id="bar"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><i id="netDot" aria-hidden="true"></i></div><div id="sb"></div></div>
 <div id="turn"></div>
 <div id="banner"></div>
 <div id="ctl">
@@ -99,7 +112,19 @@ h1{margin:0;font-size:clamp(30px,9vw,52px);color:#ffe14d;text-shadow:0 3px 0 #b6
   <div class="lbl2" id="tDiff"></div><div class="row" id="diffRow"></div>
   <button class="big g" id="playBtn"></button>
 </div>
-<div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button></div></div>
+<div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
+<div class="ov" id="lobby">
+  <h1 id="lobT"></h1>
+  <div class="heads">📱🎳📱</div>
+  <div class="row" id="lobMain"><button class="big" id="bCreate"></button><button class="big g" id="bJoin"></button></div>
+  <div class="lobpane" id="lobCreate"><div style="font-weight:800" id="lobCodeL"></div><div id="lobCode"></div><a class="big" id="lobWa" target="_blank" rel="noopener"></a><div id="lobWait"></div><div id="lobCd"></div></div>
+  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="6" autocomplete="off"><button class="big" id="bConn"></button></div>
+  <div id="lobStatus"></div>
+  <button class="big s" id="lobBack"></button>
+</div>
+<div id="npause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="npauseT"></h2><div id="npauseS" style="font-weight:700"></div><button class="big g" id="npauseLeave"></button></div></div>
+<div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big g" id="apprYes"></button><button class="big s" id="apprNo"></button></div></div></div>
+<div id="weak"></div>
 <div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div id="oS" style="font-size:20px;font-weight:800;line-height:1.5"></div><div id="oB" style="font-weight:800;color:#ffe14d"></div><button class="big g" id="againBtn"></button><button class="big s" id="menuBtn"></button></div></div>
 
 <script>
@@ -152,9 +177,9 @@ const TX={
   goodC:["Nice one!","Flying kitties!","Almost a strike!"],
   winner:n=>`${n} wins! 🏆`,draw:"It's a tie! 🤝",score:"Score",best:"Best",newBest:"🎉 New best!",hintK:"<kbd>←→</kbd> spot · <kbd>Q</kbd><kbd>E</kbd> angle · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> curve · <kbd>Space</kbd> roll/stop · <kbd>Esc</kbd> pause",hintT:"Drag on the lane to move",hintM:"Tap “Stop” when the marker is in the green!",aiThink:"Aiming…"}};
 let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
-const t=k=>TX[lang][k],pick=a=>a[Math.random()*a.length|0],rr=(a,b)=>a+Math.random()*(b-a);
+const t=k=>TX[lang][k]??(typeof TXO!=="undefined"?TXO[lang][k]:undefined),pick=a=>a[Math.random()*a.length|0],rr=(a,b)=>a+Math.random()*(b-a);
 let diff=ls.get("annabelle-bowling-diff")==="normal"?"normal":"easy";
-let mode=["solo","pc","two"].includes(ls.get("annabelle-bowling-mode"))?ls.get("annabelle-bowling-mode"):"pc";
+let mode=["solo","pc","two","online"].includes(ls.get("annabelle-bowling-mode"))?ls.get("annabelle-bowling-mode"):"pc";
 const coarse=matchMedia("(pointer:coarse)").matches;
 /* ================= sound ================= */
 let AC=null,muted=ls.get("annabelle-muted")==="1";
@@ -174,6 +199,9 @@ const SFX={
  strike:()=>{[392,523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,"square",.1,null,i*.075));noise(.7,3000,"highpass",.08,null,.2);tone(330,.14,"triangle",.14,600,.5)},
  sad:()=>{tone(330,.3,"sawtooth",.1,250);tone(250,.35,"sawtooth",.1,170,.3)},
  sweep:()=>noise(.5,400,"bandpass",.1,1500,0,.5),
+ join:()=>{tone(523,.14,"triangle",.2);setTimeout(()=>tone(784,.22,"triangle",.2),130)},drop:()=>{tone(500,.18,"sawtooth",.1,250);setTimeout(()=>tone(300,.3,"sawtooth",.1,150),170)},
+ back:()=>{tone(440,.12,"triangle",.2);setTimeout(()=>tone(660,.12,"triangle",.2),110);setTimeout(()=>tone(880,.2,"triangle",.2),220)},
+ huh:()=>{tone(300,.12,"triangle",.14,420);tone(430,.18,"triangle",.14,330,.14)},
  win:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.25,"triangle",.2,null,i*.11))}};
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 /* ================= scoring ================= */
@@ -204,16 +232,19 @@ function scoreGame(rolls){
  return{frames,total:frames.reduce((m,f)=>f.cum!=null?f.cum:m,0)};
 }
 /* ================= physics (lane units: width 1, x in -.5..+.5, y forward 0..L) ================= */
-const L=3.0,PY0=L-.35,DY=.145,DX=.165,BACK=L+.55;
-const PIN0=[];for(let k=0,id=1;k<4;k++)for(let j=0;j<=k;j++,id++)PIN0.push({id,x0:(j-k/2)*DX,y0:PY0+k*DY});
-function cfg(){return diff==="easy"?{rb:.085,rp:.052,bump:true}:{rb:.068,rp:.05,bump:false}}
-function makeRoll(standing,aim,power){
+const L=3.0,PY0=L-.35,BACK=L+.55;
+const K={DX:.21,DY:.18,thr:.5,e:.6,fr:4,rbE:.08,rbN:.06,rp:.052,pe:.78};   // physics knobs (pin spacing, how hard a pin must be hit to knock the next one, friction...)
+const PIN0=[];function buildPins(){PIN0.length=0;for(let k=0,id=1;k<4;k++)for(let j=0;j<=k;j++,id++)PIN0.push({id,x0:(j-k/2)*K.DX,y0:PY0+k*K.DY})}buildPins();
+function cfg(){return diff==="easy"?{rb:K.rbE,rp:K.rp,bump:true}:{rb:K.rbN,rp:K.rp,bump:false}}
+function mkRng(seed){let a=seed>>>0||1;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function makeRoll(standing,aim,power,seed){
+ const R=mkRng(seed==null?(Math.random()*4294967296)>>>0:seed),rr=(a,b)=>a+R()*(b-a);
  const c=cfg(),sp=1.9+power*2.3,a=aim.ang+rr(-.004,.004);
- return{c,t:0,ev:[],ball:{x:aim.x,y:0,vx:sp*Math.sin(a),vy:sp*Math.cos(a),spin:aim.spin,gut:false,out:false,roll:0,gutHit:false},
+ return{c,t:0,R,ev:[],ball:{x:aim.x,y:0,vx:sp*Math.sin(a),vy:sp*Math.cos(a),spin:aim.spin,gut:false,out:false,roll:0,gutHit:false},
   pins:PIN0.filter(p=>standing.has(p.id)).map(p=>({id:p.id,x:p.x0+rr(-.002,.002),y:p.y0,vx:0,vy:0,up:true,hit:false,ang:0,tgt:0,z:0,vz:0,rot:0}))};
 }
 function pinEv(P,type,v){P.ev.push({type,v})}
-function knock(P,p,dirx){if(!p.up)return;p.up=false;p.hit=true;p.tgt=(dirx>=0?1:-1)*rr(1.25,1.6);p.vz=rr(.5,1.2);p.rot=rr(-6,6);pinEv(P,"pin",1)}
+function knock(P,p,dirx){if(!p.up)return;const rr=(a,b)=>a+P.R()*(b-a);p.up=false;p.hit=true;p.tgt=(dirx>=0?1:-1)*rr(1.25,1.6);p.vz=rr(.5,1.2);p.rot=rr(-6,6);pinEv(P,"pin",1)}
 function stepRoll(P,dt){
  const c=P.c,b=P.ball;P.t+=dt;
  if(!b.out){
@@ -225,7 +256,7 @@ function stepRoll(P,dt){
   if(b.y>BACK-.05)b.out=true;
   for(const p of P.pins){const dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy),mn=c.rb+c.rp;
    if(d<mn&&d>1e-6&&!b.gut){const nx=dx/d,ny=dy/d,rvx=p.vx-b.vx,rvy=p.vy-b.vy,dot=rvx*nx+rvy*ny;
-    if(dot<0){const e=.78,mb=6,mp=1,j=-(1+e)*dot/(1/mb+1/mp);b.vx-=j*nx/mb;b.vy-=j*ny/mb;p.vx+=j*nx/mp;p.vy+=j*ny/mp;
+    if(dot<0){const e=K.pe,mb=6,mp=1,j=-(1+e)*dot/(1/mb+1/mp);b.vx-=j*nx/mb;b.vy-=j*ny/mb;p.vx+=j*nx/mp;p.vy+=j*ny/mp;
      if(p.up){knock(P,p,nx||b.vx);pinEv(P,"thud",0)}}
     const ov=mn-d;p.x+=nx*ov*.9;p.y+=ny*ov*.9;b.x-=nx*ov*.1;b.y-=ny*ov*.1}}
  }
@@ -234,10 +265,10 @@ function stepRoll(P,dt){
   const sa=a.vx*a.vx+a.vy*a.vy,sq=q.vx*q.vx+q.vy*q.vy;if(sa<.0025&&sq<.0025)continue;
   const dx=q.x-a.x,dy=q.y-a.y,d=Math.hypot(dx,dy),mn=c.rp*2;
   if(d<mn&&d>1e-6){const nx=dx/d,ny=dy/d,dot=(q.vx-a.vx)*nx+(q.vy-a.vy)*ny;
-   if(dot<0){const e=.82,j2=-(1+e)*dot/2;a.vx-=j2*nx;a.vy-=j2*ny;q.vx+=j2*nx;q.vy+=j2*ny;
-    if(a.up&&-dot>.12)knock(P,a,-nx);if(q.up&&-dot>.12)knock(P,q,nx);pinEv(P,"pp",-dot)}
+   if(dot<0){const e=K.e,j2=-(1+e)*dot/2;a.vx-=j2*nx;a.vy-=j2*ny;q.vx+=j2*nx;q.vy+=j2*ny;
+    if(a.up&&-dot>K.thr)knock(P,a,-nx);if(q.up&&-dot>K.thr)knock(P,q,nx);pinEv(P,"pp",-dot)}
    const ov=(mn-d)/2;a.x-=nx*ov;a.y-=ny*ov;q.x+=nx*ov;q.y+=ny*ov}}
- const fr=Math.exp(-2.3*dt);
+ const fr=Math.exp(-K.fr*dt);
  for(const p of ps){
   if(!p.up||p.vx||p.vy){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=fr;p.vy*=fr;if(Math.abs(p.vx)<.015)p.vx=0;if(Math.abs(p.vy)<.015)p.vy=0}
   if(p.x>.64){p.x=.64;p.vx=-Math.abs(p.vx)*.5}else if(p.x<-.64){p.x=-.64;p.vx=Math.abs(p.vx)*.5}
@@ -250,32 +281,34 @@ function simRoll(standing,aim,power,easy){const od=diff;if(easy!==undefined)diff
 const cv=$("cv"),cx=cv.getContext("2d");
 let G=null,raf=0,last=0,W=0,H=0,DPR=1;
 const COL=[{shirt:"#ff6fa8",fur:"#ffc067",dk:"#a85a1c"},{shirt:"#4dc3ff",fur:"#d9dde5",dk:"#6a7384"},{shirt:"#7ddc6a",fur:"#8a8f9c",dk:"#3a3f4c"}];
-function names(){if(mode==="solo")return[{n:t("p1"),c:0,ai:false}];if(mode==="pc")return[{n:t("p1"),c:0,ai:false},{n:t("pcn"),c:2,ai:true}];return[{n:t("pl")[0],c:0,ai:false},{n:t("pl")[1],c:1,ai:false}]}
-function newPlayers(){return names().map(o=>({name:o.n,col:COL[o.c],ai:o.ai,rolls:[],frame:0,fr:[],done:false}))}
-function startGame(){
+function names(me){if(mode==="online"){const o=[{n:t("p1"),c:0,ai:false},{n:t("friendN"),c:1,ai:false}];if(me===1){o[0].n=t("friendN");o[1].n=t("p1")}return o}if(mode==="solo")return[{n:t("p1"),c:0,ai:false}];if(mode==="pc")return[{n:t("p1"),c:0,ai:false},{n:t("pcn"),c:2,ai:true}];return[{n:t("pl")[0],c:0,ai:false},{n:t("pl")[1],c:1,ai:false}]}
+function newPlayers(me){return names(me).map(o=>({name:o.n,col:COL[o.c],ai:o.ai,rolls:[],frame:0,fr:[],done:false}))}
+function startGame(online,me){
  ac();
- G={players:newPlayers(),cur:0,phase:"aim",standing:new Set(PIN0.map(p=>p.id)),aim:{x:0,ang:0,spin:0},meter:{v:0,dir:1,run:false},P:null,timer:0,react:{k:"idle",t:0},conf:[],pause:false,over:false,z:1,camT:0,lastRoll:null,sweepA:1,rollSnd:0,hitSnd:0,aiPlan:null,pinsPrev:null,time:0};
- $("menu").classList.remove("show");$("over").classList.remove("show");$("pause").classList.remove("show");
+ G={online:!!online,me:me||0,guest:!!online&&me===1,tn:1,goN:0,resN:0,players:newPlayers(me),cur:0,phase:"aim",standing:new Set(PIN0.map(p=>p.id)),aim:{x:0,ang:0,spin:0},meter:{v:0,dir:1,run:false},P:null,timer:0,react:{k:"idle",t:0},conf:[],pause:false,over:false,z:1,camT:0,lastRoll:null,sweepA:1,rollSnd:0,hitSnd:0,aiPlan:null,pinsPrev:null,time:0};
+ $("menu").classList.remove("show");$("over").classList.remove("show");$("pause").classList.remove("show");$("againBtn").style.display="";
  document.body.classList.add("game");fit();beginTurn();
  cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(loop);
 }
-window.toMenu=function(){G=null;cancelAnimationFrame(raf);document.body.classList.remove("game");$("over").classList.remove("show");$("pause").classList.remove("show");$("menu").classList.add("show");drawMenu()};
+window.toMenu=function(){if(G&&G.online&&!G.over)netLeave();else if(NET.conn||NET.peer||NET.waitCode)netClose();hideLob();$("weak").classList.remove("on");G=null;cancelAnimationFrame(raf);document.body.classList.remove("game");$("over").classList.remove("show");$("pause").classList.remove("show");$("menu").classList.add("show");drawMenu()};
 function cur(){return G.players[G.cur]}
+function myTurn(){return !cur().ai&&(!G.online||G.cur===G.me)}
 function beginTurn(){
  const p=cur();G.phase="aim";G.timer=0;G.P=null;G.meter={v:0,dir:1,run:false};G.sweepA=1;
  if(G.standing.size===10||true){G.aim.x=0;G.aim.ang=0;G.aim.spin=0;$("ang").value=0;syncSpin()}
- G.lastRoll=null;G.react={k:"idle",t:0};
+ G.lastRoll=null;G.react={k:"idle",t:0};G.goMsg=G.resMsg=null;G.pendRes=null;
  if(p.ai){planAI();G.aiT=0}
  renderSB();ui()}
 function ui(){
- const p=cur(),ai=p.ai;
- $("ctl").classList.toggle("ai",ai||G.phase==="roll"||G.phase==="result"||G.phase==="sweep"||G.over);
+ const p=cur(),ai=p.ai,lock=ai||(G.online&&G.cur!==G.me);
+ $("ctl").classList.toggle("ai",lock||G.phase==="roll"||G.phase==="result"||G.phase==="sweep"||G.over);
  const m=G.phase==="meter";
  $("go").textContent=m?t("stop"):t("go");$("go").classList.toggle("stop",m);
  $("angRow").style.visibility=m?"hidden":"visible";
  $("meterWrap").style.visibility=(m||ai&&G.phase==="aim")?"visible":"hidden";
+ if(G.online&&G.cur===G.me&&G.phase==="wait")$("go").textContent="⏳";
  const fr=p.frame+1,bl=p.fr.length+1;
- $("turn").textContent=ai&&G.phase==="aim"?t("aiThink"):t("turn")(p.name,Math.min(10,fr),bl);
+ $("turn").textContent=ai&&G.phase==="aim"?t("aiThink"):G.online&&!G.over?(G.cur!==G.me?t("theirTurn"):t("yourTurn"))+" · "+Math.min(10,fr)+"/10 · "+bl:t("turn")(p.name,Math.min(10,fr),bl);
  $("mk").style.left=(G.meter.v*100)+"%";
 }
 function fit(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
@@ -283,23 +316,32 @@ function fit(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv
  const ty=document.body.classList.contains("game")?tb.bottom:0;$("turn").style.top=(ty+2)+"px"}
 addEventListener("resize",fit);addEventListener("orientationchange",()=>setTimeout(fit,200));
 /* ================= turn logic ================= */
-function planAI(){
- const p=cur(),easy=diff==="easy",up=PIN0.filter(q=>G.standing.has(q.id));
+function aiMakePlan(standing,easy){   // the computer friend throws like a kid: aim noise, wobbly power, now and then a silly miss
+ const up=PIN0.filter(q=>standing.has(q.id));
  let tx=0;
- if(G.standing.size===10)tx=(Math.random()<.5?-1:1)*.045;else{const q=pick(up);tx=q.x0}
- const ex=easy?.08:.032,ea=easy?.022:.009;
- let x0=Math.max(-.36,Math.min(.36,tx*.55+(Math.random()+Math.random()-1)*ex));
- let ang=Math.atan2(tx-x0,PY0)+(Math.random()+Math.random()-1)*ea;
- G.aiPlan={x:x0,ang:Math.max(-.25,Math.min(.25,ang)),spin:0,power:easy?rr(.55,.95):rr(.74,.95)}}
+ if(standing.size===10)tx=(Math.random()<.5?-1:1)*.03;else if(up.length){const q=pick(up);tx=q.x0}
+ const g=()=>Math.random()+Math.random()+Math.random()-1.5;   // ~bell curve, +-1.5
+ const ex=easy?.26:.1,ea=easy?.09:.035;
+ let x0=Math.max(-.36,Math.min(.36,tx*.55+g()*ex));
+ let ang=Math.atan2(tx-x0,PY0)+g()*ea;
+ let power=easy?rr(.3,.95):rr(.45,.95);
+ if(Math.random()<(easy?.15:.06)){x0=pick([-1,1])*rr(.2,.36);ang=pick([-1,1])*rr(.05,.14)}   // oops: wild throw (gutter / lonely pin)
+ return{x:x0,ang:Math.max(-.25,Math.min(.25,ang)),spin:0,power}}
+function planAI(){G.aiPlan=aiMakePlan(G.standing,diff==="easy")}
 function throwBall(power){
  if(G.phase!=="meter"&&!(cur().ai&&G.phase==="aim"))return;
- G.meter.run=false;G.phase="roll";G.timer=0;G.P=makeRoll(G.standing,G.aim,power);G.pinsBefore=new Set(G.standing);G.power=power;SFX.swing();G.react={k:"idle",t:0};ui()}
+ if(G.online){
+  if(G.guest){G.meter.run=false;G.phase="wait";G.thMsg={t:"th",n:G.tn,x:G.aim.x,a:G.aim.ang,s:G.aim.spin,p:power};G.thT=3;netSend(G.thMsg);ui();return}
+  G.seed=(crypto.getRandomValues(new Uint32Array(1))[0])>>>0}
+ launch(power)}
+function launch(power){
+ G.meter.run=false;G.phase="roll";G.timer=0;G.acc=0;const sd=G.seed;G.P=makeRoll(G.standing,G.aim,power,sd);G.seed=null;G.goN=G.tn;if(G.online&&!G.guest){G.goMsg={t:"go",n:G.tn,x:G.aim.x,a:G.aim.ang,s:G.aim.spin,p:power,sd};netSend(G.goMsg)}G.pinsBefore=new Set(G.standing);G.power=power;SFX.swing();G.react={k:"idle",t:0};ui()}
 function stopMeter(){if(G.phase==="meter")throwBall(G.meter.v)}
-function pressGo(){if(!G||G.pause||G.over||cur().ai)return;ac();if(G.phase==="aim"){G.phase="meter";G.meter={v:0,dir:1,run:true};SFX.click();ui()}else if(G.phase==="meter")stopMeter()}
-function finishRoll(forceK){
+function pressGo(){if(!G||G.pause||G.over||!myTurn())return;ac();if(G.phase==="aim"){G.phase="meter";G.meter={v:0,dir:1,run:true};SFX.click();ui()}else if(G.phase==="meter")stopMeter()}
+function finishRoll(forceIds){
  const P=G.P,pl=cur();
  let k;
- if(forceK!=null){k=forceK;const ids=[...G.standing].slice(0,k);G.pinsDownIds=new Set(ids)}
+ if(forceIds){const ids=forceIds.filter(i=>G.standing.has(i));k=ids.length;G.pinsDownIds=new Set(ids)}
  else{const down=P.pins.filter(p=>!p.up).map(p=>p.id);k=down.length;G.pinsDownIds=new Set(down)}
  const wasGut=P&&P.ball.gutHit;
  for(const id of G.pinsDownIds)G.standing.delete(id);
@@ -329,9 +371,11 @@ function advance(){
  // called after the sweep: pick next turn or end the game
  const pl=cur();
  if(G.reset||G.res.end&&true){}
- if(G.reset)G.standing=new Set(PIN0.map(p=>p.id));
- if(G.players.every(p=>p.done)){endGame();return}
- if(G.res.end){let n=G.cur;do{n=(n+1)%G.players.length}while(G.players[n].done);G.cur=n}
+ if(G.reset||G.res.end)G.standing=new Set(PIN0.map(p=>p.id));   // new rack after a strike/spare AND whenever the frame (or the whole 10th) is over, so the next turn never starts on leftover pins
+ const all=G.players.every(p=>p.done);
+ if(!all&&G.res.end){let n=G.cur;do{n=(n+1)%G.players.length}while(G.players[n].done);G.cur=n}
+ if(G.online&&!G.guest){G.tn++;sendSync(all)}
+ if(all){endGame();return}
  beginTurn()}
 function endGame(){
  G.over=true;G.phase="over";document.body.classList.add("game");
@@ -340,7 +384,7 @@ function endGame(){
  if(ps.length===1)title=t("score")+": "+ps[0].s;else title=win.length>1?t("draw"):t("winner")(win[0].p.name);
  $("oT").textContent=title;
  $("oS").innerHTML=ps.map(x=>`${x.p.name}: <span style="color:#ffe14d">${x.s}</span>`).join("<br>");
- const human=ps.filter(x=>!x.p.ai).map(x=>x.s),hs=Math.max(...human),key="annabelle-bowling-best-"+diff,old=+ls.get(key)||0;
+ const human=G.online?[ps[G.me].s]:ps.filter(x=>!x.p.ai).map(x=>x.s),hs=Math.max(...human),key="annabelle-bowling-best-"+diff,old=+ls.get(key)||0;
  const nb=hs>old&&hs>0;if(nb)ls.set(key,String(hs));
  $("oB").textContent=(nb?t("newBest")+" ":"")+t("best")+": "+Math.max(old,hs);
  $("over").classList.add("show");SFX.win();burst(120);G.react={k:"dance",t:99};renderSB();ui()}
@@ -356,8 +400,8 @@ function renderSB(){
 /* ================= input ================= */
 function laneX(clientX){return(clientX-W/2)/Lay.W0}
 let dragging=false;
-cv.addEventListener("pointerdown",e=>{if(!G||G.pause||G.over)return;ac();if(G.phase==="meter"&&!cur().ai){stopMeter();return}
- if(G.phase==="aim"&&!cur().ai){dragging=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}setAimX(laneX(e.clientX))}});
+cv.addEventListener("pointerdown",e=>{if(!G||G.pause||G.over)return;ac();if(G.phase==="meter"&&myTurn()){stopMeter();return}
+ if(G.phase==="aim"&&myTurn()){dragging=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}setAimX(laneX(e.clientX))}});
 cv.addEventListener("pointermove",e=>{if(dragging&&G&&G.phase==="aim")setAimX(laneX(e.clientX))});
 ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>cv.addEventListener(ev,()=>{dragging=false}));
 function setAimX(x){const m=diff==="easy"?.4:.38;G.aim.x=Math.max(-m,Math.min(m,x))}
@@ -374,26 +418,27 @@ addEventListener("keydown",e=>{
  if(e.key==="Escape"||e.code==="KeyP"){e.preventDefault();if(G.over)toMenu();else doPause(!G.pause);return}
  if(G.over||G.pause)return;
  if(e.code==="Space"||e.code==="Enter"){e.preventDefault();if(!e.repeat)pressGo();return}
- if(G.phase!=="aim"||cur().ai)return;
+ if(G.phase!=="aim"||!myTurn())return;
  if(e.code==="KeyZ"){G.aim.spin=-1;syncSpin()}else if(e.code==="KeyX"){G.aim.spin=0;syncSpin()}else if(e.code==="KeyC"){G.aim.spin=1;syncSpin()}
  if(["ArrowLeft","ArrowRight","KeyA","KeyD","KeyQ","KeyE"].includes(e.code)){e.preventDefault();keys[e.code]=1}});
 addEventListener("keyup",e=>{delete keys[e.code]});
-addEventListener("blur",()=>{for(const k in keys)delete keys[k];if(G&&!G.over&&!G.pause)doPause(true)});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.over&&!G.pause)doPause(true)});
-function doPause(on){if(!G||G.over)return;G.pause=on;$("pause").classList.toggle("show",on);if(!on)last=performance.now()}
-$("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};
+addEventListener("blur",()=>{for(const k in keys)delete keys[k];if(G&&!G.over&&!G.pause&&!G.online)doPause(true)});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.over&&!G.pause&&!G.online)doPause(true)});
+function doPause(on){if(!G||G.over)return;if(G.online){$("pause").classList.toggle("show",on);return}G.pause=on;$("pause").classList.toggle("show",on);if(!on)last=performance.now()}
+$("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};$("pMenu").onclick=()=>{SFX.click();toMenu()};
 $("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()};
-$("againBtn").onclick=()=>{SFX.click();startGame()};$("menuBtn").onclick=()=>{SFX.click();toMenu()};
+$("againBtn").onclick=()=>{SFX.click();if(G&&G.online){if(NET.myRe)return;NET.myRe=true;netSend({t:"rematch"});$("oB").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch()}else startGame()};$("menuBtn").onclick=()=>{SFX.click();toMenu()};
 /* ================= menu ================= */
 function drawMenu(){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";
  $("tTitle").textContent=t("title");document.title=t("title");$("tSub").textContent=t("sub");
  $("rules").innerHTML=t("rules").map(r=>"<p>"+r+"</p>").join("");
  $("tMode").textContent=t("mode");$("tDiff").textContent=t("diff");
- $("modeRow").innerHTML=[["solo","solo"],["pc","pc"],["two","two"]].map(([k,l])=>`<button class="lang ${k===mode?"sel":""}" data-mode="${k}">${t(l)}</button>`).join("");
+ $("modeRow").innerHTML=[["solo","solo"],["pc","pc"],["two","two"],["online","online"]].map(([k,l])=>`<button class="lang ${k===mode?"sel":""}" data-mode="${k}">${t(l)}</button>`).join("");
  $("diffRow").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}">${t(k)}</button>`).join("");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");
  $("playBtn").textContent=t("play");$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("againBtn").textContent=t("again");$("menuBtn").textContent=t("menu");
+ $("pMenu").textContent=t("menu");if(typeof onlineLang==="function")onlineLang();
  $("lAng").textContent=t("angle");$("hintk").innerHTML=coarse?"":t("hintK");$("go").textContent=t("go");
  updMute();
 }
@@ -402,13 +447,13 @@ document.addEventListener("click",e=>{
  if(Lg){lang=Lg.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawMenu();if(G){renderSB();ui()}}
  if(D){diff=D.dataset.diff;ls.set("annabelle-bowling-diff",diff);SFX.click();drawMenu()}
  if(M){mode=M.dataset.mode;ls.set("annabelle-bowling-mode",mode);SFX.click();drawMenu()}});
-$("playBtn").onclick=()=>{SFX.click();startGame()};
+$("playBtn").onclick=()=>{SFX.click();if(mode==="online")showLobby();else startGame()};
 /* ================= main loop ================= */
 function burst(n){for(let i=0;i<n;i++)G.conf.push({x:W/2+rr(-W*.3,W*.3),y:H*.2+rr(-20,20),vx:rr(-160,160),vy:rr(-300,-20),c:pick(["#ff5d8f","#ffd23f","#4dc3ff","#7ddc6a","#c58cf0","#fff"]),r:rr(0,6),vr:rr(-8,8),life:rr(1.6,2.8)})}
 function loop(now){
  raf=requestAnimationFrame(loop);if(!G)return;
  let dt=Math.min(.05,(now-last)/1000);last=now;if(G.pause)return;
- update(dt);draw(dt)}
+ if(!G.netp)update(dt);draw(dt)}
 function update(dt){
  G.time+=dt;
  if(G.react.t>0)G.react.t-=dt;
@@ -418,22 +463,25 @@ function update(dt){
   if(p.ai){G.aiT+=dt;const k=Math.min(1,G.aiT/1.1),e=k*k*(3-2*k),pl=G.aiPlan;G.aim.x=pl.x*e;G.aim.ang=pl.ang*e;G.aim.spin=pl.spin;
    G.meter.v=(G.aiT>1.1)?Math.min(pl.power,(G.aiT-1.1)/.7*pl.power):0;
    if(G.aiT>1.9){G.meter.v=pl.power;throwBall(pl.power)}ui()}
-  else{
+  else if(myTurn()){
    const m=diff==="easy"?.4:.38;let mv=0;if(keys.ArrowLeft||keys.KeyA)mv-=1;if(keys.ArrowRight||keys.KeyD)mv+=1;
    if(mv)G.aim.x=Math.max(-m,Math.min(m,G.aim.x+mv*.45*dt));
    let av=0;if(keys.KeyQ)av-=1;if(keys.KeyE)av+=1;if(av){G.aim.ang=Math.max(-.25,Math.min(.25,G.aim.ang+av*.25*dt));$("ang").value=G.aim.ang/.25*100}}
- }else if(G.phase==="meter"&&!cur().ai){
+ }else if(G.phase==="meter"&&myTurn()){
   const sp=diff==="easy"?1.15:1.6;G.meter.v+=G.meter.dir*sp*dt;if(G.meter.v>=1){G.meter.v=1;G.meter.dir=-1}else if(G.meter.v<=0){G.meter.v=0;G.meter.dir=1}
   $("mk").style.left=(G.meter.v*100)+"%"}
  else if(G.phase==="roll"){
-  const P=G.P;let n=Math.max(1,Math.ceil(dt*120));for(let i=0;i<n;i++)stepRoll(P,dt/n);
+  const P=G.P;G.acc=(G.acc||0)+dt;let guard=0;while(G.acc>=1/120&&guard++<20){stepRoll(P,1/120);G.acc-=1/120}
   G.rollSnd-=dt;if(G.rollSnd<=0&&!P.ball.out){SFX.rumble(P.ball.gut);G.rollSnd=.1}
   G.hitSnd-=dt;
   for(const e of P.ev){if(e.type==="pin"&&G.hitSnd<=0){(Math.random()<.5?SFX.meow:SFX.squeak)();G.hitSnd=.05}else if(e.type==="thud")SFX.thud();else if(e.type==="gutter"){SFX.boing()}else if(e.type==="bump"){SFX.squeak()}else if(e.type==="pp"&&G.hitSnd<=0&&e.v>.2){SFX.squeak();G.hitSnd=.07}}
   P.ev.length=0;
-  if(rollDone(P)){finishRoll();showResult()}
+  if(rollDone(P)){
+   if(G.online&&G.guest){if(G.pendRes)applyRes();else if(G.pendSync){G.phase="wait2";applySync()}else{G.phase="wait2"}}
+   else{finishRoll();showResult();if(G.online){G.resMsg={t:"res",n:G.tn,ids:[...G.pinsDownIds]};netSend(G.resMsg)}}}
  }else if(G.phase==="result"){G.timer+=dt;if(G.timer>1.5){G.phase="sweep";G.timer=0;SFX.sweep()}}
- else if(G.phase==="sweep"){G.timer+=dt;G.sweepA=Math.max(0,1-G.timer/.7);if(G.timer>.8){advance()}}
+ else if(G.phase==="sweep"){G.timer+=dt;G.sweepA=Math.max(0,1-G.timer/.7);if(G.timer>.8){if(G.guest){G.phase="await";if(G.pendSync)applySync()}else advance()}}
+ else if(G.phase==="wait"){G.thT-=dt;if(G.thT<=0&&G.thMsg){netSend(G.thMsg);G.thT=3}}
  const tz=(G.phase==="roll"&&G.P&&G.P.ball.y>1.1||G.phase==="result"||G.phase==="sweep")?1.2:1;G.z+=(tz-G.z)*Math.min(1,dt*3.5);
 }
 /* ================= drawing ================= */
@@ -559,8 +607,286 @@ function drawKitten(dt){
  if(k==="sad"){cx.fillStyle="#7fd8ff";cx.beginPath();cx.ellipse(r*.95,-r*.1+((tt*40)%14),r*.08,r*.14,0,0,7);cx.fill();cx.fillStyle=pal.fur;cx.strokeStyle=pal.dk;cx.lineWidth=2;cx.beginPath();cx.ellipse(-r*.45,-r*.05,r*.3,r*.22,.3,0,7);cx.fill();cx.stroke()}
  cx.restore();
 }
+/* ================= online 1-vs-1 (WebRTC via PeerJS, the same secure module as the online football) ================= */
+const TXO={"he": {"back": "◀ חזרה", "npaused": "החברה התנתקה… ממתינים שתתחבר מחדש ⏳", "npausedS": "המשחק מושהה וימשיך בדיוק מאותו מקום", "leave": "🏠 יציאה מהמשחק", "left": "החברה יצאה מהמשחק 👋", "roomLeft": "החדר פתוח עוד", "expired": "⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש", "apprT": "מישהי מבקשת להצטרף למשחק 🔐", "apprS": "אשרי רק אם גם אצל החברה שלך מופיע בדיוק המספר הזה", "apprYes": "✅ אשרי", "apprNo": "❌ דחי", "pairMsg": "קוד אימות: N 🔐 מחכים שהחברה תאשר…", "lobT": "משחק אונליין", "create": "🏠 צרי חדר", "join": "🔑 הצטרפי עם קוד", "codeIs": "קוד החדר:", "waitF": "מחכה לחברה… 🕐", "share": "💬 שלחי לחברה בוואטסאפ", "shareTxt": "בואי לשחק איתי באולינג חתולים! 🎳🐱", "enter": "הקלידי את הקוד של החברה:", "goC": "התחברי ▶", "conn": "מתחבר… 🔌", "reconn": "מתחבר מחדש… 🔌", "failC": "לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב", "waitRe": "מחכה לחברה למשחק נוסף… 🕐", "weakL": ["החיבור התעטש 🤧 ממשיכים!", "החתלתול של החברה נרדם על הקו 😴", "דג קטן נתקע בכבל 🐟", "פרפר ישב על הראוטר 🦋", "רגע, החתול מחפש את הוויי-פיי 📶😹"], "friendN": "חברה 🐾", "theirTurn": "התור של החברה… ⏳", "yourTurn": "התור שלך! 🎳", "online": "🌐 אונליין"}, "fr": {"back": "◀ Retour", "npaused": "Ton ami s'est déconnecté… on attend sa reconnexion ⏳", "npausedS": "Le match est en pause et reprendra au même endroit", "leave": "🏠 Quitter la partie", "left": "Ton ami a quitté la partie 👋", "roomLeft": "Salle ouverte encore", "expired": "⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle", "apprT": "Quelqu'un veut rejoindre la partie 🔐", "apprS": "Accepte seulement si ton amie voit exactement ce même nombre", "apprYes": "✅ Accepter", "apprNo": "❌ Refuser", "pairMsg": "Code de vérification : N 🔐 on attend que ton amie accepte…", "lobT": "Jeu en ligne", "create": "🏠 Créer une salle", "join": "🔑 Rejoindre avec un code", "codeIs": "Code de la salle :", "waitF": "J'attends ton ami… 🕐", "share": "💬 Envoyer sur WhatsApp", "shareTxt": "Viens jouer au Bowling des Chats avec moi ! 🎳🐱", "enter": "Tape le code de ton ami :", "goC": "Se connecter ▶", "conn": "Connexion… 🔌", "reconn": "Reconnexion… 🔌", "failC": "Connexion impossible 😿 Vérifie le code et internet, puis réessaie", "waitRe": "J'attends ton ami pour rejouer… 🕐", "weakL": ["La connexion a éternué 🤧 on continue !", "Le chaton de ton ami dort sur la ligne 😴", "Un petit poisson est coincé dans le câble 🐟", "Un papillon s'est posé sur le routeur 🦋", "Une seconde, le chat cherche le Wi-Fi 📶😹"], "friendN": "Ami(e) 🐾", "theirTurn": "Au tour de ton ami… ⏳", "yourTurn": "C'est ton tour ! 🎳", "online": "🌐 En ligne"}, "en": {"back": "◀ Back", "npaused": "Your friend disconnected… waiting for them to reconnect ⏳", "npausedS": "The match is paused and will continue exactly where it stopped", "leave": "🏠 Leave the game", "left": "Your friend left the game 👋", "roomLeft": "Room open for", "expired": "⏰ Time's up, the code is no longer valid. Create a new room", "apprT": "Someone wants to join the game 🔐", "apprS": "Accept only if your friend sees exactly this same number", "apprYes": "✅ Accept", "apprNo": "❌ Decline", "pairMsg": "Verification code: N 🔐 waiting for your friend to accept…", "lobT": "Online game", "create": "🏠 Create a room", "join": "🔑 Join with a code", "codeIs": "Room code:", "waitF": "Waiting for your friend… 🕐", "share": "💬 Send on WhatsApp", "shareTxt": "Come bowl with me in Bowling Cats! 🎳🐱", "enter": "Type your friend's code:", "goC": "Connect ▶", "conn": "Connecting… 🔌", "reconn": "Reconnecting… 🔌", "failC": "Couldn't connect 😿 Check the code and internet, then try again", "waitRe": "Waiting for your friend to rematch… 🕐", "weakL": ["The connection sneezed 🤧 keep going!", "Your friend's kitten fell asleep on the line 😴", "A little fish got stuck in the cable 🐟", "A butterfly sat on the router 🦋", "Hang on, the cat is looking for Wi-Fi 📶😹"], "friendN": "Friend 🐾", "theirTurn": "Friend's turn… ⏳", "yourTurn": "Your turn! 🎳", "online": "🌐 Online"}};
+const ROOM_SECS=300,DELAY=110;
+const NET={pendingLink:null,lm:0,ie:0,inT:0,waitCode:null,rs:null,cand:null,joinSec:null,key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,code:"",myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0,
+ t0:0,lastSnap:0,sn:0,lx:0,ly:0,lt:0,dashCool:0,rinT:0,rinN:0,pauseT:0,tok:200,tokT:0,rec:false,rinQ:-1,iq:0,wt:null,wi:-1};
+const SOFT=4000,HARD=20000;   // quiet for 4 s: "weak connection" pill (the match keeps going); quiet for 20 s: hard pause with a Leave button
+const PEER_SRC="vendor/peerjs.min.js";
+/* ICE servers. STUN finds a direct route; TURN relays the game when there is none (two phones on mobile data / strict Wi-Fi).
+   The free public relay below is shared and best-effort: for a rock-solid game put your own TURN credentials in
+   localStorage["annabelle-turn"] as a JSON array of ICE servers (e.g. from a free metered.ca / Cloudflare TURN account). */
+function iceServers(){
+ let own=null;try{own=JSON.parse(localStorage.getItem("annabelle-turn")||"null")}catch(e){}
+ const base=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
+  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:80?transport=tcp","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
+ return Array.isArray(own)&&own.length?[...own,...base]:base}
+const PEER_CFG={config:{iceServers:iceServers(),iceCandidatePoolSize:2}};
+const PID="annabelle-bowling-";
+function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
+// --- validation: every number / array from the network is checked and rebuilt ---
+const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
+const num=(x,lo,hi)=>typeof x==="number"&&x>=lo&&x<=hi;          // NaN and Infinity fail
+function lims(a,L){if(!Array.isArray(a)||a.length!==L.length)return null;const o=[];for(let i=0;i<L.length;i++){if(!num(a[i],L[i][0],L[i][1]))return null;o.push(a[i])}return o}
+const rnd=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>b.toString(16).padStart(2,"0")).join("");
+async function hmac(key,msg){const e=new TextEncoder(),k=await crypto.subtle.importKey("raw",e.encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC",k,e.encode(msg))),b=>b.toString(16).padStart(2,"0")).join("")}
+function onlineLang(){
+ const set=(id,k)=>{const e=$(id);if(e)e.textContent=t(k)};
+ set("lobT","lobT");set("bCreate","create");set("bJoin","join");set("lobCodeL","codeIs");set("lobInL","enter");set("bConn","goC");set("lobBack","back");set("npauseLeave","leave");
+ set("apprT","apprT");set("apprS","apprS");set("apprYes","apprYes");set("apprNo","apprNo");set("lobWa","share");set("lobWait","waitF");
+ if(NET.paused&&G&&G.online){$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
+}
+function setPaused(on){ // connection lost (on) / back (off): the match is frozen on both sides
+ if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();
+ NET.paused=on;if(G)G.netp=on;$("npause").classList.toggle("on",on);
+ if(on){$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
+ else{clearTimeout(NET.rt);NET.rt=null;last=performance.now()}
+}
+// --- connection plumbing (same as the online checkers: secret in the invitation link, host approval for typed codes, HMAC for reconnects) ---
+function stopCd(){clearInterval(NET.cd);NET.cd=null;$("lobCd").textContent="";$("lobCd").classList.remove("low")}
+function startCd(gen){
+ stopCd();const end=Date.now()+ROOM_SECS*1000;
+ const tick=()=>{if(gen!==NET.gen){stopCd();return}const left=Math.max(0,Math.round((end-Date.now())/1000));
+  $("lobCd").textContent=t("roomLeft")+" "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");$("lobCd").classList.toggle("low",left<=30);
+  if(left<=0){lobFail();$("lobStatus").textContent=t("expired")}};
+ tick();NET.cd=setInterval(tick,500);
+}
+function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.myRe=NET.oppRe=false;NET.paused=false;NET.rec=false;weakHide();NET.key=null;NET.waitCode=null;NET.rs=null;NET.cand=null;NET.joinSec=null;$("appr").classList.remove("on");$("npause").classList.remove("on");NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
+function netLeave(){ // leaving on purpose: tell the friend (so they don't wait)
+ const c=NET.conn,p=NET.peer;if(G&&G.online)netSend({t:"bye"});NET.conn=null;NET.peer=null;netClose();if(G)G.netp=false;
+ setTimeout(()=>{try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}},400);
+}
+function netSend(o){try{if(NET.conn&&NET.conn.open)NET.conn.send(o)}catch(e){}}
+function lobPane(w){["lobMain","lobCreate","lobJoin"].forEach(id=>{const e=$(id);if(id==="lobMain")e.style.display=w==="main"?"":"none";else e.classList.toggle("on",id===w)})}
+function showLob(){$("menu").classList.remove("show");$("lobby").classList.add("show")}
+function hideLob(){$("lobby").classList.remove("show")}
+function showLobby(){netClose();$("lobStatus").textContent="";lobPane("main");showLob()}
+function lobFail(){netClose();$("lobStatus").textContent=t("failC");lobPane("main")}
+function hostPeer(code,gen,resume){
+ const p=new Peer(PID+code,PEER_CFG);NET.peer=p;
+ p.on("open",()=>{if(gen!==NET.gen)return;NET.host=true;NET.code=code;
+  if(resume==="wait"){$("lobStatus").textContent="";return}     // same room (same code and secret), just back online
+  if(resume)return;
+  NET.rs=rnd(16);NET.waitCode=code;
+  $("lobCode").textContent=code;const url=location.origin+location.pathname+"?room="+code+"&s="+NET.rs;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
+  $("lobStatus").textContent="";lobPane("lobCreate");startCd(gen)});
+ p.on("disconnected",()=>{if(gen!==NET.gen||p.destroyed)return;if(NET.waitCode&&!(G&&G.online))hostRecover();else try{p.reconnect()}catch(e){}});
+ p.on("connection",c=>{if(gen!==NET.gen)return;
+  if(!NET.key){ // fresh room: the first friend in is accepted (the room code is the secret, valid only for the countdown)
+   if(NET.conn||(G&&G.online)||NET.pend.size>=4){try{c.close()}catch(e){}return}
+   c.fresh=true;attach(c,gen,true);
+  }else{ // a game exists: only someone who proves they know the game secret can (re)connect
+   if(NET.pend.size>=3){try{c.close()}catch(e){}return}
+   attach(c,gen,true);
+  }});
+ p.on("error",e=>{if(gen!==NET.gen)return;
+  if(NET.waitCode&&!(G&&G.online)){ // the room is open and waiting for the friend: never throw it away because the connection hiccupped
+   if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online)){try{p.destroy()}catch(x){}hostPeer(NET.waitCode,gen,"wait")}},2000)}
+   else hostRecover();
+   return}
+  if(G&&G.online){ // mid-match: a signalling hiccup never ends the match (the friend is connected peer-to-peer); only a lost id is retried
+   if(e&&e.type==="unavailable-id"&&NET.rec){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.rec){try{p.destroy()}catch(x){}hostPeer(NET.code,gen,true)}},3000)}
+   return}
+  if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
+}
+function hostRecover(){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
+ if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
+ if(p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
+ try{p&&p.destroy()}catch(e){}                        // a half-dead peer: start a fresh one with the SAME id
+ $("lobStatus").textContent=t("reconn");
+ clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
+}
+function createRoom(){
+ netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
+ loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
+}
+function joinRoom(code,sec){
+ netClose();const gen=NET.gen;NET.code=code;NET.joinSec=sec||null;$("lobStatus").textContent=t("conn");lobPane("none");showLob();
+ loadPeer().then(()=>{if(gen!==NET.gen)return;
+  const p=new Peer(undefined,PEER_CFG);NET.peer=p;let cur=null,attempt=0;
+  const joined=()=>NET.conn&&NET.conn.open;
+  const go=()=>{if(gen!==NET.gen||joined())return;attempt++;
+   if(attempt>4){lobFail();return}
+   $("lobStatus").textContent=t("conn")+(attempt>1?" ("+attempt+"/4)":"");
+   if(cur){try{cur.close()}catch(e){}}
+   NET.host=false;cur=p.connect(PID+code,{reliable:true});attach(cur,gen);
+   clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!joined())go()},13000)};
+  p.on("open",()=>{if(gen===NET.gen)go()});
+  p.on("error",e=>{if(gen!==NET.gen||(G&&G.online))return;const ty=e&&e.type;
+   if(ty==="peer-unavailable"||ty==="webrtc"||ty==="negotiation"||ty==="socket-error"||ty==="socket-closed"){clearTimeout(NET.tm);NET.tm=setTimeout(go,3000)}   // host may just be waking up: try again shortly
+   else lobFail()});
+ }).catch(()=>{if(gen===NET.gen)lobFail()});
+}
+function admit(c){ // host: this connection is the friend
+ if(NET.cand&&NET.cand!==c){try{NET.cand.close()}catch(e){}}NET.cand=null;$("appr").classList.remove("on");
+ if(NET.conn||!c.open)return;c.authed=true;NET.pend.delete(c);clearTimeout(c.to);c.fin()}
+function askApproval(c){
+ c.pair=String(10+crypto.getRandomValues(new Uint32Array(1))[0]%90);clearTimeout(c.to);c.to=setTimeout(()=>{if(NET.cand===c){try{c.close()}catch(e){}}},60000);
+ try{c.send({t:"pair",n:c.pair})}catch(e){}
+ $("apprN").textContent=c.pair;$("appr").classList.add("on");SFX.join();
+ $("apprYes").onclick=()=>{SFX.click();if(NET.cand===c)admit(c)};
+ $("apprNo").onclick=()=>{SFX.click();NET.cand=null;$("appr").classList.remove("on");try{c.close()}catch(e){}};
+}
+function attach(c,gen,pending){
+ c.myN=rnd(16);if(c.authed===undefined)c.authed=false;
+ if(pending)NET.pend.add(c);else NET.conn=c;
+ let opened=false;
+ const finish=()=>{if(gen!==NET.gen)return;NET.pend.delete(c);clearTimeout(c.to);
+  if(NET.conn&&NET.conn!==c){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
+  NET.conn=c;NET.last=Date.now();clearTimeout(NET.tm);NET.rec=false;NET.rinQ=-1;
+  if(NET.host){if(G&&G.online&&!G.guest)hostResume();else startOnlineHost()}else netSend({t:"hello"})};
+ const op=()=>{if(opened||gen!==NET.gen)return;opened=true;
+  c.to=setTimeout(()=>{if(!c.authed){NET.pend.delete(c);try{c.close()}catch(e){}}},10000);
+  if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
+  else if(!NET.host){try{c.send({t:"join",s:NET.joinSec})}catch(e){}}};
+ c.fin=finish;
+ const watchIce=()=>{const pc=c.peerConnection;if(!pc||c._w)return;c._w=1;
+  pc.addEventListener("iceconnectionstatechange",()=>{const st=pc.iceConnectionState;clearTimeout(c.iceT);
+   if(st==="failed"||st==="closed"){gone()}
+   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},15000)}})};
+ setTimeout(watchIce,0);setTimeout(watchIce,800);
+ c.on("open",()=>{watchIce();op()});
+ c.on("data",async d=>{
+  try{
+  if(gen!==NET.gen||!d||typeof d!=="object")return;
+  if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
+  if(d.t==="pr"&&NET.key&&typeof d.h==="string"){if(c.authed)return;const want=await hmac(NET.key,"R"+(NET.host?"g":"h")+c.myN);if(gen!==NET.gen)return;if(d.h===want){c.authed=true;finish()}else{NET.pend.delete(c);try{c.close()}catch(e){}}return}
+  if(c.fresh&&NET.host&&!NET.key){ // room still open: invitation link (secret) joins directly, a typed code needs the host's approval
+   if(d.t!=="join")return;
+   const sec=typeof d.s==="string"&&/^[0-9a-f]{32}$/.test(d.s)?d.s:null;
+   if(NET.conn){try{c.close()}catch(e){}return}
+   if(sec&&NET.rs&&sec===NET.rs){admit(c)}
+   else if(!sec&&!NET.cand){NET.cand=c;askApproval(c)}
+   else{try{c.close()}catch(e){}}
+   return}
+  if(!c.authed&&!NET.host&&d.t==="pair"&&!NET.key&&typeof d.n==="string"&&/^\d{2}$/.test(d.n)){$("lobStatus").textContent=t("pairMsg").replace("N",d.n);clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!NET.key)lobFail()},70000);return}
+  if(!c.authed){ // first contact of a joining friend: take the game secret from the host's first "start"
+   if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanCfg(d)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
+   return}
+  if(NET.conn!==c)return;
+  NET.last=Date.now();onNetData(d)
+  }catch(e){}});
+ const gone=()=>{NET.pend.delete(c);if(NET.cand===c){NET.cand=null;$("appr").classList.remove("on")}if(gen===NET.gen&&NET.conn===c)onNetClose()};
+ c.on("close",gone);c.on("error",gone);
+ if(c.open)op();
+}
+
+// --- what comes from the network is checked and rebuilt, never used as-is ---
+const cleanCfg=d=>d&&typeof d==="object"&&(d.df==="easy"||d.df==="normal")?{df:d.df}:null;
+const idList=(a,max)=>{if(!Array.isArray(a)||a.length>max)return null;const o=[],seen=new Set();for(const x of a){if(!int(x,1,10)||seen.has(x))return null;seen.add(x);o.push(x)}return o};
+function cleanSync(d){
+ if(!int(d.n,1,1e4)||!int(d.c,0,1)||!int(d.o,0,1)||!Array.isArray(d.pl)||d.pl.length!==2)return null;
+ const st=idList(d.st,10);if(!st)return null;const pl=[];
+ for(const q of d.pl){if(!q||typeof q!=="object"||!Array.isArray(q.r)||q.r.length>21||!Array.isArray(q.b)||q.b.length>3||!int(q.f,0,10)||!int(q.d,0,1))return null;
+  for(const x of q.r.concat(q.b))if(!int(x,0,10))return null;pl.push({r:q.r.slice(),b:q.b.slice(),f:q.f,d:q.d})}
+ return{n:d.n,cur:d.c,over:d.o,st,pl}}
+function cleanGo(d){if(!int(d.n,1,1e4)||!num(d.x,-.45,.45)||!num(d.a,-.26,.26)||![-1,0,1].includes(d.s)||!num(d.p,0,1)||!int(d.sd,0,4294967295))return null;return{n:d.n,x:d.x,a:d.a,s:d.s,p:d.p,sd:d.sd}}
+function cleanTh(d){if(!int(d.n,1,1e4)||!num(d.x,-.45,.45)||!num(d.a,-.26,.26)||![-1,0,1].includes(d.s)||!num(d.p,0,1))return null;return{n:d.n,x:d.x,a:d.a,s:d.s,p:d.p}}
+// --- match flow: the host runs the rules; the guest only sends its throw and plays the same (seeded) roll ---
+const startMsg=r=>({t:"start",k:NET.key,df:diff,r});
+function startOnlineHost(){stopCd();NET.waitCode=null;SFX.join();if(!NET.key)NET.key=rnd(16);hideLob();$("over").classList.remove("show");mode="online";startGame(true,0);netSend(startMsg(0))}
+function hostResume(){weakHide();setPaused(false);netSend(startMsg(1));resendState()}
+function resendState(){if(!G||!G.online||G.guest)return;if(G.syncMsg)netSend(G.syncMsg);if(G.goMsg)netSend(G.goMsg);if(G.resMsg)netSend(G.resMsg)}
+function maybeRematch(){if(NET.host&&NET.myRe&&NET.oppRe&&NET.conn){NET.myRe=NET.oppRe=false;startOnlineHost()}}
+function sendSync(over){const g=G;g.syncMsg={t:"sync",n:g.tn,c:g.cur,o:over?1:0,st:[...g.standing],pl:g.players.map(p=>({r:p.rolls.slice(),b:p.fr.slice(),f:p.frame,d:p.done?1:0}))};netSend(g.syncMsg)}
+function applySync(){
+ const s=G.pendSync;if(!s||s.n<=G.tn)return;G.pendSync=null;
+ G.players.forEach((p,i)=>{const q=s.pl[i];p.rolls=q.r;p.fr=q.b;p.frame=q.f;p.done=!!q.d});
+ G.standing=new Set(s.st);G.cur=s.cur;G.tn=s.n;G.goN=0;G.resN=0;G.pendRes=null;G.P=null;
+ if(s.over)endGame();else beginTurn()}
+function applyRes(){const r=G.pendRes;if(!r)return;G.pendRes=null;G.resN=r.n;
+ if(G.P)for(const p of G.P.pins){const dn=r.ids.includes(p.id);if(dn&&p.up){p.up=false;p.ang=p.tgt=1.4}else if(!dn&&!p.up){p.up=true;p.ang=p.tgt=0;p.z=p.vz=0}}   // both screens agree with the host's count
+ finishRoll(r.ids);showResult()}
+function showLeft(){if(!G)return;G.over=true;setPaused(false);$("pause").classList.remove("show");$("oT").textContent=t("left");$("oS").textContent="👋";$("oB").textContent="";$("againBtn").style.display="none";$("over").classList.add("show")}
+function onNetData(d){
+ if(!d||typeof d!=="object")return;
+ if(d.t==="start"&&!NET.host){
+  const c=cleanCfg(d);if(!c||d.k!==NET.key)return;
+  if(d.r===1&&G&&G.guest&&!G.over){weakHide();setPaused(false)}
+  else{SFX.join();setPaused(false);diff=c.df;hideLob();$("over").classList.remove("show");mode="online";startGame(true,1)}}
+ else if(d.t==="sync"&&!NET.host&&G&&G.guest&&!G.over){const s=cleanSync(d);if(s&&s.n>G.tn){G.pendSync=s;if(!["roll","result","sweep"].includes(G.phase))applySync()}}
+ else if(d.t==="go"&&!NET.host&&G&&G.guest&&!G.over){const g=cleanGo(d);if(g&&g.n===G.tn&&G.goN!==g.n&&["aim","meter","wait"].includes(G.phase)){G.aim={x:g.x,ang:g.a,spin:g.s};G.seed=g.sd;launch(g.p)}}
+ else if(d.t==="res"&&!NET.host&&G&&G.guest&&!G.over){const ids=idList(d.ids,10);if(ids&&int(d.n,1,1e4)&&d.n===G.tn&&G.resN!==d.n){G.pendRes={n:d.n,ids};if(G.phase==="wait2")applyRes()}}
+ else if(d.t==="th"&&NET.host&&G&&G.online&&!G.guest&&!G.over){const g=cleanTh(d);if(!g||g.n!==G.tn||G.cur!==1)return;
+  if(G.goN===G.tn){if(G.goMsg)netSend(G.goMsg)}
+  else if(G.phase==="aim"){G.aim={x:g.x,ang:g.a,spin:g.s};G.seed=(crypto.getRandomValues(new Uint32Array(1))[0])>>>0;launch(g.p)}}
+ else if(d.t==="rematch"&&G&&G.online&&G.over){SFX.click();NET.oppRe=true;maybeRematch()}
+ else if(d.t==="bye"){const had=G&&G.online;if(had)SFX.drop();netClose();setPaused(false);if(had)showLeft();else lobFail()}
+}
+// --- connection trouble: forgiving tiers. 0-4 s quiet: nothing visible. 4-20 s: "weak connection" pill, the match keeps running (host: the friend's kitten keeps its last input, then stops; guest: last snapshot is extrapolated a little).
+//     20 s+: hard pause with a Leave button. Meanwhile we reconnect quietly; any valid data / a re-authenticated connection clears everything at once.
+function onNetClose(){ // the connection itself is gone (closed / ICE failed): reconnect quietly; the clock decides when it becomes a hard pause
+ if(!G||!G.online){if(NET.conn||NET.peer)lobFail();return}
+ const c=NET.conn;NET.conn=null;try{c&&c.close()}catch(e){}
+ if(G.over){netClose();showLeft();return}
+ startRecover();
+}
+function startRecover(){if(!G||!G.online||G.over)return;NET.rec=true;if(NET.host)hostLoop();else guestLoop()}
+function hardLost(){setPaused(true);weakHide(true);if(NET.conn)onNetClose();else if(!NET.rec)startRecover()}
+function netResume(){ // data is flowing again after a hard pause that never closed the connection
+ if(!NET.paused)return;setPaused(false);NET.rec=false;weakHide(true);
+ if(!G.guest)resendState()
+}
+function weakLine(){const L=t("weakL");NET.wi=(NET.wi+1+Math.random()*(L.length-1)|0)%L.length;const e=$("weak"),r=cv.getBoundingClientRect();e.textContent=L[NET.wi];
+ if(r.width>0){e.style.top=(r.top+r.height*.075)+"px";e.style.left=(r.left+r.width/2)+"px"}e.style.maxWidth=Math.max(160,(r.width||innerWidth)-16)+"px"}
+function weakSet(on){if(!G||on===!!G.weak)return;G.weak=on;if(on){weakLine();$("weak").classList.add("on");clearInterval(NET.wt);NET.wt=setInterval(weakLine,3500);SFX.huh()}else weakHide()}
+function weakHide(keepFlag){clearInterval(NET.wt);NET.wt=null;$("weak").classList.remove("on");if(G)G.weak=false}
+function guestLoop(){
+ clearTimeout(NET.rt);if(!NET.rec||NET.host||!G||!G.online)return;const gen=NET.gen;
+ function tryConnect(){if(gen!==NET.gen||!NET.rec||!NET.peer)return;if(NET.conn&&NET.conn.open)return;
+  if(NET.conn){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
+  try{attach(NET.peer.connect(PID+NET.code,{reliable:true}),gen)}catch(e){}}
+ function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
+  if(!p||p.destroyed||p.disconnected||!p.open){
+   try{p&&p.destroy()}catch(e){}
+   loadPeer().then(()=>{if(gen!==NET.gen||!NET.rec)return;const np=new Peer(undefined,PEER_CFG);NET.peer=np;
+    np.on("open",()=>{if(gen===NET.gen&&NET.rec)tryConnect()});np.on("error",()=>{})}).catch(()=>{});
+  }else tryConnect();
+  NET.rt=setTimeout(go,4500)}
+ go();
+}
+function hostLoop(){ // keep the room's peer alive so the friend can come back with the secret
+ clearTimeout(NET.rt);if(!NET.rec||!NET.host||!G||!G.online)return;const gen=NET.gen;
+ (function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
+  if(!p||p.destroyed){loadPeer().then(()=>{if(gen===NET.gen&&NET.rec&&(!NET.peer||NET.peer.destroyed))hostPeer(NET.code,gen,true)}).catch(()=>{})}
+  else if(p.disconnected){try{p.reconnect()}catch(e){}}
+  NET.rt=setTimeout(go,4500)})();
+}
+function netKick(){ // phone woke up / network is back: retry right away
+ if(NET.waitCode&&!(G&&G.online)){hostRecover();return}
+ if(!G||!G.online)return;
+ if(NET.rec){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
+ else netSend({t:"ping"});
+}
+function netQ(){ // connection quality dot: green = data flowing, amber = quiet for a few seconds, red = hard pause
+ const d=$("netDot");if(!d)return;if(!G||!G.online){d.style.display="none";return}
+ const a=NET.paused?9e9:Date.now()-NET.last;d.style.display="";d.style.background=a<SOFT?"#2fb36a":a<HARD?"#f2c94c":"#e23b3b";d.title=a<SOFT?"🟢":a<HARD?"🟡":"🔴"}
+let hbN=0;
+setInterval(()=>{const now=Date.now();
+ if(NET.tickAt&&now-NET.tickAt>3000)NET.last=now;                   // OUR timers were frozen (phone asleep / app in background): that says nothing about the friend
+ NET.tickAt=now;netQ();
+ if(!G||!G.online){weakHide();return}
+ if(++hbN%4===0)netSend({t:"ping"});
+ if(document.hidden||G.over)return;
+ const q=now-NET.last;
+ if(NET.paused){if(NET.conn&&NET.conn.open&&q<2500)netResume();return}
+ if(q>HARD)hardLost();else weakSet(q>SOFT);
+},500);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){NET.last=Date.now();NET.tickAt=Date.now();netKick()}});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
+$("npauseLeave").addEventListener("click",()=>{SFX.click();toMenu()});
+$("bCreate").addEventListener("click",()=>{SFX.click();createRoom()});
+$("bJoin").addEventListener("click",()=>{SFX.click();lobPane("lobJoin");$("lobStatus").textContent="";$("lobIn").value="";$("lobIn").focus()});
+$("bConn").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===6){SFX.click();joinRoom(c)}});
+$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6)});
+$("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
+
+{const U=new URLSearchParams(location.search),q=U.get("room")||"",sc=/^[0-9a-f]{32}$/.test(U.get("s")||"")?U.get("s"):null;
+ if(q||U.has("s"))try{history.replaceState(null,"",location.pathname)}catch(e){}
+ if(/^\d{6}$/.test(q))setTimeout(()=>{mode="online";showLob();lobPane("none");joinRoom(q,sc)},0)}
+
 /* ================= test hooks ================= */
-window.__bw={scoreGame,simRoll,PIN0,get G(){return G},forceRoll(k){if(!G)return;G.P=null;finishRoll(k);G.phase="result";advance();},setDiff(d){diff=d}};
+window.__bw={scoreGame,simRoll,PIN0,get G(){return G},NET,startGame,forceRoll(k){if(!G)return;G.P=null;finishRoll([...G.standing].slice(0,k));G.phase="result";advance();},setDiff(d){diff=d}};
 /* ================= init ================= */
 drawMenu();
 </script>
