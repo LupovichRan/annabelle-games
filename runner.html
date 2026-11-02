@@ -420,6 +420,7 @@ function jump(){
   if(pl.onGround){ pl.vy=JV; pl.onGround=false; pl.jumps=1; pl.slideT=0; stats.jumps++; SFX.jump(); dust(PX,0,5); }
   else if(pl.jumps<2){ pl.vy=JV2; pl.jumps=2; pl.flip=1; stats.doubleJumps++; SFX.jump2(); for(let i=0;i<6;i++) parts.push({x:PX,y:pl.y,vx:(Math.random()-.5)*3,vy:-Math.random()*2,life:.5,max:.5,r:.08,col:"#fff",star:true});
     if(Math.random()<.25) addFloat(PX,pl.y+1.5,T[lang].hop,"#7c5cff",.8); }
+  else pl.jbuf=.14;   // jump buffering: a tap just before landing is remembered and jumps the moment you touch down
 }
 function slide(hold){
   if(state!=="play"||pl.tumble>0) return;
@@ -483,7 +484,8 @@ function update(dt){
   pl.ph+=dx*2.1; pl.roar=Math.max(0,pl.roar-dt); pl.inv=Math.max(0,pl.inv-dt); pl.magnet=Math.max(0,pl.magnet-dt); if(pl.shield>0) pl.shield=Math.max(0,pl.shield-dt);
   pl.flip=Math.max(0,pl.flip-dt*2.4); if(pl.tumble>0) pl.tumble=Math.max(0,pl.tumble-dt);
   pl.blink-=dt; if(pl.blink<-3) pl.blink=.15;
-  if(!pl.onGround){ pl.vy-=G*dt; pl.y+=pl.vy*dt; if(pl.y<=0){ pl.y=0; pl.vy=0; pl.onGround=true; pl.jumps=0; if(state==="play") SFX.land(); dust(PX,0,4); if(pl.slideQ){ pl.slideQ=false; if(state==="play"&&pl.tumble<=0){ pl.slideT=0; slide(); } } } }
+  if(pl.jbuf>0) pl.jbuf-=dt;
+  if(!pl.onGround){ pl.vy-=G*dt; pl.y+=pl.vy*dt; if(pl.y<=0){ pl.y=0; pl.vy=0; pl.onGround=true; pl.jumps=0; if(state==="play") SFX.land(); dust(PX,0,4); if(pl.jbuf>0&&state==="play"){ pl.jbuf=0; jump(); } if(pl.slideQ){ pl.slideQ=false; if(state==="play"&&pl.tumble<=0){ pl.slideT=0; slide(); } } } }
   if(pl.slideT>0) pl.slideT=Math.max(0,pl.slideT-dt);
   if(pl.onGround&&state==="play"&&Math.random()<dt*6*speed/8) parts.push({x:PX-.3,y:.03,vx:-speed*.3,vy:.6,life:.35,max:.35,r:.06,col:"#f6d59a"});
   // input pending tap
