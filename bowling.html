@@ -86,6 +86,10 @@ a.big{display:flex;align-items:center;justify-content:center;text-decoration:non
 .dance{display:inline-block;animation:dn .6s infinite alternate}@keyframes dn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 #netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s;align-self:center}
 .corner{position:fixed;top:max(8px,env(safe-area-inset-top));inset-inline-end:10px;z-index:40}
+
+/* big laptop / desktop windows: scale the menu & result screens up so they do not look tiny */
+@media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){.ov{zoom:1.2}}
+@media (hover:hover) and (pointer:fine) and (min-width:1600px) and (min-height:930px){.ov{zoom:1.4}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/bowling.webmanifest"><meta name="theme-color" content="#3a1d6e"><link rel="icon" type="image/png" sizes="192x192" href="icons/bowling-192.png"><meta name="apple-mobile-web-app-title" content="באולינג חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/bowling-apple-180.png"><script src="pwa.js" data-app="bowling" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -497,7 +501,7 @@ function update(dt){
 const Lay={W0:300,yB:0,yT:0,Hh:0,K:.95,s1:0};
 function layout(){
  const tb=$("top").getBoundingClientRect(),cb=$("ctl").getBoundingClientRect();
- const ty=tb.bottom+44,by=cb.top-2;
+ const ty=tb.bottom+44+(W>=900?26:0),by=cb.top-2;
  Lay.yB=by-72;Lay.yT=ty+8;Lay.Hh=Math.max(120,Lay.yB-Lay.yT);Lay.W0=Math.min(W*.8,Lay.Hh*.95,380);Lay.s1=1/(1+Lay.K);
  $("turn").style.top=(tb.bottom+3)+"px"}
 function proj(x,y){const u=Math.max(-.2,Math.min(1.3,y/(L+.35))),s=1/(1+Lay.K*u);return{x:W/2+x*Lay.W0*s,y:Lay.yB-Lay.Hh*(1-s)/(1-Lay.s1),s}}
