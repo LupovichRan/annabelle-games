@@ -47,6 +47,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 #zone{position:absolute;top:0;bottom:0;left:72%;width:23%;background:#5fd38d99}
 #zone2{position:absolute;top:0;bottom:0;left:0;width:35%;background:#ff6a6a55}
 #mk{position:absolute;top:-2px;bottom:-2px;width:8px;margin-left:-4px;border-radius:4px;background:#ffe14d;box-shadow:0 0 8px #ffe14d;left:0}
+#meterWrap.pos{background:linear-gradient(90deg,#1f3b8a99,#2c2150cc 50%,#1f3b8a99)}#meterWrap.pos #zone,#meterWrap.pos #zone2{display:none}#meterWrap.pos::after{content:"";position:absolute;left:50%;top:5px;bottom:5px;width:2px;margin-left:-1px;background:#fff6}#meterWrap.pos #mk{width:18px;margin-left:-9px;border-radius:50%;background:#fff;box-shadow:0 0 8px #fff;top:2px;bottom:2px}
 #go{width:100%;max-width:420px;min-height:54px;border-radius:18px;background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48;font:900 21px Rubik,Arial}
 #go:active{transform:translateY(3px);box-shadow:0 1px 0 #1d7c48}
 #go.stop{background:linear-gradient(#ff8a6a,#e04a2a);box-shadow:0 4px 0 #8a2310}
@@ -135,7 +136,7 @@ const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 /* ================= texts ================= */
 const TX={
  he:{title:"באולינג חתולים",sub:"הפילו את חתולי הפרווה! 🎳",
-  rules:["👆 גוררים כדי לבחור מקום · מכוונים זווית וקימור","⏱️ לוחצים 'זרקי!' – ושוב לעצור את המד ברגע הירוק","🐱 עשרה חתולי פרווה על הקו – מי שנפל מיילל! 🎳"],
+  rules:["🎯 מכוונים זווית וקימור · לוחצים 'זרקי!'","📍 עוצרים את הכדור המהבהב איפה שרוצים · ⏱️ ועוד פעם לעצור את העוצמה בירוק","🐱 עשרה חתולי פרווה על הקו – מי שנפל מיילל! 🎳"],
   mode:"עם מי משחקים?",solo:"לבד",pc:"נגד המחשב",two:"שני שחקנים",diff:"רמה",easy:"קל (עם פגושים)",normal:"רגיל",play:"▶ משחקים!",again:"שוב",menu:"לתפריט",
   paused:"הפסקה ⏸",resume:"▶ ממשיכים",go:"🎳 זרקי!",stop:"✋ עצרי!",angle:"זווית",
   p1:"את",p2:"שחקן 2",pcn:"חברה 🐾",pl:["שחקנית 1","שחקנית 2"],
@@ -147,9 +148,9 @@ const TX={
   gutterC:["הכדור הלך לטייל 🚶","התעלה אוהבת אותך!","בוינג! מיאו…"],
   missC:["החתולים הסתכלו וצחקו 😹","פספוס מצחיק","הכדור רצה לשכב"],
   goodC:["יפה מאוד!","חתולים מעופפים!","עוד קצת וזה סטרייק!"],
-  winner:n=>`${n} ניצחה! 🏆`,draw:"תיקו! 🤝",score:"ניקוד",best:"שיא",newBest:"🎉 שיא חדש!",hintK:"<kbd>←→</kbd> מקום · <kbd>Q</kbd><kbd>E</kbd> זווית · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> קימור · <kbd>רווח</kbd> זריקה/עצירה · <kbd>Esc</kbd> הפסקה",hintT:"גררי על המסלול כדי לזוז",hintM:"לחצי 'עצרי' כשהסמן בירוק!",aiThink:"החברה מכוונת…"},
+  winner:n=>`${n} ניצחה! 🏆`,draw:"תיקו! 🤝",score:"ניקוד",best:"שיא",newBest:"🎉 שיא חדש!",hintK:"<kbd>←→</kbd> מקום · <kbd>Q</kbd><kbd>E</kbd> זווית · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> קימור · <kbd>רווח</kbd> זריקה/עצירה · <kbd>Esc</kbd> הפסקה",hintT:"גררי על המסלול כדי לזוז, או לחצי זרקי ועצרי את הכדור",hintM:"לחצי 'עצרי' כשהסמן בירוק!",aiThink:"החברה מכוונת…"},
  fr:{title:"Bowling des Chats",sub:"Fais tomber les chats en peluche ! 🎳",
-  rules:["👆 Glisse pour choisir l'endroit · règle l'angle et l'effet","⏱️ Appuie sur « Lance ! » puis arrête la jauge dans le vert","🐱 Dix chats en peluche – celui qui tombe miaule ! 🎳"],
+  rules:["🎯 Règle l'angle et l'effet · appuie sur « Lance ! »","📍 Arrête la boule où tu veux · ⏱️ puis arrête la jauge de force dans le vert","🐱 Dix chats en peluche – celui qui tombe miaule ! 🎳"],
   mode:"Avec qui jouer ?",solo:"Seul(e)",pc:"Contre l'ordi",two:"Deux joueurs",diff:"Niveau",easy:"Facile (avec bumpers)",normal:"Normal",play:"▶ Jouer !",again:"Encore",menu:"Menu",
   paused:"Pause ⏸",resume:"▶ Reprendre",go:"🎳 Lance !",stop:"✋ Stop !",angle:"Angle",
   p1:"Toi",p2:"Joueur 2",pcn:"Copine 🐾",pl:["Joueuse 1","Joueuse 2"],
@@ -161,9 +162,9 @@ const TX={
   gutterC:["La boule est partie se promener 🚶","La rigole t'aime !","Boing ! Miaou…"],
   missC:["Les chats ont bien rigolé 😹","Raté rigolo","La boule voulait dormir"],
   goodC:["Très joli !","Chats volants !","Presque un strike !"],
-  winner:n=>`${n} gagne ! 🏆`,draw:"Égalité ! 🤝",score:"Score",best:"Record",newBest:"🎉 Nouveau record !",hintK:"<kbd>←→</kbd> place · <kbd>Q</kbd><kbd>E</kbd> angle · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> effet · <kbd>Espace</kbd> lancer/stop · <kbd>Échap</kbd> pause",hintT:"Glisse sur la piste pour te placer",hintM:"Appuie sur « Stop » quand le curseur est dans le vert !",aiThink:"Elle vise…"},
+  winner:n=>`${n} gagne ! 🏆`,draw:"Égalité ! 🤝",score:"Score",best:"Record",newBest:"🎉 Nouveau record !",hintK:"<kbd>←→</kbd> place · <kbd>Q</kbd><kbd>E</kbd> angle · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> effet · <kbd>Espace</kbd> lancer/stop · <kbd>Échap</kbd> pause",hintT:"Glisse sur la piste, ou appuie sur Lance et arrête la boule",hintM:"Appuie sur « Stop » quand le curseur est dans le vert !",aiThink:"Elle vise…"},
  en:{title:"Bowling Cats",sub:"Knock down the plush kitties! 🎳",
-  rules:["👆 Drag to pick your spot · set the angle and the curve","⏱️ Tap “Roll!” then stop the meter in the green","🐱 Ten plush kitties on the lane – the ones that fall go meow! 🎳"],
+  rules:["🎯 Set the angle and the curve · tap “Roll!”","📍 Stop the moving ball where you want · ⏱️ then stop the power meter in the green","🐱 Ten plush kitties on the lane – the ones that fall go meow! 🎳"],
   mode:"Who plays?",solo:"Solo",pc:"vs Computer",two:"Two players",diff:"Level",easy:"Easy (bumpers)",normal:"Normal",play:"▶ Play!",again:"Again",menu:"Menu",
   paused:"Paused ⏸",resume:"▶ Resume",go:"🎳 Roll!",stop:"✋ Stop!",angle:"Angle",
   p1:"You",p2:"Player 2",pcn:"Buddy 🐾",pl:["Player 1","Player 2"],
@@ -175,7 +176,7 @@ const TX={
   gutterC:["The ball went for a walk 🚶","The gutter loves you!","Boing! Meow…"],
   missC:["The kitties just laughed 😹","Funny miss","The ball wanted a nap"],
   goodC:["Nice one!","Flying kitties!","Almost a strike!"],
-  winner:n=>`${n} wins! 🏆`,draw:"It's a tie! 🤝",score:"Score",best:"Best",newBest:"🎉 New best!",hintK:"<kbd>←→</kbd> spot · <kbd>Q</kbd><kbd>E</kbd> angle · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> curve · <kbd>Space</kbd> roll/stop · <kbd>Esc</kbd> pause",hintT:"Drag on the lane to move",hintM:"Tap “Stop” when the marker is in the green!",aiThink:"Aiming…"}};
+  winner:n=>`${n} wins! 🏆`,draw:"It's a tie! 🤝",score:"Score",best:"Best",newBest:"🎉 New best!",hintK:"<kbd>←→</kbd> spot · <kbd>Q</kbd><kbd>E</kbd> angle · <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> curve · <kbd>Space</kbd> roll/stop · <kbd>Esc</kbd> pause",hintT:"Drag on the lane, or tap Roll and stop the ball",hintM:"Tap “Stop” when the marker is in the green!",aiThink:"Aiming…"}};
 let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
 const t=k=>TX[lang][k]??(typeof TXO!=="undefined"?TXO[lang][k]:undefined),pick=a=>a[Math.random()*a.length|0],rr=(a,b)=>a+Math.random()*(b-a);
 let diff=ls.get("annabelle-bowling-diff")==="normal"?"normal":"easy";
@@ -285,7 +286,7 @@ function names(me){if(mode==="online"){const o=[{n:t("p1"),c:0,ai:false},{n:t("f
 function newPlayers(me){return names(me).map(o=>({name:o.n,col:COL[o.c],ai:o.ai,rolls:[],frame:0,fr:[],done:false}))}
 function startGame(online,me){
  ac();
- G={online:!!online,me:me||0,guest:!!online&&me===1,tn:1,goN:0,resN:0,players:newPlayers(me),cur:0,phase:"aim",standing:new Set(PIN0.map(p=>p.id)),aim:{x:0,ang:0,spin:0},meter:{v:0,dir:1,run:false},P:null,timer:0,react:{k:"idle",t:0},conf:[],pause:false,over:false,z:1,camT:0,lastRoll:null,sweepA:1,rollSnd:0,hitSnd:0,aiPlan:null,pinsPrev:null,time:0};
+ G={online:!!online,me:me||0,guest:!!online&&me===1,tn:1,goN:0,resN:0,players:newPlayers(me),cur:0,phase:"aim",standing:new Set(PIN0.map(p=>p.id)),aim:{x:0,ang:0,spin:0},meter:{v:0,dir:1,run:false},pos:{v:.5,dir:1},manualX:false,P:null,timer:0,react:{k:"idle",t:0},conf:[],pause:false,over:false,z:1,camT:0,lastRoll:null,sweepA:1,rollSnd:0,hitSnd:0,aiPlan:null,pinsPrev:null,time:0};
  $("menu").classList.remove("show");$("over").classList.remove("show");$("pause").classList.remove("show");$("againBtn").style.display="";
  document.body.classList.add("game");fit();beginTurn();
  cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(loop);
@@ -294,7 +295,7 @@ window.toMenu=function(){if(G&&G.online&&!G.over)netLeave();else if(NET.conn||NE
 function cur(){return G.players[G.cur]}
 function myTurn(){return !cur().ai&&(!G.online||G.cur===G.me)}
 function beginTurn(){
- const p=cur();G.phase="aim";G.timer=0;G.P=null;G.meter={v:0,dir:1,run:false};G.sweepA=1;
+ const p=cur();G.phase="aim";G.timer=0;G.P=null;G.meter={v:0,dir:1,run:false};G.pos={v:Math.random(),dir:Math.random()<.5?1:-1};G.manualX=false;G.sweepA=1;
  if(G.standing.size===10||true){G.aim.x=0;G.aim.ang=0;G.aim.spin=0;$("ang").value=0;syncSpin()}
  G.lastRoll=null;G.react={k:"idle",t:0};G.goMsg=G.resMsg=null;G.pendRes=null;
  if(p.ai){planAI();G.aiT=0}
@@ -302,14 +303,15 @@ function beginTurn(){
 function ui(){
  const p=cur(),ai=p.ai,lock=ai||(G.online&&G.cur!==G.me);
  $("ctl").classList.toggle("ai",lock||G.phase==="roll"||G.phase==="result"||G.phase==="sweep"||G.over);
- const m=G.phase==="meter";
- $("go").textContent=m?t("stop"):t("go");$("go").classList.toggle("stop",m);
- $("angRow").style.visibility=m?"hidden":"visible";
- $("meterWrap").style.visibility=(m||ai&&G.phase==="aim")?"visible":"hidden";
+ const m=G.phase==="meter",ps=G.phase==="pos";
+ $("go").textContent=(m||ps)?t("stop"):t("go");$("go").classList.toggle("stop",m||ps);
+ $("angRow").style.visibility=(m||ps)?"hidden":"visible";
+ $("meterWrap").classList.toggle("pos",ps);
+ $("meterWrap").style.visibility=(m||ps||ai&&G.phase==="aim")?"visible":"hidden";
  if(G.online&&G.cur===G.me&&G.phase==="wait")$("go").textContent="⏳";
  const fr=p.frame+1,bl=p.fr.length+1;
  $("turn").textContent=ai&&G.phase==="aim"?t("aiThink"):G.online&&!G.over?(G.cur!==G.me?t("theirTurn"):t("yourTurn"))+" · "+Math.min(10,fr)+"/10 · "+bl:t("turn")(p.name,Math.min(10,fr),bl);
- $("mk").style.left=(G.meter.v*100)+"%";
+ $("mk").style.left=((ps?G.pos.v:G.meter.v)*100)+"%";
 }
 function fit(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
  const tb=$("top").getBoundingClientRect(),cb=$("ctl").getBoundingClientRect();
@@ -337,7 +339,10 @@ function throwBall(power){
 function launch(power){
  G.meter.run=false;G.phase="roll";G.timer=0;G.acc=0;const sd=G.seed;G.P=makeRoll(G.standing,G.aim,power,sd);G.seed=null;G.goN=G.tn;if(G.online&&!G.guest){G.goMsg={t:"go",n:G.tn,x:G.aim.x,a:G.aim.ang,s:G.aim.spin,p:power,sd};netSend(G.goMsg)}G.pinsBefore=new Set(G.standing);G.power=power;SFX.swing();G.react={k:"idle",t:0};ui()}
 function stopMeter(){if(G.phase==="meter")throwBall(G.meter.v)}
-function pressGo(){if(!G||G.pause||G.over||!myTurn())return;ac();if(G.phase==="aim"){G.phase="meter";G.meter={v:0,dir:1,run:true};SFX.click();ui()}else if(G.phase==="meter")stopMeter()}
+function pressGo(){if(!G||G.pause||G.over||!myTurn())return;ac();if(G.phase==="aim"){SFX.click();if(G.manualX){G.phase="meter";G.meter={v:0,dir:1,run:true}}else{G.phase="pos";posToX()}ui()}else if(G.phase==="pos")stopPos();else if(G.phase==="meter")stopMeter()}
+function posRange(){return diff==="easy"?.4:.38}
+function posToX(){const m=posRange();G.aim.x=(G.pos.v-.5)*2*m}
+function stopPos(){if(G.phase!=="pos")return;posToX();G.phase="meter";G.meter={v:0,dir:1,run:true};SFX.click();ui()}
 function finishRoll(forceIds){
  const P=G.P,pl=cur();
  let k;
@@ -401,10 +406,11 @@ function renderSB(){
 function laneX(clientX){return(clientX-W/2)/Lay.W0}
 let dragging=false;
 cv.addEventListener("pointerdown",e=>{if(!G||G.pause||G.over)return;ac();if(G.phase==="meter"&&myTurn()){stopMeter();return}
+ if(G.phase==="pos"&&myTurn()){stopPos();return}
  if(G.phase==="aim"&&myTurn()){dragging=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}setAimX(laneX(e.clientX))}});
 cv.addEventListener("pointermove",e=>{if(dragging&&G&&G.phase==="aim")setAimX(laneX(e.clientX))});
 ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>cv.addEventListener(ev,()=>{dragging=false}));
-function setAimX(x){const m=diff==="easy"?.4:.38;G.aim.x=Math.max(-m,Math.min(m,x))}
+function setAimX(x){const m=diff==="easy"?.4:.38;G.manualX=true;G.aim.x=Math.max(-m,Math.min(m,x))}
 $("ang").addEventListener("input",()=>{if(G)G.aim.ang=$("ang").value/100*.25});
 function syncSpin(){document.querySelectorAll("#spin button").forEach(b=>b.classList.toggle("sel",G&&+b.dataset.s===G.aim.spin))}
 $("spin").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!G||G.phase!=="aim")return;G.aim.spin=+b.dataset.s;SFX.click();syncSpin()});
@@ -465,9 +471,12 @@ function update(dt){
    if(G.aiT>1.9){G.meter.v=pl.power;throwBall(pl.power)}ui()}
   else if(myTurn()){
    const m=diff==="easy"?.4:.38;let mv=0;if(keys.ArrowLeft||keys.KeyA)mv-=1;if(keys.ArrowRight||keys.KeyD)mv+=1;
-   if(mv)G.aim.x=Math.max(-m,Math.min(m,G.aim.x+mv*.45*dt));
+   if(mv){G.manualX=true;G.aim.x=Math.max(-m,Math.min(m,G.aim.x+mv*.45*dt))}
    let av=0;if(keys.KeyQ)av-=1;if(keys.KeyE)av+=1;if(av){G.aim.ang=Math.max(-.25,Math.min(.25,G.aim.ang+av*.25*dt));$("ang").value=G.aim.ang/.25*100}}
- }else if(G.phase==="meter"&&myTurn()){
+ }else if(G.phase==="pos"&&myTurn()){
+  const sp=diff==="easy"?.85:1.25;G.pos.v+=G.pos.dir*sp*dt;if(G.pos.v>=1){G.pos.v=1;G.pos.dir=-1}else if(G.pos.v<=0){G.pos.v=0;G.pos.dir=1}
+  posToX();$("mk").style.left=(G.pos.v*100)+"%"}
+ else if(G.phase==="meter"&&myTurn()){
   const sp=diff==="easy"?1.15:1.6;G.meter.v+=G.meter.dir*sp*dt;if(G.meter.v>=1){G.meter.v=1;G.meter.dir=-1}else if(G.meter.v<=0){G.meter.v=0;G.meter.dir=1}
   $("mk").style.left=(G.meter.v*100)+"%"}
  else if(G.phase==="roll"){
@@ -502,12 +511,12 @@ function draw(dt){
  drawLane();
  // pins / ball sorted far-first
  const items=[];
- if(G.phase==="aim"||G.phase==="meter"){for(const p of PIN0)if(G.standing.has(p.id))items.push({y:p.y0,k:"pin",p:{id:p.id,x:p.x0,y:p.y0,up:true,ang:0,z:0}})}
+ if(G.phase==="aim"||G.phase==="pos"||G.phase==="meter"){for(const p of PIN0)if(G.standing.has(p.id))items.push({y:p.y0,k:"pin",p:{id:p.id,x:p.x0,y:p.y0,up:true,ang:0,z:0}})}
  else if(G.P){for(const p of G.P.pins)items.push({y:p.y,k:"pin",p});if(!G.P.ball.out||G.phase==="roll")items.push({y:G.P.ball.y,k:"ball"})}
- if(G.phase==="aim"||G.phase==="meter")items.push({y:0,k:"aimball"});
+ if(G.phase==="aim"||G.phase==="pos"||G.phase==="meter")items.push({y:0,k:"aimball"});
  items.sort((a,b)=>b.y-a.y);
  for(const it of items){if(it.k==="pin")drawPin(it.p);else if(it.k==="ball")drawBall(G.P.ball,G.P.c.rb);else drawBall({x:G.aim.x,y:0,roll:0,gut:false},cfg().rb)}
- if(G.phase==="aim"||G.phase==="meter")drawGuide();
+ if(G.phase==="aim"||G.phase==="pos"||G.phase==="meter")drawGuide();
  cx.restore();
  drawKitten(dt);
  // confetti
@@ -806,7 +815,7 @@ function onNetData(d){
   if(d.r===1&&G&&G.guest&&!G.over){weakHide();setPaused(false)}
   else{SFX.join();setPaused(false);diff=c.df;hideLob();$("over").classList.remove("show");mode="online";startGame(true,1)}}
  else if(d.t==="sync"&&!NET.host&&G&&G.guest&&!G.over){const s=cleanSync(d);if(s&&s.n>G.tn){G.pendSync=s;if(!["roll","result","sweep"].includes(G.phase))applySync()}}
- else if(d.t==="go"&&!NET.host&&G&&G.guest&&!G.over){const g=cleanGo(d);if(g&&g.n===G.tn&&G.goN!==g.n&&["aim","meter","wait"].includes(G.phase)){G.aim={x:g.x,ang:g.a,spin:g.s};G.seed=g.sd;launch(g.p)}}
+ else if(d.t==="go"&&!NET.host&&G&&G.guest&&!G.over){const g=cleanGo(d);if(g&&g.n===G.tn&&G.goN!==g.n&&["aim","pos","meter","wait"].includes(G.phase)){G.aim={x:g.x,ang:g.a,spin:g.s};G.seed=g.sd;launch(g.p)}}
  else if(d.t==="res"&&!NET.host&&G&&G.guest&&!G.over){const ids=idList(d.ids,10);if(ids&&int(d.n,1,1e4)&&d.n===G.tn&&G.resN!==d.n){G.pendRes={n:d.n,ids};if(G.phase==="wait2")applyRes()}}
  else if(d.t==="th"&&NET.host&&G&&G.online&&!G.guest&&!G.over){const g=cleanTh(d);if(!g||g.n!==G.tn||G.cur!==1)return;
   if(G.goN===G.tn){if(G.goMsg)netSend(G.goMsg)}
