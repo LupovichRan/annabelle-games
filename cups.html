@@ -153,7 +153,7 @@ const cupGeo=new THREE.LatheGeometry([new THREE.Vector2(.84,0),new THREE.Vector2
 const bandGeo=new THREE.CylinderGeometry(.74,.77,.34,22);
 const blobGeo=new THREE.CircleGeometry(1,16);
 const blobMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28,depthWrite:false});
-const CCOL=[0xe23b6a,0xffb43b,0x2fb8c0,0x8a6bff,0x4cc47c];
+const CCOL=[0xe23b6a,0xe23b6a,0xe23b6a,0xe23b6a,0xe23b6a];   // all cups look the same: no cheating by colour
 let cups=[];
 function mkCup(i){const g=new THREE.Group();const c=new THREE.Mesh(cupGeo,M(CCOL[i%5]));c.name="body";g.add(c);const b=new THREE.Mesh(bandGeo,M(0xffffff));b.position.y=.7;g.add(b);
  const num=new THREE.Mesh(new THREE.CircleGeometry(.3,12),M(0xffffff));g.add(num);
@@ -165,7 +165,7 @@ const blobB=new THREE.Mesh(blobGeo,blobMat);blobB.rotation.x=-Math.PI/2;blobB.po
 let ph="menu",pt=0,paused=false,mode=ls.get("annabelle-cups-mode")==="easy"?"easy":"norm";
 let level=1,hearts=3,score=0,streak=0,best=+ls.get("annabelle-cups-best")||0,ballCup=0,cupAt=[],X=[],sel=0,over=false;
 let steps=[],stepI=0,stepT=0,swapLog=[],gapT=0,rv=null,resultT=0,wasCorrect=false,idleT=0,mood=0,moodK="";
-const cfg=()=>{const e=mode==="easy";const n=level<=2?3:level<=5?4:5;return{n:e?Math.min(n,4):n,swaps:Math.min(e?12:18,Math.round((3+level*1.6)*(e?.75:1))),dur:Math.max(e?.5:.3,(.92-.06*level)*(e?1.4:1)),decoy:level>=4,dbl:level>=6&&!e,same:level>=8&&!e}};
+const cfg=()=>{const e=mode==="easy";const n=level<=2?3:level<=5?4:5;return{n:e?Math.min(n,4):n,swaps:Math.min(e?12:18,Math.round((3+level*1.6)*(e?.75:1))),dur:Math.max(e?.5:.3,(.92-.06*level)*(e?1.4:1)),decoy:level>=4,dbl:level>=6&&!e,same:true}};
 function layout(n){X=[];const sp=n===3?2.2:n===4?1.95:1.7;for(let i=0;i<n;i++)X.push((i-(n-1)/2)*sp)}
 function buildCups(n){cups.forEach(c=>{scene.remove(c.g);scene.remove(c.blob)});cups=[];for(let i=0;i<n;i++)cups.push(mkCup(i));layout(n);cupAt=cups.map((c,i)=>i);cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;positionCup(c)});
  cups.forEach(c=>{const num=c.g.children[2];num.visible=false});buildPicks(n)}
