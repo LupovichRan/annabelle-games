@@ -20,7 +20,17 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 #top{position:fixed;top:max(8px,env(safe-area-inset-top));left:10px;right:66px;z-index:12;display:none;gap:8px;align-items:center;pointer-events:none;direction:ltr}
 .game #top{display:flex}
 #top .pill,#top button{pointer-events:auto}
-.pill{background:#0009;border:2px solid #fff6;border-radius:999px;padding:5px 12px;font:900 17px Rubik,Arial;white-space:nowrap}
+.pill{background:#0009;border:2px solid #fff6;border-radius:999px;padding:4px 9px;font:900 15px Rubik,Arial;white-space:nowrap}
+#top .iconbtn{width:40px;height:40px;font-size:18px;border-width:2px}
+#pSt{display:none}@media (min-width:520px){#pSt{display:inline-block}}
+.row3{display:flex;gap:8px;width:100%}.row3 .big{min-width:0;font-size:16px;padding:6px 6px;line-height:1.1}
+#shop{justify-content:flex-start}
+.up{display:flex;align-items:center;gap:10px;width:100%;min-height:68px;border-radius:20px;background:linear-gradient(#a58bff,#7c5cff);padding:8px 12px;text-align:start;box-shadow:0 5px 0 #0005;font:800 16px/1.15 Rubik,Arial;color:#fff}
+.up:active{transform:translateY(3px);box-shadow:0 2px 0 #0005}
+.up .ic{font-size:30px;flex:none}.up .tx{flex:1;min-width:0}.up small{display:block;font-weight:600;font-size:12px;opacity:.92;margin-top:2px}.up .pips{letter-spacing:2px;font-size:13px}
+.up .co{flex:none;background:#0006;border-radius:14px;padding:6px 10px;font:900 17px Rubik,Arial;white-space:nowrap}
+.up.no{background:linear-gradient(#8aa0b8,#5b6f88)}.up.mx{background:linear-gradient(#ffd23f,#e09800);color:#4a3300}.up.mx .co{background:#0002}
+@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}.up.shk{animation:shk .3s}
 #cap{position:fixed;left:0;right:0;top:19%;z-index:13;text-align:center;pointer-events:none;font:900 clamp(22px,6.4vw,38px)/1.15 Rubik,Arial;text-shadow:0 3px 0 #000a,0 0 14px #0006;padding:0 14px;opacity:0;transform:scale(.7)}
 #cap.show{animation:cap 2s ease-out forwards}
 @keyframes cap{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.1)}22%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
@@ -45,7 +55,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 .ov.show{display:flex}
 .ov .mid{flex:1}
 #menu,#train,#res{background:linear-gradient(#0000 0,#0000 100%)}
-#menu .top,#train .top,#res .top{margin-top:34px;display:flex;flex-direction:column;gap:6px;align-items:center}
+#menu .top,#train .top,#res .top,#shop .top{margin-top:34px;display:flex;flex-direction:column;gap:6px;align-items:center}
 .bot{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;max-width:440px;padding:12px;background:#0005;border-radius:26px;backdrop-filter:blur(3px)}
 h1{margin:0;font-size:clamp(32px,10vw,56px);color:#ffe14d;text-shadow:0 4px 0 #b65f10,0 0 24px #ffe14d88;line-height:1.05;padding:0 40px}
 h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #b65f10}
@@ -81,7 +91,7 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #b65f10}
 <canvas id="cv"></canvas>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
 
-<div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><span class="pill" id="pTh"></span><span class="pill" id="pSc"></span><span class="pill" id="pSt"></span></div>
+<div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pTh"></span><span class="pill" id="pSc"></span><span class="pill" id="pCo"></span><span class="pill" id="pSt"></span></div>
 <div id="gauges"><div class="gl" id="gTl"></div><div class="gb" id="gTen"><div class="z"></div><div class="y"></div><div class="r"></div><div class="m" id="gTenM"></div></div>
  <div class="gb pr"><div class="f" id="gPrF"></div></div>
  <div id="gBrW" class="hide" style="display:flex;flex-direction:column;align-items:center;gap:4px;width:100%"><div class="gl" id="gBl"></div><div class="gb br"><div class="f" id="gBrF"></div></div></div></div>
@@ -90,14 +100,17 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #b65f10}
 
 <div class="ov show" id="menu"><div class="top"><h1 id="mT"></h1><div class="sub" id="mS"></div></div><div class="mid"></div>
  <div class="bot"><div class="sub" id="mStr"></div><button class="big g" id="playBtn"></button>
-  <div class="row"><button class="big p" id="trainBtn"></button><button class="big o" id="bookBtn"></button></div>
+  <div class="row3"><button class="big o" id="shopBtn"></button><button class="big p" id="trainBtn"></button><button class="big s" id="bookBtn"></button></div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
 <div class="ov" id="train"><div class="top"><h2 id="trT"></h2><div class="sub" id="trS"></div></div><div class="mid"></div>
  <div class="bot"><div class="sub" id="trInfo"></div><div id="gbar"><div id="gz"></div><div id="gm"></div></div><button class="big" id="bRep"></button><button class="big s" id="trBack"></button></div></div>
 <div class="ov" id="res"><div class="top"><h2 id="rT"></h2></div><div class="mid"></div>
- <div class="bot"><div class="sub" id="rS"></div><div class="sub" id="rA" style="font-size:30px"></div><button class="big g" id="againBtn"></button>
+ <div class="bot"><div class="sub" id="rS"></div><div class="sub" id="rA" style="font-size:30px"></div><div class="sub" id="rHint"></div><button class="big g" id="againBtn"></button>
+  <button class="big o" id="rShop"></button>
   <div class="row"><button class="big p" id="rTrain"></button><button class="big s" id="rMenu"></button></div></div></div>
 <div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
+<div class="ov" id="shop"><div class="top"><h2 id="shT"></h2><div class="sub" id="shS"></div></div><div class="mid"></div>
+ <div class="bot"><span class="pill" id="shCo" style="font-size:20px;padding:4px 16px"></span><div id="upList" style="display:flex;flex-direction:column;gap:8px;width:100%"></div><button class="big s" id="shBack"></button></div></div>
 <div class="ov" id="book"><h2 id="bkT"></h2><div id="bookGrid"></div><button class="big s" id="bkBack" style="max-width:320px"></button></div>
 <div id="nogl"><div style="font-size:70px">🐱</div><div id="nglT"></div><button class="big g" id="nglB" style="max-width:260px"></button></div>
 
@@ -116,7 +129,9 @@ he:{title:"חכת השריר",sub:"חופרים עם הכוח ומושכים ח�
  trT:"חדר כושר 💪",trS:"לחצי כשהסמן בירוק!",trInfo:"חזרות טובות: {n} · זמן: {t}",rep:"💪 הרימי!",back:"חזרה",trDone:"האימון נגמר! +{n} כוח",
  lvl:"💪 כוח {n}!",maxed:"הכי חזקה! 🏆",bookT:"אוסף החיות",locked:"???",need:"עוד {n} לרמה הבאה",
  noGL:"המשחק הזה צריך תלת־ממד (WebGL) והדפדפן שלך לא תומך. נסי דפדפן אחר 🐱",home:"🏠 לכל המשחקים",
- mStr:"כוח {n} · עוד {x} חזרות לרמה הבאה"},
+ mStr:"כוח {n} · עוד {x} חזרות לרמה הבאה",
+ shop:"🛒 חנות",shT:"חנות שדרוגים 🛒",shS:"מקבלים מטבעות על כל חיה שתופסים!",shopHint:"אחרי כל סיבוב אפשר לשדרג! 🛒",rShop:"🛒 שדרוגים",lvlW:"רמה",maxUp:"מקסימום 🏆",needCoins:"חסרים עוד {n} מטבעות 🪙",bought:"שודרג! 🎉",
+ tsFast:"🏎️💨 צונאמי מהיר!",tsNormal:"🌊 צונאמי!",tsSlow:"🐢 צונאמי איטי…",tsVslow:"🐌 צונאמי איטי מאווווד…",gBrS:"🌊 החזיקי חזק עד שהגל עובר!",menuB:"לתפריט"},
 fr:{title:"La Canne Muscle",sub:"Creuse avec tes muscles et sors des animaux ! 💪",play:"▶ Jouer",train:"💪 Muscu",book:"📖 Album",throws:"🎣",score:"⭐",str:"Force",
  throwB:"🎯 Lance !",reelB:"🪝 Tire !",braceB:"🌊 Tiens bon !",gTen:"Appuie et tiens – mais pas trop !",gBr:"🌊 Tape vite pour tenir !",
  rules:"Arrête la flèche sur un animal enterré, lance, puis maintiens « Tire » pour le ramener. Attention à la corde et au tsunami ! 🌊",
@@ -126,7 +141,9 @@ fr:{title:"La Canne Muscle",sub:"Creuse avec tes muscles et sors des animaux ! �
  trT:"Salle de sport 💪",trS:"Tape quand le curseur est vert !",trInfo:"Bonnes reps : {n} · Temps : {t}",rep:"💪 Soulève !",back:"Retour",trDone:"Fini ! +{n} force",
  lvl:"💪 Force {n} !",maxed:"Au maximum ! 🏆",bookT:"Album des animaux",locked:"???",need:"Encore {n} pour le niveau suivant",
  noGL:"Ce jeu a besoin de la 3D (WebGL) et ton navigateur ne la gère pas. Essaie un autre 🐱",home:"🏠 Tous les jeux",
- mStr:"Force {n} · encore {x} reps pour monter"},
+ mStr:"Force {n} · encore {x} reps pour monter",
+ shop:"🛒 Boutique",shT:"Boutique d'améliorations 🛒",shS:"Chaque animal attrapé donne des pièces !",shopHint:"Après chaque manche, améliore ton matériel ! 🛒",rShop:"🛒 Améliorations",lvlW:"Niv.",maxUp:"Maximum 🏆",needCoins:"Il manque {n} pièces 🪙",bought:"Amélioré ! 🎉",
+ tsFast:"🏎️💨 Tsunami rapide !",tsNormal:"🌊 Tsunami !",tsSlow:"🐢 Tsunami lent…",tsVslow:"🐌 Tsunami très très lent…",gBrS:"🌊 Tiens bon jusqu'à ce que la vague passe !",menuB:"Menu"},
 en:{title:"Muscle Rod Dig",sub:"Dig with your muscles and pull out animals! 💪",play:"▶ Play",train:"💪 Train",book:"📖 Book",throws:"🎣",score:"⭐",str:"Power",
  throwB:"🎯 Throw!",reelB:"🪝 Reel!",braceB:"🌊 Hold tight!",gTen:"Press and hold – but not too much!",gBr:"🌊 Tap fast to hold on!",
  rules:"Stop the arrow over a buried animal, throw, then hold “Reel” to pull it to you. Watch the rope and the tsunami! 🌊",
@@ -136,7 +153,16 @@ en:{title:"Muscle Rod Dig",sub:"Dig with your muscles and pull out animals! 💪
  trT:"Gym 💪",trS:"Tap when the marker is green!",trInfo:"Good reps: {n} · Time: {t}",rep:"💪 Lift!",back:"Back",trDone:"Done! +{n} power",
  lvl:"💪 Power {n}!",maxed:"Strongest! 🏆",bookT:"Animal book",locked:"???",need:"{n} more for the next level",
  noGL:"This game needs 3D (WebGL) and your browser doesn't support it. Try another one 🐱",home:"🏠 All games",
- mStr:"Power {n} · {x} more reps to level up"}};
+ mStr:"Power {n} · {x} more reps to level up",
+ shop:"🛒 Shop",shT:"Upgrade shop 🛒",shS:"Every animal you catch gives coins!",shopHint:"After every round you can upgrade! 🛒",rShop:"🛒 Upgrades",lvlW:"Lv",maxUp:"Max 🏆",needCoins:"{n} more coins needed 🪙",bought:"Upgraded! 🎉",
+ tsFast:"🏎️💨 Fast tsunami!",tsNormal:"🌊 Tsunami!",tsSlow:"🐢 Slow tsunami…",tsVslow:"🐌 Super-duper slow tsunami…",gBrS:"🌊 Hold tight until the wave passes!",menuB:"Menu"}};
+const UPT={he:{reach:["חכה ארוכה וקופצנית","זורקת רחוק ותופסת רחב יותר"],rope:["חבל סופר־חזק","החבל מחזיק יותר מתח"],reel:["גלגלת טורבו","מושכים את החיה מהר יותר"],power:["שרירי ברזל","כוח משיכה גדול יותר"]},
+ fr:{reach:["Canne géante rebondissante","Lance plus loin, attrape plus large"],rope:["Corde super solide","La corde tient plus de tension"],reel:["Moulinet turbo","Ramène l'animal plus vite"],power:["Muscles d'acier","Plus de force pour tirer"]},
+ en:{reach:["Long bouncy rod","Throws farther, catches wider"],rope:["Super-strong rope","Rope handles more tension"],reel:["Turbo reel","Pulls the animal faster"],power:["Iron muscles","More pulling power"]}};
+const UPD=[{k:"reach",ic:"🎯",cost:[8,16,28,44,66]},{k:"rope",ic:"🪢",cost:[8,16,28,44,66]},{k:"reel",ic:"⚙️",cost:[10,20,34,52,76]},{k:"power",ic:"💪",cost:[12,24,40,60,90]}],UMAX=5;
+/* tsunami types: ap = approach time, win = time the wave presses on you, warn = siren time, thr = bracing needed */
+const TS={fast:{ap:.9,win:.3,warn:.8,thr:.35,sc:.8,tx:"tsFast",hold:false,rate:1.6},normal:{ap:2.0,win:.6,warn:1.3,thr:.5,sc:1,tx:"tsNormal",hold:false,rate:1},slow:{ap:3.6,win:1.5,warn:2.0,thr:.55,sc:1.25,tx:"tsSlow",hold:true,rate:.7},vslow:{ap:5.6,win:2.6,warn:2.6,thr:.6,sc:1.5,tx:"tsVslow",hold:true,rate:.55}};
+const TSK=["fast","normal","slow","vslow"];
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
 const t=(k,o)=>{let s=(TX[lang][k]??TX.he[k]??k);if(o)for(const q in o)s=s.replace("{"+q+"}",o[q]);return s};
@@ -154,9 +180,10 @@ const ANIM=[
 const AID=Object.fromEntries(ANIM.map(a=>[a.id,a]));
 const MAXS=10,need=l=>4+2*l,F_=S=>2+1.3*S;
 /* save */
-let SV={str:0,xp:0,best:0,book:{}};
-try{const o=JSON.parse(ls.get("annabelle-digrod")||"null");if(o&&typeof o==="object"){SV.str=Math.max(0,Math.min(MAXS,o.str|0));SV.xp=Math.max(0,o.xp|0);SV.best=Math.max(0,o.best|0);if(o.book&&typeof o.book==="object")for(const a of ANIM)SV.book[a.id]=Math.max(0,o.book[a.id]|0)}}catch(e){}
+let SV={str:0,xp:0,best:0,book:{},coins:0,up:{reach:0,rope:0,reel:0,power:0}};
+try{const o=JSON.parse(ls.get("annabelle-digrod")||"null");if(o&&typeof o==="object"){SV.str=Math.max(0,Math.min(MAXS,o.str|0));SV.xp=Math.max(0,o.xp|0);SV.best=Math.max(0,o.best|0);SV.coins=Math.max(0,Math.min(99999,o.coins|0));if(o.up&&typeof o.up==="object")for(const u of UPD)SV.up[u.k]=Math.max(0,Math.min(UMAX,o.up[u.k]|0));if(o.book&&typeof o.book==="object")for(const a of ANIM)SV.book[a.id]=Math.max(0,o.book[a.id]|0)}}catch(e){}
 const save=()=>ls.set("annabelle-digrod",JSON.stringify(SV));
+const UP=SV.up,Fe=()=>F_(S+UP.power*.8),SE=()=>S+UP.power*.8;
 /* ============ sound ============ */
 let AC=null,muted=ls.get("annabelle-muted")==="1";
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
@@ -167,7 +194,7 @@ const SFX={click(){tone(560,.08,"triangle",.16)},whoosh(){noise(.3,500,"bandpass
  snap(){tone(300,.3,"sawtooth",.18,60);noise(.2,2500,"highpass",.2)},boing(){tone(220,.4,"sine",.3,700);tone(700,.3,"sine",.2,200,.25)},
  pop(){tone(500,.12,"triangle",.25,1100)},catchS(){[523,659,784,1046].forEach((f,i)=>tone(f,.2,"triangle",.22,null,i*.08))},
  big(){[392,523,659,784,1046,1318].forEach((f,i)=>tone(f,.28,"square",.12,null,i*.09));noise(.6,3000,"highpass",.1,6000,.3)},
- siren(){for(let i=0;i<4;i++)tone(i%2?620:880,.24,"sawtooth",.13,null,i*.25)},rumble(){noise(1.8,120,"lowpass",.5,60)},splash(){noise(.6,1800,"bandpass",.35,400)},
+ siren(ty){if(ty==="fast"){for(let i=0;i<8;i++)tone(i%2?1100:1500,.1,"square",.1,null,i*.1)}else if(ty==="slow"){for(let i=0;i<3;i++)tone(i%2?520:700,.5,"sawtooth",.12,null,i*.6)}else if(ty==="vslow"){for(let i=0;i<3;i++)tone(i%2?300:420,.8,"sawtooth",.13,null,i*.9)}else{for(let i=0;i<4;i++)tone(i%2?620:880,.24,"sawtooth",.13,null,i*.25)}},rumble(d=1.8){noise(d,120,"lowpass",.5,60)},buy(){[523,659,784,1046,1318].forEach((f,i)=>tone(f,.18,"triangle",.2,null,i*.06));noise(.3,4000,"highpass",.08,8000,.2)},coin(){tone(1200,.08,"square",.1);tone(1600,.16,"square",.09,null,.07)},splash(){noise(.6,1800,"bandpass",.35,400)},
  lvl(){[392,494,587,784,988].forEach((f,i)=>tone(f,.25,"triangle",.22,null,i*.09))},rep(){tone(330,.15,"sawtooth",.15,660)},oops(){tone(260,.25,"triangle",.18,150)},
  brace(){tone(300,.06,"square",.1)}};
 /* ============ three.js scene ============ */
@@ -241,40 +268,72 @@ const BUILD={
  panda:()=>critter({r:1.0,body:0xffffff,head:0xffffff,ears:{t:"round",c:0x222222},snout:0xf2f2f2,foot:0x222222,tail:{t:"puff",c:0xffffff},extra:(g,r,hr)=>{for(const sx of[-1,1]){const p=sph(hr*.22,0x222222,5,4);p.scale.set(1,1.3,.5);put(p,sx*hr*.4,r*1.85,r*.12+hr*.85);g.add(p)}}}),
  elephant:()=>critter({r:1.15,body:0x9aa6b8,belly:0xc4cdda,ears:{t:"big",c:0x8794a8},foot:0x8794a8,tail:{t:"long",c:0x8794a8},extra:(g,r,hr)=>{const tr=cyl(hr*.2,hr*1.0,0x9aa6b8,6);tr.rotation.x=Math.PI/2.5;put(tr,0,r*1.45,r*.12+hr*1.0);g.add(tr)}}),
  dino:()=>critter({r:1.2,body:0x4fc46a,belly:0xd6f2a0,ears:null,tail:{t:"dino",c:0x4fc46a},extra:(g,r,hr)=>{for(let i=0;i<5;i++){const p=cone(r*.16,r*.35,0xffb84d,4);put(p,0,r*1.7+r*.28-i*r*.17,-r*.4-i*r*.12);g.add(p)}const sn=sph(hr*.5,0x6fdc86,6,5);sn.scale.z=1.2;put(sn,0,r*1.5,r*.12+hr*.8);g.add(sn)}})};
-function buildKitten(){const K=new THREE.Group(),r=.85;
- const body=sph(r,0xffa94d,8,6);body.scale.set(r,r*1.05,r*.95);put(body,0,r*1.05,0);K.add(body);
- K.add(put(sph(r*.62,0xffd9a8,6,5),0,r*.95,r*.62));
- const head=sph(.78,0xffa94d,8,6);put(head,0,2.15,.1);K.add(head);
- for(const sx of[-1,1]){const e=cone(.26,.5,0xffa94d,4);put(e,sx*.5,2.85,.05);e.rotation.z=-sx*.25;K.add(e);const ei=cone(.14,.3,0xff9fb8,4);put(ei,sx*.5,2.82,.14);ei.rotation.z=-sx*.25;K.add(ei);
-  const ey=sph(.12,0x222222,5,4);put(ey,sx*.3,2.2,.82);K.add(ey);K.add(put(sph(.04,0xffffff,4,3),sx*.3+.03,2.26,.92))}
- K.add(put(sph(.1,0xff7a9a,5,4),0,2.0,.88));
- for(const sx of[-1,1])K.add(put(sph(.3,0xffa94d,5,4),sx*.4,.2,.35));
- for(let i=0;i<3;i++){const s=box(.08,.35,.04,0xe0832a);put(s,-.35+i*.35,2.7,.58);s.rotation.x=-.5;K.add(s)}
- const tl=new THREE.Group();for(let i=0;i<5;i++)tl.add(put(sph(.2-i*.01,0xffa94d,5,4),Math.sin(i*.7)*.5,.9+i*.35,-.8-i*.1));K.add(tl);K.userData.tail=tl;
- // arms: pivot at shoulder
- function arm(sx){const A=new THREE.Group();put(A,sx*.95,1.45,.1);const up=new THREE.Group();A.add(up);
-  const bic=sph(.24,0xffa94d,6,5);put(bic,0,-.25,0);up.add(bic);const fa=new THREE.Group();put(fa,0,-.5,0);up.add(fa);
-  const fore=cyl(.15,.6,0xffa94d,6);put(fore,0,-.3,0);fa.add(fore);const fist=sph(.22,0xffc27a,6,5);put(fist,0,-.62,0);fa.add(fist);
-  A.userData={up,fa,bic,fist};K.add(A);return A}
+/* smooth-shaded cartoon cat (about 4.5k triangles) */
+const msC={};const MS=c=>msC[c]||(msC[c]=new THREE.MeshLambertMaterial({color:c}));
+const ssph=(rx,ry,rz,c,w=10,h=7)=>{const k=w+"_"+h;const g=sphG[k]||(sphG[k]=new THREE.SphereGeometry(1,w,h));const m=new THREE.Mesh(g,MS(c));m.scale.set(rx,ry,rz);return m};
+function buildKitten(){const K=new THREE.Group();
+ const OR=0xffa94d,CR=0xffeacb,DK=0xe0832a,PK=0xff9fb8;
+ // torso + legs
+ K.add(put(ssph(.84,.88,.76,OR,16,12),0,1.08,0));
+ K.add(put(ssph(.56,.68,.42,CR,12,9),0,1.02,.47));            // belly: cream oval lying on the front of the body
+ for(const sx of[-1,1]){K.add(put(ssph(.38,.42,.42,OR,10,7),sx*.55,.5,-.05));K.add(put(ssph(.3,.2,.44,CR,10,7),sx*.4,.2,.34))}
+ // head
+ K.add(put(ssph(.98,.84,.84,OR,20,14),0,2.42,.1));
+ K.add(put(ssph(.38,.27,.26,CR,10,7),0,2.2,.86));              // muzzle
+ K.add(put(ssph(.3,.22,.2,CR,8,6),-.2,2.17,.84));K.add(put(ssph(.3,.22,.2,CR,8,6),.2,2.17,.84));
+ K.add(put(ssph(.11,.075,.07,PK,8,6),0,2.32,1.07));            // nose
+ for(const sx of[-1,1]){const m=new THREE.Mesh(new THREE.TorusGeometry(.11,.022,5,12,Math.PI),MS(0x7a3a2a));m.rotation.z=Math.PI;put(m,sx*.11,2.2,1.07);K.add(m)}
+ K.add(put(new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.12,5),MS(0x7a3a2a)),0,2.24,1.08));
+ // eyes: white, pupil, shine
+ for(const sx of[-1,1]){const ex=sx*.4,ey=2.55,ez=.88;
+  const w=ssph(.22,.28,.12,0xffffff,12,9);put(w,ex,ey,ez);w.rotation.y=sx*.25;K.add(w);
+  const pu=ssph(.14,.2,.08,0x2a1a10,10,8);put(pu,ex+sx*.01,ey-.01,ez+.075);pu.rotation.y=sx*.25;K.add(pu);
+  K.add(put(ssph(.05,.06,.03,0xffffff,6,5),ex+.05,ey+.09,ez+.14));K.add(put(ssph(.025,.025,.02,0xffffff,5,4),ex-.04,ey-.07,ez+.135));
+  // ears: rounded triangles with pink inside
+  const ear=new THREE.Mesh(new THREE.ConeGeometry(.36,.62,14),MS(OR));ear.scale.z=.55;put(ear,sx*.62,3.12,.0);ear.rotation.z=-sx*.38;K.add(ear);
+  const ei=new THREE.Mesh(new THREE.ConeGeometry(.22,.42,12),MS(PK));ei.scale.z=.4;put(ei,sx*.6,3.07,.1);ei.rotation.z=-sx*.38;K.add(ei);
+  const et=ssph(.09,.09,.07,OR,6,5);put(et,sx*.77,3.4,0);K.add(et);   // softens the ear tip
+  // cheek stripes + whiskers
+  for(let i=0;i<2;i++){const cs=ssph(.2,.035,.03,DK,8,4);put(cs,sx*.9,2.42-i*.1,.35+i*.0);cs.rotation.y=sx*-.9;cs.rotation.z=sx*(.15-i*.3);K.add(cs)}
+  for(let i=-1;i<=1;i++){const wh=new THREE.Mesh(new THREE.CylinderGeometry(.013,.01,.78,4),MS(0xfff6e6));wh.rotation.z=Math.PI/2;const g=new THREE.Group();g.add(wh);wh.position.x=sx*.39;put(g,sx*.5,2.2+i*.07,.98);g.rotation.y=sx*(.5)-0;g.rotation.z=sx*i*.18;K.add(g)}}
+ for(let i=-1;i<=1;i++){const st=ssph(.055,.2,.03,DK,6,5);put(st,i*.2,3.0,.52);st.rotation.x=-.75;st.rotation.z=-i*.2;K.add(st)}   // forehead stripes
+ // tail
+ const tg=new THREE.Group();put(tg,0,.55,-.6);{const crv=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.12,-.55),new THREE.Vector3(0,.3,-1.05),new THREE.Vector3(0,.95,-1.15),new THREE.Vector3(0,1.5,-.85)]);
+  tg.add(new THREE.Mesh(new THREE.TubeGeometry(crv,18,.14,8,false),MS(OR)));tg.add(put(ssph(.17,.17,.17,CR,8,6),0,1.5,-.85));
+  for(const u of[.45,.65]){const q=crv.getPoint(u),r=new THREE.Mesh(new THREE.TorusGeometry(.145,.035,5,10),MS(DK));r.position.copy(q);r.rotation.x=Math.PI/2+(u>.6?-.9:.2);tg.add(r)}}
+ K.add(tg);K.userData.tail=tg;
+ // arms hang from the shoulders: shoulder cap -> upper arm -> bicep -> forearm -> paw
+ function arm(sx){const A=new THREE.Group();put(A,sx*.74,1.58,.14);const up=new THREE.Group();A.add(up);
+  A.add(ssph(.3,.3,.3,OR,10,8));
+  const ua=new THREE.Mesh(new THREE.CapsuleGeometry(.2,.3,3,8),MS(OR));put(ua,0,-.27,0);up.add(ua);
+  const bic=sph(.2,OR,10,8);bic.material=MS(OR);put(bic,0,-.25,.1);up.add(bic);
+  const fa=new THREE.Group();put(fa,0,-.5,0);up.add(fa);
+  const fore=new THREE.Mesh(new THREE.CapsuleGeometry(.15,.3,3,8),MS(OR));put(fore,0,-.28,0);fa.add(fore);
+  const fist=sph(.22,CR,10,8);fist.material=MS(CR);put(fist,0,-.62,.02);fa.add(fist);
+  A.userData={up,fa,bic,fist,sx};K.add(A);return A}
  K.userData.aR=arm(1);K.userData.aL=arm(-1);
- // rod on right fist
- const rod=new THREE.Group();const stick=cyl(.06,3.4,0x8a5a2b,5);put(stick,0,1.7,0);rod.add(stick);rod.add(put(sph(.1,0xffd23f,5,4),0,3.4,0));
+ // fishing rod held in the near (left) paw, pointing along the arm
+ const rod=new THREE.Group();const stick=cyl(.06,3.4,0x8a5a2b,5);put(stick,0,1.7,0);rod.add(stick);const knob=sph(.1,0xffd23f,6,5);rod.add(put(knob,0,3.4,0));K.userData.stick=stick;K.userData.knob=knob;
  K.userData.rod=rod;K.userData.rodTip=new THREE.Object3D();put(K.userData.rodTip,0,3.4,0);rod.add(K.userData.rodTip);
- K.userData.aR.userData.fa.add(rod);rod.position.set(0,-.62,0);rod.visible=false;
- const dumb=new THREE.Group();dumb.add(put(cyl(.05,1.8,0x555555,5),0,0,0));for(const sx of[-1,1])dumb.add(put(sph(.34,0x333344,6,5),sx*.9,0,0));dumb.rotation.z=Math.PI/2;dumb.rotation.z=0;dumb.children.forEach(c=>{});K.userData.dumb=dumb;dumb.visible=false;K.add(dumb);
+ K.userData.aL.userData.fa.add(rod);rod.position.set(0,-.62,0);rod.rotation.set(Math.PI,0,0);rod.visible=false;
+ const dumb=new THREE.Group();dumb.add(put(cyl(.05,1.8,0x555555,6),0,0,0));dumb.rotation.z=Math.PI/2;
+ const bar=new THREE.Group();bar.add(dumb);for(const sx of[-1,1])bar.add(put(sph(.34,0x333344,8,6),sx*.9,0,0));dumb.rotation.z=Math.PI/2;dumb.position.set(0,0,0);K.userData.dumb=bar;bar.visible=false;K.add(bar);
  return K}
+const ROD_COL=[0x8a5a2b,0xb7c0cc,0xffc933,0x45d0ff,0xff7ad9,0x9d6bff];
+function applyRod(){const k=kitten.userData,tot=UP.reach+UP.rope+UP.reel,tier=Math.min(5,Math.floor(tot/3)+(tot>0?0:0)),sy=1+.05*tot,sw=1+.08*tot;
+ k.stick.material=M(ROD_COL[tier]);k.stick.scale.set(sw,sy,sw);k.stick.position.y=1.7*sy;k.rodTip.position.y=3.4*sy;k.knob.position.y=3.4*sy;k.knob.scale.setScalar(.1*(1+.12*tot));k.knob.material=M(tier>=2?ROD_COL[tier]:0xffd23f)}
 const kitten=buildKitten();world.add(kitten);kitten.position.set(KX,G,.3);
-function setBicep(S){const k=kitten.userData;for(const a of[k.aR,k.aL]){const b=.19+.04*S+(popB*.1);a.userData.bic.scale.setScalar(b);a.userData.fa.children[0].scale.set(1+S*.06,1,1+S*.06);a.userData.fist.scale.setScalar(.2+.014*S)}}
+function setBicep(S){const k=kitten.userData;for(const a of[k.aR,k.aL]){const b=.2+.034*S+(popB*.1);a.userData.bic.scale.setScalar(b);a.userData.fa.children[0].scale.set(1+S*.05,1,1+S*.05);a.userData.fist.scale.setScalar(.22+.012*S)}}
 let popB=0;
 function pose(name,tm=0){const k=kitten.userData,R_=k.aR,L=k.aL;
- const set=(A,u,f)=>{A.userData.up.rotation.set(0,0,u);A.userData.fa.rotation.set(0,0,f)};
+ const set=(A,x,u,f)=>{const sx=A.userData.sx;A.rotation.set(x,0,0);A.userData.up.rotation.set(0,0,sx*u);A.userData.fa.rotation.set(0,0,sx*f)};
  k.rod.visible=false;k.dumb.visible=false;
- if(name==="rod"){set(R_,-2.0,-.2);set(L,.3,-.2);k.rod.visible=true;k.rod.rotation.set(0,0,-.35)}
- else if(name==="pull"){set(R_,-1.7,-.3);set(L,-1.2,-.4);k.rod.visible=true;k.rod.rotation.set(0,0,-.5)}
- else if(name==="flex"){const w=Math.sin(tm*3)*.05;set(R_,-2.5+w,-1.8);set(L,2.5-w,1.8)}
- else if(name==="lift"){const h=tm;set(R_,-2.6*h-.2,0);set(L,2.6*h+.2,0);k.dumb.visible=true;k.dumb.position.set(0,2.0+h*1.9,.35)}
- else if(name==="cheer"){const w=Math.sin(tm*10)*.2;set(R_,-3+w,-.3);set(L,3-w,.3)}
- else{set(R_,-.2,-.2);set(L,.2,.2)}}
+ if(name==="rod"){set(R_,-.3,.2,.2);set(L,-1.9,-.1,.0);k.rod.visible=true}
+ else if(name==="pull"){set(R_,-1.5,.15,.1);set(L,-1.5,-.1,.2);k.rod.visible=true}
+ else if(name==="flex"){const w=Math.sin(tm*3)*.05;set(R_,-.25,1.45+w,1.75);set(L,-.25,1.45-w,1.75)}
+ else if(name==="lift"){const h=tm;set(R_,-(.9+h*1.5),.35,0);set(L,-(.9+h*1.5),.35,0);k.dumb.visible=true;k.dumb.position.set(0,2.2+h*1.7,1.0)}
+ else if(name==="cheer"){const w=Math.sin(tm*10)*.2;set(R_,0,2.7+w,.2);set(L,0,2.7-w,.2)}
+ else{set(R_,0,.18,.05);set(L,0,.18,.05)}}
 /* animal instances */
 const animals=[];let aid=0;
 function mkAnimal(def,x){const g=BUILD[def.id]();const sc=.7+Math.min(def.w,24)/24*.75;g.scale.setScalar(sc*.95);
@@ -290,7 +349,7 @@ const hook=new THREE.Group();hook.add(sph(.2,0xffd23f,6,5));const hk=new THREE.M
 const ropeM=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,1,4),new THREE.MeshBasicMaterial({color:0xfff3c4}));ropeM.visible=false;world.add(ropeM);
 function beamTo(m,a,b){const d=new THREE.Vector3().subVectors(b,a),L=d.length()||.001;m.position.copy(a).addScaledVector(d,.5);m.scale.set(1,L,1);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize())}
 /* tsunami wave */
-const wave=new THREE.Group();{const body=new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.4,7,10,1,false,0,Math.PI),M(0x2f9be0,{transparent:true,opacity:.82}));body.rotation.z=Math.PI/2;body.rotation.y=Math.PI;wave.add(body);
+const wave=new THREE.Group();{const body=new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.4,7,10,1,false,0,Math.PI),M(0x2f9be0,{transparent:true,opacity:.82,side:THREE.DoubleSide,depthWrite:false}));body.rotation.z=Math.PI/2;body.rotation.y=Math.PI;wave.add(body);
  body.rotation.set(0,0,0);body.rotation.x=Math.PI/2;body.rotation.z=0;
  const foam=new THREE.Group();for(let i=0;i<9;i++)foam.add(put(sph(.7,0xffffff,6,5),-.6,3.2+(i%2)*.15,-3+i*.78));wave.add(foam);}
 wave.visible=false;world.add(wave);
@@ -304,45 +363,59 @@ function stepParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.lif
 const TH=10;let st="menu",stPrev="menu";
 let S=SV.str,throwsLeft=TH,score=0,caught=[],waveSeen=false,waveForce=false,reelCount=0;
 let mk=0,mkDir=1,mx=0,spanMax=10,toss=null,dig=null,rl=null,popA=null,wv=null,banner=null;
-let holdReel=false,holdBrace=false,braceCh=0,teT=0,tLevelBanner=null,tm=0,flexT=0;
-const span=()=>Math.min(14.5,6.5+1.3*S),x0=()=>-4.0,sweepX=p=>x0()+p*span();
+let holdReel=false,holdBrace=false,braceCh=0,teT=0,tLevelBanner=null,tm=0,flexT=0,wvQ=[],wvGap=0,pushT=0,roundTS={},waveLog=[];
+function clearWaves(){wv=null;wvQ.length=0;wvGap=0;pushT=0;wave.visible=false;$("gBrW").classList.add("hide")}
+const span=()=>Math.min(15.5,6.5+1.3*S+.9*UP.reach),x0=()=>-4.0,sweepX=p=>x0()+p*span();
 const HAND=()=>{const v=new THREE.Vector3();kitten.userData.rodTip.getWorldPosition(v);return v};
 function bannerShow(txt){const b=$("banner");b.textContent=txt;b.classList.remove("show");void b.offsetWidth;b.classList.add("show")}
 let capT=0;function cap(txt,col="#fff"){const c=$("cap");c.textContent=txt;c.style.color=col;c.classList.remove("show");void c.offsetWidth;c.classList.add("show")}
 function pick(arr,w){let s=0;for(const a of arr)s+=w(a);let r=Math.random()*s;for(const a of arr){r-=w(a);if(r<=0)return a}return arr[0]}
-function refreshHeavy(){const F=F_(S);for(const a of animals){a.heavy=F<a.def.w*.55;if(a.heavy&&!a.lock){a.lock=sprite("💪",.9);world.add(a.lock)}if(!a.heavy&&a.lock){world.remove(a.lock);a.lock=null}}}
-function spawnOne(){const F=F_(S),lo=-3.0,hi=Math.min(11.5,x0()+span()+1.2);
+function refreshHeavy(){const F=Fe();for(const a of animals){a.heavy=F<a.def.w*.55;if(a.heavy&&!a.lock){a.lock=sprite("💪",.9);world.add(a.lock)}if(!a.heavy&&a.lock){world.remove(a.lock);a.lock=null}}}
+function spawnOne(){const F=Fe(),lo=-3.0,hi=Math.min(11.5,x0()+span()+1.2);
  const can=ANIM.filter(a=>F>=a.w*.55);const pool=Math.random()<.78&&can.length?can:ANIM;const def=pick(pool,a=>a.p);
  let x=lo,bestX=lo,bestD=-1;for(let k=0;k<40;k++){const f=Math.random(),bias=Math.min(1,def.w/24),u=Math.min(1,f*(1-bias*.6)+bias*.5*Math.random()+bias*.5*f);x=lo+(hi-lo)*u;const d=animals.reduce((m,a)=>Math.min(m,Math.abs(a.x-x)),9);if(d>bestD){bestD=d;bestX=x}if(d>1.7)break}
  mkAnimal(def,bestX)}
 function fillAnimals(){while(animals.length<6)spawnOne();refreshHeavy()}
 function clearAnimals(){while(animals.length)dropAnimal(animals[0])}
 /* ----- UI helpers ----- */
-function hud(){$("pTh").textContent=t("throws")+" "+throwsLeft;$("pSc").textContent=t("score")+" "+score;$("pSt").textContent="💪 "+S}
-function show(id){for(const x of["menu","train","res","pause","book"])$(x).classList.toggle("show",x===id)}
+function hud(){$("pTh").textContent=t("throws")+" "+throwsLeft;$("pSc").textContent=t("score")+" "+score;$("pCo").textContent="🪙 "+SV.coins;$("pSt").textContent="💪 "+S+(UP.power?"+"+UP.power:"")}
+function show(id){for(const x of["menu","train","res","pause","book","shop"])$(x).classList.toggle("show",x===id)}
 function setMode(m){document.body.classList.toggle("game",m==="game");$("gauges").classList.toggle("on",false)}
 function ctlUpdate(){const a=st==="aim";$("bThrow").classList.toggle("hide",!a);$("bReel").classList.toggle("hide",st!=="reel");$("bBrace").classList.toggle("hide",!(st==="reel"&&wv&&wv.active))}
-function strText(){const n=need(S),left=S>=MAXS?0:n-SV.xp;return S>=MAXS?t("maxed"):t("mStr",{n:S,x:left})}
+function strText(){const n=need(S),left=S>=MAXS?0:n-SV.xp;return (S>=MAXS?t("maxed"):t("mStr",{n:S,x:left}))+" · 🪙 "+SV.coins}
 function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");
- $("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("trainBtn").textContent=t("train");$("bookBtn").textContent=t("book");$("mStr").textContent=strText();$("rules").textContent=t("rules");
+ $("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("trainBtn").textContent=t("train");$("shopBtn").textContent=t("shop");$("bookBtn").textContent=t("book");$("mStr").textContent=strText();$("rules").textContent=t("rules");
  $("bThrow").textContent=t("throwB");$("bReel").textContent=t("reelB");$("bBrace").textContent=t("braceB");$("gTl").textContent=t("gTen");$("gBl").textContent=t("gBr");
  $("trT").textContent=t("trT");$("trS").textContent=t("trS");$("bRep").textContent=t("rep");$("trBack").textContent=t("back");
- $("againBtn").textContent=t("again");$("rTrain").textContent=t("train");$("rMenu").textContent=t("menu");$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");$("bkT").textContent=t("bookT");$("bkBack").textContent=t("back");
+ $("againBtn").textContent=t("again");$("rTrain").textContent=t("train");$("rMenu").textContent=t("menu");$("rShop").textContent=t("rShop")+" · 🪙 "+SV.coins;$("rHint").textContent=t("shopHint");$("shT").textContent=t("shT");$("shS").textContent=t("shS");$("shBack").textContent=t("back");$("homeBtn").title=t("menuB");$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");$("bkT").textContent=t("bookT");$("bkBack").textContent=t("back");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");hud()}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 function drawBook(){$("bookGrid").innerHTML=ANIM.map(a=>{const c=SV.book[a.id]|0;return `<div class="bk ${c?"":"lk"}"><div class="e">${a.e}</div><div>${c?a.n[lang]:t("locked")}</div><div>${c?"×"+c:"⚖ "+a.w}</div></div>`}).join("")}
+/* ----- shop ----- */
+const upCost=k=>{const d=UPD.find(u=>u.k===k);return UP[k]>=UMAX?0:d.cost[UP[k]]};
+function drawShop(){$("shCo").textContent="🪙 "+SV.coins;
+ $("upList").innerHTML=UPD.map(u=>{const lv=UP[u.k],mx=lv>=UMAX,c=upCost(u.k),no=!mx&&SV.coins<c,nm=UPT[lang][u.k];
+  return `<button class="up ${mx?"mx":no?"no":""}" data-up="${u.k}"><span class="ic">${u.ic}</span><span class="tx">${nm[0]}<small>${nm[1]}</small><span class="pips">${"●".repeat(lv)}${"○".repeat(UMAX-lv)}</span></span><span class="co">${mx?t("maxUp"):"🪙 "+c}</span></button>`}).join("")}
+function openShop(){ac();st="shop";setMode("menu");show("shop");clearAnimals();marker.visible=false;hook.visible=false;ropeM.visible=false;drawShop()}
+function buyUp(k){const c=upCost(k);if(UP[k]>=UMAX)return;const b=document.querySelector(`[data-up="${k}"]`);
+ if(SV.coins<c){SFX.oops();cap(t("needCoins",{n:c-SV.coins}),"#ffd23f");if(b){b.classList.remove("shk");void b.offsetWidth;b.classList.add("shk")}return}
+ SV.coins-=c;UP[k]++;save();SFX.buy();burst(KX+1,3,50,7);popB=1;applyRod();refreshHeavy();cap(t("bought"),"#fff7c4");drawShop();drawTexts()}
 /* ----- flow ----- */
-function toMenu(){st="menu";setMode("menu");clearAnimals();hook.visible=false;ropeM.visible=false;marker.visible=false;wave.visible=false;wv=null;rl=null;dig=null;toss=null;popA=null;holdReel=false;holdBrace=false;$("gauges").classList.remove("on");show("menu");drawTexts();ctlUpdate()}
+function toMenu(){if((st==="aim"||st==="toss"||st==="dig"||st==="reel"||st==="catch"||st==="after")&&score>SV.best){SV.best=score}paused=false;save();st="menu";setMode("menu");clearAnimals();hook.visible=false;ropeM.visible=false;marker.visible=false;wave.visible=false;clearWaves();rl=null;dig=null;toss=null;popA=null;holdReel=false;holdBrace=false;$("gauges").classList.remove("on");show("menu");drawTexts();ctlUpdate()}
 window.toMenu=toMenu;
-function startRound(){ac();throwsLeft=TH;score=0;caught=[];waveSeen=false;reelCount=0;clearAnimals();fillAnimals();setMode("game");show(null);st="aim";mk=0;mkDir=1;hud();ctlUpdate();$("gauges").classList.remove("on");cap(t("gTen").split("–")[0]&&"🎯",'#fff');}
-function nextThrow(){if(throwsLeft<=0){endRound();return}st="aim";mkDir=mkDir||1;fillAnimals();ctlUpdate();$("gauges").classList.remove("on");wave.visible=false;hook.visible=false;ropeM.visible=false;wv=null;rl=null;hud()}
+function startRound(){ac();throwsLeft=TH;score=0;caught=[];waveSeen=false;reelCount=0;roundTS={};clearWaves();clearAnimals();fillAnimals();setMode("game");show(null);st="aim";mk=0;mkDir=1;hud();ctlUpdate();$("gauges").classList.remove("on");cap(t("gTen").split("–")[0]&&"🎯",'#fff');}
+function nextThrow(){if(throwsLeft<=0){endRound();return}st="aim";mkDir=mkDir||1;fillAnimals();ctlUpdate();$("gauges").classList.remove("on");wave.visible=false;hook.visible=false;ropeM.visible=false;clearWaves();rl=null;hud()}
 function endRound(){st="result";const nb=score>SV.best;if(nb)SV.best=score;save();ctlUpdate();$("gauges").classList.remove("on");setMode("menu");clearAnimals();hook.visible=false;ropeM.visible=false;marker.visible=false;wave.visible=false;
  $("rT").textContent=t("rT");$("rS").textContent=t("rS",{n:caught.length,s:score})+(nb?"  "+t("best"):"");$("rA").textContent=caught.slice(0,14).map(a=>a.e).join("")||"🌱";show("res");SFX.big();flexT=0;burst(KX+1,2.5,50,7)}
 function doThrow(){if(st!=="aim")return;ac();SFX.whoosh();mx=sweepX(mk);const s=HAND();toss={t:0,dur:.55,from:s.clone(),to:new THREE.Vector3(mx,G,.1)};st="toss";marker.visible=false;hook.visible=true;ctlUpdate();pose("pull")}
 function startReel(a){rl={a,p:.12,ten:0,time:0,snapT:0,lastTick:0,slack:0,hitT:0};st="reel";reelCount++;$("gauges").classList.add("on");$("gBrW").classList.add("hide");
- const want=waveForce||(!waveSeen&&reelCount>=2)||Math.random()<.3;waveForce=false;
- if(want){wv={sched:1.0+Math.random()*1.4,t:-1,active:false,resolved:false,dur:3.0,ax:a.x,state:"wait"}}else wv=null;ctlUpdate();pose("pull")}
-function loseThrow(msg,col,snap){SFX[snap?"snap":"boing"]();cap(msg,col);const a=rl&&rl.a;if(a){a.g.position.y=a.y;a.g.visible=true}rl=null;wv=null;hook.visible=false;ropeM.visible=false;holdReel=false;st="after";$("gauges").classList.remove("on");wave.visible=false;ctlUpdate();popA={delay:1.4,after:true}}
+ const forced=waveForce;waveForce=false;clearWaves();
+ if(forced||(!waveSeen&&reelCount>=2)||Math.random()<.4){
+  const r0=Math.random(),n=Array.isArray(forced)?forced.length:(r0<.6?1:r0<.9?2:3);let prev=null;
+  for(let i=0;i<n;i++){let ty;if(Array.isArray(forced))ty=forced[i];else if(typeof forced==="string")ty=forced;else{ty=pick(TSK.filter(k=>k!==prev),k=>({fast:3,normal:3,slow:2.5,vslow:1.5})[k]*(roundTS[k]?1:2.5))}wvQ.push(ty);prev=ty;roundTS[ty]=1}
+  wvGap=1.0+Math.random()*1.2}
+ ctlUpdate();pose("pull")}
+function loseThrow(msg,col,snap){SFX[snap?"snap":"boing"]();cap(msg,col);const a=rl&&rl.a;if(a){a.g.position.y=a.y;a.g.visible=true}rl=null;clearWaves();hook.visible=false;ropeM.visible=false;holdReel=false;st="after";$("gauges").classList.remove("on");wave.visible=false;ctlUpdate();popA={delay:1.4,after:true}}
 /* ----- update ----- */
 const vTmp=new THREE.Vector3();
 function update(dt){tm+=dt;
@@ -351,8 +424,8 @@ function update(dt){tm+=dt;
  kitten.userData.tail.rotation.y=Math.sin(tm*2)*.3;
  stepParts(dt);
  if(popB>0)popB=Math.max(0,popB-dt*1.5);
- setBicep(S);
- if(st==="menu"||st==="book"){pose("flex",tm);kitten.rotation.y=.35+Math.sin(tm*.6)*.25;marker.visible=false}
+ setBicep(SE());
+ if(st==="menu"||st==="book"||st==="shop"){pose("flex",tm);kitten.rotation.y=.35+Math.sin(tm*.6)*.25;marker.visible=false}
  else if(st==="train"){trainUpdate(dt)}
  else if(st==="result"){flexT+=dt;pose("cheer",flexT);kitten.rotation.y=.4}
  else{kitten.rotation.y=.95;
@@ -362,7 +435,7 @@ function update(dt){tm+=dt;
    if(k>=1){SFX.thud();burst(toss.to.x,G+.2,18,4,dirtM);dig={t:0,dur:.7,x:toss.to.x};st="dig";hook.rotation.z=0}}
   else if(st==="dig"){dig.t+=dt;const k=Math.min(1,dig.t/dig.dur);hook.position.set(dig.x,G-k*2.4,.1);if(Math.random()<.4)burst(dig.x,G+.2,1,3,dirtM);const s=HAND();beamTo(ropeM,s,hook.position);
    if(k>=1){let best=null,bd=1e9;for(const a of animals){const d=Math.abs(a.x-dig.x);if(d<bd){bd=d;best=a}}
-    if(best&&bd<=1.25){if(best.heavy){SFX.boing();cap(t("heavy"),"#ffd23f");burst(best.x,best.y+1,10,3,pCols);throwsLeft++;hud();st="after";popA={delay:1.3,after:true};hook.visible=false;ropeM.visible=false;ctlUpdate()}else{SFX.hook();burst(best.x,best.y,10,3,pCols);startReel(best)}}
+    if(best&&bd<=1.25+.14*UP.reach){if(best.heavy){SFX.boing();cap(t("heavy"),"#ffd23f");burst(best.x,best.y+1,10,3,pCols);throwsLeft++;hud();st="after";popA={delay:1.3,after:true};hook.visible=false;ropeM.visible=false;ctlUpdate()}else{SFX.hook();burst(best.x,best.y,10,3,pCols);startReel(best)}}
     else{SFX.oops();cap(t("miss"),"#fff");st="after";popA={delay:1.2,after:true};hook.visible=false;ropeM.visible=false;ctlUpdate()}}}
   else if(st==="reel")reelUpdate(dt);
   else if(st==="catch"){popUpdate(dt)}
@@ -371,52 +444,59 @@ function update(dt){tm+=dt;
  // wave
  if(wv&&wv.active)waveUpdate(dt);
  camUpdate(dt)}
-function reelUpdate(dt){const r=rl,a=r.a,F=F_(S),Rw=a.def.w;r.time+=dt;
- if(holdReel){r.ten+=dt*(.75+.5*Rw/F);SFX.tick&&r.time-r.lastTick>.18&&(SFX.tick(),r.lastTick=r.time)}else r.ten-=dt*1.4;
+function reelUpdate(dt){const r=rl,a=r.a,F=Fe(),Rw=a.def.w;r.time+=dt;
+ if(holdReel){r.ten+=dt*(.75+.5*Rw/F)*(1-.08*UP.rope);SFX.tick&&r.time-r.lastTick>.18&&(SFX.tick(),r.lastTick=r.time)}else r.ten-=dt*1.4;
  r.ten=Math.max(0,Math.min(1.05,r.ten));
  if(r.ten>.85&&holdReel&&r.time-r.snapT>.14){SFX.warnT();r.snapT=r.time}
  if(r.ten>=1){loseThrow(t("snap"),"#ff7a8a",true);return}
- if(holdReel&&r.ten>=.2){const mult=r.ten>=.8?1.4:1;r.p+=dt*(.18+.5*F/(F+Rw*1.2))*mult*(wv&&wv.pushT>0?.0:1)}else r.p-=dt*.04*Rw/F;
- if(wv&&wv.pushT>0)wv.pushT-=dt;
+ if(holdReel&&r.ten>=.2){const mult=r.ten>=.8?1.4:1;r.p+=dt*(.18+.5*F/(F+Rw*1.2))*mult*(1+.12*UP.reel)*(pushT>0?.0:1)}else r.p-=dt*.04*Rw/F;
+ if(pushT>0)pushT-=dt;
  if(r.p<=0){loseThrow(t("escaped"),"#fff",false);return}
- r.p=Math.min(1,r.p);
+ r.p=Math.min((wv||wvQ.length)?.9:1,r.p);   // the sea keeps the animal from arriving until every tsunami has passed
  // animal pos along the underground line to kitten
  const sx=a.x,sy=a.y,ex=KX+1.5,ey=-1.1,k=r.p,ax=sx+(ex-sx)*k,ay=sy+(ey-sy)*k+Math.sin(k*Math.PI)*.0;
  const jit=r.ten*.12*Math.sin(tm*40);a.g.position.set(ax+jit,ay,.1);a.g.rotation.y=-.9;a.g.rotation.z=Math.sin(tm*14)*r.ten*.1;
  hook.position.set(ax-.2,ay+.3,.2);const s=HAND();beamTo(ropeM,s,hook.position);hook.rotation.z=0;
  $("gTenM").style.left=Math.min(100,r.ten*100)+"%";$("gPrF").style.width=(r.p*100)+"%";
- // wave
- if(wv&&wv.state==="wait"){wv.sched-=dt;if(wv.sched<=0){wv.state="go";wv.active=true;wv.t=0;wv.hitDone=false;waveSeen=true;braceCh=0;holdBrace=false;wv.ax=a.x;SFX.siren();SFX.rumble();cap(t("warn"),"#8fe0ff");bannerShow(t("warn"));$("gBrW").classList.remove("hide");ctlUpdate()}}
+ // waves: queue of tsunamis, each with a siren warning, an approach, a press and a retreat
+ if(!wv&&wvQ.length){wvGap-=dt;if(wvGap<=0)newWave(wvQ.shift(),a)}
  if(r.p>=1){// caught!
-  st="catch";popA={t:0,a,x0:ex,from:a.g.position.clone()};holdReel=false;$("gauges").classList.remove("on");wv=null;wave.visible=false;ctlUpdate();pose("cheer",0);return}}
-function waveUpdate(dt){wv.t+=dt;if(!wave.visible){wave.visible=true}
- const k=wv.t/wv.dur,x=15-k*28;wave.position.set(x,2.2,.5);wave.scale.set(1,1+Math.sin(tm*6)*.04,1);
- if(holdBrace)braceCh=Math.min(1,braceCh+dt*.7);else braceCh=Math.max(0,braceCh-dt*.3);
+  st="catch";popA={t:0,a,x0:ex,from:a.g.position.clone()};holdReel=false;$("gauges").classList.remove("on");clearWaves();ctlUpdate();pose("cheer",0);return}}
+function newWave(ty,a){const T=TS[ty];wv={ty,T,t:0,state:"warn",active:true,res:null,xh:15};waveSeen=true;waveLog.push(ty);braceCh=0;holdBrace=false;
+ SFX.siren(ty);SFX.rumble(T.warn+T.ap);cap(t(T.tx),"#8fe0ff");bannerShow(t(T.tx));$("gBl").textContent=t(T.hold?"gBrS":"gBr");$("gBrW").classList.remove("hide");ctlUpdate()}
+function waveUpdate(dt){const a=rl&&rl.a;if(!a){clearWaves();return}const T=wv.T;wv.t+=dt;
+ if(holdBrace)braceCh=Math.min(1,braceCh+dt*.7*T.rate);else braceCh=Math.max(0,braceCh-dt*(T.hold?.18:.3));
  $("gBrF").style.width=(braceCh*100)+"%";
- const a=rl&&rl.a;
- if(a&&!wv.hitDone&&x<=Math.max(a.g.position.x,KX+2)+.5){wv.hitDone=true;
-  if(braceCh>=.5){SFX.splash();burst(a.g.position.x,2,40,7,waterM,10);cap(t("braced"),"#8fe0ff");score+=2;hud();const f=sprite("😎",1.4);f.position.set(KX+1.5,3.8,.9);world.add(f);setTimeout(()=>world.remove(f),1500);bannerShow(t("bonus"))}
-  else{SFX.splash();SFX.boing();burst(a.g.position.x,2,40,7,waterM,10);cap(t("pushed"),"#ffd23f");rl.p=Math.max(.05,rl.p-.45);rl.ten=0;wv.pushT=.8;const f=sprite("😂",1.4);f.position.set(a.g.position.x,3.5,.9);world.add(f);setTimeout(()=>world.remove(f),1500)}}
- if(wv.t>=wv.dur+.3){wv.active=false;wave.visible=false;wv.state="done";$("gBrW").classList.add("hide");holdBrace=false;ctlUpdate()}}
+ const xh=Math.max(a.g.position.x,KX+2)+.5;
+ if(wv.state==="warn"){if(wv.t>=T.warn){wv.state="app";wv.t=0;wave.visible=true}}
+ else if(wv.state==="app"){const k=Math.min(1,wv.t/T.ap);wv.x=15+(xh-15)*k;if(wv.t>=T.ap){wv.state="press";wv.t=0;
+   if(braceCh<T.thr)waveFail(a,T);}}
+ else if(wv.state==="press"){wv.x=xh+Math.sin(tm*30)*.06;if(!wv.res&&braceCh<.12)waveFail(a,T);
+  if(wv.t>=T.win){if(!wv.res){wv.res="ok";SFX.splash();burst(a.g.position.x,2,40,7,waterM,10);cap(t("braced"),"#8fe0ff");const b=T.hold?3:2;score+=b;SV.coins+=b;save();hud();const f=sprite("😎",1.4);f.position.set(KX+1.5,3.8,.9);world.add(f);setTimeout(()=>world.remove(f),1500);bannerShow(t("bonus"))}
+   wv.state="leave";wv.t=0}}
+ else if(wv.state==="leave"){wv.x=xh-(wv.t/.9)*(xh+14);if(wv.t>=.9){const more=wvQ.length>0;wv=null;wave.visible=false;holdBrace=false;if(more){wvGap=.5+Math.random()*.7;$("gBrW").classList.add("hide")}else $("gBrW").classList.add("hide");ctlUpdate();return}}
+ if(wave.visible){wave.position.set(wv.x,2.2,.5);wave.scale.set(T.sc*.9,T.sc*(1+Math.sin(tm*6)*.04),T.sc)}}
+function waveFail(a,T){wv.res="fail";SFX.splash();SFX.boing();burst(a.g.position.x,2,40,7,waterM,10);cap(t("pushed"),"#ffd23f");rl.p=Math.max(.05,rl.p-(T.hold?.55:.45));rl.ten=0;pushT=.8;const f=sprite("😂",1.4);f.position.set(a.g.position.x,3.5,.9);world.add(f);setTimeout(()=>world.remove(f),1500)}
 function popUpdate(dt){const p=popA;p.t+=dt;const k=Math.min(1,p.t/.9),a=p.a;
  a.g.position.set(p.from.x+(KX+2.6-p.from.x)*k,p.from.y+(G+.1-p.from.y)*Math.min(1,k*1.4)+Math.sin(k*Math.PI)*3.2,.9);a.g.rotation.y+=dt*6;
  hook.visible=false;ropeM.visible=false;
  if(k>=1&&!p.done){p.done=true;a.g.rotation.y=.2;a.g.rotation.z=0;const big=a.def.w>=7;SFX[big?"big":"catchS"]();burst(KX+2.6,2.2,big?60:26,big?9:6);cap(a.def.c[lang],"#fff7c4");
-  score+=a.def.v;caught.push(a.def);SV.book[a.def.id]=(SV.book[a.def.id]|0)+1;save();hud();
+  score+=a.def.v;SV.coins+=a.def.v;SFX.coin();caught.push(a.def);SV.book[a.def.id]=(SV.book[a.def.id]|0)+1;save();hud();
   const f=sprite("+"+a.def.v+"⭐",1.6);f.position.set(KX+2.6,4.2,.9);world.add(f);setTimeout(()=>world.remove(f),1400)}
  if(p.done){p.t2=(p.t2||0)+dt;a.g.position.y=G+.1+Math.abs(Math.sin(p.t2*7))*.5*Math.max(0,1-p.t2/1.4);
   if(p.t2>1.5){dropAnimal(a);popA=null;throwsLeft--;hud();pose("rod");nextThrow()}}}
 /* camera */
-let camX=KX+3,camLook=new THREE.Vector3();
-function camUpdate(dt){const asp=cam.aspect;const hero=(st==="menu"||st==="train"||st==="result"||st==="book");
+let camX=KX+3,camLook=new THREE.Vector3(),viewShift=0;
+function camUpdate(dt){const asp=cam.aspect;const hero=(st==="menu"||st==="train"||st==="result"||st==="book"||st==="shop");
  let tp,tl;
- if(hero){const wide=asp>1.2;tp=new THREE.Vector3(KX+(wide?3.2:1.8),(wide?2.6:3.0),(wide?9.5:13.5));tl=new THREE.Vector3(KX+.2+(wide?1.2:0),(wide?1.6:.7),0)}
+ if(hero){const wide=asp>1.2;tp=new THREE.Vector3(KX+(wide?3.2:1.5),(wide?2.6:2.2),(wide?9.5:15.8));tl=new THREE.Vector3(KX+.2+(wide?1.2:0),(wide?1.6:1.5),0)}
  else{const vw=asp>=1.5?21:Math.max(9,Math.min(21,9+(asp-.45)*10));const vfov=cam.fov*Math.PI/180,hf=2*Math.atan(Math.tan(vfov/2)*asp),d=vw/(2*Math.tan(hf/2));
   let fx=KX+4.5;if(st==="aim")fx=KX*.4+mx*.6;else if(rl)fx=(KX+rl.a.g.position.x)/2;else if(st==="toss"||st==="dig")fx=(KX+hook.position.x)/2;else if(st==="catch")fx=KX+3;
   const lo=XMIN-1+vw/2,hi=XMAX+1-vw/2;fx=hi<lo?(lo+hi)/2:Math.max(lo,Math.min(hi,fx));
   tp=new THREE.Vector3(fx,1.6+d*.07,d);tl=new THREE.Vector3(fx,-.9,0)}
  const k=Math.min(1,dt*3.2);cam.position.lerp(tp,k);camLook.lerp(tl,k);cam.lookAt(camLook);
- if(wv&&wv.active&&wv.t<2){cam.position.x+=Math.sin(tm*60)*.05;cam.position.y+=Math.cos(tm*53)*.04}}
+ {const want=hero&&asp<1.2?innerHeight*.165:0;viewShift+=(want-viewShift)*Math.min(1,dt*4);const w=innerWidth,h=innerHeight;if(Math.abs(viewShift)>.5){cam.setViewOffset(w,h,0,viewShift,w,h)}else cam.clearViewOffset();cam.updateProjectionMatrix()}
+ if(wv&&(wv.state==="app"||wv.state==="press")){const q=wv.state==="press"?1.6:.7;cam.position.x+=Math.sin(tm*60)*.05*q;cam.position.y+=Math.cos(tm*53)*.04*q}}
 function resize(){if(!glOK)return;const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
 addEventListener("resize",resize);
 /* ----- training ----- */
@@ -448,15 +528,15 @@ press($("bBrace"),()=>{holdBrace=true;braceCh=Math.min(1,braceCh+.2);SFX.brace()
 $("bThrow").addEventListener("pointerdown",e=>{e.preventDefault();doThrow()});
 $("bRep").addEventListener("pointerdown",e=>{e.preventDefault();repTap()});
 $("playBtn").onclick=()=>{SFX.click();startRound()};$("trainBtn").onclick=()=>{SFX.click();startTrain()};$("bookBtn").onclick=()=>{SFX.click();st="book";drawBook();show("book")};
-$("bkBack").onclick=()=>{SFX.click();toMenu()};$("trBack").onclick=()=>{SFX.click();toMenu()};
+$("bkBack").onclick=()=>{SFX.click();toMenu()};$("shBack").onclick=()=>{SFX.click();toMenu()};$("shopBtn").onclick=()=>{SFX.click();openShop()};$("rShop").onclick=()=>{SFX.click();openShop()};$("homeBtn").onclick=()=>{SFX.click();toMenu()};$("upList").addEventListener("click",e=>{const b=e.target.closest("[data-up]");if(b)buyUp(b.dataset.up)});$("trBack").onclick=()=>{SFX.click();toMenu()};
 $("againBtn").onclick=()=>{SFX.click();startRound()};$("rTrain").onclick=()=>{SFX.click();startTrain()};$("rMenu").onclick=()=>{SFX.click();toMenu()};
 $("pauseBtn").onclick=()=>{SFX.click();doPause(!paused)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};$("pMenu").onclick=()=>{SFX.click();paused=false;toMenu()};
 $("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()};
-document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();if(st==="book")drawBook()}});
+document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();if(st==="book")drawBook();if(st==="shop")drawShop()}});
 addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
  if(e.code==="KeyM"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();return}
- if(e.code==="Escape"||e.code==="KeyP"){e.preventDefault();if(st==="menu"||st==="book"||st==="result"){return}doPause(!paused);return}
- if(st==="menu"){if(e.code==="Enter"||e.code==="Space"){e.preventDefault();$("playBtn").click()}else if(e.code==="KeyT")$("trainBtn").click();return}
+ if(e.code==="Escape"||e.code==="KeyP"){e.preventDefault();if(st==="book"||st==="shop"){e.preventDefault();toMenu();return}if(st==="menu"||st==="result"){return}doPause(!paused);return}
+ if(st==="menu"){if(e.code==="Enter"||e.code==="Space"){e.preventDefault();$("playBtn").click()}else if(e.code==="KeyT")$("trainBtn").click();else if(e.code==="KeyU")$("shopBtn").click();return}
  if(st==="result"){if(e.code==="Enter"||e.code==="Space"){e.preventDefault();$("againBtn").click()}return}
  if(paused)return;
  if(st==="train"){if(e.code==="Space"||e.code==="Enter"){e.preventDefault();if(!e.repeat)repTap()}return}
@@ -465,8 +545,8 @@ addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||(window.Annabe
 addEventListener("keyup",e=>{if(e.code==="Space"||e.code==="Enter")holdReel=false;if(e.code==="KeyB"||e.code==="ShiftLeft"||e.code==="ShiftRight")holdBrace=false});
 /* test hooks */
 window.__dr={get st(){return st},get S(){return S},get score(){return score},get throwsLeft(){return throwsLeft},get animals(){return animals.map(a=>({id:a.def.id,x:a.x,w:a.def.w,heavy:a.heavy}))},get ten(){return rl?rl.ten:null},get prog(){return rl?rl.p:null},get wave(){return !!(wv&&wv.active)},get braceCh(){return braceCh},get sv(){return SV},get glOK(){return glOK},
- setMarker(x){mk=Math.max(0,Math.min(1,(x-x0())/span()));mkDir=0;},forceWave(){waveForce=true},setS(n){S=n;SV.str=n;SV.xp=0;refreshHeavy();drawTexts()},caught:()=>caught.map(a=>a.id),span:()=>[x0(),x0()+span()],triangles:()=>R&&R.info.render.triangles};
-updMute();drawTexts();
+ setMarker(x){mk=Math.max(0,Math.min(1,(x-x0())/span()));mkDir=0;},forceWave(ty){waveForce=ty||true},get _wave(){return wave},get _cam(){return cam},get waveInfo(){return {vis:wave.visible,x:wave.position.x,y:wave.position.y,sc:wave.scale.x}},get waveType(){return wv?wv.ty:null},get waveState(){return wv?wv.state:null},get waveQ(){return wvQ.slice()},get waveLog(){return waveLog.slice()},get coins(){return SV.coins},get up(){return {...UP}},Fe,span2:()=>span(),setCoins(n){SV.coins=n;save();drawTexts()},openShop,toMenu,setS(n){S=n;SV.str=n;SV.xp=0;refreshHeavy();drawTexts()},caught:()=>caught.map(a=>a.id),span:()=>[x0(),x0()+span()],triangles:()=>R&&R.info.render.triangles};
+updMute();applyRod();drawTexts();
 if(glOK){resize();cam.position.set(KX+2.2,2.6,9.5);camLook.set(KX+.2,1.2,0);requestAnimationFrame(loop)}
 </script>
 </body>
