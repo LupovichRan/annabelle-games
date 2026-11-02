@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><!--pt--><script src="playtime.js" data-app="magic2"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>קסם החתולים</title><script src="safe.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#e6f3ff;font-family:"Rubik","Varela Round",Arial,sans-serif;color:#2a2f6b;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+#menu{justify-content:center;gap:12px;padding:10px;overflow:auto}
+h1{margin:0;font-size:clamp(28px,8vw,42px);color:#6a4fe0;text-shadow:0 3px 0 #0001;text-align:center}
+.heads{font-size:46px;line-height:1}
+.langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.lang{min-height:44px;padding:4px 14px;border-radius:999px;border:2px solid #6a4fe0;background:#fff;font:800 16px Rubik,Arial;color:#2a2f6b}
+.lang.sel{background:#6a4fe0;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.big{min-height:58px;min-width:150px;padding:8px 20px;border-radius:18px;border:none;background:linear-gradient(#8f7bff,#6a4fe0);color:#fff;font:800 20px Rubik,Arial;box-shadow:0 4px 0 #3f2aa8}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #3f2aa8}
+.big.y{background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48}
+.big.o{background:linear-gradient(#ffb35c,#f08a24);box-shadow:0 4px 0 #b65f10}
+.big.g{background:linear-gradient(#b8c1cc,#7d8794);box-shadow:0 4px 0 #555e69;min-height:48px;font-size:16px}
+.rules{max-width:440px;background:#fff;border-radius:16px;padding:10px 14px;font-size:16px;line-height:1.4;box-shadow:0 3px 0 #0001;text-align:center}
+.explain{max-width:440px;font-size:15px;line-height:1.45;text-align:right;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 3px 0 #0001}
+.iconbtn{width:48px;height:48px;border-radius:50%;border:3px solid #6a4fe0;background:#fff;font-size:22px;padding:0;display:flex;align-items:center;justify-content:center}
+.corner{position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;z-index:30}
+.bar{display:flex;width:100%;max-width:520px;align-items:center;justify-content:space-between;padding:10px 70px 4px 12px;gap:8px}
+.pill{flex:1;background:#fff;border-radius:999px;padding:6px 14px;text-align:center;font-weight:800;min-height:40px;box-shadow:0 3px 0 #0001}
+#stage{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 10px 10px;min-height:0}
+.say{display:flex;align-items:center;gap:8px;width:100%;justify-content:center}
+.mascot{font-size:44px;line-height:1;animation:flo 1.6s ease-in-out infinite alternate}
+.bubble{background:#fff;border-radius:16px;padding:8px 12px;font-weight:700;font-size:clamp(15px,4.3vw,19px);line-height:1.25;box-shadow:0 3px 0 #0001;flex:1;text-align:center}
+@keyframes flo{to{transform:translateY(-8px) rotate(4deg)}}
+#cols{flex:1;width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;direction:ltr;min-height:0}
+.col{display:flex;flex-direction:column;gap:4px;padding:6px 5px;border-radius:18px;border:3px solid var(--c);background:color-mix(in srgb,var(--c) 14%,#fff);font:inherit;color:inherit;min-height:0;cursor:pointer}
+.col:active,.col.hit{transform:scale(.97);background:color-mix(in srgb,var(--c) 35%,#fff)}
+.col .n{font-weight:900;font-size:18px;color:var(--c)}
+.card{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:4px;background:#fff;border-radius:10px;border:2px solid #0002;font-size:clamp(20px,6vw,30px);line-height:1;animation:deal .32s both cubic-bezier(.2,1.4,.4,1);animation-delay:var(--d,0s);overflow:hidden}
+.card small{font-size:11px;font-weight:800;opacity:.75;display:none}
+@media (min-width:420px){.card small{display:inline}}
+@keyframes deal{from{transform:translateY(-70px) scale(.4) rotate(-20deg);opacity:0}}
+#all{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;direction:ltr;width:100%}
+#all .card{aspect-ratio:1;flex:none;font-size:clamp(20px,6vw,32px)}
+#hold{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px}
+.hat{font-size:clamp(100px,32vw,170px);line-height:1;animation:flo 1.2s ease-in-out infinite alternate}
+.hat.shake{animation:shk .12s infinite alternate}
+@keyframes shk{from{transform:rotate(-9deg) scale(1.05)}to{transform:rotate(9deg) scale(1.1)}}
+.bigcard{width:min(60vw,240px);aspect-ratio:3/4;background:#fff;border:6px solid #6a4fe0;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:clamp(90px,28vw,130px);box-shadow:0 8px 0 #0002;animation:pop .7s cubic-bezier(.2,1.6,.4,1)}
+.bigcard b{font-size:22px;color:#6a4fe0;margin-top:6px}
+@keyframes pop{from{transform:scale(.1) rotate(-40deg);opacity:0}}
+#btns{display:flex;gap:10px;justify-content:center;padding:6px 10px calc(10px + env(safe-area-inset-bottom));flex-wrap:wrap}
+.curtain{position:fixed;inset:0;z-index:25;display:flex;pointer-events:none}
+.curtain i{flex:1;background:repeating-linear-gradient(90deg,#b0203f 0 18px,#8a1830 18px 36px);box-shadow:inset 0 0 40px #0006;transition:transform .7s cubic-bezier(.6,0,.2,1)}
+.curtain.open i:first-child{transform:translateX(-101%)}.curtain.open i:last-child{transform:translateX(101%)}
+#conf{position:fixed;inset:0;pointer-events:none;z-index:24}
+#kh{position:fixed;bottom:4px;left:0;right:0;text-align:center;font-size:12px;opacity:.6;display:none;pointer-events:none}
+.desk #kh{display:block}
+.desk .big:hover{filter:brightness(1.07)}.desk .col:hover{filter:brightness(1.05)}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/magic2.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic2-192.png"><meta name="apple-mobile-web-app-title" content="קסם החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic2-apple-180.png"><script src="pwa.js" data-app="magic2" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+</head>
+<body>
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<canvas id="conf"></canvas>
+<section class="screen active" id="menu">
+  <h1 id="tTitle"></h1>
+  <div class="heads">😺🎩✨</div>
+  <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
+  <div class="rules" id="rules"></div>
+  <div class="row"><button class="big y" id="bPlay"></button></div>
+  <div class="row"><button class="big g" id="bHow"></button></div>
+  <div class="explain" id="how" style="display:none"></div>
+</section>
+<section class="screen" id="play">
+  <div class="bar"><button class="iconbtn homeBtn" aria-label="menu">🏠</button><div class="pill" id="info"></div><div style="width:48px"></div></div>
+  <div id="stage">
+    <div class="say"><div class="mascot" id="mascot">😺🎩</div><div class="bubble" id="say"></div></div>
+    <div id="body" style="flex:1;width:100%;display:flex;flex-direction:column;min-height:0"></div>
+  </div>
+  <div id="btns"></div>
+</section>
+<div id="kh"></div>
+<script>
+const $=id=>document.getElementById(id);
+const CARDS=[["🐱","cat"],["🐶","dog"],["🐭","mouse"],["🐹","hamster"],["🐰","bunny"],["🦊","fox"],["🐻","bear"],["🐼","panda"],["🐨","koala"],["🐯","tiger"],["🦁","lion"],["🐮","cow"],["🐷","pig"],["🐸","frog"],["🐵","monkey"],["🐔","chick"],["🐧","penguin"],["🦄","unicorn"],["🐙","octopus"],["🐢","turtle"],["🦉","owl"]];
+const NAMES={he:["חתול","כלב","עכבר","האמסטר","ארנב","שועל","דוב","פנדה","קואלה","נמר","אריה","פרה","חזרזיר","צפרדע","קוף","אפרוח","פינגווין","חד־קרן","תמנון","צב","ינשוף"],
+fr:["chat","chien","souris","hamster","lapin","renard","ours","panda","koala","tigre","lion","vache","cochon","grenouille","singe","poussin","pingouin","licorne","pieuvre","tortue","hibou"],
+en:["cat","dog","mouse","hamster","bunny","fox","bear","panda","koala","tiger","lion","cow","piggy","frog","monkey","chick","penguin","unicorn","octopus","turtle","owl"]};
+const TX={he:{title:"קסם החתולים",rules:["🐱 תחשבי בסתר על חיה אחת מתוך 21.","הקוסם הקטן ינחש איזו!"],play:"🎩 בואו נתחיל!",how:"ℹ️ איך זה עובד?",
+ howT:"הקוסם מחלק 21 קלפים לשלושה טורים, ואת אומרת רק באיזה טור הקלף שלך. אחרי שלוש פעמים, הקלף שלך תמיד נמצא במקום ה־11 בערימה – הקלף האמצעי. זה קסם של חשבון, לא של קסמים 😉 (שימי לב: אפשר לגלות את זה רק פעם אחת, ואז זה כבר לא סוד!)",
+ think:"חשבי על קלף אחד – אל תגידי לאף אחד!",ready:"חשבתי! ✨",which:["באיזה טור הקלף שלך?","ועכשיו – באיזה טור הוא?","עוד פעם אחרונה – באיזה טור?"],col:"טור",
+ info:["שלב","/3"],gather:["אוספים… וקצת מערבבים 🌀","פוף! הקלפים רוקדים 💃","עוד קצת קסם… ✨"],
+ drum:"תופים… תופים… 🥁",hatT:"הקלפים נכנסים לכובע…",reveal:["וואו! זה הקלף שלך!!","בום! ידעתי את זה! 😎","קוסמת קטנה ניצחה את כולם!"],q:"נכון?",again:"🔁 עוד קסם",menu:"☰ לתפריט",
+ c:["אני קוסם חתולי מקצועי 😼","מיאו־גי! 🪄","הזקן שלי רועד מהתרגשות…","הקלפים שלך מדגדגים לי בכפות 🐾"]},
+fr:{title:"La magie des chats",rules:["🐱 Pense en secret à un animal parmi 21.","Le petit magicien va deviner lequel !"],play:"🎩 C'est parti !",how:"ℹ️ Comment ça marche ?",
+ howT:"Le magicien distribue 21 cartes en trois colonnes et tu dis seulement dans quelle colonne est ta carte. Après trois fois, ta carte est toujours la 11e du paquet – celle du milieu. C'est un tour de calcul, pas de sorcellerie 😉",
+ think:"Pense à une carte – ne le dis à personne !",ready:"J'ai pensé ! ✨",which:["Dans quelle colonne est ta carte ?","Et maintenant, quelle colonne ?","Une dernière fois – quelle colonne ?"],col:"Colonne",
+ info:["Étape","/3"],gather:["On ramasse… et on mélange 🌀","Pouf ! Les cartes dansent 💃","Encore un peu de magie… ✨"],
+ drum:"Roulement de tambour… 🥁",hatT:"Les cartes entrent dans le chapeau…",reveal:["Waouh ! C'est ta carte !!","Boum ! Je le savais ! 😎","La petite magicienne bat tout le monde !"],q:"C'est bien ça ?",again:"🔁 Encore un tour",menu:"☰ Menu",
+ c:["Je suis un chat magicien pro 😼","Miaou-gie ! 🪄","Mes moustaches vibrent d'excitation…","Tes cartes chatouillent mes pattes 🐾"]},
+en:{title:"Magic Cats trick",rules:["🐱 Secretly think of one animal out of 21.","The little magician will guess which one!"],play:"🎩 Let's go!",how:"ℹ️ How does it work?",
+ howT:"The magician deals 21 cards into three columns and you only say which column holds your card. After three times, your card is always the 11th in the pile – the middle one. It's a maths trick, not witchcraft 😉",
+ think:"Think of one card – don't tell anybody!",ready:"I've got one! ✨",which:["Which column is your card in?","Now – which column is it in?","One last time – which column?"],col:"Column",
+ info:["Step","/3"],gather:["Gathering up… and a little shuffle 🌀","Poof! The cards are dancing 💃","A bit more magic… ✨"],
+ drum:"Drum roll… 🥁",hatT:"The cards go into the hat…",reveal:["Wow! That's your card!!","Boom! I knew it! 😎","A little magician beats everyone!"],q:"Is it right?",again:"🔁 Another trick",menu:"☰ Menu",
+ c:["I'm a professional cat magician 😼","Meow-gic! 🪄","My whiskers are trembling with excitement…","Your cards tickle my paws 🐾"]}};
+const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
+let lang="he";try{lang=localStorage.getItem("annabelle-lang")||"he"}catch(e){}if(!TX[lang])lang="he";
+const t=k=>TX[lang][k],rnd=a=>a[Math.floor(Math.random()*a.length)];
+const COL=["#e8862d","#2fb36a","#d6479a"];
+let deck=[],step=0,stage="menu",busy=false;
+let AC=null,muted=false;try{muted=localStorage.getItem("annabelle-muted")==="1"}catch(e){}
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(a.destination);o.start(n);o.stop(n+d)}
+const SFX={click(){tone(520,.08,"triangle",.18)},swish(){tone(900,.18,"sine",.1,300)},
+ deal(i){tone(380+i*28,.07,"triangle",.14,200+i*10)},pick(){tone(600,.1,"triangle",.2);tone(900,.14,"triangle",.2,null,.08)},
+ meow(){tone(700,.25,"sawtooth",.07,420);tone(520,.2,"sine",.1,300,.12)},
+ drum(){for(let i=0;i<16;i++)tone(110+i*6,.09,"square",.08+i*.006,70,i*.12)},
+ win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6)}};
+function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
+$("muteBtn").onclick=()=>{muted=!muted;try{localStorage.setItem("annabelle-muted",muted?"1":"0")}catch(e){}updMute();SFX.click()};updMute();
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=""}
+const nm=i=>NAMES[lang][i];
+const cardEl=(i,d)=>{const e=document.createElement("div");e.className="card";e.style.setProperty("--d",d+"s");e.innerHTML=CARDS[i][0]+"<small>"+nm(i)+"</small>";return e};
+
+/* ---------- menu ---------- */
+function drawMenu(){
+ $("tTitle").textContent=t("title");document.title=t("title");
+ $("rules").innerHTML=t("rules").map(r=>"<p style='margin:3px 0'>"+r+"</p>").join("");
+ $("bPlay").textContent=t("play");$("bHow").textContent=t("how");$("how").textContent=t("howT");
+ $("flags").innerHTML="";
+ LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
+  x.onclick=()=>{lang=c;try{localStorage.setItem("annabelle-lang",c)}catch(e){}document.documentElement.lang=c;drawMenu()};$("flags").appendChild(x)});
+ document.documentElement.dir=lang==="he"?"rtl":"ltr";
+}
+function toMenu(){stopConf();$("how").style.display="none";stage="menu";show("menu");drawMenu()}
+window.toMenu=toMenu;
+document.querySelectorAll(".homeBtn").forEach(b=>b.onclick=toMenu);
+$("bHow").onclick=()=>{SFX.click();const h=$("how");h.style.display=h.style.display==="none"?"":"none"};
+$("bPlay").onclick=()=>{ac();SFX.click();start()};
+
+/* ---------- the trick ---------- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function setBtns(list){const b=$("btns");b.innerHTML="";list.forEach(([txt,cls,fn])=>{const x=document.createElement("button");x.className="big "+cls;x.textContent=txt;x.onclick=fn;b.appendChild(x)})}
+function say(s,meow){$("say").textContent=s;if(meow)SFX.meow()}
+function start(){
+ deck=shuffle(CARDS.map((_,i)=>i));step=0;busy=false;stopConf();show("play");stage="think";
+ $("info").textContent="🃏 21";$("mascot").textContent="😺🎩";say(t("think"));
+ const g=document.createElement("div");g.id="all";
+ deck.forEach((c,i)=>g.appendChild(cardEl(c,i*.03)));
+ const body=$("body");body.innerHTML="";body.appendChild(Object.assign(document.createElement("div"),{style:"flex:1;display:flex;align-items:center;width:100%"})).appendChild(g);
+ for(let i=0;i<21;i++)setTimeout(()=>SFX.deal(i%7),i*30);
+ setBtns([[t("ready"),"y",()=>{SFX.click();curtain(()=>deal())}]]);
+}
+function curtain(then){
+ let c=document.querySelector(".curtain");if(c)c.remove();
+ c=document.createElement("div");c.className="curtain open";c.innerHTML="<i></i><i></i>";document.body.appendChild(c);
+ SFX.swish();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{c.classList.remove("open");setTimeout(()=>{then();requestAnimationFrame(()=>c.classList.add("open"));setTimeout(()=>c.remove(),900)},760)}));
+}
+function deal(){ // 7 rows x 3 columns: card i goes to column i%3
+ stage="pick";busy=false;$("info").textContent=t("info")[0]+" "+(step+1)+t("info")[1];
+ say(t("which")[step]);
+ const body=$("body");body.innerHTML="";const cols=document.createElement("div");cols.id="cols";
+ for(let j=0;j<3;j++){const b=document.createElement("button");b.className="col";b.style.setProperty("--c",COL[j]);b.dataset.c=j;b.setAttribute("aria-label",t("col")+" "+(j+1));
+  b.innerHTML='<span class="n">'+(j+1)+'</span>';
+  for(let r=0;r<7;r++){const i=r*3+j;b.appendChild(cardEl(deck[i],(r*3+j)*.045));setTimeout(()=>SFX.deal(r),(r*3+j)*45)}
+  b.onclick=()=>pick(j);cols.appendChild(b)}
+ body.appendChild(cols);setBtns([]);
+ $("kh").innerHTML="1 · 2 · 3";
+}
+function pick(j){
+ if(stage!=="pick"||busy)return;busy=true;SFX.pick();
+ const cs=document.querySelectorAll(".col");cs[j].classList.add("hit");
+ const col=k=>deck.filter((_,i)=>i%3===k),others=[0,1,2].filter(k=>k!==j);
+ deck=[].concat(col(others[0]),col(j),col(others[1])); // the chosen column goes in the middle
+ step++;
+ setTimeout(()=>{
+  if(step<3){say(t("gather")[step-1],true);curtain(()=>deal())}
+  else finale();
+ },380);
+}
+function finale(){
+ stage="reveal";$("info").textContent="🎩";say(t("drum"));SFX.drum();$("kh").innerHTML="";
+ const body=$("body");body.innerHTML='<div id="hold"><div class="hat shake" id="hat">🎩</div><div style="font-weight:800">'+t("hatT")+'</div></div>';
+ setTimeout(()=>{ // the 11th card is the secret one
+  const c=deck[10];SFX.win();confetti();$("mascot").textContent="😻🎉";say(rnd(t("reveal")));
+  $("body").innerHTML='<div id="hold"><div class="bigcard">'+CARDS[c][0]+'<b>'+nm(c)+'</b></div><div style="font-weight:800;font-size:20px">'+t("q")+' 😉</div></div>';
+  window.__reveal=c;
+  setBtns([[t("again"),"y",()=>{SFX.click();start()}],[t("menu"),"g",()=>toMenu()]]);
+  stage="done";
+ },2000);
+}
+let cf=null;
+const CC=["#e8862d","#2fb36a","#d6479a","#6a4fe0","#2a8fd0","#e23b3b"];
+function confetti(){const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");
+ const P=[];for(let i=0;i<110;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:CC[i%CC.length],a:Math.random()*6});
+ const end=Date.now()+3500;cancelAnimationFrame(cf);
+ (function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});
+  if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
+function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
+
+/* keyboard */
+document.addEventListener("keydown",e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing&&AnnabelleDesk.typing(e)))return;
+ const k=e.key;
+ if(k==="m"||k==="M"){$("muteBtn").click();return}
+ if(stage==="menu"){if(k==="Enter"||k===" "){if(!(e.target.closest&&e.target.closest("button"))){e.preventDefault();$("bPlay").click()}}return}
+ if(k==="Escape"){toMenu();return}
+ if(stage==="pick"){const m={"1":0,"2":1,"3":2,ArrowLeft:0,ArrowDown:1,ArrowRight:2};if(k in m){e.preventDefault();pick(m[k])}return}
+ if(stage==="think"||stage==="done"){if(k==="Enter"||k===" "){if(!(e.target.closest&&e.target.closest("button"))){e.preventDefault();const b=$("btns").querySelector("button");b&&b.click()}}}
+});
+window.__m2={get deck(){return deck},get stage(){return stage}};
+drawMenu();
+</script>
+</body>
+</html>
