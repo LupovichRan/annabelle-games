@@ -13,7 +13,7 @@
 
   var ua = navigator.userAgent || '';
   var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  var isAndroid = /Android/.test(ua);
+  var isAndroid = /Android/.test(ua) || (!isIOS && !/Windows|Macintosh|CrOS/.test(ua) && navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) <= 900); // also catches Chrome's 'Desktop site' mode
   var force = /[?&]pwatest=1/.test(location.search);
   function standalone() {
     return navigator.standalone === true ||
