@@ -37,7 +37,7 @@ h1{font-size:clamp(22px,min(7vw,5vh),40px);text-shadow:0 3px 0 #e8956a}
 .shelf.out-r{transform:rotateY(-35deg) translateX(30%);opacity:0;transition:none}
 .row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 4px 12px;margin-bottom:10px;border-bottom:10px solid #b9824f;border-radius:0 0 4px 4px}
 @media (orientation:landscape){.row{grid-template-columns:repeat(6,minmax(0,1fr))}.shelf{max-height:calc(100dvh - 150px)}}
-a[class^=g]{position:relative;height:min(19vh,150px)}
+a[class^=g]{position:relative;height:min(19vh,150px,calc((100dvh - 330px)/3))}
 @media (orientation:landscape){a[class^=g]{height:min(30vh,150px)}}
 .empty{padding:30px 10px;color:#8a6a4a;font-weight:700;font-size:16px}
 .dots{display:flex;gap:10px}.dots i{width:10px;height:10px;border-radius:50%;background:#d9b48a}.dots i.on{background:#6b4a3a}
@@ -150,9 +150,9 @@ function secScroll(d,abs){var secs=[].slice.call(sh.querySelectorAll('.sec'));if
  sh.scrollTop=secs[n].offsetTop-sh.offsetTop;var a=secs[n].querySelector('a[class^=g]');if(a)a.focus({preventScroll:true})}
 var PG=[];
 function pages(){ // phone/tablet view: every shelf is split into pages that fit the screen, so no game is hidden below the fold
- var land=matchMedia('(orientation:landscape)').matches,per=land?6:3,th=Math.min(innerHeight*(land?.30:.19),150),rows=Math.max(1,Math.floor((innerHeight-220)/(th+32))),cap=rows*per;PG=[];
- SH.forEach(function(sh0,si){var L=sh0.id=='fav'?favs:sh0.g,n=Math.max(1,Math.ceil(L.length/cap));
-  var ch=Math.ceil(Math.ceil(L.length/per)/n)*per; // balanced pages (e.g. 10 games -> 6 + 4, not 9 + 1)
+ var land=matchMedia('(orientation:landscape)').matches,per=land?6:3,th=Math.min(innerHeight*(land?.30:.19),150),rows=Math.max(1,Math.floor((innerHeight-220)/(th+32))),cap=land?rows*per:9;PG=[];
+ SH.forEach(function(sh0,si){var L=sh0.id=='fav'?favs:sh0.g,n=Math.max(1,Math.ceil(L.length/(land?cap:9)));
+  var ch=land?cap:9; // portrait phone: exactly 9 games (3x3) per page
   for(var k=0;k<n;k++)PG.push({s:sh0,from:k*ch,to:(k+1)*ch,t:sh0.t+(n>1?' '+(k+1)+'/'+n:'')})});
  cur=Math.max(0,Math.min(cur,PG.length-1))}
 function draw(){if(wide()){HE.classList.add('allview');drawAll();return}HE.classList.remove('allview');sh.style.removeProperty('--per');
