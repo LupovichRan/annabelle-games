@@ -21,6 +21,8 @@ body.play #app{display:flex}
 .pill{background:#fff;border-radius:999px;padding:5px 12px;font-weight:900;font-size:clamp(12px,3.4vw,18px);box-shadow:0 3px 0 #0002;white-space:nowrap;display:flex;gap:4px;align-items:center;height:38px}.pill{padding:4px 9px}
 #mas{width:44px;height:44px;flex:none}@media (max-width:480px){#mas{display:none}}
 #mas.hop{animation:hop .6s}
+#musBtn.off,#musBtn2.off{opacity:.55}@media (max-width:480px){#musBtn2{display:none}}
+
 @keyframes hop{30%{transform:translateY(-12px) rotate(-8deg)}60%{transform:translateY(0) rotate(6deg)}}
 #scene{position:relative;flex:1 1 auto;min-height:clamp(168px,31vh,236px);border-radius:22px 22px 0 0;background:radial-gradient(#fff9 2px,#0000 3px) 0 0/22px 22px,linear-gradient(#ffe9f1 0 62%,#f7cfa8 62%);overflow:hidden;box-shadow:inset 0 0 0 4px #fff8}
 #scene.w2{background:radial-gradient(#fff9 2px,#0000 3px) 0 0/22px 22px,linear-gradient(#e4f6ff 0 62%,#f7cfa8 62%)}#scene.w3{background:radial-gradient(#fff9 2px,#0000 3px) 0 0/22px 22px,linear-gradient(#e9ffe7 0 62%,#f7cfa8 62%)}
@@ -133,10 +135,11 @@ h2{margin:0;font-size:28px;color:#ff5c93;text-shadow:0 2px 0 #fff}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/kitchen.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/kitchen-192.png"><meta name="apple-mobile-web-app-title" content="מסעדת החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/kitchen-apple-180.png"><script src="pwa.js" data-app="kitchen" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <div id="app">
- <div id="hud"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pDay"></span><span class="pill" id="pCoin"></span><span class="pill" id="pServ"></span><span class="grow"></span><div id="mas"></div><button class="iconbtn" id="muteBtn" aria-label="sound">🔊</button></div>
+ <div id="hud"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pDay"></span><span class="pill" id="pCoin"></span><span class="pill" id="pServ"></span><span class="grow"></span><div id="mas"></div><button class="iconbtn" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn" id="musBtn2" aria-label="music">🎵</button></div>
  <div id="scene"><div id="deco"></div><div id="seats"></div><div id="counter"></div></div>
  <div id="work"></div>
  <div id="shelf"></div>
@@ -147,15 +150,15 @@ h2{margin:0;font-size:28px;color:#ff5c93;text-shadow:0 2px 0 #fff}
 <div class="ov show" id="menu"><div id="mMas" style="width:min(46vw,200px)"></div><div><h1 id="mT"></h1><div class="sub" id="mS"></div></div>
  <div class="row" style="flex-direction:column;align-items:center;gap:10px">
   <button class="big g" id="playBtn"></button>
-  <div class="row"><button class="round" id="bookBtn" aria-label="book">📖<small id="lBook"></small></button><button class="round" id="shopBtn" aria-label="shop">🛒<small id="lShop"></small></button><button class="round" id="creaBtn" aria-label="creative">🧪<small id="lCrea"></small></button></div>
+  <div class="row"><button class="round" id="bookBtn" aria-label="book">📖<small id="lBook"></small></button><button class="round" id="shopBtn" aria-label="shop">🛒<small id="lShop"></small></button><button class="round" id="creaBtn" aria-label="creative">🧪<small id="lCrea"></small></button><button class="round" id="musBtn" aria-label="music">🎵<small id="lMus"></small></button></div>
   <div class="row" id="diffs"></div>
   <div class="sub" id="mBest"></div>
  </div>
  <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div>
 
 <div class="ov" id="daysov"><div class="card"><h2 id="dT"></h2><div class="grid" id="dGrid" style="grid-template-columns:repeat(5,1fr)"></div><button class="big s" id="dBack"></button></div></div>
-<div class="ov" id="intro"><div class="card"><div id="iMas" style="width:90px"></div><h2 id="iT"></h2><div class="sub" id="iS"></div><div class="row" id="iNew" style="font-size:44px"></div><div class="sub" id="iE"></div><button class="big g" id="iGo"></button></div></div>
-<div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div class="stars" id="oStars"></div><div class="sub" id="oS"></div><div class="sub" id="oU"></div><button class="big g" id="oNext"></button><button class="big o" id="oAgain"></button><button class="big s" id="oMenu"></button></div></div>
+<div class="ov" id="intro"><div class="card"><div id="iMas" style="width:90px"></div><h2 id="iT"></h2><div class="sub" id="iS"></div><div class="row" id="iNew" style="font-size:44px"></div><div class="sub" id="iE"></div><div class="sub" id="iG" style="font-weight:800"></div><button class="big g" id="iGo"></button></div></div>
+<div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div class="stars" id="oStars"></div><div class="sub" id="oS"></div><div class="sub" id="oG" style="font-weight:800"></div><div class="sub" id="oU"></div><button class="big g" id="oNext"></button><button class="big o" id="oAgain"></button><button class="big s" id="oMenu"></button></div></div>
 <div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
 <div class="ov" id="bookov" style="background:#ffeaf2"><h2 id="bT"></h2><div class="sub" id="bS"></div><div class="grid" id="bGrid" style="grid-template-columns:repeat(auto-fill,minmax(98px,1fr));max-width:760px"></div><button class="big s" id="bBack"></button></div>
 <div class="ov" id="shopov" style="background:#fff3d9"><h2 id="sT"></h2><div class="pill" id="sCoin"></div><div class="grid" id="sGrid" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr));max-width:760px"></div><button class="big s" id="sBack"></button></div>
@@ -181,7 +184,7 @@ he:{title:"מסעדת החתולים",sub:"מכינים אוכל ללקוחות 
  keys:"מקשים: <b>1–9,0</b> מצרך · <b>Q W E R T</b> תחנה · <b>Enter</b> בישול · <b>Z X C</b> הגשה ללקוח · <b>B</b> פח · <b>Esc</b> הפסקה",
  noGL:"",
  arrive:{mimi:["מיאו! אני רעבה 😺","יש משהו טעים?"],gus:["דגגגג! רק דג! 🐟","אני לא נרגז… רק רעב 😾"],bobo:["הב הב! אני רעב!! 🐶","אני לוקח שניים!"],fifi:["מתוק מתוק מתוק! 🍰","אני אוהבת קינוחים!"],bonnie:["ירקות פריכים! 🥕","משהו ירוק?"],pom:["אני רעב כמו דובי! 🐼","הרבה הרבה אוכל!"],otto:["אני מבקר המסעדות 🧐","בואו נראה מה יש כאן…"],kiki:["יום הולדת שמח לי! 🎂","מסיבה! מסיבה!"]},
- evt:{party:"🎉 מסיבת יום הולדת! הרבה לקוחות!",critic:"🧐 מבקר מסעדות מגיע – תכינו יפה!",grand:"🎊 פתיחה חגיגית!"},
+ evt:{party:"🎉 מסיבת יום הולדת! הרבה לקוחות!",critic:"🧐 מבקר מסעדות מגיע – תכינו יפה!",grand:"🎊 פתיחה חגיגית!",fest:"🎪 פסטיבל האוכל! כל החתולים באו!"},
  ds:{plate:"צלחת",blender:"בלנדר",grill:"מחבת",oven:"תנור",toaster:"טוסטר"},
  deco:{table_pink:"שולחן ורוד",table_blue:"שולחן תכלת",plant:"קקטוס",flower:"חמניה",lamp:"פנס",poster:"תמונה",fishbowl:"אקווריום",rug:"שטיח",apron_blue:"סינר כחול",apron_gold:"סינר זהב",apron_rb:"סינר קשת"}},
 fr:{title:"Le Resto des Chats",sub:"Prépare à manger pour des clients rigolos ! 🍔",play:"▶ Jouer",book:"Recettes",shop:"Boutique",crea:"Créatif",
@@ -198,7 +201,7 @@ fr:{title:"Le Resto des Chats",sub:"Prépare à manger pour des clients rigolos 
  keys:"Touches : <b>1–9,0</b> ingrédient · <b>Q W E R T</b> station · <b>Entrée</b> cuisiner · <b>Z X C</b> servir · <b>B</b> poubelle · <b>Échap</b> pause",
  noGL:"",
  arrive:{mimi:["Miaou ! J'ai faim 😺","Un truc bon ?"],gus:["Du poisson ! Que du poisson ! 🐟","Je ne suis pas grognon… j'ai faim 😾"],bobo:["Ouaf ! J'ai faim !! 🐶","J'en prends deux !"],fifi:["Du sucré ! 🍰","J'adore les desserts !"],bonnie:["Des légumes croquants ! 🥕","Un truc vert ?"],pom:["J'ai faim comme un panda ! 🐼","Beaucoup à manger !"],otto:["Je suis le critique 🧐","Voyons voir…"],kiki:["Joyeux anniversaire à moi ! 🎂","Fête ! Fête !"]},
- evt:{party:"🎉 Fête d'anniversaire ! Beaucoup de clients !",critic:"🧐 Un critique arrive – fais de ton mieux !",grand:"🎊 Grande ouverture !"},
+ evt:{party:"🎉 Fête d'anniversaire ! Beaucoup de clients !",critic:"🧐 Un critique arrive – fais de ton mieux !",grand:"🎊 Grande ouverture !",fest:"🎪 Festival gourmand ! Tous les chats sont là !"},
  ds:{plate:"Assiette",blender:"Mixeur",grill:"Poêle",oven:"Four",toaster:"Grille-pain"},
  deco:{table_pink:"Table rose",table_blue:"Table bleue",plant:"Cactus",flower:"Tournesol",lamp:"Lanterne",poster:"Tableau",fishbowl:"Aquarium",rug:"Tapis",apron_blue:"Tablier bleu",apron_gold:"Tablier doré",apron_rb:"Tablier arc-en-ciel"}},
 en:{title:"Cat Kitchen",sub:"Cook for the funniest customers! 🍔",play:"▶ Play",book:"Recipes",shop:"Shop",crea:"Creative",
@@ -215,7 +218,7 @@ en:{title:"Cat Kitchen",sub:"Cook for the funniest customers! 🍔",play:"▶ Pl
  keys:"Keys: <b>1–9,0</b> ingredient · <b>Q W E R T</b> station · <b>Enter</b> cook · <b>Z X C</b> serve · <b>B</b> bin · <b>Esc</b> pause",
  noGL:"",
  arrive:{mimi:["Meow! I'm hungry 😺","Anything yummy?"],gus:["Fish! Only fish! 🐟","I'm not grumpy… just hungry 😾"],bobo:["Woof! I'm starving!! 🐶","I'll take two!"],fifi:["Sweet sweet sweet! 🍰","I love desserts!"],bonnie:["Crunchy veggies! 🥕","Something green?"],pom:["Hungry like a panda! 🐼","Lots and lots of food!"],otto:["I'm the food critic 🧐","Let's see what you've got…"],kiki:["Happy birthday to me! 🎂","Party! Party!"]},
- evt:{party:"🎉 Birthday party! So many customers!",critic:"🧐 A food critic is coming – do your best!",grand:"🎊 Grand opening!"},
+ evt:{party:"🎉 Birthday party! So many customers!",critic:"🧐 A food critic is coming – do your best!",grand:"🎊 Grand opening!",fest:"🎪 Food festival! All the cats came!"},
  ds:{plate:"Plate",blender:"Blender",grill:"Pan",oven:"Oven",toaster:"Toaster"},
  deco:{table_pink:"Pink table",table_blue:"Blue table",plant:"Cactus",flower:"Sunflower",lamp:"Lantern",poster:"Picture",fishbowl:"Fish tank",rug:"Rug",apron_blue:"Blue apron",apron_gold:"Gold apron",apron_rb:"Rainbow apron"}}};
 const NM={ // ingredient + dish names
@@ -238,7 +241,24 @@ const SFX={click(){tone(560,.08,"triangle",.16)},pick(){tone(760,.07,"triangle",
  serve(){tone(660,.1,"triangle",.2);tone(880,.12,"triangle",.2,null,.09);tone(1175,.25,"triangle",.2,null,.18)},
  mew(){tone(700,.28,"sine",.18,1150);tone(1150,.2,"sine",.1,800,.18)},woof(){tone(190,.12,"sawtooth",.18,120);noise(.1,500,"lowpass",.1)},squeak(){tone(1300,.1,"square",.07,1800);tone(1700,.12,"square",.06,1300,.1)},hoot(){tone(420,.25,"sine",.17,360);tone(380,.3,"sine",.13,330,.28)},
  bye(){tone(660,.12,"triangle",.14,440);tone(520,.18,"triangle",.12,330,.12)},burp(){tone(110,.3,"sawtooth",.15,70);noise(.25,200,"lowpass",.1)},
- cheer(){[523,659,784,1047].forEach((f,i)=>tone(f,.14,"triangle",.17,null,i*.06))},win(){[523,659,784,1047,784,1047,1318].forEach((f,i)=>tone(f,.2,"triangle",.18,null,i*.1))},buy(){tone(1175,.1,"square",.1);tone(1568,.25,"square",.1,null,.09)}};
+ cheer(){[523,659,784,1047].forEach((f,i)=>tone(f,.14,"triangle",.17,null,i*.06))},win(){[523,659,784,1047,784,1047,1318].forEach((f,i)=>tone(f,.2,"triangle",.18,null,i*.1))},buy(){tone(1175,.1,"square",.1);tone(1568,.25,"square",.1,null,.09)},
+ star(i){tone(660+i*220,.2,"triangle",.17);tone(1320+i*330,.3,"sine",.07,null,.06)},
+ fan(){[392,523,659,784,1046,1318].forEach((f,i)=>tone(f,.28,"triangle",.15,null,i*.08));noise(.5,5000,"highpass",.05,9000,.3)},
+ combo(n){const b=520+Math.min(n,8)*40;tone(b,.1,"triangle",.13);tone(b*1.25,.1,"triangle",.12,null,.07);tone(b*1.5,.16,"triangle",.12,null,.14)},
+ bonus(){[784,988,1175,1568].forEach((f,i)=>tone(f,.2,"square",.08,null,i*.07));tone(2093,.4,"sine",.08,null,.3)}};
+/* tiny background music loop (off by default; the 🎵 buttons; respects mute) */
+let musicOn=ls.get("annabelle-music")==="1",mT=null,mStep=0;
+const MEL=[0,4,7,4,9,7,4,0,2,5,9,5,7,4,2,0],BAS=[0,0,5,5,-3,-3,-5,-5];
+function musicTick(){if(!musicOn||muted||document.hidden||!AC||AC.state!=="running")return;const s=mStep++;tone(262*Math.pow(2,MEL[s%16]/12),.28,"triangle",.045);if(s%2===0)tone(131*Math.pow(2,BAS[(s>>1)%8]/12),.5,"sine",.05)}
+function musicSet(on){musicOn=on;ls.set("annabelle-music",on?"1":"0");clearInterval(mT);mT=null;if(on){ac();mT=setInterval(musicTick,260)}for(const id of["musBtn","musBtn2"])$(id).classList.toggle("off",!on)}
+const RW=()=>window.AnnabelleRewards;
+/* bonus mini-goal of the day */
+const BG={he:{combo:"🎯 בונוס: {n} מנות ברצף!",clean:"🎯 בונוס: אף לקוח לא עוזב בכעס!",coins:"🎯 בונוס: הרוויחי {n} 💰 היום!",ok:"🎯 הבונוס הושג! +{c} 💰",miss:"🎯 הבונוס לא הושג הפעם – נסי שוב!",mus:"מוזיקה"},
+ fr:{combo:"🎯 Bonus : {n} plats d'affilée !",clean:"🎯 Bonus : aucun client ne part fâché !",coins:"🎯 Bonus : gagne {n} 💰 aujourd'hui !",ok:"🎯 Bonus réussi ! +{c} 💰",miss:"🎯 Bonus raté cette fois – réessaie !",mus:"Musique"},
+ en:{combo:"🎯 Bonus: {n} dishes in a row!",clean:"🎯 Bonus: no customer leaves upset!",coins:"🎯 Bonus: earn {n} 💰 today!",ok:"🎯 Bonus reached! +{c} 💰",miss:"🎯 Bonus missed this time – try again!",mus:"Music"}};
+const bg=(k,o)=>{let s=BG[lang][k];if(o)for(const q in o)s=s.replace("{"+q+"}",o[q]);return s};
+function bonusGoal(n){const k=n%3;return k===1?{k:"combo",n:n>=9?4:3}:k===2?{k:"coins",n:20+n*4}:{k:"clean",n:0}}
+const bonusTxt=g=>bg(g.k,{n:g.n}),bonusMet=g=>g.k==="combo"?G.bestCombo>=g.n:g.k==="coins"?G.coins>=g.n:G.lost===0;
 /* ============ data ============ */
 const ING={bread:["🍞",1],fish:["🐟",1],lettuce:["🥬",1],tomato:["🍅",1],cheese:["🧀",1],milk:["🥛",1],strawberry:["🍓",2],ice:["🧊",2],egg:["🥚",3],flour:["🌾",3],rice:["🍚",4],seaweed:["🌿",4],corn:["🌽",5],potato:["🥔",5],banana:["🍌",6],chocolate:["🍫",6],honey:["🍯",6],carrot:["🥕",7]};
 const ST={plate:{d:1,dur:.5,snd:"plateTap"},blender:{d:2,dur:1.4,snd:"whirr"},grill:{d:3,dur:1.6,snd:"sizzle"},oven:{d:5,dur:2,snd:"hum"},toaster:{d:6,dur:1.2,snd:"pop"}};
@@ -302,18 +322,18 @@ function stIcon(s){const w="#fff",o="#e0b27a",g="#9aa6b2";
 const BINSVG=`<svg viewBox="0 0 80 88"><ellipse cx="40" cy="80" rx="30" ry="6" fill="#0002"/><path d="M12 36 h56 l-5 44 h-46Z" fill="#9fd6ff" stroke="#5aa6d6" stroke-width="3" stroke-linejoin="round"/><path d="M22 44 v28 M40 44 v28 M58 44 v28" stroke="#5aa6d6" stroke-width="2.4" opacity=".6"/><g><path d="M20 38 L22 14 L36 28Z M60 38 L58 14 L44 28Z" fill="#ffb86b"/><ellipse cx="40" cy="38" rx="22" ry="17" fill="#ffb86b"/><ellipse cx="31" cy="36" rx="3.4" ry="4.2" fill="#2b1b12"/><ellipse cx="49" cy="36" rx="3.4" ry="4.2" fill="#2b1b12"/><ellipse cx="40" cy="43" rx="3" ry="2.2" fill="#ff7a9a"/><path d="M34 47 q6 6 12 0" stroke="#2b1b12" stroke-width="2.4" fill="none" stroke-linecap="round"/></g><rect x="8" y="34" width="64" height="8" rx="4" fill="#5aa6d6"/></svg>`;
 /* ============ state ============ */
 let mode="menu",day=1,diff=S.diff,paused=false,running=false,G=null,held=null,activeT=0;
-const MAXDAY=15;
+const MAXDAY=20;
 function stList(){return G&&G.creative?STORD.slice():STORD.filter(s=>ST[s].d<=day)}
 function ingList(){return Object.keys(ING).filter(i=>G&&G.creative?true:ING[i][1]<=day)}
 function pool(){return DISH.map(d=>RC[d[0]]).filter(r=>G&&G.creative?true:r.d<=day)}
 const hintsOn=()=>G&&!G.creative&&(diff==="easy"||(day===1&&diff!=="hard"));
 function dayConf(n,df){
- const N=[4,5,5,6,7,6,7,8,8,9,9,10,10,11,12][n-1],pm=df==="easy"?1.8:df==="hard"?.62:1.05;
+ const N=[4,5,5,6,7,6,7,8,8,9,9,10,10,11,12,12,13,13,14,15][n-1],pm=df==="easy"?1.8:df==="hard"?.62:1.05;
  const base=Math.max(34,52-n*1.3)*pm;
  const seatsN=df==="easy"?2:(n<=2?2:3),seats=df==="hard"?3:seatsN,gap=Math.max(5,10.5-n*.3)*(df==="easy"?1.25:df==="hard"?.75:1);
  let cnt=N+(df==="hard"?2:0)-(df==="easy"?1:0);
- const evt=n===5?"party":n===10?"critic":n===15?"grand":"";
- if(evt==="party")cnt+=3;if(evt==="grand")cnt+=2;
+ const evt=n===5?"party":n===10?"critic":n===15?"grand":n===20?"fest":"";
+ if(evt==="party")cnt+=3;if(evt==="grand")cnt+=2;if(evt==="fest")cnt+=3;
  return{n:Math.max(3,cnt),seats,gap,pat:base,evt,maxItems:n<3?1:n<8?2:3}}
 /* ============ build DOM ============ */
 let seatEls=[],tgEls=[],cookT=[];
@@ -321,7 +341,7 @@ function setApp(on){document.body.classList.toggle("play",on)}
 function blurNow(){try{const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur()}catch(e){}}
 function showOv(id){blurNow();document.querySelectorAll(".ov").forEach(o=>o.classList.toggle("show",o.id===id))}
 function hideOv(){blurNow();document.querySelectorAll(".ov").forEach(o=>o.classList.remove("show"))}
-function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("lBook").textContent=t("book");$("lShop").textContent=t("shop");$("lCrea").textContent=t("crea");
+function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("lBook").textContent=t("book");$("lShop").textContent=t("shop");$("lCrea").textContent=t("crea");$("lMus").textContent=bg("mus");
  $("rules").textContent=t("rules");$("dT").textContent=t("days");$("dBack").textContent=t("back");$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");$("iGo").textContent=t("start");$("oAgain").textContent=t("again");$("oMenu").textContent=t("menu");$("bBack").textContent=t("back");$("sBack").textContent=t("back");$("sT").textContent=t("shopT");$("keys").innerHTML=t("keys");
  $("diffs").innerHTML=[["easy","easy"],["norm","norm"],["hard","hard"]].map(([k,x])=>`<button class="chip ${diff===k?"sel":""}" data-diff="${k}">${t(x)}</button>`).join("");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");
@@ -403,7 +423,7 @@ function serve(si,src){const c=G.seats[si];if(!c||c.leaving)return false;const F
  save();SFX.serve();setTimeout(()=>SFX.coin(),200);popAt(c.el,"+"+coins+" 💰");
  c.react="yum";c.pat=Math.min(c.maxPat,c.pat+c.maxPat*.12);c.reactT=1.1;setMood(c);
  const mas=$("mas");mas.classList.remove("hop");void mas.offsetWidth;mas.classList.add("hop");
- if(G.combo>=3){toast(t("combo").replace("{n}",G.combo),1200);SFX.cheer()}else if(Math.random()<.4)toast(pick(t("cheers")),900);
+ if(G.combo>=3){toast(t("combo").replace("{n}",G.combo),1200);SFX.cheer();SFX.combo(G.combo)}else if(Math.random()<.4)toast(pick(t("cheers")),900);
  const all=c.orders.every(x=>x.done>=x.qty);
  if(all){c.react="happy";c.moodShown=null;setMood(c);G.served++;leave(c,true);c.el.classList.add("happy");updateBubble(c)}else{updateBubble(c)}
  renderTargets();hud();applyHint();return true}
@@ -474,7 +494,7 @@ function update(dt){if(!G||G.over)return;G.time+=dt;G.sinceSpawn+=dt;
   setMood(c);if(c.pat<=0)leave(c,false)});
  checkEnd()}
 function checkEnd(){if(!G||G.over||G.creative)return;if(G.spawned>=G.total&&G.seats.every(c=>!c)){G.over=true;setTimeout(endDay,700)}}
-function startDay(n,creative){day=n;mode="play";G={creative:!!creative,cf:creative?{seats:3,gap:99,pat:99,evt:"",maxItems:1,n:0}:dayConf(n,diff),seats:[],seatsN:creative?0:0,tg:null,time:0,sinceSpawn:0,spawned:0,served:0,done:0,lost:0,coins:0,dishes:0,combo:0,bestCombo:0,lastServe:-99,over:false,total:0};
+function startDay(n,creative){day=n;mode="play";RW()&&RW().award({game:"kitchen",event:"play"});G={bonus:creative?null:bonusGoal(n),creative:!!creative,cf:creative?{seats:3,gap:99,pat:99,evt:"",maxItems:1,n:0}:dayConf(n,diff),seats:[],seatsN:creative?0:0,tg:null,time:0,sinceSpawn:0,spawned:0,served:0,done:0,lost:0,coins:0,dishes:0,combo:0,bestCombo:0,lastServe:-99,over:false,total:0};
  if(!creative){G.seatsN=G.cf.seats;G.total=G.cf.n;G.seats=new Array(G.seatsN).fill(null)}
  held=null;paused=false;running=false;activeT=0;
  $("scene").className=n>=11?"w3":n>=6?"w2":"";
@@ -488,21 +508,26 @@ function showIntro(){const cf=G.cf;$("iMas").innerHTML=avatar({fur:"#ffb15c",ear
  $("iS").textContent=t("cust").replace("{n}",G.total);const nu=[];Object.keys(ING).filter(i=>ING[i][1]===day).forEach(i=>nu.push(ING[i][0]));DISH.map(d=>RC[d[0]]).filter(r=>r.d===day).forEach(r=>nu.push(r.e));
  STORD.filter(s=>ST[s].d===day&&day>1).forEach(s=>nu.push("__"+s));
  $("iNew").innerHTML=(nu.length&&day>=1?`<div class="sub" style="width:100%">${t("newT")}</div>`:"")+nu.map(x=>x.startsWith("__")?`<div style="width:60px">${stIcon(x.slice(2))}</div>`:`<span>${x}</span>`).join("");
- $("iE").textContent=cf.evt?t("evt")[cf.evt]:"";showOv("intro");$("iGo").focus&&0}
+ $("iE").textContent=cf.evt?t("evt")[cf.evt]:"";$("iG").textContent=G.bonus?bonusTxt(G.bonus):"";showOv("intro");$("iGo").focus&&0}
 $("iGo").onclick=()=>{SFX.click();hideOv();running=true;G.sinceSpawn=99;renderSeatsAll();renderShelf();renderTargets();hud();if(hintsOn()&&day===1)setTimeout(()=>toast(t("hintTap"),2800),400)};
 function endDay(){if(!G)return;running=false;const ratio=G.served/Math.max(1,G.total);const need=diff==="easy"?.3:.4;
  const stars=ratio>=.9?3:ratio>=.6?2:1;const pass=ratio>=need;const sd=S.stars[diff];
- let unlocked=false;if(pass){sd[day]=Math.max(sd[day]||0,stars);if(day>=S.maxDay&&day<MAXDAY){S.maxDay=day+1;unlocked=true}}
+ let unlocked=false;const prevStars=sd[day]||0;if(pass){sd[day]=Math.max(sd[day]||0,stars);if(day>=S.maxDay&&day<MAXDAY){S.maxDay=day+1;unlocked=true}}
  // bonus coins for stars
- const bonus=stars*5;G.coins+=bonus;S.coins+=bonus;save();
+ const bonus=stars*5;G.coins+=bonus;S.coins+=bonus;
+ const bmet=pass&&G.bonus&&bonusMet(G.bonus);let gb=0;if(bmet){gb=10;G.coins+=gb;S.coins+=gb}
+ const oldStars=(S.stars[diff][day]||0);save();
  $("oT").textContent=pass?"🎉 "+t("res"):"😸 "+t("res");$("oStars").innerHTML=[1,2,3].map(i=>`<span style="animation-delay:${i*.25}s">${pass&&i<=stars?"⭐":"☆"}</span>`).join("");
  $("oS").textContent=t("served").replace("{a}",G.served).replace("{b}",G.total)+"  ·  "+t("earned").replace("{c}",G.coins);
- $("oU").textContent=unlocked?t("newDay"):"";$("oNext").style.display=(pass&&day<MAXDAY)?"":"none";$("oNext").textContent=t("next");
- showOv("over");pass?SFX.win():SFX.bye();if(pass)confetti(90);hud();G.endInfo={stars,pass,unlocked}}
+ $("oU").textContent=unlocked?t("newDay"):"";$("oG").textContent=G.bonus?(bmet?bg("ok",{c:gb}):bg("miss")):"";$("oNext").style.display=(pass&&day<MAXDAY)?"":"none";$("oNext").textContent=t("next");
+ showOv("over");pass?SFX.win():SFX.bye();if(pass){confetti(90);for(let i=0;i<stars;i++)setTimeout(()=>SFX.star(i),300+i*250);if(bmet)setTimeout(()=>SFX.bonus(),1100);if(stars===3||evtDay(day))setTimeout(()=>SFX.fan(),1200)}hud();G.endInfo={stars,pass,unlocked,bonus:!!bmet};
+ {const R_=RW();if(R_){if(pass)R_.award({game:"kitchen",event:"levelClear",level:day,score:G.coins});if(pass&&stars>prevStars)R_.award({game:"kitchen",event:"star",stars:stars-prevStars});if(G.bestCombo>=3)R_.award({game:"kitchen",event:"combo",score:G.bestCombo});R_.award({game:"kitchen",event:"score",score:S.coins});if(pass&&(evtDay(day)||bmet))R_.award({game:"kitchen",event:"win"});R_.flush()}}}
+const evtDay=n=>n===5||n===10||n===15||n===20;
 $("oNext").onclick=()=>{SFX.click();startDay(day+1)};$("oAgain").onclick=()=>{SFX.click();startDay(day)};$("oMenu").onclick=()=>{SFX.click();toMenu()};
 function doPause(on){if(!running||!G||G.over)return;paused=on;if(on)showOv("pause");else hideOv()}
 $("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};$("pMenu").onclick=()=>{SFX.click();toMenu()};$("homeBtn").onclick=()=>{SFX.click();toMenu()};
 function toMenu(){running=false;paused=false;mode="menu";G=null;held=null;setApp(false);showOv("menu");drawTexts()}
+$("musBtn").onclick=$("musBtn2").onclick=()=>{ac();musicSet(!musicOn);SFX.click()};musicSet(musicOn);
 $("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");$("muteBtn").textContent=muted?"🔇":"🔊";if(!muted)SFX.click()};
 document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();return}
  const D=e.target.closest&&e.target.closest("[data-diff]");if(D){diff=D.dataset.diff;S.diff=diff;save();SFX.click();drawTexts()}});
@@ -524,7 +549,7 @@ $("sGrid").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(
  if(!S.owned[d[0]]){if(S.coins<d[2]){SFX.nope();toast(t("noMoney"));return}S.coins-=d[2];S.owned[d[0]]=1;S.eq[d[3]]=d[0];SFX.buy();confetti(20)}else{if(S.eq[d[3]]===d[0])delete S.eq[d[3]];else S.eq[d[3]]=d[0];SFX.click()}
  save();openShop();applyDeco();drawTexts()});
 /* confetti */
-let cfA=0;function confetti(n=70){const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");const C=["#ff5c93","#ffd24a","#5fd38d","#5aa9ff","#b57cff"];const P=[];for(let i=0;i<n;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:C[i%5],a:Math.random()*6});const end=Date.now()+2600;cancelAnimationFrame(cfA);(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cfA=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
+let cfA=0;function confetti(n=70){const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");const C=["#ff5c93","#ffd24a","#5fd38d","#5aa9ff","#b57cff"];const P=[];for(let i=0;i<n;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:C[i%5],a:Math.random()*6,k:i%3});const end=Date.now()+2600;cancelAnimationFrame(cfA);(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);if(p.k===1){x.beginPath();for(let q=0;q<10;q++){const rr=q%2?p.r*.45:p.r*1.3,an=q*Math.PI/5;x.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}x.fill()}else if(p.k===2){x.beginPath();x.arc(0,0,p.r*.7,0,6.3);x.fill()}else x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cfA=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&running&&G&&!G.over&&!paused)doPause(true)});
 /* ============ test hooks ============ */
 window.__kitchen={get G(){return G},get S(){return S},get held(){return held},RC,ING,DISH,CUST,

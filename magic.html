@@ -27,7 +27,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 .rules{max-width:460px;background:#fff;border-radius:16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 3px 0 #0001}
 .rules p{margin:3px 0}
 .lbl2{font-weight:800;font-size:16px}
-.rng .big{min-width:92px;min-height:48px;font-size:17px;background:#fff;color:#3d2766;border:3px solid #8a4fd8;box-shadow:0 3px 0 #0002}
+.rng .big{min-width:78px;padding:8px 10px;min-height:48px;font-size:17px;background:#fff;color:#3d2766;border:3px solid #8a4fd8;box-shadow:0 3px 0 #0002}
 .rng .big.sel{background:#8a4fd8;color:#fff}
 
 /* playing screens */
@@ -112,25 +112,52 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #00
 @media (min-width:1100px) and (min-height:960px){.desk #menu{zoom:1.38}}
 @media (min-width:1400px) and (min-height:1150px){.desk #menu{zoom:1.7}}
 .desk #menu{justify-content:safe center}
+
+/* upgrade: rank, stamps, skins, toasts, music button */
+.m2{left:64px;display:none}.inmenu .m2{display:flex}
+.rankbox{display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:8px 12px;box-shadow:0 3px 0 #0001;max-width:460px;width:min(92vw,460px)}
+.rankbox .ric{font-size:38px;line-height:1}
+.rankbox .rt{flex:1;min-width:0;text-align:start}.rankbox b{font-size:16px}
+.rankbox small{display:block;font-size:12px;opacity:.8;margin-top:2px}
+.bar2{height:10px;border-radius:6px;background:#e7dcf7;overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,#b985f5,#ffb35c);border-radius:6px;transition:width .6s}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+.chip{min-height:34px;padding:2px 10px;border-radius:999px;border:2px solid #8a4fd8;background:#fff;font:800 14px Rubik,Arial;color:#3d2766;display:inline-flex;align-items:center;gap:4px;direction:ltr}
+.chip.done{background:#2fb36a;border-color:#1d7c48;color:#fff}
+button.chip{min-height:44px;cursor:pointer}button.chip.sel{background:#8a4fd8;color:#fff}button.chip.lk{opacity:.55}
+.badges{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:92vw}
+.badge{background:#fff3c4;border:2px solid #ffb35c;border-radius:14px;padding:4px 12px;font-weight:800;font-size:16px;animation:bdg .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes bdg{from{transform:scale(.3);opacity:0}}
+.sk-candy,.sk-candy body{background:#ffe6f2}.sk-candy h1{color:#e0408f}
+.sk-candy .card{background:#fff8fc}.sk-candy .card .g b{border-radius:50%;color:#a02b6a}
+.sk-night,.sk-night body{background:#1b1740;color:#fff3c4}.sk-night h1,.sk-night #res h2{color:#ffd23f}.sk-night #res .box{background:#2a2560;color:#fff3c4}
+.sk-night .card{background:#2a2560}.sk-night .card .g b{background:color-mix(in srgb,var(--c) 24%,#2a2560);color:#fff6cf}
+.sk-night .rules,.sk-night .rankbox,.sk-night .explain,.sk-night .eq{color:#3d2766}
+#num.rolling{filter:blur(1px);color:#8a4fd8}
+.mascot2{font-size:46px;line-height:1;animation:flo 1.2s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.hat,.float,.mascot2{animation:none}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/magic.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic-192.png"><meta name="apple-mobile-web-app-title" content="קסם הקלפים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic-apple-180.png"><script src="pwa.js" data-app="magic" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
-<body>
+<body class="inmenu">
 
-<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn corner m2" id="musBtn" aria-label="music">🎵</button>
 <!-- MENU -->
 <section class="screen active" id="menu">
   <h1 id="tTitle"></h1>
   <div class="heads">🎩 ✨ 🃏</div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
   <div class="rules" id="rules"></div>
+  <div class="rankbox" id="rank"></div>
   <div class="lbl2" id="tRange"></div>
   <div class="row rng" id="rng"></div>
   <div class="row">
     <button class="big" id="bComp"></button>
     <button class="big o" id="bSelf"></button>
   </div>
+  <div class="chips" id="stamps"></div>
+  <div class="chips" id="skins"></div>
 </section>
 
 <!-- COMPUTER GUESSES -->
@@ -215,7 +242,7 @@ const TX={
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang="he";try{lang=localStorage.getItem("annabelle-lang")||"he"}catch(e){} if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
-const COLORS=["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"];
+let COLORS=["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"];
 let bits=5,cards=[],mode="",order=[],idx=0,ans=[],keep=[];
 
 let AC=null,muted=false;try{muted=localStorage.getItem("annabelle-muted")==="1"}catch(e){}
@@ -229,14 +256,63 @@ const SFX={
  back(){tone(420,.1,"triangle",.15,300)},
  away(){tone(400,.14,"sine",.18,180)},
  keep(){tone(500,.1,"sine",.18,800)},
- drum(){for(let i=0;i<14;i++)tone(110+i*6,.09,"square",.08+i*.006,70,i*.1)},
- win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6)}
+ drum(){for(let i=0;i<14;i++){tone(110+i*6,.09,"square",.08+i*.006,70,i*.1);if(i%2)noise(.05,1800,.05+i*.004,i*.1+.05)}},
+ win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6);tone(1568,.7,"sine",.06,null,.7);noise(.5,6000,.05,.55)},
+ tick(i){tone(700+(i||0)*55,.05,"square",.07)},
+ sparkle(){[1568,2093,2637].forEach((f,k)=>tone(f,.12,"sine",.07,null,k*.045))},
+ fan(){[392,523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.3,"triangle",.2,null,i*.08));[262,330,392].forEach(f=>tone(f,.9,"sine",.1,null,.6))},
+ meow(){tone(700,.22,"sawtooth",.06,430);tone(520,.2,"sine",.09,300,.12)}
 };
+function noise(d,f,v=.1,delay=0){if(muted)return;const a=ac();if(!a)return;const n=a.currentTime+delay,len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),dat=buf.getChannelData(0);for(let i=0;i<len;i++)dat[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=buf;const fl=a.createBiquadFilter();fl.type="bandpass";fl.frequency.value=f;const g=a.createGain();g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);s.connect(fl);fl.connect(g);g.connect(a.destination);s.start(n);s.stop(n+d+.02)}
+/* tiny background music loop (off by default, the 🎵 button; respects mute) */
+let musicOn=false,mT=null,mStep=0;try{musicOn=localStorage.getItem("annabelle-music")==="1"}catch(e){}
+const MEL=[0,2,4,7,9,7,4,2,0,4,7,9,12,9,7,4],BAS=[0,0,-5,-5,-3,-3,-7,-7];
+function musicTick(){if(!musicOn||muted||document.hidden||!AC||AC.state!=="running")return;const s=mStep++;tone(262*Math.pow(2,MEL[s%16]/12),.3,"triangle",.04);if(s%2===0)tone(131*Math.pow(2,BAS[(s>>1)%8]/12),.55,"sine",.05)}
+function musicSet(on){musicOn=on;try{localStorage.setItem("annabelle-music",on?"1":"0")}catch(e){}clearInterval(mT);mT=null;if(on){ac();mT=setInterval(musicTick,270)}$("musBtn").style.opacity=on?1:.55}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=t("k_"+id)||""}
+function show(id){document.body.classList.toggle("inmenu",id==="menu");document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=t("k_"+id)||""}
 function maxN(){return (1<<bits)-1}
+const RW=()=>window.AnnabelleRewards;
+/* ---- progress: tricks -> rank, one stamp per range, unlockable decks ---- */
+const EX={he:{rank:"דרגה",r:["קוסמת מתחילה","קוסמת צעירה","קוסמת גדולה","מכשפה","קוסמת־על"],sk:["קלאסית","סוכריות","לילה"],lock:"נפתח אחרי {n} קסמים",
+  up:"🎉 דרגה חדשה: {r}!",stamp:"🔖 חותמת חדשה: 1–{n}!",skin:"🎴 חפיסה חדשה: {s}!",next:"עוד {n} קסמים לדרגה הבאה",top:"הדרגה הכי גבוהה! 👑",streak:"🔥 {n} קסמים ברצף!",all:"🌟 אספת את כל החותמות!",tricks:"קסמים",deck:"חפיסה"},
+ fr:{rank:"Rang",r:["Apprentie","Jeune magicienne","Grande magicienne","Sorcière","Super magicienne"],sk:["Classique","Bonbons","Nuit"],lock:"Après {n} tours",
+  up:"🎉 Nouveau rang : {r} !",stamp:"🔖 Nouveau tampon : 1–{n} !",skin:"🎴 Nouveau jeu : {s} !",next:"Encore {n} tours pour le rang suivant",top:"Rang maximum ! 👑",streak:"🔥 {n} tours d'affilée !",all:"🌟 Tous les tampons !",tricks:"tours",deck:"Jeu"},
+ en:{rank:"Rank",r:["Apprentice","Young Magician","Great Magician","Sorceress","Super Magician"],sk:["Classic","Candy","Night"],lock:"Unlocks after {n} tricks",
+  up:"🎉 New rank: {r}!",stamp:"🔖 New stamp: 1–{n}!",skin:"🎴 New deck: {s}!",next:"{n} more tricks to the next rank",top:"Top rank! 👑",streak:"🔥 {n} tricks in a row!",all:"🌟 All stamps collected!",tricks:"tricks",deck:"Deck"}};
+const xt=(k,o)=>{let s=EX[lang][k];if(typeof s!=="string")return s;if(o)for(const q in o)s=s.replace("{"+q+"}",o[q]);return s};
+const RANKS=[0,3,8,15,30],RICON=["🐣","🎩","✨","🧙","👑"],SKINS=[["classic",0],["candy",3],["night",8]];
+const SKINCOL={classic:["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"],candy:["#ff7eb6","#ffa94d","#4cc98a","#a98bff","#59c3ff","#ff6f6f"],night:["#ffd23f","#ff9f43","#6ee7b7","#a5b4fc","#7dd3fc","#fda4af"]};
+let PG={tricks:0,stamps:{},skin:"classic",all:0},streak=0;
+try{const o=JSON.parse(load("annabelle-magic")||"null");if(o&&typeof o==="object"){PG.tricks=Math.max(0,Math.min(99999,o.tricks|0));if(o.stamps&&typeof o.stamps==="object")for(const k of [3,4,5,6])PG.stamps[k]=Math.max(0,o.stamps[k]|0);if(SKINS.some(s=>s[0]===o.skin))PG.skin=o.skin;PG.all=o.all?1:0}}catch(e){}
+const pgSave=()=>{save("annabelle-magic",JSON.stringify(PG));save("annabelle-magic-best",String(PG.tricks))};
+const rankIdx=n=>RANKS.reduce((r,v,i)=>n>=v?i:r,0);
+function applySkin(){document.documentElement.className=document.documentElement.className.replace(/\bsk-\w+/g,"").trim()+" sk-"+PG.skin;COLORS=SKINCOL[PG.skin]}
+/* a finished trick: stats + rewards. returns the list of celebration messages */
+function trickDone(){
+ const b4=rankIdx(PG.tricks);PG.tricks++;streak++;const newStamp=!PG.stamps[bits];PG.stamps[bits]=(PG.stamps[bits]|0)+1;
+ const af=rankIdx(PG.tricks),msgs=[];
+ if(newStamp)msgs.push(xt("stamp",{n:maxN()}));
+ if(af>b4)msgs.push(xt("up",{r:xt("r")[af]}));
+ const sk=SKINS.find(s=>s[1]>0&&s[1]===PG.tricks);if(sk)msgs.push(xt("skin",{s:xt("sk")[SKINS.indexOf(sk)]}));
+ const allNow=!PG.all&&[3,4,5,6].every(k=>PG.stamps[k]);if(allNow){PG.all=1;msgs.push(xt("all"))}
+ if(streak>=2)msgs.push(xt("streak",{n:streak}));
+ pgSave();
+ const R_=RW();if(R_){R_.award({game:"magic",event:"levelClear",level:PG.tricks,score:PG.tricks});R_.award({game:"magic",event:"star",stars:bits>=6?3:bits>=5?2:1});if(streak>=2)R_.award({game:"magic",event:"combo",score:streak});R_.award({game:"magic",event:"score",score:PG.tricks});if(af>b4||allNow||newStamp)R_.award({game:"magic",event:"win"});R_.flush()}
+ return {msgs,rankUp:af>b4||allNow||!!sk};
+}
+function badgeEl(msgs){const d=document.createElement("div");d.className="badges";msgs.forEach((m,i)=>{const e=document.createElement("div");e.className="badge";e.style.animationDelay=(i*.25)+"s";e.textContent=m;d.appendChild(e)});return d}
+function drawProgress(){
+ const n=PG.tricks,ri=rankIdx(n),nx=RANKS[ri+1];
+ const pct=nx?Math.round((n-RANKS[ri])/(nx-RANKS[ri])*100):100;
+ $("rank").innerHTML='<div class="ric">'+RICON[ri]+'</div><div class="rt"><b>'+xt("rank")+': '+xt("r")[ri]+' · '+n+' '+xt("tricks")+'</b><div class="bar2"><i style="width:'+pct+'%"></i></div><small>'+(nx?xt("next",{n:nx-n}):xt("top"))+'</small></div>';
+ $("stamps").innerHTML=[3,4,5,6].map(k=>'<span class="chip'+(PG.stamps[k]?" done":"")+'">'+(PG.stamps[k]?"✔":"🔖")+" 1–"+((1<<k)-1)+'</span>').join("");
+ $("skins").innerHTML="";
+ SKINS.forEach(([k,need],i)=>{const lk=n<need,b=document.createElement("button");b.className="chip"+(k===PG.skin?" sel":"")+(lk?" lk":"");b.textContent=(lk?"🔒 ":"🎴 ")+xt("sk")[i];if(lk)b.title=xt("lock",{n:need});
+  b.onclick=()=>{if(lk){SFX.no();return}SFX.click();PG.skin=k;pgSave();applySkin();drawProgress()};$("skins").appendChild(b)});
+}
 
 /* build the cards: card b holds every number 1..max whose bit b is set; the first one is 2^b */
 function build(){
@@ -245,7 +321,7 @@ function build(){
 }
 function cardEl(c){
  const el=document.createElement("div");el.className="card";el.style.setProperty("--c",c.color);
- const cols=c.nums.length<=8?4:c.nums.length<=16?4:8; // 8 → 4×2, 16 → 4×4, 32 → 8×4
+ const cols=c.nums.length<=4?2:c.nums.length<=8?4:c.nums.length<=16?4:8; // 8 → 4×2, 16 → 4×4, 32 → 8×4
  const g=document.createElement("div");g.className="g";g.style.gridTemplateColumns="repeat("+cols+",1fr)";
  const big=window.AnnabelleDesk&&AnnabelleDesk.isDesk();
  const fs=cols===8?"clamp(11px,2.6vw,"+(big?26:18)+"px)":"clamp(16px,4.4vw,"+(big?38:26)+"px)";el.style.setProperty("--fs",fs);
@@ -257,11 +333,12 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 
 /* ---------- menu ---------- */
 function drawMenu(){
+ applySkin();drawProgress();
  $("tTitle").textContent=t("title");document.title=t("title");
  $("rules").innerHTML=t("rules").map(r=>"<p>"+r+"</p>").join("");
  $("tRange").textContent=t("range");
  $("rng").innerHTML="";
- [[4,15],[5,31],[6,63]].forEach(([b,n])=>{const x=document.createElement("button");x.className="big"+(b===bits?" sel":"");x.textContent="1–"+n;x.dir="ltr";
+ [[3,7],[4,15],[5,31],[6,63]].forEach(([b,n])=>{const x=document.createElement("button");x.className="big"+(b===bits?" sel":"");x.textContent="1–"+n;x.dir="ltr";
   x.onclick=()=>{SFX.click();bits=b;save("annabelle-magic-bits",b);drawMenu()};$("rng").appendChild(x)});
  $("bComp").textContent=t("comp");$("bSelf").textContent=t("self");
  $("flags").innerHTML="";
@@ -276,6 +353,7 @@ document.querySelectorAll(".homeBtn").forEach(b=>b.onclick=toMenu);
 
 /* ---------- computer guesses ---------- */
 function startComp(){
+ RW()&&RW().award({game:"magic",event:"play"});
  mode="comp";build();order=shuffle(cards.map((_,i)=>i));idx=-1;ans=[];
  show("comp");thinkScreen();
 }
@@ -296,7 +374,7 @@ function askCard(){
  $("cBtns").innerHTML="";
  const bk=document.createElement("button");bk.className="big g";bk.style.minWidth="0";bk.textContent=t("back");bk.onclick=()=>{SFX.back();if(idx===0){thinkScreen();return}idx--;ans.pop();askCard()};
  const no=document.createElement("button");no.className="big n";no.textContent=t("no");no.onclick=()=>{SFX.no();answer(false)};
- const ye=document.createElement("button");ye.className="big y";ye.textContent=t("yes");ye.onclick=()=>{SFX.yes();answer(true)};
+ const ye=document.createElement("button");ye.className="big y";ye.textContent=t("yes");ye.onclick=e=>{SFX.yes();SFX.sparkle();if(e&&e.clientX)sparks(e.clientX,e.clientY,12);answer(true)};
  $("cBtns").append(ye,no,bk);
 }
 function answer(v){
@@ -312,16 +390,18 @@ function answer(v){
 }
 
 /* ---------- reveal (shared) ---------- */
+function rollNum(el,final,done){let n=0;el.classList.add("rolling");const it=setInterval(()=>{n++;if(n<13){el.textContent=1+Math.floor(Math.random()*maxN());SFX.tick(n%8)}else{clearInterval(it);el.classList.remove("rolling");el.textContent=final;el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");done&&done()}},75)}
 function reveal(used,from){
  const sum=used.reduce((s,c)=>s+c.key,0);
  const box=$("resBox");box.innerHTML="";
  if(sum===0){
   box.innerHTML='<h2>'+t("none")+'</h2>';
   const b=document.createElement("button");b.className="big";b.textContent=t("tryOther");b.onclick=()=>{$("res").classList.remove("on");from==="comp"?startComp():startSelf()};
-  const nv=document.createElement("div");nv.id="resNav";box.append(b,nv);$("res").classList.add("on");return;
+  const nv=document.createElement("div");nv.id="resNav";box.append(b,nv);$("res").classList.add("on");SFX.no();return;
  }
  const h=document.createElement("h2");h.textContent=t("your");
- const num=document.createElement("div");num.id="num";num.className="pop";num.textContent=sum;
+ const num=document.createElement("div");num.id="num";num.textContent="?";
+ const mas=document.createElement("div");mas.className="mascot2";mas.textContent="😺";
  const eq=document.createElement("div");eq.className="eq";
  eq.innerHTML=used.map(c=>'<em>'+c.key+'</em>').join(" + ")+(used.length>1?" = <em>"+sum+"</em>":"");
  const w=document.createElement("div");w.style.cssText="font-size:26px;font-weight:800";w.textContent=t("wow");
@@ -331,8 +411,10 @@ function reveal(used,from){
  const a=document.createElement("button");a.className="big";a.textContent=t("again");a.onclick=()=>{$("res").classList.remove("on");stopConf();from==="comp"?startComp():startSelf()};
  row.appendChild(a);
  const nv=document.createElement("div");nv.id="resNav";
- box.append(h,num,eq,w,hb,ex,row,nv);
- $("res").classList.add("on");confetti();SFX.win();
+ const bd=document.createElement("div");
+ box.append(mas,h,num,bd,eq,w,hb,ex,row,nv);
+ $("res").classList.add("on");SFX.drum();
+ rollNum(num,sum,()=>{mas.textContent="😻";SFX.win();SFX.meow();confetti();sparks(innerWidth/2,innerHeight*.35,26);const r=trickDone();bd.appendChild(badgeEl(r.msgs));if(r.rankUp){SFX.fan();confetti()}});
 }
 
 /* ---------- friend magic: think -> hand the phone over -> cards one at a time ---------- */
@@ -340,6 +422,7 @@ let sOrder=[],sIdx=0,sMarks=[],sStage="",peekT=null;
 function sClear(){["sSay","sSub"].forEach(i=>$(i).textContent="");$("sDots").innerHTML="";$("sWrap").innerHTML="";$("sBtns").innerHTML=""}
 function sBtn(txt,cls,fn){const b=document.createElement("button");b.className="big "+(cls||"");b.textContent=txt;b.onclick=fn;$("sBtns").appendChild(b);return b}
 function startSelf(){
+ RW()&&RW().award({game:"magic",event:"play"});
  mode="self";build();sOrder=shuffle(cards.map((_,i)=>i));sMarks=cards.map(()=>false);sIdx=0;
  show("self");sThink();
 }
@@ -366,7 +449,7 @@ function sCard(){ // one card at a time; the previous ones are already hidden
  $("sDots").innerHTML=sOrder.map((_,i)=>'<i class="'+(i<sIdx?"on":i===sIdx?"cur":"")+'"></i>').join("");
  const el=cardEl(c);el.classList.add("flip");el.tabIndex=0;el.setAttribute("role","button");
  const paint=()=>{el.classList.toggle("mark",sMarks[ci]);let tg=el.querySelector(".tag");if(sMarks[ci]){if(!tg){tg=document.createElement("div");tg.className="tag";tg.textContent=t("sMark");el.appendChild(tg)}}else if(tg)tg.remove()};
- el.onclick=()=>{sMarks[ci]=!sMarks[ci];sMarks[ci]?SFX.keep():SFX.away();paint()};paint();
+ el.onclick=e=>{sMarks[ci]=!sMarks[ci];if(sMarks[ci]){SFX.keep();SFX.sparkle();if(e&&e.clientX)sparks(e.clientX,e.clientY,14)}else SFX.away();paint()};paint();
  $("sWrap").appendChild(el);SFX.swish();
  sBtn(sIdx===n-1?t("sLast"):t("sNext"),"y",sNextCard);
 }
@@ -385,7 +468,8 @@ function sFinish(){
  hb.addEventListener("pointerdown",e=>{e.preventDefault();clearTimeout(tm.t);tm.t=setTimeout(peek,650)});
  ["pointerup","pointerleave","pointercancel"].forEach(ev=>hb.addEventListener(ev,()=>clearTimeout(tm.t)));
  hb.addEventListener("contextmenu",e=>e.preventDefault());
- SFX.win();confetti();
+ SFX.win();confetti();sparks(innerWidth/2,innerHeight*.3,24);
+ {const r=trickDone();if(r.msgs.length)$("sWrap").querySelector(".stage").appendChild(badgeEl(r.msgs));if(r.rankUp)SFX.fan()}
  sBtn(t("sAgain"),"",()=>{stopConf();SFX.click();startSelf()});
 }
 function peek(){ // secret hint for the magician only: the corner numbers of the cards that were marked
@@ -394,15 +478,20 @@ function peek(){ // secret hint for the magician only: the corner numbers of the
  clearTimeout(peekT);peekT=setTimeout(()=>{if(pk)pk.style.display="none"},3000);
 }
 
-let cf=null,cfT=null;
-function confetti(){
- const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");
- const P=[];for(let i=0;i<110;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:COLORS[i%COLORS.length],a:Math.random()*6});
- const end=Date.now()+3500;cancelAnimationFrame(cf);
- (function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});
-  if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})();
-}
-function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
+let cf=null;const PART=[];
+function pLoop(){const cv=$("conf"),x=cv.getContext("2d");x.clearRect(0,0,cv.width,cv.height);
+ for(let i=PART.length-1;i>=0;i--){const p=PART[i];p.life-=1/60;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.a+=p.w;
+  if(p.life<=0||p.y>cv.height+30){PART.splice(i,1);continue}
+  x.save();x.globalAlpha=Math.max(0,Math.min(1,p.life*2));x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;
+  if(p.s===1){x.beginPath();for(let q=0;q<10;q++){const r=q%2?p.r*.45:p.r*1.2,an=q*Math.PI/5;x.lineTo(Math.cos(an)*r,Math.sin(an)*r)}x.fill()}
+  else if(p.s===2){x.beginPath();x.arc(0,0,p.r*.7,0,7);x.fill()}else x.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+  x.restore()}
+ cf=PART.length?requestAnimationFrame(pLoop):null}
+function addP(o){PART.push(o);if(PART.length>260)PART.shift();if(!cf)cf=requestAnimationFrame(pLoop)}
+function sizeConf(){const cv=$("conf");if(cv.width!==innerWidth||cv.height!==innerHeight){cv.width=innerWidth;cv.height=innerHeight}}
+function confetti(){sizeConf();const cv=$("conf");for(let i=0;i<90;i++)addP({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,g:0,r:4+Math.random()*6,c:COLORS[i%COLORS.length],a:Math.random()*6,w:.15,s:i%3,life:5})}
+function sparks(x,y,n=14){sizeConf();for(let i=0;i<n;i++){const an=Math.random()*7,sp=2+Math.random()*5;addP({x,y,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp-2,g:.18,r:3+Math.random()*5,c:i%3?COLORS[i%COLORS.length]:"#ffd23f",a:0,w:.2,s:1,life:.8+Math.random()*.5})}}
+function stopConf(){PART.length=0;cancelAnimationFrame(cf);cf=null;const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
 
 // keyboard (laptop)
 const isOn=id=>$(id).classList.contains("active");
@@ -411,7 +500,7 @@ document.addEventListener("keydown",e=>{
  const k=e.key,kk=k.length===1?k.toLowerCase():k,act=k==="Enter"||k===" ",btn=e.target&&e.target.closest&&e.target.closest("button,a,input"),card=e.target&&e.target.closest&&e.target.closest("#selfList .card");
  const click=el=>{if(el){e.preventDefault();el.click()}};
  if($("res").classList.contains("on")){if(act&&!btn)click($("resBox").querySelector("button.big:not(.g)"));else if(k==="Escape"){e.preventDefault();toMenu()}return}
- if(isOn("menu")){if(kk==="1")click($("bComp"));else if(kk==="2")click($("bSelf"));else if(kk==="r"){e.preventDefault();bits=bits>=6?4:bits+1;save("annabelle-magic-bits",bits);SFX.click();drawMenu()}return}
+ if(isOn("menu")){if(kk==="1")click($("bComp"));else if(kk==="2")click($("bSelf"));else if(kk==="r"){e.preventDefault();bits=bits>=6?3:bits+1;save("annabelle-magic-bits",bits);SFX.click();drawMenu()}return}
  if(k==="Escape"&&(isOn("comp")||isOn("self"))){e.preventDefault();toMenu();return}
  if(isOn("comp")){
   const ye=$("cBtns").querySelector(".big.y"),no=$("cBtns").querySelector(".big.n"),bk=$("cBtns").querySelector(".big.g"),rd=$("cBtns").querySelector(".big:not(.y):not(.n):not(.g)");
@@ -432,7 +521,8 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
 $("bComp").onclick=()=>{SFX.click();startComp()};$("bSelf").onclick=()=>{SFX.click();startSelf()};
 $("muteBtn").addEventListener("click",()=>{muted=!muted;save("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});updMute();
-const sb=+load("annabelle-magic-bits");if(sb>=4&&sb<=6)bits=sb;
+$("musBtn").addEventListener("click",()=>{ac();musicSet(!musicOn);SFX.click()});musicSet(musicOn);
+const sb=+load("annabelle-magic-bits");if(sb>=3&&sb<=6)bits=sb;
 drawMenu();
 </script>
 </body>

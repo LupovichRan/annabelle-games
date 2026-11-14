@@ -72,18 +72,40 @@ h1{margin:0;font-size:clamp(28px,8vw,42px);color:#6a4fe0;text-shadow:0 3px 0 #00
 .desk .card small{font-size:clamp(11px,1.2vw,16px)}
 .desk .hat{font-size:clamp(100px,16vw,220px)}.desk .bigcard{width:min(34vw,300px,calc(100vh - 360px))}
 .desk .big{font-size:clamp(20px,1.8vw,26px)}
+
+/* upgrade: modes, decks, rank, music */
+.m2{left:64px;display:none}.inmenu .m2{display:flex}
+.rankbox{display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:8px 12px;box-shadow:0 3px 0 #0001;max-width:440px;width:min(92vw,440px)}
+.rankbox .ric{font-size:38px;line-height:1}.rankbox .rt{flex:1;min-width:0;text-align:start}.rankbox b{font-size:16px}.rankbox small{display:block;font-size:12px;opacity:.8;margin-top:2px}
+.bar2{height:10px;border-radius:6px;background:#dfe6ff;overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,#8f7bff,#ffb35c);border-radius:6px;transition:width .6s}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:460px}
+.chip{min-height:44px;padding:2px 12px;border-radius:999px;border:2px solid #6a4fe0;background:#fff;font:800 15px Rubik,Arial;color:#2a2f6b;display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.chip.sel{background:#6a4fe0;color:#fff}.chip.lk{opacity:.55}.chip.done{border-color:#2fb36a}
+.chip.st{min-height:32px;font-size:13px;cursor:default;direction:ltr}.chip.st.done{background:#2fb36a;border-color:#1d7c48;color:#fff}
+.lbl2{font-weight:800;font-size:15px;margin-top:2px}
+.badges{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:92vw}
+.badge{background:#fff3c4;border:2px solid #ffb35c;border-radius:14px;padding:4px 12px;font-weight:800;font-size:15px;animation:bdg .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes bdg{from{transform:scale(.3);opacity:0}}
+.col.ok{animation:colok .38s}@keyframes colok{50%{transform:scale(1.04);box-shadow:0 0 22px 4px var(--c)}}
+.mascot.joy{animation:joy .5s 3}@keyframes joy{50%{transform:translateY(-14px) rotate(-10deg) scale(1.2)}}
+.hat.pop{animation:hpop .6s cubic-bezier(.2,1.6,.4,1)}@keyframes hpop{from{transform:scale(.4) rotate(-30deg)}}
+@media (prefers-reduced-motion:reduce){.hat,.mascot,.col.ok{animation:none}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/magic2.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic2-192.png"><meta name="apple-mobile-web-app-title" content="קסם החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic2-apple-180.png"><script src="pwa.js" data-app="magic2" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
-<body>
-<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<body class="inmenu">
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn corner m2" id="musBtn" aria-label="music">🎵</button>
 <canvas id="conf"></canvas>
 <section class="screen active" id="menu">
   <h1 id="tTitle"></h1>
   <div class="heads">😺🎩✨</div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
   <div class="rules" id="rules"></div>
+  <div class="rankbox" id="rank"></div>
+  <div class="lbl2" id="lMode"></div><div class="chips" id="modes"></div>
+  <div class="lbl2" id="lDeck"></div><div class="chips" id="decks"></div>
   <div class="row"><button class="big y" id="bPlay"></button></div>
   <div class="row"><button class="big g" id="bHow"></button></div>
   <div class="explain" id="how" style="display:none"></div>
@@ -99,10 +121,13 @@ h1{margin:0;font-size:clamp(28px,8vw,42px);color:#6a4fe0;text-shadow:0 3px 0 #00
 <div id="kh"></div>
 <script>
 const $=id=>document.getElementById(id);
-const CARDS=[["🐱","cat"],["🐶","dog"],["🐭","mouse"],["🐹","hamster"],["🐰","bunny"],["🦊","fox"],["🐻","bear"],["🐼","panda"],["🐨","koala"],["🐯","tiger"],["🦁","lion"],["🐮","cow"],["🐷","pig"],["🐸","frog"],["🐵","monkey"],["🐔","chick"],["🐧","penguin"],["🦄","unicorn"],["🐙","octopus"],["🐢","turtle"],["🦉","owl"]];
-const NAMES={he:["חתול","כלב","עכבר","האמסטר","ארנב","שועל","דוב","פנדה","קואלה","נמר","אריה","פרה","חזרזיר","צפרדע","קוף","אפרוח","פינגווין","חד־קרן","תמנון","צב","ינשוף"],
-fr:["chat","chien","souris","hamster","lapin","renard","ours","panda","koala","tigre","lion","vache","cochon","grenouille","singe","poussin","pingouin","licorne","pieuvre","tortue","hibou"],
-en:["cat","dog","mouse","hamster","bunny","fox","bear","panda","koala","tiger","lion","cow","piggy","frog","monkey","chick","penguin","unicorn","octopus","turtle","owl"]};
+const CARDS=[["🐱","cat"],["🐶","dog"],["🐭","mouse"],["🐹","hamster"],["🐰","bunny"],["🦊","fox"],["🐻","bear"],["🐼","panda"],["🐨","koala"],["🐯","tiger"],["🦁","lion"],["🐮","cow"],["🐷","pig"],["🐸","frog"],["🐵","monkey"],["🐔","chick"],["🐧","penguin"],["🦄","unicorn"],["🐙","octopus"],["🐢","turtle"],["🦉","owl"]].concat([["🦋","butterfly"],["🐝","bee"],["🐞","ladybug"],["🐬","dolphin"],["🐳","whale"],["🦀","crab"]]);
+const SWEETS=["🍎","🍌","🍇","🍓","🍉","🍒","🍑","🍍","🥝","🍅","🥕","🌽","🍕","🍔","🍟","🍩","🍪","🎂","🍰","🍦","🍫","🍿","🥨","🥐","🧀","🍭","🍬"].map(e=>[e,""]);
+const FUN=["⭐","🌙","☀️","🌈","☁️","⚡","🔥","❄️","🌸","🌻","🌷","🎈","🎁","🎀","👑","💎","🎵","🎨","⚽","🏀","🚗","🚀","✈️","🚂","⛵","🏰","🎡"].map(e=>[e,""]);
+const DECKS=[["animals",CARDS,"🐱"],["sweets",SWEETS,"🍭"],["fun",FUN,"🚀"]];
+const NAMES={he:["חתול","כלב","עכבר","האמסטר","ארנב","שועל","דוב","פנדה","קואלה","נמר","אריה","פרה","חזרזיר","צפרדע","קוף","אפרוח","פינגווין","חד־קרן","תמנון","צב","ינשוף","פרפר","דבורה","פרת משה רבנו","דולפין","לוויתן","סרטן"],
+fr:["chat","chien","souris","hamster","lapin","renard","ours","panda","koala","tigre","lion","vache","cochon","grenouille","singe","poussin","pingouin","licorne","pieuvre","tortue","hibou","papillon","abeille","coccinelle","dauphin","baleine","crabe"],
+en:["cat","dog","mouse","hamster","bunny","fox","bear","panda","koala","tiger","lion","cow","piggy","frog","monkey","chick","penguin","unicorn","octopus","turtle","owl","butterfly","bee","ladybug","dolphin","whale","crab"]};
 const TX={he:{title:"קסם החתולים",rules:["🐱 תחשבי בסתר על חיה אחת מתוך 21.","הקוסם הקטן ינחש איזו!"],play:"🎩 בואו נתחיל!",how:"ℹ️ איך זה עובד?",
  howT:"הקוסם מחלק 21 קלפים לשלושה טורים, ואת אומרת רק באיזה טור הקלף שלך. אחרי שלוש פעמים, הקלף שלך תמיד נמצא במקום ה־11 בערימה – הקלף האמצעי. זה קסם של חשבון, לא של קסמים 😉 (שימי לב: אפשר לגלות את זה רק פעם אחת, ואז זה כבר לא סוד!)",
  think:"חשבי על קלף אחד – אל תגידי לאף אחד!",ready:"חשבתי! ✨",which:["באיזה טור הקלף שלך?","ועכשיו – באיזה טור הוא?","עוד פעם אחרונה – באיזה טור?"],col:"טור",
@@ -126,24 +151,77 @@ let lang="he";try{lang=localStorage.getItem("annabelle-lang")||"he"}catch(e){}if
 const t=k=>TX[lang][k],rnd=a=>a[Math.floor(Math.random()*a.length)];
 const COL=["#e8862d","#2fb36a","#d6479a"];
 let deck=[],step=0,stage="menu",busy=false;
+const RW=()=>window.AnnabelleRewards;
+const MODES=[{n:9,steps:2,need:0,gc:3,stars:1},{n:21,steps:3,need:0,gc:7,stars:2},{n:27,steps:3,need:4,gc:7,stars:3}];
+const DECKNEED=[0,3,8];
+let DK=CARDS,N=21,STEPS=3,mi=1,di=0,streak=0;
+const EX={he:{rank:"דרגה",r:["קוסמת מתחילה","קוסמת צעירה","קוסמת גדולה","מכשפה","קוסמת־על"],tricks:"קסמים",next:"עוד {n} קסמים לדרגה הבאה",top:"הדרגה הכי גבוהה! 👑",
+  mode:"כמה קלפים?",deck:"איזו חפיסה?",lock:"נפתח אחרי {n} קסמים",modeN:["קטן","קלאסי","גדול"],deckN:["חיות","מתוקים","הפתעות"],
+  up:"🎉 דרגה חדשה: {r}!",stamp:"🔖 חותמת חדשה: {n} קלפים!",unl:"🎴 נפתח משהו חדש!",streak:"🔥 {n} קסמים ברצף!"},
+ fr:{rank:"Rang",r:["Apprentie","Jeune magicienne","Grande magicienne","Sorcière","Super magicienne"],tricks:"tours",next:"Encore {n} tours pour le rang suivant",top:"Rang maximum ! 👑",
+  mode:"Combien de cartes ?",deck:"Quel jeu ?",lock:"Après {n} tours",modeN:["Petit","Classique","Grand"],deckN:["Animaux","Gourmandises","Surprises"],
+  up:"🎉 Nouveau rang : {r} !",stamp:"🔖 Nouveau tampon : {n} cartes !",unl:"🎴 Quelque chose de nouveau !",streak:"🔥 {n} tours d'affilée !"},
+ en:{rank:"Rank",r:["Apprentice","Young Magician","Great Magician","Sorceress","Super Magician"],tricks:"tricks",next:"{n} more tricks to the next rank",top:"Top rank! 👑",
+  mode:"How many cards?",deck:"Which deck?",lock:"Unlocks after {n} tricks",modeN:["Small","Classic","Grand"],deckN:["Animals","Treats","Surprises"],
+  up:"🎉 New rank: {r}!",stamp:"🔖 New stamp: {n} cards!",unl:"🎴 Something new unlocked!",streak:"🔥 {n} tricks in a row!"}};
+const xt=(k,o)=>{let s=EX[lang][k];if(typeof s!=="string")return s;if(o)for(const q in o)s=s.replace("{"+q+"}",o[q]);return s};
+const RANKS=[0,3,8,15,30],RICON=["🐣","🎩","✨","🧙","👑"];
+let PG={tricks:0,stamps:{},mode:1,deck:0};
+try{const o=JSON.parse(localStorage.getItem("annabelle-magic2")||"null");if(o&&typeof o==="object"){PG.tricks=Math.max(0,Math.min(99999,o.tricks|0));if(o.stamps&&typeof o.stamps==="object")for(const m of MODES)PG.stamps[m.n]=Math.max(0,o.stamps[m.n]|0);PG.mode=Math.max(0,Math.min(2,o.mode|0));PG.deck=Math.max(0,Math.min(2,o.deck|0))}}catch(e){}
+const pgSave=()=>{try{localStorage.setItem("annabelle-magic2",JSON.stringify(PG));localStorage.setItem("annabelle-magic2-best",String(PG.tricks))}catch(e){}};
+const rankIdx=n=>RANKS.reduce((r,v,i)=>n>=v?i:r,0);
+function sel(){if(PG.tricks<MODES[PG.mode].need)PG.mode=1;if(PG.tricks<DECKNEED[PG.deck])PG.deck=0;mi=PG.mode;di=PG.deck;N=MODES[mi].n;STEPS=MODES[mi].steps;DK=DECKS[di][1]}
+sel();
+function trickDone(){
+ const b4=rankIdx(PG.tricks),m=MODES[mi];PG.tricks++;streak++;const newStamp=!PG.stamps[m.n];PG.stamps[m.n]=(PG.stamps[m.n]|0)+1;
+ const af=rankIdx(PG.tricks),msgs=[];
+ if(newStamp)msgs.push(xt("stamp",{n:m.n}));
+ if(af>b4)msgs.push(xt("up",{r:xt("r")[af]}));
+ if(MODES.some(x=>x.need===PG.tricks)||DECKNEED.includes(PG.tricks)&&PG.tricks>0)msgs.push(xt("unl"));
+ if(streak>=2)msgs.push(xt("streak",{n:streak}));
+ pgSave();
+ const R_=RW();if(R_){R_.award({game:"magic2",event:"levelClear",level:PG.tricks,score:PG.tricks});R_.award({game:"magic2",event:"star",stars:m.stars});if(streak>=2)R_.award({game:"magic2",event:"combo",score:streak});R_.award({game:"magic2",event:"score",score:PG.tricks});if(af>b4||newStamp)R_.award({game:"magic2",event:"win"});R_.flush()}
+ return {msgs,rankUp:af>b4};
+}
+function badgeEl(msgs){const d=document.createElement("div");d.className="badges";msgs.forEach((m,i)=>{const e=document.createElement("div");e.className="badge";e.style.animationDelay=(i*.25)+"s";e.textContent=m;d.appendChild(e)});return d}
+function drawProgress(){
+ const n=PG.tricks,ri=rankIdx(n),nx=RANKS[ri+1],pct=nx?Math.round((n-RANKS[ri])/(nx-RANKS[ri])*100):100;
+ $("rank").innerHTML='<div class="ric">'+RICON[ri]+'</div><div class="rt"><b>'+xt("rank")+': '+xt("r")[ri]+' · '+n+' '+xt("tricks")+'</b><div class="bar2"><i style="width:'+pct+'%"></i></div><small>'+(nx?xt("next",{n:nx-n}):xt("top"))+'</small></div>';
+ $("lMode").textContent=xt("mode");$("lDeck").textContent=xt("deck");
+ $("modes").innerHTML="";MODES.forEach((m,i)=>{const lk=n<m.need,b=document.createElement("button");b.className="chip"+(i===PG.mode?" sel":"")+(lk?" lk":"")+(PG.stamps[m.n]?" done":"");b.textContent=(lk?"🔒 ":(PG.stamps[m.n]?"✔ ":""))+"🃏 "+m.n+" · "+xt("modeN")[i];if(lk)b.title=xt("lock",{n:m.need});
+  b.onclick=()=>{if(lk){SFX.no();return}SFX.click();PG.mode=i;pgSave();sel();drawProgress()};$("modes").appendChild(b)});
+ $("decks").innerHTML="";DECKS.forEach((d,i)=>{const lk=n<DECKNEED[i],b=document.createElement("button");b.className="chip"+(i===PG.deck?" sel":"")+(lk?" lk":"");b.textContent=(lk?"🔒 ":d[2]+" ")+xt("deckN")[i];if(lk)b.title=xt("lock",{n:DECKNEED[i]});
+  b.onclick=()=>{if(lk){SFX.no();return}SFX.click();PG.deck=i;pgSave();sel();drawProgress()};$("decks").appendChild(b)});
+}
 let AC=null,muted=false;try{muted=localStorage.getItem("annabelle-muted")==="1"}catch(e){}
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
 function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(a.destination);o.start(n);o.stop(n+d)}
 const SFX={click(){tone(520,.08,"triangle",.18)},swish(){tone(900,.18,"sine",.1,300)},
  deal(i){tone(380+i*28,.07,"triangle",.14,200+i*10)},pick(){tone(600,.1,"triangle",.2);tone(900,.14,"triangle",.2,null,.08)},
  meow(){tone(700,.25,"sawtooth",.07,420);tone(520,.2,"sine",.1,300,.12)},
- drum(){for(let i=0;i<16;i++)tone(110+i*6,.09,"square",.08+i*.006,70,i*.12)},
- win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6)}};
+ drum(){for(let i=0;i<16;i++){tone(110+i*6,.09,"square",.08+i*.006,70,i*.12);if(i%2)noise(.05,1800,.05+i*.004,i*.12+.05)}},
+ win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.22,null,i*.11));tone(2093,.5,"sine",.1,null,.6);tone(1568,.7,"sine",.06,null,.7);noise(.5,6000,.05,.55)},
+ sparkle(){[1568,2093,2637].forEach((f,k)=>tone(f,.12,"sine",.07,null,k*.045))},
+ fan(){[392,523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.3,"triangle",.2,null,i*.08));[262,330,392].forEach(f=>tone(f,.9,"sine",.1,null,.6))},
+ no(){tone(300,.18,"sawtooth",.1,200)}};
+function noise(d,f,v=.1,delay=0){if(muted)return;const a=ac();if(!a)return;const n=a.currentTime+delay,len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),dat=buf.getChannelData(0);for(let i=0;i<len;i++)dat[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=buf;const fl=a.createBiquadFilter();fl.type="bandpass";fl.frequency.value=f;const g=a.createGain();g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);s.connect(fl);fl.connect(g);g.connect(a.destination);s.start(n);s.stop(n+d+.02)}
+/* tiny background music loop (off by default, the 🎵 button; respects mute) */
+let musicOn=false,mT=null,mStep=0;try{musicOn=localStorage.getItem("annabelle-music")==="1"}catch(e){}
+const MEL=[0,4,7,9,7,4,2,4,0,2,4,7,12,9,7,4],BAS=[0,0,-3,-3,-5,-5,-8,-7];
+function musicTick(){if(!musicOn||muted||document.hidden||!AC||AC.state!=="running")return;const s=mStep++;tone(262*Math.pow(2,MEL[s%16]/12),.3,"triangle",.04);if(s%2===0)tone(131*Math.pow(2,BAS[(s>>1)%8]/12),.55,"sine",.05)}
+function musicSet(on){musicOn=on;try{localStorage.setItem("annabelle-music",on?"1":"0")}catch(e){}clearInterval(mT);mT=null;if(on){ac();mT=setInterval(musicTick,270)}$("musBtn").style.opacity=on?1:.55}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 $("muteBtn").onclick=()=>{muted=!muted;try{localStorage.setItem("annabelle-muted",muted?"1":"0")}catch(e){}updMute();SFX.click()};updMute();
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=""}
-const nm=i=>NAMES[lang][i];
-const cardEl=(i,d)=>{const e=document.createElement("div");e.className="card";e.style.setProperty("--d",d+"s");e.innerHTML=CARDS[i][0]+"<small>"+nm(i)+"</small>";return e};
+$("musBtn").onclick=()=>{ac();musicSet(!musicOn);SFX.click()};musicSet(musicOn);
+function show(id){document.body.classList.toggle("inmenu",id==="menu");document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=""}
+const nm=i=>DK===CARDS?NAMES[lang][i]:"";
+const cardEl=(i,d)=>{const e=document.createElement("div");e.className="card";e.style.setProperty("--d",d+"s");e.innerHTML=DK[i][0]+(DK===CARDS?"<small>"+nm(i)+"</small>":"");return e};
 
 /* ---------- menu ---------- */
 function drawMenu(){
+ sel();drawProgress();
  $("tTitle").textContent=t("title");document.title=t("title");
- $("rules").innerHTML=t("rules").map(r=>"<p style='margin:3px 0'>"+r+"</p>").join("");
+ $("rules").innerHTML=t("rules").map(r=>"<p style='margin:3px 0'>"+r.replace("21",N)+"</p>").join("");
  $("bPlay").textContent=t("play");$("bHow").textContent=t("how");$("how").textContent=t("howT");
  $("flags").innerHTML="";
  LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
@@ -161,12 +239,13 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function setBtns(list){const b=$("btns");b.innerHTML="";list.forEach(([txt,cls,fn])=>{const x=document.createElement("button");x.className="big "+cls;x.textContent=txt;x.onclick=fn;b.appendChild(x)})}
 function say(s,meow){$("say").textContent=s;if(meow)SFX.meow()}
 function start(){
- deck=shuffle(CARDS.map((_,i)=>i));step=0;busy=false;stopConf();show("play");stage="think";
- $("info").textContent="🃏 21";$("mascot").textContent="😺🎩";say(t("think"));
- const g=document.createElement("div");g.id="all";
+ sel();RW()&&RW().award({game:"magic2",event:"play"});
+ deck=shuffle(DK.map((_,i)=>i)).slice(0,N);step=0;busy=false;stopConf();show("play");stage="think";
+ $("info").textContent="🃏 "+N;$("mascot").textContent="😺🎩";say(t("think"));
+ const g=document.createElement("div");g.id="all";g.style.gridTemplateColumns="repeat("+MODES[mi].gc+",1fr)";
  deck.forEach((c,i)=>g.appendChild(cardEl(c,i*.03)));
  const body=$("body");body.innerHTML="";body.appendChild(Object.assign(document.createElement("div"),{style:"flex:1;display:flex;align-items:center;width:100%"})).appendChild(g);
- for(let i=0;i<21;i++)setTimeout(()=>SFX.deal(i%7),i*30);
+ for(let i=0;i<N;i++)setTimeout(()=>SFX.deal(i%7),i*30);
  setBtns([[t("ready"),"y",()=>{SFX.click();curtain(()=>deal())}]]);
 }
 function curtain(then){
@@ -176,24 +255,24 @@ function curtain(then){
  requestAnimationFrame(()=>requestAnimationFrame(()=>{c.classList.remove("open");setTimeout(()=>{then();requestAnimationFrame(()=>c.classList.add("open"));setTimeout(()=>c.remove(),900)},760)}));
 }
 function deal(){ // 7 rows x 3 columns: card i goes to column i%3
- stage="pick";busy=false;$("info").textContent=t("info")[0]+" "+(step+1)+t("info")[1];
- say(t("which")[step]);
+ stage="pick";busy=false;$("info").textContent=t("info")[0]+" "+(step+1)+"/"+STEPS;
+ say(t("which")[step===STEPS-1?2:step]);
  const body=$("body");body.innerHTML="";const cols=document.createElement("div");cols.id="cols";
  for(let j=0;j<3;j++){const b=document.createElement("button");b.className="col";b.style.setProperty("--c",COL[j]);b.dataset.c=j;b.setAttribute("aria-label",t("col")+" "+(j+1));
   b.innerHTML='<span class="n">'+(j+1)+'</span>';
-  for(let r=0;r<7;r++){const i=r*3+j;b.appendChild(cardEl(deck[i],(r*3+j)*.045));setTimeout(()=>SFX.deal(r),(r*3+j)*45)}
+  for(let r=0;r<N/3;r++){const i=r*3+j;b.appendChild(cardEl(deck[i],(r*3+j)*.045));setTimeout(()=>SFX.deal(r),(r*3+j)*45)}
   b.onclick=()=>pick(j);cols.appendChild(b)}
  body.appendChild(cols);setBtns([]);
  $("kh").innerHTML="1 · 2 · 3";
 }
 function pick(j){
  if(stage!=="pick"||busy)return;busy=true;SFX.pick();
- const cs=document.querySelectorAll(".col");cs[j].classList.add("hit");
+ const cs=document.querySelectorAll(".col");cs[j].classList.add("hit","ok");SFX.sparkle();{const r=cs[j].getBoundingClientRect();sparks(r.left+r.width/2,r.top+r.height/2,12)}$("mascot").textContent=rnd(["😸","😼","😺"])+"🎩";
  const col=k=>deck.filter((_,i)=>i%3===k),others=[0,1,2].filter(k=>k!==j);
  deck=[].concat(col(others[0]),col(j),col(others[1])); // the chosen column goes in the middle
  step++;
  setTimeout(()=>{
-  if(step<3){say(t("gather")[step-1],true);curtain(()=>deal())}
+  if(step<STEPS){say(t("gather")[step-1],true);curtain(()=>deal())}
   else finale();
  },380);
 }
@@ -201,21 +280,29 @@ function finale(){
  stage="reveal";$("info").textContent="🎩";say(t("drum"));SFX.drum();$("kh").innerHTML="";
  const body=$("body");body.innerHTML='<div id="hold"><div class="hat shake" id="hat">🎩</div><div style="font-weight:800">'+t("hatT")+'</div></div>';
  setTimeout(()=>{ // the 11th card is the secret one
-  const c=deck[10];SFX.win();confetti();$("mascot").textContent="😻🎉";say(rnd(t("reveal")));
-  $("body").innerHTML='<div id="hold"><div class="bigcard">'+CARDS[c][0]+'<b>'+nm(c)+'</b></div><div style="font-weight:800;font-size:20px">'+t("q")+' 😉</div></div>';
+  const c=deck[(N-1)/2];SFX.win();confetti();sparks(innerWidth/2,innerHeight*.4,30);$("mascot").textContent="😻🎉";$("mascot").classList.add("joy");say(rnd(t("reveal")));
+  $("body").innerHTML='<div id="hold"><div class="bigcard">'+DK[c][0]+'<b>'+nm(c)+'</b></div><div id="bdg"></div><div style="font-weight:800;font-size:20px">'+t("q")+' 😉</div></div>';
   window.__reveal=c;
+  {const r=trickDone();if(r.msgs.length)$("bdg").appendChild(badgeEl(r.msgs));if(r.rankUp){SFX.fan();confetti()}}
   setBtns([[t("again"),"y",()=>{SFX.click();start()}],[t("menu"),"g",()=>toMenu()]]);
   stage="done";
  },2000);
 }
-let cf=null;
+let cf=null;const PART=[];
 const CC=["#e8862d","#2fb36a","#d6479a","#6a4fe0","#2a8fd0","#e23b3b"];
-function confetti(){const cv=$("conf");cv.width=innerWidth;cv.height=innerHeight;const x=cv.getContext("2d");
- const P=[];for(let i=0;i<110;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:CC[i%CC.length],a:Math.random()*6});
- const end=Date.now()+3500;cancelAnimationFrame(cf);
- (function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});
-  if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
-function stopConf(){cancelAnimationFrame(cf);const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
+function pLoop(){const cv=$("conf"),x=cv.getContext("2d");x.clearRect(0,0,cv.width,cv.height);
+ for(let i=PART.length-1;i>=0;i--){const p=PART[i];p.life-=1/60;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.a+=p.w;
+  if(p.life<=0||p.y>cv.height+30){PART.splice(i,1);continue}
+  x.save();x.globalAlpha=Math.max(0,Math.min(1,p.life*2));x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;
+  if(p.s===1){x.beginPath();for(let q=0;q<10;q++){const r=q%2?p.r*.45:p.r*1.2,an=q*Math.PI/5;x.lineTo(Math.cos(an)*r,Math.sin(an)*r)}x.fill()}
+  else if(p.s===2){x.beginPath();x.arc(0,0,p.r*.7,0,7);x.fill()}else x.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+  x.restore()}
+ cf=PART.length?requestAnimationFrame(pLoop):null}
+function addP(o){PART.push(o);if(PART.length>260)PART.shift();if(!cf)cf=requestAnimationFrame(pLoop)}
+function sizeConf(){const cv=$("conf");if(cv.width!==innerWidth||cv.height!==innerHeight){cv.width=innerWidth;cv.height=innerHeight}}
+function confetti(){sizeConf();const cv=$("conf");for(let i=0;i<90;i++)addP({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,g:0,r:4+Math.random()*6,c:CC[i%CC.length],a:Math.random()*6,w:.15,s:i%3,life:5})}
+function sparks(x,y,n=14){sizeConf();for(let i=0;i<n;i++){const an=Math.random()*7,sp=2+Math.random()*5;addP({x,y,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp-2,g:.18,r:3+Math.random()*5,c:i%3?CC[i%CC.length]:"#ffd23f",a:0,w:.2,s:1,life:.8+Math.random()*.5})}}
+function stopConf(){PART.length=0;cancelAnimationFrame(cf);cf=null;const cv=$("conf");cv.getContext("2d").clearRect(0,0,cv.width,cv.height)}
 
 /* keyboard */
 document.addEventListener("keydown",e=>{

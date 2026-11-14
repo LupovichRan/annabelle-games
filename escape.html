@@ -41,6 +41,13 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .bar{display:flex;gap:4px;margin-top:3px}
 .bar span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.7)}
 .bar span.d{background:#ff7a3d}
+.wstars{font-size:46px;line-height:1;direction:ltr;letter-spacing:4px}.wstars span{display:inline-block;opacity:.25;filter:grayscale(1)}
+.wstars span.on{opacity:1;filter:none;animation:starpop .55s both}.wstars span.on:nth-child(2){animation-delay:.25s}.wstars span.on:nth-child(3){animation-delay:.5s}
+@keyframes starpop{0%{transform:scale(.1) rotate(-120deg);opacity:0}65%{transform:scale(1.5) rotate(15deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.card{animation:cardin .4s cubic-bezier(.2,1.4,.4,1)}@keyframes cardin{from{transform:scale(.5) translateY(30px);opacity:0}}
+.pb{position:fixed;pointer-events:none;z-index:60;font-size:24px}
+.rbanner{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);z-index:70;pointer-events:none;background:#fff;border:4px solid #ff7a3d;border-radius:22px;padding:10px 22px;font-size:26px;font-weight:900;color:#e8581c;text-align:center;animation:rbn 2.2s forwards;max-width:90vw}
+@keyframes rbn{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}15%{transform:translate(-50%,-50%) scale(1.15);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-90%);opacity:0}}
 .starspill{background:#fff;border-radius:999px;padding:6px 10px;font-size:20px;font-weight:700;white-space:nowrap;box-shadow:0 3px 0 rgba(74,44,107,.2);direction:ltr}
 .stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:0 6px}
 .box{position:relative;border-radius:18px;overflow:hidden;box-shadow:0 6px 18px rgba(74,44,107,.3);direction:ltr}
@@ -120,6 +127,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 </style>
 <!--pwa--><link rel="manifest" href="manifests/escape.webmanifest"><meta name="theme-color" content="#ffd6b8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="בית העץ"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/escape-apple-180.png"><script src="pwa.js" data-app="escape" data-slots='[["#langS", "after"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langS" data-pauseslot="#pause .card" data-relabel="#paHome" defer></script><script src="share.js" data-slot="#langS" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -130,13 +138,13 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <p id="sIntro"></p>
     <div class="langs" id="langS"></div>
     <div class="paws" id="sPaws"></div>
-    <div class="btns"><button class="big" id="goBtn"></button><button class="big soft" id="againBtn"></button></div>
+    <div class="btns"><button class="big" id="goBtn"></button><button class="big soft" id="againBtn"></button><div style="display:flex;gap:8px"><button class="big alt" id="dailyBtn" style="min-height:46px;font-size:16px;padding:6px 8px"></button><button class="big soft" id="musBtn" style="min-height:46px;font-size:16px;padding:6px 8px"></button></div></div>
     <div class="keyhint" data-k="start"></div>
   </section>
   <section class="screen" id="game">
     <div class="top">
       <button class="iconbtn" id="pauseBtn" aria-label="pause">⏸️</button>
-      <div class="info"><div class="rnum" id="rNum"></div><div class="rname" id="rName"></div><div class="bar" id="bar"><span></span><span></span><span></span><span></span></div></div>
+      <div class="info"><div class="rnum" id="rNum"></div><div class="rname" id="rName"></div><div class="bar" id="bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
       <div class="starspill" id="stars">☆☆☆</div>
     </div>
     <div class="stage" id="stage"><div class="box" id="box"><img id="scene" alt=""></div></div>
@@ -159,6 +167,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <div class="winbig">🎉🐯🎉</div>
     <h2 id="wT"></h2>
     <p id="wP" style="font-size:17px"></p>
+    <div class="wstars" id="wStars"></div>
     <button class="big" id="wBtn"></button>
     <button class="link" id="wHome"></button>
     <div class="keyhint" data-k="won"></div>
@@ -202,8 +211,8 @@ const $ = id=>document.getElementById(id);
 const T = {
 he:{dir:'rtl',name:'עברית',sub:'אנאבל וטיגרו',title:'הבריחה מבית העץ',
  intro:'היי אנאבל! אני טיגרו, גור טיגריס 🐯 ננעלנו בבית העץ! תעזרי לנו לברוח? מצאי 3 כוכבים, פתחי את התיבה וקחי את מפתח הזהב 🔑',
- go:'יוצאים לדרך! 🐾',cont:n=>`המשיכי לחדר ${n} 🐾`,again:'מההתחלה 🔁',paws:n=>`🐾 ברחת מ-${n} מתוך 4 חדרים`,
- room:(i)=>`חדר ${i} מתוך 4`,
+ go:'יוצאים לדרך! 🐾',cont:n=>`המשיכי לחדר ${n} 🐾`,again:'מההתחלה 🔁',paws:n=>`🐾 ברחת מ-${n} מתוך 8 חדרים`,
+ room:(i)=>`חדר ${i} מתוך 8`,
  rooms:['מחבוא בבית העץ','כיתת גן הפרפרים','תצפית ההרים של החוקרת','הצוללת בשונית האלמוגים'],
  sayStart:'אוי אנאבל! ננעלנו! הקישי על דברים בחדר ומצאי 3 כוכבים ⭐',
  welcome:n=>`ברוכה הבאה ל${n}, אנאבל! מצאי 3 כוכבים חדשים ⭐`,
@@ -211,7 +220,7 @@ he:{dir:'rtl',name:'עברית',sub:'אנאבל וטיגרו',title:'הבריח�
  chestNeed:n=>`התיבה צריכה 3 כוכבים. יש לך ${n}! 🔒`,chestKey:'וואו! מפתח זהב נוצץ! 🔑 עכשיו נסי את הדלת!',chestEmpty:'התיבה ריקה עכשיו. לכי לדלת! 🚪',
  doorLocked:['הדלת נעולה! טיגרו ניסה ללקק אותה. זה לא עבד 😝','הדלת נעולה! טיגרו נתן לה נשיקה. עדיין נעולה 😘','הדלת נעולה! טיגרו דפק עליה בזנב: בום! אבל היא לא נפתחה 🐯'],already:['את הכוכב הזה כבר קיבלת, חמודה! 😄','הכוכב הזה כבר בכיס שלך! טיגרו מחייך 😸'],
  wrong:'אופס! נסי שוב, אנאבל! 🙈',wrongs:["אופס! נסי שוב, אנאבל! 🙈", "טיגרו התעטש על התשובה הלא נכונה! אאאפצ'י! 🤧", "הקוף החליק על בננה! נסי תשובה אחרת 🍌", "כמעט כמעט! אפילו התוכי מתבלבל לפעמים 🦜", "טיגרו עושה פרצוף מצחיק 😜 ננסה שוב?"],hintBtn:'🐯 בקשי רמז מטיגרו',close:'סגירה',
- roomWon:i=>`ברחת מחדר ${i}!`,allWon:'ברחת מכל החדרים, אנאבל!',wonP:n=>`${n} מתוך 4 חדרים! טיגרו נותן לך חיבוק פרוותי ענק 🤗`,
+ roomWon:i=>`ברחת מחדר ${i}!`,allWon:'ברחת מכל החדרים, אנאבל!',wonP:n=>`${n} מתוך 8 חדרים! טיגרו נותן לך חיבוק פרוותי ענק 🤗`,
  next:'לחדר הבא 🐾',playAgain:'לשחק שוב 🔁',home:'למסך הפתיחה',
  final:'הצלחת, אנאבל! את החוקרת הכי אמיצה וחכמה בכל הג׳ונגל!',
  paused:'הפסקה ⏸️',resume:'המשיכי לשחק ▶️',restart:'החדר מההתחלה 🔄',soundOn:'צלילים: פועלים 🔊',soundOff:'צלילים: כבויים 🔇',grown:'להורים: עריכת שאלות ✏️',
@@ -221,8 +230,8 @@ he:{dir:'rtl',name:'עברית',sub:'אנאבל וטיגרו',title:'הבריח�
  edSave:'שמירה',edSaved:'נשמר! ✅',edReset:'חזרה לשאלה המקורית',edNote:'נשמר במכשיר הזה בלבד. שאלה שלכם תופיע בכל השפות (בלי רמז מותאם).'},
 fr:{dir:'ltr',name:'Français',sub:'Annabelle et Tigero',title:"L'évasion de la cabane",
  intro:"Coucou Annabelle ! Je suis Tigero, un bébé tigre 🐯 On est enfermés dans la cabane ! Tu nous aides à nous échapper ? Trouve 3 étoiles, ouvre le coffre et prends la clé d'or 🔑",
- go:"C'est parti ! 🐾",cont:n=>`Continuer : salle ${n} 🐾`,again:'Recommencer 🔁',paws:n=>`🐾 ${n} salles sur 4 réussies`,
- room:i=>`Salle ${i} sur 4`,
+ go:"C'est parti ! 🐾",cont:n=>`Continuer : salle ${n} 🐾`,again:'Recommencer 🔁',paws:n=>`🐾 ${n} salles sur 8 réussies`,
+ room:i=>`Salle ${i} sur 8`,
  rooms:['La cabane cachette','La classe du jardin aux papillons',"Le belvédère de l'exploratrice",'Le sous-marin du récif de corail'],
  sayStart:'Oh non, Annabelle ! On est enfermés ! Touche les objets de la pièce et trouve 3 étoiles ⭐',
  welcome:n=>`Bienvenue dans « ${n} », Annabelle ! Trouve 3 nouvelles étoiles ⭐`,
@@ -230,7 +239,7 @@ fr:{dir:'ltr',name:'Français',sub:'Annabelle et Tigero',title:"L'évasion de la
  chestNeed:n=>`Le coffre a besoin de 3 étoiles. Tu en as ${n} ! 🔒`,chestKey:"Waouh ! Une clé d'or toute brillante ! 🔑 Essaie la porte !",chestEmpty:'Le coffre est vide maintenant. Va vers la porte ! 🚪',
  doorLocked:["La porte est fermée ! Tigero a essayé de la lécher. Ça n'a pas marché 😝",'La porte est fermée ! Tigero lui a fait un bisou. Toujours fermée 😘','La porte est fermée ! Tigero a tapé avec sa queue : boum ! Elle ne s’ouvre pas 🐯'],already:['Tu as déjà gagné cette étoile, petite maligne ! 😄','Cette étoile est déjà dans ta poche ! Tigero sourit 😸'],
  wrong:'Oups ! Essaie encore, Annabelle ! 🙈',wrongs:["Oups ! Essaie encore, Annabelle ! 🙈", "Tigero a éternué sur la mauvaise réponse ! Atchoum ! 🤧", "Le singe a glissé sur une banane ! Essaie une autre réponse 🍌", "Presque ! Même le perroquet se trompe parfois 🦜", "Tigero fait une grimace rigolote 😜 On réessaie ?"],hintBtn:'🐯 Demande un indice à Tigero',close:'Fermer',
- roomWon:i=>`Salle ${i} réussie !`,allWon:'Tu as réussi toutes les salles, Annabelle !',wonP:n=>`${n} salles sur 4 ! Tigero te fait un gros câlin tout doux 🤗`,
+ roomWon:i=>`Salle ${i} réussie !`,allWon:'Tu as réussi toutes les salles, Annabelle !',wonP:n=>`${n} salles sur 8 ! Tigero te fait un gros câlin tout doux 🤗`,
  next:'Salle suivante 🐾',playAgain:'Rejouer 🔁',home:"Retour à l'accueil",
  final:"Tu as réussi, Annabelle ! Tu es l'exploratrice la plus courageuse et la plus maligne de toute la jungle !",
  paused:'Pause ⏸️',resume:'Continuer ▶️',restart:'Recommencer la salle 🔄',soundOn:'Son : activé 🔊',soundOff:'Son : coupé 🔇',grown:'Pour les grands : modifier les questions ✏️',
@@ -240,8 +249,8 @@ fr:{dir:'ltr',name:'Français',sub:'Annabelle et Tigero',title:"L'évasion de la
  edSave:'Enregistrer',edSaved:'Enregistré ! ✅',edReset:"Revenir à la question d'origine",edNote:'Enregistré sur cet appareil seulement. Votre question s’affiche dans toutes les langues (sans indice personnalisé).'},
 en:{dir:'ltr',name:'English',sub:"Annabelle & Tigero's",title:'Treehouse Escape',
  intro:"Hi Annabelle! I'm Tigero, a tiger cub 🐯 We got locked in the treehouse! Can you help us escape? Find 3 stars, open the chest and grab the golden key 🔑",
- go:"Let's go! 🐾",cont:n=>`Continue: room ${n} 🐾`,again:'Start over 🔁',paws:n=>`🐾 ${n} of 4 rooms escaped`,
- room:i=>`Room ${i} of 4`,
+ go:"Let's go! 🐾",cont:n=>`Continue: room ${n} 🐾`,again:'Start over 🔁',paws:n=>`🐾 ${n} of 8 rooms escaped`,
+ room:i=>`Room ${i} of 8`,
  rooms:['Treehouse hideout','Butterfly garden classroom',"Explorer's mountain lookout",'Coral reef submarine'],
  sayStart:"Uh-oh, Annabelle! We're locked in! Tap things in the room to find 3 stars ⭐",
  welcome:n=>`Welcome to the ${n.charAt(0).toLowerCase()+n.slice(1)}, Annabelle! Find 3 new stars ⭐`,
@@ -249,7 +258,7 @@ en:{dir:'ltr',name:'English',sub:"Annabelle & Tigero's",title:'Treehouse Escape'
  chestNeed:n=>`The chest needs 3 stars. You have ${n}! 🔒`,chestKey:'WOW! A shiny golden key! 🔑 Now try the door!',chestEmpty:'The chest is empty now. Go to the door! 🚪',
  doorLocked:["The door is locked! Tigero tried licking it. Didn't work 😝",'The door is locked! Tigero gave it a kiss. Still locked 😘','The door is locked! Tigero bonked it with his tail: boing! It did not open 🐯'],already:['You already got this star, silly! 😄','That star is already in your pocket! Tigero grins 😸'],
  wrong:'Oopsie! Try again, Annabelle! 🙈',wrongs:["Oopsie! Try again, Annabelle! 🙈", "Tigero sneezed on the wrong answer! Achoo! 🤧", "The monkey slipped on a banana! Try another answer 🍌", "Almost! Even the parrot gets mixed up sometimes 🦜", "Tigero pulls a silly face 😜 Shall we try again?"],hintBtn:'🐯 Ask Tigero for a hint',close:'Close',
- roomWon:i=>`Room ${i} escaped!`,allWon:'You beat every room, Annabelle!',wonP:n=>`${n} of 4 rooms beaten! Tigero gives you a big fuzzy hug 🤗`,
+ roomWon:i=>`Room ${i} escaped!`,allWon:'You beat every room, Annabelle!',wonP:n=>`${n} of 8 rooms beaten! Tigero gives you a big fuzzy hug 🤗`,
  next:'Next room 🐾',playAgain:'Play again 🔁',home:'Back to start',
  final:'You did it, Annabelle! You are the bravest, smartest explorer in the whole jungle!',
  paused:'Paused ⏸️',resume:'Keep playing ▶️',restart:'Restart room 🔄',soundOn:'Sound: on 🔊',soundOff:'Sound: off 🔇',grown:'For grown-ups: edit questions ✏️',
@@ -304,6 +313,52 @@ const PUZ=[
   en:["🦪 Annabelle finds 12 pearls and shares them equally between 3 chests. How many pearls are in each chest?",["3", "4", "6"],1,"Perfect pearl sharing! Your last sea star, Annabelle! ⭐","Share the 12 pearls into 3 equal piles, one at a time. 🦪"]}}
 ];
 
+
+// ---------- round 2: 4 harder rooms (same pictures in evening colours, new riddles) ----------
+const TOT=8, DAILY_FLAG='annabelle-escape-daily';
+Object.assign(T.he,{rooms2:['בית העץ בערב','גן הפרפרים בשקיעה','פסגת ההרים בזריחה','שונית האלמוגים בלילה'],daily:'📅 החדר היומי',musOn:'🎵 מוזיקה',musOff:'🎵 כבויה',round2:'🌙 סיבוב 2: חידות קצת יותר קשות!',stars3:'בלי טעויות = 3 כוכבים!'});
+Object.assign(T.fr,{rooms2:['La cabane le soir','Le jardin au coucher du soleil','Le sommet au lever du jour','Le récif la nuit'],daily:'📅 Salle du jour',musOn:'🎵 Musique',musOff:'🎵 Coupée',round2:'🌙 Tour 2 : des énigmes un peu plus dures !',stars3:'Sans erreur = 3 étoiles !'});
+Object.assign(T.en,{rooms2:['Treehouse at Dusk','Butterfly Garden at Sunset','Mountain Top at Sunrise','Coral Reef by Night'],daily:'📅 Daily room',musOn:'🎵 Music',musOff:'🎵 Off',round2:'🌙 Round 2: slightly trickier riddles!',stars3:'No mistakes = 3 stars!'});
+const mk=(h,f,e)=>({he:h,fr:f,en:e});
+const PUZ2=[
+{ parrot:mk(['🐒 הקוף אסף 4 ערמות, ובכל ערמה 7 בננות. כמה בננות יש לו?',['24','28','32'],1,'כפל של אלופה! ⭐','7 ועוד 7 ועוד 7 ועוד 7. 🍌'],
+   ['🐒 Le singe fait 4 tas de 7 bananes. Combien de bananes ?',['24','28','32'],1,'Une multiplication de championne ! ⭐','7 plus 7 plus 7 plus 7. 🍌'],
+   ['🐒 The monkey makes 4 piles of 7 bananas. How many bananas?',['24','28','32'],1,'Multiplication champion! ⭐','7 + 7 + 7 + 7. 🍌']),
+  giraffe:mk(['🦒 מה ההפך של „גבוה”?',['נמוך','רחב','מהיר'],0,'מילים מנצחות! ⭐','ג׳ירפה גבוהה… ונמלה? 🐜'],
+   ['🦒 Quel est le contraire de « grand » ?',['petit','long','vite'],0,'Des mots gagnants ! ⭐','Une girafe est grande… et une fourmi ? 🐜'],
+   ['🦒 What is the opposite of “tall”?',['short','wide','fast'],0,'Winning words! ⭐','A giraffe is tall… and an ant? 🐜']),
+  pencils:mk(['✏️ מה המספר הבא: 2, 5, 8, 11, …?',['13','14','15'],1,'חוקרת חוקיות! ⭐','בכל צעד מוסיפים אותו מספר. כמה? 🔍'],
+   ['✏️ Quel nombre vient ensuite : 2, 5, 8, 11, … ?',['13','14','15'],1,'Reine des suites ! ⭐','À chaque pas, on ajoute le même nombre. Lequel ? 🔍'],
+   ['✏️ What comes next: 2, 5, 8, 11, …?',['13','14','15'],1,'Pattern detective! ⭐','Each step adds the same number. Which one? 🔍'])},
+{ parrot:mk(['🦋 לכל פרפר 6 רגליים. כמה רגליים יש ל-5 פרפרים?',['25','30','35'],1,'חשבון פרפרים מושלם! ⭐','5 פעמים 6. אפשר לספור בקפיצות של 6. 🦋'],
+   ['🦋 Un papillon a 6 pattes. Combien de pattes pour 5 papillons ?',['25','30','35'],1,'Un calcul de papillons parfait ! ⭐','5 fois 6. Compte de 6 en 6. 🦋'],
+   ['🦋 A butterfly has 6 legs. How many legs do 5 butterflies have?',['25','30','35'],1,'Perfect butterfly maths! ⭐','5 times 6. Count in sixes. 🦋']),
+  giraffe:mk(['🦒 איזו מילה מתחילה באותה אות כמו „פרפר”?',['פרח','גשם','דג'],0,'עין חדה לאותיות! ⭐','פ-רפר… איזו עוד מילה מתחילה ב-פ? 🌸'],
+   ['🦒 Quel mot commence comme « papillon » ?',['pomme','fleur','arbre'],0,'Un œil de lynx pour les lettres ! ⭐','Pa-pillon… quel autre mot commence par « p » ? 🍎'],
+   ['🦒 Which word starts with the same letter as “butterfly”?',['bee','sun','tree'],0,'Sharp eyes for letters! ⭐','B-utterfly… which other word starts with B? 🐝']),
+  pencils:mk(['✏️ מה המספר הבא: 1, 4, 9, 16, …?',['20','25','36'],1,'וואו, מספרים מרובעים! ⭐','1×1, 2×2, 3×3, 4×4… ומה הלאה? 🔍'],
+   ['✏️ Quel nombre vient ensuite : 1, 4, 9, 16, … ?',['20','25','36'],1,'Waouh, des carrés ! ⭐','1×1, 2×2, 3×3, 4×4… et après ? 🔍'],
+   ['✏️ What comes next: 1, 4, 9, 16, …?',['20','25','36'],1,'Wow, square numbers! ⭐','1×1, 2×2, 3×3, 4×4… and then? 🔍'])},
+{ parrot:mk(['⛰️ הטיול התחיל ב-8:30 ונמשך שעה וחצי. מתי הוא נגמר?',['9:30','10:00','10:30'],1,'שעון מושלם! ⭐','8:30 ועוד שעה זה 9:30. ועוד חצי שעה? ⏰'],
+   ['⛰️ La balade commence à 8h30 et dure une heure et demie. Elle finit à quelle heure ?',['9h30','10h00','10h30'],1,'Une horloge parfaite ! ⭐','8h30 plus une heure : 9h30. Et une demi-heure de plus ? ⏰'],
+   ['⛰️ The hike starts at 8:30 and lasts an hour and a half. When does it end?',['9:30','10:00','10:30'],1,'Perfect clock skills! ⭐','8:30 plus one hour is 9:30. Then half an hour more? ⏰']),
+  giraffe:mk(['🦒 איזה משפט הוא שאלה?',['מה השעה?','השעה שלוש.','תראי את הפסגה!'],0,'זיהית שאלה! ⭐','שאלה נגמרת בסימן שאלה. 🤔'],
+   ['🦒 Quelle phrase est une question ?',['Quelle heure est-il ?','Il est trois heures.','Regarde le sommet !'],0,'Tu as repéré la question ! ⭐','Une question finit par « ? ». 🤔'],
+   ['🦒 Which sentence is a question?',['What time is it?','It is three o’clock.','Look at the top!'],0,'You spotted the question! ⭐','A question ends with “?”. 🤔']),
+  pencils:mk(['🎒 התיק של טיגרו שוקל 12 ק״ג. החוקרת סוחבת חצי ממנו. כמה ק״ג?',['4','6','8'],1,'חצי זה חילוק ב-2! ⭐','חצי = לחלק ל-2 חלקים שווים. 🎒'],
+   ['🎒 Le sac de Tigero pèse 12 kg. L’exploratrice en porte la moitié. Combien de kg ?',['4','6','8'],1,'La moitié, c’est diviser par 2 ! ⭐','La moitié = 2 parts égales. 🎒'],
+   ['🎒 Tigero’s bag weighs 12 kg. The explorer carries half of it. How many kg?',['4','6','8'],1,'Half means divide by 2! ⭐','Half = 2 equal parts. 🎒'])},
+{ parrot:mk(['🐠 בשונית יש 24 דגים. שליש מהם שחו משם. כמה דגים נשארו?',['8','16','18'],1,'שליש וחילוק – את אלופה! ⭐','שליש של 24 זה 24 לחלק ל-3. ואז להחסיר. 🐠'],
+   ['🐠 Dans le récif il y a 24 poissons. Un tiers s’en va. Combien en restent-ils ?',['8','16','18'],1,'Un tiers, bravo ! ⭐','Un tiers de 24 = 24 divisé par 3. Puis on enlève. 🐠'],
+   ['🐠 The reef has 24 fish. A third of them swim away. How many are left?',['8','16','18'],1,'Thirds, well done! ⭐','A third of 24 is 24 divided by 3. Then subtract. 🐠']),
+  giraffe:mk(['🦒 מי לא שייך לאוקיינוס?',['כריש','פרח','דולפין'],1,'עין חדה! ⭐','איזה אחד לא יכול לשחות? 🌸'],
+   ['🦒 Qui n’appartient pas à l’océan ?',['requin','fleur','dauphin'],1,'Bien vu ! ⭐','Lequel ne sait pas nager ? 🌸'],
+   ['🦒 Which one does not belong in the ocean?',['shark','flower','dolphin'],1,'Sharp eyes! ⭐','Which one cannot swim? 🌸']),
+  pencils:mk(['🔑 המפתח האחרון! כמה זה 7 × 8?',['54','56','64'],1,'את אלופת הכפל! ⭐','7×8 = 7×4 כפול 2. 28 כפול 2? 🗝️'],
+   ['🔑 La dernière clé ! Combien font 7 × 8 ?',['54','56','64'],1,'Championne de la multiplication ! ⭐','7×8 = 7×4 fois 2. 28 fois 2 ? 🗝️'],
+   ['🔑 The last key! What is 7 × 8?',['54','56','64'],1,'Multiplication champion! ⭐','7×8 = 7×4 doubled. 28 doubled? 🗝️'])}
+].map(r=>{ const o={}; for(const k of Object.keys(r)){ const [he,fr,en]=[r[k].he,r[k].fr,r[k].en]; o[k]={he,fr,en}; } return o; });
+
 // Hotspots (percent of the 768x1344 picture). Coral picture is pre-mirrored, matching the original's mirrored layout.
 const HS={
  treehouse:{parrot:[78,2,22,14],monkey:[6,8,28,14],giraffe:[33,39,17,11.5],chest:[33,50.5,17,9],pencils:[78,78,22,16],door:[2,23,30,38]},
@@ -320,13 +375,13 @@ function validP(p){if(!p||typeof p.q!=='string'||!Array.isArray(p.options))retur
 function getPuzzle(r,slot){
   const c=loadCustom(); const cp=c[r]&&c[r][slot];
   if(validP(cp)){const o=cp.options.map(s=>String(s).trim()).filter(Boolean);return {q:cp.q.trim(),opts:o,ans:o.indexOf(cp.answer.trim()),win:T[lang].customWin,hint:T[lang].customHint,custom:true};}
-  const p=PUZ[r][slot][lang];return {q:p[0],opts:p[1],ans:p[2],win:p[3],hint:p[4],custom:false};
+  const p=(r<4?PUZ[r]:PUZ2[r-4])[slot][lang];return {q:p[0],opts:p[1],ans:p[2],win:p[3],hint:p[4],custom:false};
 }
 
 // ---------- sound ----------
 let ctx=null;
 function sfx(kind){ if(muted) return; try{ ctx=ctx||new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended')ctx.resume();
-  const notes={tap:[[660,.08]],wrong:[[300,.15],[220,.25]],boing:[[420,.07],[760,.07],[330,.18]],win:[[523,.12],[659,.12],[784,.12],[1046,.3]],roar:[[120,.5]],key:[[880,.08],[1175,.08],[1568,.2]]}[kind]||[];
+  const notes={tap:[[660,.08]],wrong:[[300,.15],[220,.25]],boing:[[420,.07],[760,.07],[330,.18]],win:[[523,.12],[659,.12],[784,.12],[1046,.3]],roar:[[120,.5]],key:[[880,.08],[1175,.08],[1568,.2]],star:[[784,.07],[1047,.07],[1319,.07],[1568,.22]]}[kind]||[];
   let t=ctx.currentTime; for(const [f,d] of notes){const o=ctx.createOscillator(),g=ctx.createGain();o.type=kind==='roar'?'sawtooth':'triangle';o.frequency.setValueAtTime(f,t);if(kind==='roar')o.frequency.exponentialRampToValueAtTime(60,t+d);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+d);t+=d;}
  }catch(e){} }
 const VLANG={he:'he',fr:'fr',en:'en'};
@@ -336,7 +391,12 @@ function speak(text){ try{ if(muted||!('speechSynthesis' in window))return; cons
 function stopSpeak(){try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}}
 
 // ---------- state ----------
-let prog=(()=>{try{const p=JSON.parse(localStorage.getItem(PKEY)||'{}');return {completed:Math.min(4,Math.max(0,p.completed|0))};}catch(e){return {completed:0};}})();
+let prog=(()=>{try{const p=JSON.parse(localStorage.getItem(PKEY)||'{}');return {completed:Math.min(TOT,Math.max(0,p.completed|0)),rs:(p.rs&&typeof p.rs==='object')?p.rs:{}};}catch(e){return {completed:0,rs:{}};}})();
+const RW=()=>window.AnnabelleRewards;
+const rname=(r,t)=>r<4?t.rooms[r]:t.rooms2[r-4];
+const sceneOf=r=>SCENES[r%4];
+function dkey(){return typeof window.__annabelleToday==='string'?window.__annabelleToday:(d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate())(new Date());}
+function dseed(){let h=2166136261;for(const ch of dkey()){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function saveProg(){try{localStorage.setItem(PKEY,JSON.stringify(prog));}catch(e){}}
 const S={room:0,stars:[],key:false,puzzle:null,sayKey:'sayStart',sayArg:null,wrong:false,hint:false,wonOpen:false};
 
@@ -345,7 +405,7 @@ function sayText(){const t=T[lang];const v=t[S.sayKey];if(typeof v==='function')
 function say(key,arg){S.sayKey=key;S.sayArg=arg;S.sayIdx=(S.sayIdx|0)+1;const b=$('bubble');b.textContent=sayText();b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');speak(b.textContent);}
 
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));['puz','won','pause','ed'].forEach(o=>$(o).classList.remove('on'));$('conf').innerHTML='';
-  document.body.classList.toggle('sea',id==='game'&&SCENES[S.room]==='coral'); if(id==='game')layout();}
+  document.body.classList.toggle('sea',id==='game'&&sceneOf(S.room)==='coral'); if(id==='game')layout();}
 
 // ---------- i18n ----------
 function langButtons(el){const fk=el.contains(document.activeElement)&&document.activeElement.dataset?document.activeElement.dataset.lang:null;el.innerHTML='';for(const k of ['he','fr','en']){const b=document.createElement('button');b.textContent=T[k].name;b.dataset.lang=k;b.className=k===lang?'sel':'';b.onclick=()=>{setLang(k);sfx('tap');};el.appendChild(b);if(fk===k)b.focus();}}
@@ -354,9 +414,9 @@ function applyLang(){const t=T[lang];document.documentElement.lang=lang;document
   langButtons($('langS'));langButtons($('langP'));
   $('sSub').textContent=t.sub;$('sTitle').textContent=t.title;$('sIntro').textContent=t.intro;
   const c=prog.completed; $('sPaws').textContent=c?t.paws(c):'';$('sPaws').style.display=c?'':'none';
-  if(c>0&&c<4){$('goBtn').textContent=t.cont(c+1);$('againBtn').style.display='';$('againBtn').textContent=t.again;}
-  else{$('goBtn').textContent=c>=4?t.playAgain:t.go;$('againBtn').style.display='none';}
-  $('hintBtn').textContent=t.hintBtn;$('pClose').textContent=t.close;
+  if(c>0&&c<TOT){$('goBtn').textContent=t.cont(c+1);$('againBtn').style.display='';$('againBtn').textContent=t.again;}
+  else{$('goBtn').textContent=c>=TOT?t.playAgain:t.go;$('againBtn').style.display='none';}
+  $('dailyBtn').textContent=t.daily;updMus();$('hintBtn').textContent=t.hintBtn;$('pClose').textContent=t.close;
   $('paT').textContent=t.paused;$('paResume').textContent=t.resume;$('paRestart').textContent=t.restart;$('paHome').textContent=t.home;$('paGrown').textContent=t.grown;
   $('wHome').textContent=t.home;
   updateSound();renderHUD();$('bubble').textContent=sayText();kHints();
@@ -366,21 +426,22 @@ function updateSound(){const t=T[lang];$('muteS').textContent=muted?'🔇':'🔊
 function toggleMute(){muted=!muted;localStorage.setItem(MKEY,muted?'1':'0');if(muted)stopSpeak();updateSound();sfx('tap');}
 
 // ---------- game ----------
-function renderHUD(){const t=T[lang];$('rNum').textContent=t.room(S.room+1);$('rName').textContent=t.rooms[S.room];
+function renderHUD(){const t=T[lang];$('rNum').textContent=t.room(S.room+1);$('rName').textContent=rname(S.room,t)+(S.daily?' 📅':'');
   [...$('bar').children].forEach((s,i)=>s.classList.toggle('d',i<prog.completed));
   $('stars').textContent=[0,1,2].map(i=>i<S.stars.length?'⭐':'☆').join('')+(S.key?' 🔑':'');}
-function buildRoom(){const sc=SCENES[S.room];$('scene').src=IMG[sc];$('scene').alt=T[lang].rooms[S.room];
+function buildRoom(){const sc=sceneOf(S.room);$('scene').src=IMG[sc];$('scene').alt=rname(S.room,T[lang]);$('scene').style.filter=S.room>=4?['hue-rotate(35deg) saturate(1.15) brightness(.92)','hue-rotate(-40deg) saturate(1.2)','hue-rotate(150deg) saturate(1.1) brightness(1.03)','hue-rotate(-30deg) brightness(.82) saturate(1.3)'][S.room%4]:'';
   const box=$('box');box.querySelectorAll('.hot').forEach(h=>h.remove());
   for(const [id,[l,tp,w,h]] of Object.entries(HS[sc])){const b=document.createElement('button');b.className='hot';b.dataset.spot=id;b.setAttribute('aria-label',LABEL[id]);b.dataset.key=Object.keys(HS[sc]).indexOf(id)+1;b.title=LABEL[id]+' ['+b.dataset.key+']';
     b.style.left=l+'%';b.style.top=tp+'%';b.style.width=w+'%';b.style.height=h+'%';b.onclick=()=>tap(id);box.appendChild(b);}
   renderHUD();}
 function layout(){const st=$('stage'),box=$('box');if(!st.clientHeight)return;const W=st.clientWidth-12,H=st.clientHeight-4,ar=768/1344;let w=W,h=w/ar;if(h>H){h=H;w=h*ar;}box.style.width=Math.floor(w)+'px';box.style.height=Math.floor(h)+'px';}
-function startRoom(r,first){S.room=r;S.stars=[];S.key=false;S.puzzle=null;S.wonOpen=false;buildRoom();show('game');
-  if(first&&r===0)say('sayStart');else say('welcome',T[lang].rooms[r]);}
+function startRoom(r,first,daily){S.room=r;S.daily=!!daily;S.stars=[];S.key=false;S.puzzle=null;S.wonOpen=false;S.wc=0;S.streak=0;S.maxStreak=0;buildRoom();show('game');
+  if(first&&r===0)say('sayStart');else say('welcome',rname(r,T[lang]));
+  rbanner(daily?T[lang].daily:r===4?T[lang].round2:(r+1)+'. '+rname(r,T[lang]));RW()&&RW().award({game:'escape',event:'play'});musKick();}
 function tap(id){sfx(id==='door'&&S.key?'roar':'tap');
   if(id==='monkey')return say('monkey');
   if(id==='chest'){if(S.key)return say('chestEmpty');if(S.stars.length<3)return say('chestNeed',S.stars.length);S.key=true;sfx('key');renderHUD();return say('chestKey');}
-  if(id==='door'){if(!S.key)return say('doorLocked');prog.completed=Math.max(prog.completed,S.room+1);saveProg();return openWon();}
+  if(id==='door'){if(!S.key)return say('doorLocked');if(!S.daily){prog.completed=Math.max(prog.completed,S.room+1);}rate();saveProg();return openWon();}
   if(S.stars.includes(id))return say('already');
   S.puzzle=id;S.wrong=false;S.hint=false;S.no=[];renderPuzzle();$('puz').classList.add('on');speak(getPuzzle(S.room,id).q);clearTimeout(S.ht);S.ht=setTimeout(()=>{if(S.puzzle===id&&!S.hint){S.hint=true;renderPuzzle();speak(getPuzzle(S.room,id).hint);}},20000);}
 function renderPuzzle(){const hadF=$('pOpts').contains(document.activeElement);const p=getPuzzle(S.room,S.puzzle),t=T[lang];$('pCustom').textContent=p.custom?t.customTag:'';$('pCustom').style.display=p.custom?'':'none';
@@ -389,14 +450,27 @@ function renderPuzzle(){const hadF=$('pOpts').contains(document.activeElement);c
   $('pMsg').textContent=S.wrong?(t.wrongs?t.wrongs[(S.wm|0)%t.wrongs.length]:t.wrong):'';$('pMsg').style.display=S.wrong?'':'none';
   $('pHint').textContent=p.hint;$('pHint').style.display=S.hint?'':'none';$('hintBtn').style.display=S.hint?'none':'';if(hadF){const f=o.querySelector('.big:not(.no)')||o.querySelector('.big');if(f)f.focus();}}
 function answer(i){const p=getPuzzle(S.room,S.puzzle);
-  if(i===p.ans){sfx('win');S.stars.push(S.puzzle);const slot=S.puzzle;S.puzzle=null;$('puz').classList.remove('on');renderHUD();markGot();
+  if(i===p.ans){sfx('star');S.streak++;if(S.streak>S.maxStreak)S.maxStreak=S.streak;pburst(innerWidth/2,innerHeight/2,12,['⭐','✨','💛']);S.stars.push(S.puzzle);const slot=S.puzzle;S.puzzle=null;$('puz').classList.remove('on');renderHUD();markGot();
     if(p.custom){S.sayKey='customWin';S.sayArg=null;say('customWin');}else say('win',slot);}
-  else{S.wm=(S.wm|0)+1;sfx(S.wm%2?'boing':'wrong');S.wrong=true;S.hint=true;if(!S.no.includes(i))S.no.push(i);renderPuzzle();const m=$('pMsg');m.classList.remove('wob');void m.offsetWidth;m.classList.add('wob');speak($('pMsg').textContent+' '+p.hint);}}
+  else{S.wc++;S.streak=0;S.wm=(S.wm|0)+1;sfx(S.wm%2?'boing':'wrong');S.wrong=true;S.hint=true;if(!S.no.includes(i))S.no.push(i);renderPuzzle();const m=$('pMsg');m.classList.remove('wob');void m.offsetWidth;m.classList.add('wob');speak($('pMsg').textContent+' '+p.hint);}}
 function markGot(){$('box').querySelectorAll('.hot').forEach(h=>h.classList.toggle('got',S.stars.includes(h.dataset.spot)));}
-function openWon(){S.wonOpen=true;renderWon();$('won').classList.add('on');sfx('win');confetti();renderHUD();
-  if(prog.completed>=4&&S.room===3)speak(T[lang].final);}
-function renderWon(){const t=T[lang],all=S.room===3;$('wT').textContent=all?t.allWon:t.roomWon(S.room+1);$('wP').textContent=all?t.final:t.wonP(prog.completed);
-  $('wBtn').textContent=all?t.playAgain:t.next;}
+function rate(){const r=S.room,st=S.wc<=1?3:S.wc<=3?2:1;S.rate=st;const prev=prog.rs[r]||0;if(!S.daily&&st>prev)prog.rs[r]=st;
+  const R=RW();if(R){const sc=Math.max(50,300-S.wc*20)+st*100;R.award({game:'escape',event:'levelClear',level:S.daily?9:r+1,score:sc});if(!S.daily&&st>prev)R.award({game:'escape',event:'star',stars:st-prev});else if(S.daily)R.award({game:'escape',event:'star',stars:st});R.award({game:'escape',event:'combo',score:S.maxStreak});R.award({game:'escape',event:'score',score:sc});R.award({game:'escape',event:'win'});
+    if(S.daily){let dn=null;try{dn=localStorage.getItem(DAILY_FLAG);}catch(e){}if(dn!==dkey()){try{localStorage.setItem(DAILY_FLAG,dkey());}catch(e){}R.award({game:'escape',event:'win',coins:10});}}}}
+function pburst(x,y,n,em){for(let k=0;k<n;k++){const d=document.createElement('div');d.className='pb';d.textContent=em[k%em.length];d.style.left=x+'px';d.style.top=y+'px';document.body.appendChild(d);const a=Math.random()*6.283,r=50+Math.random()*80;const an=d.animate([{transform:'translate(-50%,-50%) scale(.3)',opacity:1},{transform:`translate(calc(-50% + ${Math.cos(a)*r}px),calc(-50% + ${Math.sin(a)*r-30}px)) scale(1.3)`,opacity:0}],{duration:700+Math.random()*400,easing:'ease-out'});an.onfinish=()=>d.remove();}}
+function rbanner(txt){const d=document.createElement('div');d.className='rbanner';d.textContent=txt;document.body.appendChild(d);setTimeout(()=>d.remove(),2200);}
+let musOn=localStorage.getItem('annabelle-escape-music')==='1',musT=null,musI=0;
+const PEN=[262,294,330,392,440,523,587,659],MEL=[0,2,4,2,5,4,2,1,0,2,4,7,5,4,2,0];
+function mtone(f,d,type,v){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();const o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime;o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+d);}catch(e){}}
+function musTick(){clearTimeout(musT);musT=null;if(!musOn)return;if(!muted&&!document.hidden&&$('game').classList.contains('on')&&!S.wonOpen&&!$('pause').classList.contains('on')){const n=MEL[musI%16];mtone(PEN[n],.5,'sine',.04);if(musI%4===0)mtone(PEN[n]/2,.9,'triangle',.035);}musI++;musT=setTimeout(musTick,470);}
+function musKick(){if(musOn&&!musT)musTick();}
+function updMus(){const b=$('musBtn');if(!b)return;b.textContent=musOn?T[lang].musOn:T[lang].musOff;}
+function openWon(){S.wonOpen=true;renderWon();$('won').classList.add('on');sfx('win');confetti();renderHUD();{const R=RW();R&&setTimeout(()=>R.flush(),1500);}
+  [0,1,2].forEach(k=>{if(k<(S.rate||1))setTimeout(()=>sfx('star'),400+k*250);});
+  if(prog.completed>=TOT&&S.room===TOT-1)speak(T[lang].final);}
+function renderWon(){const t=T[lang],all=S.room===TOT-1&&!S.daily;$('wT').textContent=all?t.allWon:t.roomWon(S.room+1);$('wP').textContent=all?t.final:t.wonP(prog.completed);
+  $('wBtn').textContent=(all||S.daily)?(S.daily?t.home:t.playAgain):t.next;
+  const st=S.rate||1;$('wStars').innerHTML=[1,2,3].map(k=>`<span class="${k<=st?'on':''}">⭐</span>`).join('');}
 function confetti(){const c=$('conf');c.innerHTML='';const em=['⭐','🐯','🎉','💛','🌟','🐾'];for(let i=0;i<34;i++){const e=document.createElement('i');e.textContent=em[i%em.length];e.style.left=Math.random()*100+'%';e.style.animationDuration=(1.6+Math.random()*1.6)+'s';e.style.animationDelay=(Math.random()*.6)+'s';c.appendChild(e);}setTimeout(()=>{c.innerHTML='';},4000);}
 
 // ---------- editor ----------
@@ -425,16 +499,18 @@ $('edX').onclick=()=>{$('ed').classList.remove('on');$('pause').classList.add('o
 // ---------- wiring ----------
 $('tigS').src=IMG.tiger;$('tigG').src=IMG.tiger;
 $('muteS').onclick=toggleMute;$('paSound').onclick=toggleMute;
-$('goBtn').onclick=()=>{sfx('roar');const c=prog.completed;if(c>=4){prog.completed=0;saveProg();applyLang();startRoom(0,true);}else startRoom(c,c===0);};
+$('goBtn').onclick=()=>{sfx('roar');const c=prog.completed;if(c>=TOT){prog.completed=0;saveProg();applyLang();startRoom(0,true);}else startRoom(c,c===0);};
+$('dailyBtn').onclick=()=>{sfx('roar');startRoom(dseed()%TOT,false,true);};
+$('musBtn').onclick=()=>{musOn=!musOn;try{localStorage.setItem('annabelle-escape-music',musOn?'1':'0');}catch(e){}sfx('tap');updMus();musKick();};
 $('againBtn').onclick=()=>{sfx('tap');prog.completed=0;saveProg();applyLang();startRoom(0,true);};
 $('pauseBtn').onclick=()=>{sfx('tap');stopSpeak();$('pause').classList.add('on');};
 $('paResume').onclick=()=>{sfx('tap');$('pause').classList.remove('on');};
-$('paRestart').onclick=()=>{sfx('tap');startRoom(S.room,false);};
+$('paRestart').onclick=()=>{sfx('tap');startRoom(S.room,false,S.daily);};
 $('paHome').onclick=()=>{sfx('tap');stopSpeak();applyLang();show('start');};
-$('paGrown').onclick=()=>{sfx('tap');E.room=S.room;E.slot='parrot';edLoad();renderEd();$('pause').classList.remove('on');$('ed').classList.add('on');};
+$('paGrown').onclick=()=>{sfx('tap');E.room=S.room%4;E.slot='parrot';edLoad();renderEd();$('pause').classList.remove('on');$('ed').classList.add('on');};
 $('hintBtn').onclick=()=>{sfx('tap');S.hint=true;renderPuzzle();speak(getPuzzle(S.room,S.puzzle).hint);};
 $('pClose').onclick=()=>{sfx('tap');S.puzzle=null;$('puz').classList.remove('on');stopSpeak();};
-$('wBtn').onclick=()=>{sfx('tap');S.wonOpen=false;if(S.room===3){prog.completed=0;saveProg();startRoom(0,true);}else startRoom(S.room+1,false);};
+$('wBtn').onclick=()=>{sfx('tap');S.wonOpen=false;if(S.daily){applyLang();show('start');}else if(S.room===TOT-1){prog.completed=0;saveProg();startRoom(0,true);}else startRoom(S.room+1,false);};
 $('wHome').onclick=()=>{sfx('tap');S.wonOpen=false;stopSpeak();applyLang();show('start');};
 window.addEventListener('resize',layout);
 if(window.visualViewport)visualViewport.addEventListener('resize',layout);

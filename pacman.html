@@ -73,6 +73,14 @@
   .card{background:#fffffff2;border-radius:30px;padding:18px 20px;box-shadow:0 8px 0 #0002,0 0 0 5px #ffd36b;max-width:min(94vw,560px);display:flex;flex-direction:column;align-items:center;gap:10px}
   .card h2{margin:0;font-size:clamp(28px,7vw,44px);color:var(--accent);font-weight:900}
   .sub{font-size:clamp(18px,4.8vw,25px);font-weight:800}
+  .lvsel{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:94vw}
+  .lvb{width:52px;height:56px;border-radius:16px;background:var(--w,#ffa8cb);box-shadow:0 3px 0 var(--e,#e8679a);color:#fff;font-weight:900;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;text-shadow:0 1px 0 #0004}
+  .lvb small{font-size:11px;color:#ffe066;letter-spacing:-1px}.lvb small i{font-style:normal;color:#fff8}
+  .lvb.sel{outline:4px solid #fff;box-shadow:0 0 0 7px var(--accent2,#7c5cff),0 4px 0 #0002;transform:translateY(-2px)}
+  .lvb.locked{filter:grayscale(.8);opacity:.6}
+  .stars{font-size:clamp(34px,10vw,52px);letter-spacing:6px;line-height:1;color:#d9d2c6;text-shadow:0 3px 0 #0002;direction:ltr}
+  .stars span.on{color:#ffc61a;animation:starpop .5s cubic-bezier(.3,1.8,.5,1) both}
+  @keyframes starpop{0%{transform:scale(0) rotate(-90deg)}100%{transform:scale(1) rotate(0)}}
   .rec{font-size:clamp(20px,5.5vw,30px);font-weight:900;color:#e8487f;animation:pulse .6s infinite alternate}
   @keyframes pulse{to{transform:scale(1.08)}}
   .dancer svg{width:clamp(90px,26vw,140px);height:auto;animation:dance .5s ease-in-out infinite alternate}
@@ -106,6 +114,7 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/pacman.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/pacman-192.png"><meta name="apple-mobile-web-app-title" content="טיגריס רעבתן"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/pacman-apple-180.png"><script src="pwa.js" data-app="pacman" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -130,7 +139,10 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
   <div class="langs" id="diffRow"></div>
   <button class="big go" id="playBtn"></button>
   <div class="bestline" id="bestLine"></div>
+  <div class="label" id="tLvSel"></div>
+  <div class="lvsel" id="lvSel"></div>
   <button class="lang padtog" id="padBtn"></button>
+  <button class="lang padtog" id="musBtn"></button>
   <div class="how" id="tHow"></div>
   <div class="keys" id="keysMenu"></div>
   <div class="label" id="tWatch"></div>
@@ -142,6 +154,7 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
     <h2 id="pauseTitle"></h2>
     <button class="big go" id="resumeBtn"></button>
     <button class="lang padtog" id="padBtn2"></button>
+    <button class="lang padtog" id="musBtn2"></button>
     <div class="row"><button class="big orange" id="restartBtn"></button><button class="big home" id="pMenuBtn"></button></div>
     <div class="keys" id="keysPause"></div>
   </div>
@@ -151,6 +164,7 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
   <div class="card">
     <div class="dancer" id="doneHero"></div>
     <h2 id="doneTitle"></h2>
+    <div class="stars" id="doneStars"></div>
     <div class="sub" id="doneSub"></div>
     <div class="rec" id="doneUnlock"></div>
     <button class="big go" id="nextBtn"></button>
@@ -333,7 +347,7 @@ const MAZES = [
 [
 "###############",
 "#......#......#",
-"#o##.#.#.#.##o#",
+"#o#.........#o#",
 "#....#...#....#",
 "##.#.#.#.#.#.##",
 "#..#.......#..#",
@@ -389,6 +403,66 @@ const MAZES = [
 "#.#...#.#...#.#",
 "#...#.....#...#",
 "#.............#",
+"###############"],
+[
+"###############",
+"#o...........o#",
+"#.###.#.#.###.#",
+"#.............#",
+"#.#.##...##.#.#",
+"#.#....#....#.#",
+"#.##.##-##.##.#",
+".....#GGG#.....",
+"#.##.#####.##.#",
+"#......F......#",
+"#.####.#.####.#",
+"#.............#",
+"#.##..#P#..##.#",
+"#.###.....###.#",
+"#.....#.#.....#",
+"#.##.......##.#",
+"#.##.##.##.##.#",
+"#o...........o#",
+"###############"],
+[
+"###############",
+"#.............#",
+"#.#.##.#.##.#.#",
+"#o#.........#o#",
+"#.#.##...##.#.#",
+"#.............#",
+"#.##.##-##.##.#",
+".....#GGG#.....",
+"#.#..#####..#.#",
+"#...#..F..#...#",
+"#.#.#.#.#.#.#.#",
+"#.#...#P#...#.#",
+"#.###.#.#.###.#",
+"#.....#.#.....#",
+"#.##.##.##.##.#",
+"#o...........o#",
+"#.#.##.#.##.#.#",
+"#.............#",
+"###############"],
+[
+"###############",
+"#o.....#.....o#",
+"#.##.#.#.#.##.#",
+"#.#..#...#..#.#",
+"#.#.####.##.#.#",
+"#.............#",
+"#.##.##-##.##.#",
+".....#GGG#.....",
+"#.##.#####.##.#",
+"#......F......#",
+"#.###.#.#.###.#",
+"#.....#P#.....#",
+"#.#.#.....#.#.#",
+"#.#.#.#.#.#.#.#",
+"#...#.#.#.#...#",
+"#.###.#.#.###.#",
+"#o...........o#",
+"#.............#",
 "###############"]
 ];
 
@@ -418,9 +492,23 @@ const SFX={
   tryagain(){ [523,466,440].forEach((f,i)=>tone(f,i*.16,.25,"sine",.12)); },
   ready(){ [392,523,659].forEach((f,i)=>tone(f,i*.15,.14,"triangle",.12)); },
   win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach(f=>tone(f,.9,.8,"triangle",.08)); },
-  meow(){ meow(560,0,.4); }
+  meow(){ meow(560,0,.4); },
+  star(n){ for(let i=0;i<n;i++) tone(880*Math.pow(1.26,i),.3+i*.25,.3,"triangle",.1,1760*Math.pow(1.26,i)); },
+  sparkle(){ [1568,2093,2637].forEach((f,i)=>tone(f,i*.05,.12,"sine",.05)); }
 };
 
+/* ============ MUSIC (tiny synthesized loop, follows mute) ============ */
+const MUS={on:localStorage.getItem("annabelle-music")!=="0",run:false,t:0,i:0,id:0,bpm:116,
+  mel:[0,2,4,7,4,2,4,-1, 0,2,4,7,9,7,4,-1, 2,4,7,9,7,4,2,-1, 0,4,2,7,4,2,0,-1],
+  bas:[0,0,-5,-5,-3,-3,-5,-5],
+  sc(n){ return 261.63*Math.pow(2,n/12); },
+  start(){ if(this.run||!this.on||!AC) return; this.run=true; this.t=AC.currentTime+.1; this.i=0; this.id=setInterval(()=>this.tick(),100); },
+  stop(){ this.run=false; clearInterval(this.id); },
+  tick(){ const c=AC; if(!c||muted||c.state!=="running"){ if(c) this.t=Math.max(this.t,c.currentTime+.05); return; }
+    while(this.t<c.currentTime+.35){ const i=this.i++, n=this.mel[i%this.mel.length], t=this.t-c.currentTime; if(n>=0) tone(this.sc(n)*(i%64>=32?1.5:1),t,.16,"triangle",.045);
+      if(i%4===0) tone(this.sc(this.bas[(i>>2)%this.bas.length])/2,t,.3,"sine",.07);
+      this.t+=60/this.bpm/2; } }
+};
 /* ============ TEXTS ============ */
 const T={
  he:{dir:"rtl",title:"הטיגריס הרעבתן של אנאבל",how:"אכלי דגים, כדורי צמר וטיפות חלב, וברחי מהשואב, מהאמבטיה, מהכלב ומבקבוק הריסוס! דג הזהב הענק הופך את הגור לענק ושואג, ואז הם בורחים ממך 🐟",
@@ -455,15 +543,20 @@ const LANGS=[["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","�
 const fmt=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
 const pick=a=>a[Math.random()*a.length|0];
 
+Object.assign(T.he,{diff_hard:"🔥 מאתגר",lvSel:"להתחיל משלב:",music:"מוזיקה",stars:"כוכבים",mapNames:["בית ורוד","גן ירוק","ארמון סגול","שדה שמש","אגם תכלת","מטבח אדום"]});
+Object.assign(T.fr,{diff_hard:"🔥 Défi",lvSel:"Commencer au niveau :",music:"Musique",stars:"Étoiles",mapNames:["Maison rose","Jardin vert","Palais violet","Champ de soleil","Lac bleu","Cuisine rouge"]});
+Object.assign(T.en,{diff_hard:"🔥 Challenge",lvSel:"Start at level:",music:"Music",stars:"Stars",mapNames:["Pink house","Green garden","Purple palace","Sunny field","Blue lake","Red kitchen"]});
 /* ============ CONFIG ============ */
 const COLS=15, ROWS=19;
-const THEME=[{wall:"#ffa8cb",edge:"#e8679a",light:"#ffd3e4",floor:"#fff8ef"},{wall:"#86dcbb",edge:"#2fa57d",light:"#c9f3e2",floor:"#f3fff9"},{wall:"#bba6ff",edge:"#7356f0",light:"#e0d7ff",floor:"#fbf8ff"}];
+const THEME=[{wall:"#ffa8cb",edge:"#e8679a",light:"#ffd3e4",floor:"#fff8ef"},{wall:"#86dcbb",edge:"#2fa57d",light:"#c9f3e2",floor:"#f3fff9"},{wall:"#bba6ff",edge:"#7356f0",light:"#e0d7ff",floor:"#fbf8ff"},
+ {wall:"#ffd25e",edge:"#e0a010",light:"#ffeaa8",floor:"#fffbea"},{wall:"#8fd0ff",edge:"#3b93d6",light:"#cdeaff",floor:"#f4faff"},{wall:"#ff9d8a",edge:"#e0553f",light:"#ffd0c7",floor:"#fff6f3"}];
 const mk=(rows)=>rows.map(([pSpeed,gSpeed,fright,duck,release],i)=>({maze:i,pSpeed,gSpeed,fright,duck,release,...THEME[i]}));
 const PRESETS={ // easy = fun for little players (default); normal = closer to a classic maze chase, still friendlier than before
- easy:{lives:4,modes:[10,12,10,12,8,1e9],levels:mk([[5.6,3.5,11,300,[0,3,7,12]],[6.1,4.1,9.5,500,[0,2.5,6,10]],[6.6,4.8,8,800,[0,2,5,8]]])},
- normal:{lives:3,modes:[7,16,6,16,6,1e9],levels:mk([[5.5,4.0,9,300,[0,2.5,6,10]],[6.0,4.7,7.5,500,[0,2,5,8]],[6.6,5.4,6,800,[0,1.5,4,6]]])}
+ easy:{lives:4,modes:[10,12,10,12,8,1e9],levels:mk([[5.6,3.5,11,300,[0,3,7,12]],[6.1,4.1,9.5,500,[0,2.5,6,10]],[6.6,4.8,8,800,[0,2,5,8]],[6.8,5.0,8,900,[0,2,5,8]],[7.0,5.2,7.5,1000,[0,2,4.5,7]],[7.2,5.4,7,1200,[0,1.8,4,6]]])},
+ normal:{lives:3,modes:[7,16,6,16,6,1e9],levels:mk([[5.5,4.0,9,300,[0,2.5,6,10]],[6.0,4.7,7.5,500,[0,2,5,8]],[6.6,5.4,6,800,[0,1.5,4,6]],[6.8,5.8,5.5,900,[0,1.5,4,6]],[7.0,6.1,5,1000,[0,1.2,3.5,5]],[7.2,6.4,4.5,1200,[0,1,3,4.5]]])},
+ hard:{lives:3,modes:[6,18,5,18,5,1e9],levels:mk([[6.0,4.8,6,400,[0,2,5,8]],[6.3,5.2,5.5,600,[0,1.5,4,6]],[6.6,5.6,5,900,[0,1.2,3.5,5]],[6.9,5.9,4.5,1000,[0,1,3,4.5]],[7.1,6.2,4,1200,[0,1,2.5,4]],[7.3,6.5,3.5,1500,[0,.8,2,3.5]]])}
 };
-let diff=(function(){try{return localStorage.getItem("annabelle-pacman-diff")==="normal"?"normal":"easy"}catch(e){return"easy"}})();
+let diff=(function(){try{return (function(v){return v==="normal"||v==="hard"?v:"easy"})(localStorage.getItem("annabelle-pacman-diff"))}catch(e){return"easy"}})();
 let LEVELS=PRESETS[diff].levels, MODES=PRESETS[diff].modes;
 function setDiff(d){ diff=PRESETS[d]?d:"easy"; LEVELS=PRESETS[diff].levels; MODES=PRESETS[diff].modes; try{localStorage.setItem("annabelle-pacman-diff",diff)}catch(e){} }
 const HERO={
@@ -489,9 +582,12 @@ const coarse=matchMedia("(pointer:coarse)").matches;
 let padOn=localStorage.getItem("annabelle-pacman-pad")!==null?localStorage.getItem("annabelle-pacman-pad")==="1":coarse;
 let hero=LS.char();
 let state="menu", prevState=null, lvI=0, L=LEVELS[0], score=0, lives=4, nextLife=LIFE_EVERY, sillyT=7, grid=[], pel=[], pelLeft=0, eatenCount=0, door=null, start=null, duckTile=null;
-let pl=null, foes=[], duck=null, parts=[], floats=[];
+let pl=null, foes=[], duck=null, parts=[], floats=[], lvDeaths=0, startAt=0, bumpShake=0;
+const RW=()=>window.AnnabelleRewards;
+const STARS={get(){ try{ return JSON.parse(localStorage.getItem("annabelle-pacman-stars"))||{}; }catch(e){ return {}; } }, set(o){ try{ localStorage.setItem("annabelle-pacman-stars",JSON.stringify(o)); }catch(e){} },
+  of(d,i){ return (STARS.get()[d]||[])[i]||0; }, save(d,i,n){ const o=STARS.get(); const a=o[d]||[]; if((a[i]||0)<n){ a[i]=n; o[d]=a; STARS.set(o); return true; } return false; } };
 let W=0,H=0,DPR=1,TS=20,MX=0,MY=0, gtime=0, stateT=0, relClock=0, modeI=0, modeT=0, frightT=0, freezeT=0, foeChain=0, burpT=0, sneezeT=15, shakeT=0;
-let lastBump=0,lastBumpTxt=0,lastBark=0,lastVroom=0, wetBy="spray";
+let shakeAmt=0, lastBump=0,lastBumpTxt=0,lastBark=0,lastVroom=0, wetBy="spray";
 const stats={moves:0,pellets:0,powers:0,foesEaten:0,deaths:0,bumps:0,frames:0};
 const TEST={noFoes:false};
 
@@ -553,7 +649,7 @@ function eatAt(c,r){
   if(pelLeft<=0) levelComplete();
 }
 function powerUp(){
-  stats.powers++; frightT=L.fright; foeChain=0; pl.huge=L.fright; pl.roar=.8; SFX.power(); burpT=1.3;
+  stats.powers++; shakeAmt=5; frightT=L.fright; foeChain=0; pl.huge=L.fright; pl.roar=.8; SFX.power(); burpT=1.3;
   toast(pick(T[lang].power),"#ff7a3d");
   foes.forEach(f=>{ if(f.st!=="eaten"&&f.st!=="entering"){ f.fr=true; if(f.st==="active") f.rev=true; } });
   const p=ppos(pl); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2; parts.push({x:p.x,y:p.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:.5,max:.5,col:"#ffd23f",r:.1,star:1}); }
@@ -604,30 +700,31 @@ const PRIMARY={menu:"playBtn",pause:"resumeBtn",done:"nextBtn",over:"againBtn",w
 function show(id){ ["menu","pause","done","over","win"].forEach(o=>$(o).classList.toggle("show",o===id)); $("pad").style.visibility=id?"hidden":"";
   if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
 let hintTm=0;
-function startGame(){ $("keysPlay").classList.remove("fade"); clearTimeout(hintTm); hintTm=setTimeout(()=>$("keysPlay").classList.add("fade"),9000); window.focus(); score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; startLevel(0); }
-function startLevel(i){ lvI=i; L=LEVELS[i]; loadMaze(); resetActors(); parts=[]; floats=[]; stopConfetti();
+function startGame(){ $("keysPlay").classList.remove("fade"); clearTimeout(hintTm); hintTm=setTimeout(()=>$("keysPlay").classList.add("fade"),9000); window.focus(); score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; if(!(startAt<=LS.done())) startAt=0; try{ RW()&&RW().award({game:"pacman",event:"play"}); }catch(e){} startLevel(startAt); }
+function startLevel(i){ lvI=i; L=LEVELS[i]; lvDeaths=0; loadMaze(); resetActors(); parts=[]; floats=[]; stopConfetti();
   state="ready"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
 function levelComplete(){ state="dance"; stateT=0; frightT=0; pl.huge=0; SFX.dance(); toast(T[lang].yum,"#34c47c");
   foes.forEach(f=>{ const p=fpos(f); for(let i=0;i<10;i++) parts.push({x:p.x,y:p.y,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:.6,max:.6,col:"#fff",r:.15}); });
   saveBest(); }
 function afterDance(){
-  const t=T[lang], prevDone=LS.done(); if(prevDone<lvI+1) localStorage.setItem("annabelle-pacman-done",lvI+1);
+  const t=T[lang], prevDone=LS.done(); const stars=lvDeaths===0?3:lvDeaths===1?2:1; const newStar=STARS.save(diff,lvI,stars);
+  try{ const R=RW(); if(R){ R.award({game:"pacman",event:"levelClear",level:lvI+1,score}); R.award({game:"pacman",event:"star",stars}); R.award({game:"pacman",event:"score",score}); } }catch(e){} if(prevDone<lvI+1) localStorage.setItem("annabelle-pacman-done",lvI+1);
   const newChar=CHAR_KEYS.find(k=>CHAR_NEED[k]===lvI+1&&prevDone<lvI+1);
   if(lvI===LEVELS.length-1){ state="win"; const rec=saveBest(true);
     $("jumpers").innerHTML=["tiger","lion","kitten"].map(face).join(""); $("winTitle").textContent=t.win; $("winSub").textContent=fmt(t.winS,{s:score});
     $("winRec").textContent=(newChar?fmt(t.unlock,{c:t.chars[newChar]})+" ":"")+(rec?t.rec:""); $("wAgainBtn").textContent=t.again.replace("🔁 ","🔁 "); $("wMenuBtn").textContent=t.menu;
-    show("win"); SFX.win(); confetti(); return; }
+    show("win"); SFX.win(); confetti(); try{ const R=RW(); if(R){ R.award({game:"pacman",event:"win"}); R.flush(); } }catch(e){} return; }
   state="done"; $("doneHero").innerHTML=face(HERO[hero].face); $("doneTitle").textContent=fmt(t.doneT,{n:lvI+1}); $("doneSub").textContent=fmt(t.doneS,{s:score});
-  $("doneUnlock").textContent=newChar?fmt(t.unlock,{c:t.chars[newChar]}):""; $("nextBtn").textContent=t.next; show("done");
+  $("doneUnlock").textContent=newChar?fmt(t.unlock,{c:t.chars[newChar]}):""; $("doneStars").innerHTML=[1,2,3].map(n=>`<span class="${n<=stars?"on":""}" style="animation-delay:${n*.25}s">★</span>`).join(""); $("nextBtn").textContent=t.next; show("done"); SFX.star(stars); burst(innerWidth/2,innerHeight*.32,50); try{ RW()&&RW().flush(); }catch(e){}
 }
 let recFlag=false;
 function saveBest(){ if(score>LS.best()){ localStorage.setItem("annabelle-pacman-best",score); recFlag=true; } return recFlag; }
-function die(f){ state="dying"; stateT=0; stats.deaths++; wetBy=f.k; frightT=0; pl.huge=0; SFX.splash(); toast(T[lang].wet[f.k],"#3fa9ff"); }
+function die(f){ lvDeaths++; shakeAmt=9; state="dying"; stateT=0; stats.deaths++; wetBy=f.k; frightT=0; pl.huge=0; SFX.splash(); toast(T[lang].wet[f.k],"#3fa9ff"); }
 function afterDeath(){ lives--; updateHUD();
   if(lives<=0){ state="over"; const t=T[lang], rec=saveBest(); $("overHero").innerHTML=face(HERO[hero].face); $("overTitle").textContent=t.overT; $("overSub").textContent=fmt(t.overS,{s:score});
-    $("overRec").textContent=rec?t.rec:""; $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu; show("over"); SFX.tryagain(); return; }
+    $("overRec").textContent=rec?t.rec:""; $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu; show("over"); SFX.tryagain(); try{ const R=RW(); if(R){ R.award({game:"pacman",event:"score",score}); R.flush(); } }catch(e){} return; }
   resetActors(); state="ready"; stateT=0; SFX.ready(); }
-function toMenu(){ state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("pad").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); recFlag=false; renderMenu(); show("menu"); }
+function toMenu(){ MUS.stop(); state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("pad").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); recFlag=false; renderMenu(); show("menu"); }
 function pause(){ if(["play","ready","dying","dance"].includes(state)){ prevState=state; state="paused"; show("pause"); } }
 function resume(){ if(state==="paused"){ state=prevState; show(null); } }
 
@@ -671,7 +768,7 @@ function update(dt){
   for(const f of foes){ if(f.st!=="active"&&f.st!=="leaving") continue; const q=fpos(f);
     if(Math.hypot(q.x-pp.x,q.y-pp.y)<reach){
       if(f.fr){ f.fr=false; f.st=f.st==="leaving"?"entering":"eaten"; if(f.st==="entering"){f.x=q.x;f.y=q.y;}
-        foeChain++; const pts=200*Math.pow(2,foeChain-1); score+=pts; stats.foesEaten++; SFX.eatFoe(); setTimeout(()=>SFX.home(),350);
+        foeChain++; try{ foeChain>=2&&RW()&&RW().award({game:"pacman",event:"combo",score:foeChain}); }catch(e){} shakeAmt=4; const pts=200*Math.pow(2,foeChain-1); score+=pts; stats.foesEaten++; SFX.eatFoe(); setTimeout(()=>SFX.home(),350);
         addFloat(q.x,q.y-.3,"+"+pts,"#7c5cff",1.2); toast(pick(T[lang].eat),"#7c5cff"); freezeT=.35; updateHUD();
         for(let i=0;i<12;i++) parts.push({x:q.x,y:q.y,vx:(Math.random()-.5)*6,vy:(Math.random()-.5)*6,life:.5,max:.5,col:"#ffd23f",r:.08,star:1}); }
       else { die(f); return; } } }
@@ -863,7 +960,7 @@ function render(){
   g.setTransform(DPR,0,0,DPR,0,0); g.clearRect(0,0,W,H);
   if(state==="menu"||!pl) return;
   if(!mazeImg) buildMaze();
-  let sx=0,sy=0; if(state==="dying"&&stateT<.3){ sx=(Math.random()-.5)*6; sy=(Math.random()-.5)*6; }
+  shakeAmt=Math.max(0,shakeAmt-.5); let sx=0,sy=0; if(shakeAmt>0){ sx=(Math.random()-.5)*shakeAmt; sy=(Math.random()-.5)*shakeAmt; }
   g.save(); g.translate(sx,sy);
   g.fillStyle="#0001"; g.beginPath(); g.roundRect(MX-4,MY-2,TS*COLS+8,TS*ROWS+8,TS*.5); g.fill();
   g.drawImage(mazeImg,MX,MY,TS*COLS,TS*ROWS);
@@ -927,14 +1024,18 @@ function applyLang(){ const t=T[lang]; document.documentElement.lang=lang; docum
   $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("playBtn").textContent=t.play; $("tChoose").textContent=t.choose; $("tWatch").textContent=t.watch;
   $("tLv").textContent=t.lv; $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu; updatePadBtn(); $("keysMenu").textContent=$("keysPause").textContent=$("keysPlay").textContent=KEYHINT[lang]; renderMenu(); }
 function renderMenu(){ const t=T[lang], done=LS.done();
-  $("tDiff").textContent=t.diffT; $("diffRow").innerHTML=["easy","normal"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
+  $("tDiff").textContent=t.diffT; $("diffRow").innerHTML=["easy","normal","hard"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
   $("chars").innerHTML=CHAR_KEYS.map(k=>{ const lock=done<CHAR_NEED[k]; return `<button class="ch ${k===hero?"sel":""} ${lock?"locked":""}" data-ch="${k}">${face(HERO[k].face==="cat"?"cat":HERO[k].face)}<span>${t.chars[k]}</span>${lock?`<small>${fmt(t.lock,{n:CHAR_NEED[k]})}</small>`:""}</button>`; }).join("");
+  if(!(startAt<=done)) startAt=0;
+  $("tLvSel").textContent=t.lvSel; $("lvSel").innerHTML=LEVELS.map((l,i)=>{ const lock=i>done, st=STARS.of(diff,i); return `<button class="lvb ${i===startAt?"sel":""} ${lock?"locked":""}" data-lv="${i}" title="${t.mapNames[i]}" style="--w:${l.wall};--e:${l.edge}"><b>${lock?"🔒":i+1}</b><small>${lock?"":"★".repeat(st)+"<i>"+"★".repeat(3-st)+"</i>"}</small></button>`; }).join("");
+  $("musBtn").textContent=$("musBtn2").textContent=`🎵 ${t.music} ${MUS.on?"✅":"⬜"}`;
   const b=LS.best(); $("bestLine").textContent=b?`🏆 ${t.best}: ${b}`:"";
   $("foes").innerHTML=FOES.map(k=>`<div class="foe"><canvas data-foe="${k}" width="136" height="136"></canvas><span>${t.foes[k]}</span></div>`).join("");
   document.querySelectorAll("[data-foe]").forEach(c=>{ const x=c.getContext("2d"), og=g; g=x; x.translate(68,72); drawFoe(c.dataset.foe,44,{t:1,face:1}); g=og; }); }
 document.addEventListener("click",e=>{
   const l=e.target.closest("[data-lang]"), ch=e.target.closest("[data-ch]");
+  const lvb=e.target.closest("[data-lv]"); if(lvb){ const i=+lvb.dataset.lv; if(i<=LS.done()){ startAt=i; SFX.click(); renderMenu(); } else SFX.boing(); }
   const df=e.target.closest("[data-diff]"); if(df){ setDiff(df.dataset.diff); SFX.click(); renderMenu(); }
   if(l){ lang=l.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
   if(ch){ const k=ch.dataset.ch; if(LS.done()>=CHAR_NEED[k]){ hero=k; localStorage.setItem("annabelle-pacman-char",k); SFX.meow(); renderMenu(); } else SFX.boing(); }
@@ -946,6 +1047,7 @@ $("restartBtn").onclick=()=>{ SFX.click(); startGame(); };
 $("pMenuBtn").onclick=$("oMenuBtn").onclick=$("wMenuBtn").onclick=()=>{ SFX.click(); toMenu(); };
 $("nextBtn").onclick=()=>{ SFX.click(); startLevel(lvI+1); };
 $("againBtn").onclick=$("wAgainBtn").onclick=()=>{ SFX.click(); recFlag=false; startGame(); };
+$("musBtn").onclick=$("musBtn2").onclick=()=>{ ac(); MUS.on=!MUS.on; try{ localStorage.setItem("annabelle-music",MUS.on?"1":"0"); }catch(e){} SFX.click(); if(!MUS.on) MUS.stop(); renderMenu(); };
 $("padBtn").onclick=$("padBtn2").onclick=()=>{ SFX.click(); padOn=!padOn; localStorage.setItem("annabelle-pacman-pad",padOn?"1":"0"); updatePadBtn(); layout(); };
 function updatePadBtn(){ $("padBtn").textContent=$("padBtn2").textContent=`🎮 ${T[lang].pad} ${padOn?"✅":"⬜"}`; }
 function updateMute(){ $("muteBtn").textContent=$("muteBtn2").textContent=muted?"🔇":"🔊"; }
@@ -998,10 +1100,17 @@ function confetti(){
 }
 function stopConfetti(){ cancelAnimationFrame(confRaf); const c=$("confetti"); c.getContext("2d").clearRect(0,0,c.width,c.height); }
 
+/* short confetti burst on the overlay canvas (cheap, no loop of its own) */
+let bursts=[];
+function burst(x,y,n){ const cols=["#ff7a3d","#7c5cff","#34c47c","#ffd23f","#ff5d8f","#3fc5ff"]; for(let i=0;i<n;i++){ const a=Math.random()*6.28, v=3+Math.random()*7; bursts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-4,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[i%6],s:5+Math.random()*6,life:1.6}); } SFX.sparkle(); }
+function drawBurst(dt){ const c=$("confetti"), x=c.getContext("2d"); if(!bursts.length) return; if(confRaf) return;
+  if(c.width!==innerWidth*DPR) { c.width=innerWidth*DPR; c.height=innerHeight*DPR; } x.setTransform(DPR,0,0,DPR,0,0); x.clearRect(0,0,innerWidth,innerHeight);
+  bursts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.28; p.vx*=.985; p.r+=p.vr; p.life-=dt; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.globalAlpha=Math.min(1,p.life*2); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); x.restore(); });
+  bursts=bursts.filter(p=>p.life>0); if(!bursts.length) x.clearRect(0,0,innerWidth,innerHeight); }
 /* ============ LOOP ============ */
 let lastT=0;
 function frame(t){ document.documentElement.classList.toggle("playing",state==="play"||state==="ready"||state==="dying"); const dt=Math.min(.05,(t-lastT)/1000||0); lastT=t; stats.frames++;
-  try{ if(state!=="paused") update(dt); render(); }catch(err){ console.error(err); }
+  try{ if(state!=="paused") update(dt); render(); ((state==="play"||state==="ready")&&MUS.on&&!muted)?MUS.start():MUS.stop(); drawBurst(dt); }catch(err){ console.error(err); }
   requestAnimationFrame(frame); }
 
 /* ============ test hook ============ */

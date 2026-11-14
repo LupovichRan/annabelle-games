@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#ffd6b8">
-<title>סויה בבית</title><script src="safe.js"></script>
+<title>סויה בבית</title><script src="safe.js"></script><script src="rewards.js" defer></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -929,5 +929,99 @@ drawDiff();
 })();
 </script>
 
+<style>
+/* ===== stars, hard mode, daily challenge, music, confetti (added) ===== */
+#endStars{font-size:clamp(28px,8vw,38px);letter-spacing:3px;direction:ltr;line-height:1}
+#endStars span{display:inline-block;filter:grayscale(1) opacity(.3)}
+#endStars span.on{filter:none;animation:shpop .55s cubic-bezier(.3,1.8,.5,1) both}
+#endStars span.on:nth-child(2){animation-delay:.25s}#endStars span.on:nth-child(3){animation-delay:.5s}
+@keyframes shpop{0%{transform:scale(0) rotate(-90deg)}100%{transform:scale(1) rotate(0)}}
+#dailyBtn,#musPick button{min-height:44px;padding:6px 14px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px;max-width:94vw}
+#dailyBtn.on{background:#fff;box-shadow:0 0 0 3px #ffb02e}
+#dailyBtn.done{opacity:.75}
+#musPick{display:flex;justify-content:center;margin:2px 0}
+#shConf{position:fixed;inset:0;pointer-events:none;z-index:9000;overflow:hidden}
+#shConf span{position:absolute;top:-8%;animation:shfall linear forwards}
+@keyframes shfall{to{transform:translateY(115vh) rotate(540deg)}}
+#dmod{position:absolute;top:6px;inset-inline-start:8px;z-index:60;background:#fff;border-radius:999px;padding:2px 10px;font-weight:900;font-size:13px;box-shadow:0 2px 0 #0002;display:none}
+html.desk #dailyBtn:hover,html.desk #musPick button:hover{transform:translateY(-2px)}
+html.desk #dailyBtn:focus-visible,html.desk #musPick button:focus-visible{outline:4px solid #2a8fd0;outline-offset:3px}
+</style>
+<script>
+(()=>{
+const R=()=>window.AnnabelleRewards, aw=o=>{ try{ const r=R(); if(r) r.award(Object.assign({game:'soyahome'},o)); }catch(e){} }, fl=()=>{ try{ const r=R(); if(r) r.flush(); }catch(e){} };
+const lsj=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
+const lss=(k,v)=>{ try{ localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v)); }catch(e){} };
+const TX={
+ he:{hard:'🐯 קשה',daily:'🌟 אתגר יומי',dailyOn:'🌟 אתגר יומי: {m}',dailyDone:'✅ אתגר יומי הושלם',music:'מוזיקה',
+  mods:{speedy:'⚡ סויה מהיר · נקודות ×2',brave:'💪 אמיצה · ×1.5 · 3 חיים',sleepy:'😴 מנומנם · נינוח'},
+  daily1:'אתגר יומי הושלם! +12 🪙',stars:'⭐ {n}/3',streak:'רצף של {n}! 🔥',best:'שיא כוכבים'},
+ fr:{hard:'🐯 Difficile',daily:'🌟 Défi du jour',dailyOn:'🌟 Défi du jour : {m}',dailyDone:'✅ Défi du jour réussi',music:'Musique',
+  mods:{speedy:'⚡ Rapide · points ×2',brave:'💪 Courage · ×1,5 · 3 vies',sleepy:'😴 Endormi · calme'},
+  daily1:'Défi du jour réussi ! +12 🪙',stars:'⭐ {n}/3',streak:'Série de {n} ! 🔥',best:'Record d’étoiles'},
+ en:{hard:'🐯 Hard',daily:'🌟 Daily challenge',dailyOn:'🌟 Daily challenge: {m}',dailyDone:'✅ Daily challenge done',music:'Music',
+  mods:{speedy:'⚡ Speedy · points ×2',brave:'💪 Brave · ×1.5 · 3 lives',sleepy:'😴 Sleepy · relaxed'},
+  daily1:'Daily challenge done! +12 🪙',stars:'⭐ {n}/3',streak:'Streak of {n}! 🔥',best:'Best stars'}};
+const tx2=()=>TX[lang]||TX.he;
+// ---- hard difficulty: the original diff picker only knows easy/normal, so extend it ----
+const MODS=['speedy','brave','sleepy']; const todayK=new Date().toDateString(); let h=0; for(const c of todayK) h=(h*31+c.charCodeAt(0))>>>0;
+const dmod=MODS[h%3]; let dailyDoneK=localStorage.getItem('soyahome-daily')||''; let dailyOn=false;
+const PTS={speedy:2,brave:1.5,sleepy:1};
+let hardOn=localStorage.getItem('soyahome-diff')==='hard';
+function applyHard(){ // mirror the "easy" numbers' opposites by multiplying existing P.* functions
+  window.__hard=hardOn; }
+const dp=document.getElementById('diffPick');
+function addHardBtn(){ if(!dp) return; if(!dp.querySelector('[data-hard]')){ const b=document.createElement('button'); b.dataset.hard='1'; b.textContent=tx2().hard; b.className=hardOn?'on':''; b.style.cssText=''; dp.appendChild(b); } else { const b=dp.querySelector('[data-hard]'); b.textContent=tx2().hard; b.className=hardOn?'on':''; }
+  if(hardOn) dp.querySelectorAll('[data-d]').forEach(x=>x.classList.remove('on')); }
+if(dp){ new MutationObserver(()=>{ if(!dp.querySelector('[data-hard]')) addHardBtn(); }).observe(dp,{childList:true});
+  dp.addEventListener('click',e=>{ const hb=e.target.closest('[data-hard]'); if(hb){ e.stopImmediatePropagation(); hardOn=true; lss('soyahome-diff','hard'); try{ SFX.click(); }catch(x){} addHardBtn(); return; } const d=e.target.closest('[data-d]'); if(d){ hardOn=false; setTimeout(addHardBtn,0); } },true); }
+addHardBtn();
+// 'hard' is stored under the same key; the original code only accepts easy/normal so it falls back to easy when reading.
+// we run on top of "normal" numbers: when hard, make the base 'normal' by saving normal is not possible, so scale P here instead.
+const wr=(n,f)=>{ const o=P[n]; P[n]=()=>o()*f(); };
+wr('speed',()=>(hardOn?1.4:1)*(dailyOn&&dmod==='speedy'?1.25:1)*(dailyOn&&dmod==='sleepy'?.78:1));
+wr('warn',()=>(hardOn?.5:1)*(dailyOn&&dmod==='brave'?.85:1)*(dailyOn&&dmod==='sleepy'?1.3:1));
+wr('idle',()=>hardOn?.6:1); wr('chew',()=>hardOn?.7:1); wr('push',()=>hardOn?.7:1);
+const nP2=P.nPeb; P.nPeb=()=>hardOn?Math.min(3,nP2()+1):nP2();
+const D3=D; D=function(){ return Math.min(1,D3()+(hardOn?.15:0)); };
+// ---- new game: lives for brave/hard, rewards play ----
+let streak=0;
+const ng3=newGame; newGame=function(){ ng3(); if(hardOn) MAXMISS=3; if(dailyOn&&dmod==='brave') MAXMISS=Math.min(MAXMISS,3); streak=0; curRoom=+window.__room||0; G.nextLife=hardOn?1e9:G.nextLife; hud(); aw({event:'play'}); showMod(); };
+// ---- score multiplier for the daily challenge ----
+const as0=addScore; addScore=function(n,x,y){ as0(Math.round(n*(dailyOn?PTS[dmod]:1)),x,y); };
+// ---- streak combos ----
+const sh0=shoo; shoo=function(){ sh0.apply(this,arguments); streak++; if(streak%5===0){ aw({event:'combo',score:streak}); try{ pop(L.W/2,L.H*.3,tx2().streak.replace('{n}',streak),true); SFX.good(); tone('triangle',1568,1568,.12,.1,.12); }catch(e){} } };
+const mi0=mistake; mistake=function(){ streak=0; mi0.apply(this,arguments); };
+// ---- stars + rewards on the end card ----
+const es=document.createElement('div'); es.id='endStars'; es.style.display='none'; document.getElementById('endEmo').after(es);
+let curRoom=0; const roomK=()=>curRoom;
+function confetti(n=60){ let c=document.getElementById('shConf'); if(!c){ c=document.createElement('div'); c.id='shConf'; document.body.appendChild(c); } c.innerHTML=''; const E=['🎉','⭐','💖','🐾','✨','🎈']; for(let i=0;i<n;i++){ const s=document.createElement('span'); s.textContent=E[i%E.length]; s.style.left=Math.random()*100+'%'; s.style.fontSize=(18+Math.random()*20)+'px'; s.style.animationDuration=(2+Math.random()*2)+'s'; s.style.animationDelay=(Math.random()*.9)+'s'; c.appendChild(s); } setTimeout(()=>{ c.innerHTML=''; },5200); }
+const fin3=finish; finish=function(win){ fin3(win);
+  const r=roomK(), key=hardOn?'h'+r:'r'+r, db=lsj('soyahome-stars',{}); let n=0;
+  if(win){ n=1+(G.miss<=Math.floor(MAXMISS/2)?1:0)+(G.miss===0?1:0); }
+  es.style.display=win?'block':'none'; es.innerHTML=[0,1,2].map(i=>`<span class="${i<n?'on':''}">⭐</span>`).join('');
+  const prev=+db[key]||0; if(n>prev){ db[key]=n; lss('soyahome-stars',db); }
+  aw({event:'score',score:G.score});
+  if(win){ aw({event:'levelClear',level:r+1+(hardOn?3:0),score:G.score}); if(n>prev) aw({event:'star',stars:n}); aw({event:'win'}); setTimeout(()=>{ confetti(n===3?90:60); for(let i=0;i<n;i++) setTimeout(()=>{ try{ tone('triangle',[659,784,988][i],[659,784,988][i]*1.02,.3,.14); tone('sine',[1319,1568,1976][i],[1319,1568,1976][i],.25,.07); }catch(e){} },700+i*250); },350);
+    if(dailyOn&&dailyDoneK!==todayK){ dailyDoneK=todayK; try{ localStorage.setItem('soyahome-daily',todayK); }catch(e){} aw({event:'win',coins:12}); aw({event:'star',stars:3}); $('endBest').textContent+=' · '+tx2().daily1; drawDaily(); } }
+  setTimeout(fl,600); };
+// ---- daily challenge button + music toggle in the menu ----
+const db0=document.createElement('button'); db0.id='dailyBtn'; const mp=document.createElement('div'); mp.id='musPick'; const mb=document.createElement('button'); mp.appendChild(mb);
+(dp||document.getElementById('roomPick')).after(db0); db0.after(mp);
+const tag=document.createElement('div'); tag.id='dmod'; document.getElementById('stage').appendChild(tag);
+function showMod(){ tag.style.display=dailyOn?'block':'none'; tag.textContent=tx2().mods[dmod]; }
+function drawDaily(){ const done=dailyDoneK===todayK; db0.className=(dailyOn?'on ':'')+(done?'done':''); db0.textContent=done&&!dailyOn?tx2().dailyDone:dailyOn?tx2().dailyOn.replace('{m}',tx2().mods[dmod]):tx2().daily+' · '+tx2().mods[dmod]; }
+db0.onclick=()=>{ dailyOn=!dailyOn; try{ SFX.click(); }catch(e){} drawDaily(); };
+let musOn=localStorage.getItem('soyahome-music')!=='0';
+function drawMus(){ mb.textContent=(musOn?'🎵 ':'🔕 ')+tx2().music; }
+mb.onclick=()=>{ musOn=!musOn; try{ localStorage.setItem('soyahome-music',musOn?'1':'0'); }catch(e){} drawMus(); try{ SFX.click(); }catch(e){} };
+// tiny bouncy music loop while playing (respects the mute button)
+const SC=[262,294,330,392,440,523], PAT=[0,2,4,2,3,5,4,2,1,3,5,3,2,4,3,1]; let ms=0;
+setInterval(()=>{ if(muted||!musOn||!running||paused||ending||document.hidden) return; const i=PAT[ms%PAT.length]; tone('triangle',SC[i],SC[i],.22,.05); if(ms%2===0) tone('sine',SC[i]/2,SC[i]/2,.3,.045); ms++; },300);
+const al4=applyLang; applyLang=function(){ al4(); try{ addHardBtn(); drawDaily(); drawMus(); showMod(); }catch(e){} };
+drawDaily(); drawMus(); applyLang();
+window.__sh2={hard:()=>hardOn,daily:()=>dailyOn,mod:dmod,setDaily:v=>{dailyOn=v;drawDaily();},streak:()=>streak};
+})();
+</script>
 </body>
 </html>

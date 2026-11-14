@@ -48,6 +48,11 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 .bub{position:absolute;background:#fff;border:3px solid #e8862d;border-radius:16px;padding:6px 10px;font-weight:800;font-size:16px;white-space:nowrap;transform:translate(-50%,-100%);pointer-events:none;animation:pop .25s;z-index:5}
 @keyframes pop{from{transform:translate(-50%,-100%) scale(.3)}}
 .side{display:flex;flex-direction:column;gap:8px;align-items:center}
+.big.t{background:linear-gradient(#ffe066,#f2b600);color:#5a3d00;box-shadow:0 4px 0 #a87400}
+#cupBar{display:flex;gap:6px;justify-content:center;font-size:24px;align-items:center}#cupOpp{font-weight:800;font-size:15px;text-align:center}
+#skinRow{display:none;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}#skinRow.on{display:flex}
+.skn{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 0 #0003;padding:0;font-size:16px}.skn.sel{border-color:#5a3b1a;transform:scale(1.14)}.skn.lock{opacity:.35;filter:grayscale(1)}
+#win .card{animation:cardIn .35s cubic-bezier(.2,1.4,.4,1)}@keyframes cardIn{from{transform:scale(.4);opacity:0}}
 #win{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0006;z-index:20}
 #win.on{display:flex}
 #win .card{background:#fff6d6;border-radius:22px;padding:16px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}
@@ -86,6 +91,7 @@ html.desk .screen{overflow-y:auto}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/checkers.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/checkers-192.png"><meta name="apple-mobile-web-app-title" content="דמקת חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/checkers-apple-180.png"><script src="pwa.js" data-app="checkers" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -99,7 +105,8 @@ html.desk .screen{overflow-y:auto}
     <button class="big" data-mode="normal" id="bNorm"></button>
     <button class="big p" data-mode="two" id="bTwo"></button>
   </div>
-  <div class="row"><button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button></div>
+  <div class="row"><button class="big t" data-mode="cup" id="bCup"></button><button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button></div>
+  <div id="cupBar"></div><div id="cupOpp"></div><div id="skinRow"></div>
   <div class="khint" id="kh"></div>
 </section>
 <section class="screen" id="lobby">
@@ -145,6 +152,21 @@ const TX={
   you:"Your turn 🧡",cpu:"Computer is thinking… 🤔",p1:"Orange's turn 🧡",p2:"Grey's turn 🤍",bonus:"Bonus turn! 🧶",again:"🔁 Play again",
   winYou:"You won, Annabelle! 🎉",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🤍",
   meow:"Meow!",yarn:["Yay, yarn! 🧶 Extra turn!","Playtime! 🧶 Again!","Wheee! 🧶"],king:"I'm king! 👑",jump:"Jump again!",goofy:["Oops, I slipped! 🙈","I got lost… 😵","What did I do?! 🤪","A butterfly! 🦋","I'm confused 😹"],fun:["Meow!","Ouch! 🙀","I'm rolling! 😹","I'm flying! 🪁","Well done! 👏"]}};
+const CT={
+ he:{cup:"🏆 גביע הדמקה",cupN:["גור הכדור","חתול החוף","מלכת הקרח","נסיך הממתקים","אריה הלילה"],board:["לוח העץ","לוח הנענע","לוח הקרח","לוח הסוכריות","לוח הלילה"],rnd:"משחק",skinT:"🎨 צבע החתלתולים (נפתח בגביע)",skinN:["כתום","ורוד","סגול","זהב","קשת"],cupNext:"▶ למשחק הבא",cupRetry:"🔁 ננסה שוב",cupWon:"אלופת הגביע! 🏆",cupLose:"כמעט! עוד ניסיון ואת מנצחת 💪",cupAgain:"🏆 גביע חדש",unl:"🎉 צבע חדש נפתח!",kleft:"חתלתולים נשארו"},
+ fr:{cup:"🏆 Coupe de dames",cupN:["Petit Pelote","Chat de plage","Reine des glaces","Prince bonbon","Lion de la nuit"],board:["Plateau bois","Plateau menthe","Plateau glace","Plateau bonbon","Plateau nuit"],rnd:"Match",skinT:"🎨 Couleur des chatons (débloquée dans la coupe)",skinN:["Orange","Rose","Violet","Or","Arc-en-ciel"],cupNext:"▶ Match suivant",cupRetry:"🔁 On réessaie",cupWon:"Championne de la coupe ! 🏆",cupLose:"Presque ! Encore un essai 💪",cupAgain:"🏆 Nouvelle coupe",unl:"🎉 Nouvelle couleur débloquée !",kleft:"chatons restants"},
+ en:{cup:"🏆 Checkers Cup",cupN:["Little Yarn","Beach Cat","Ice Queen","Candy Prince","Night Lion"],board:["Wood board","Mint board","Ice board","Candy board","Night board"],rnd:"Match",skinT:"🎨 Kitten colour (unlocked in the cup)",skinN:["Orange","Pink","Purple","Gold","Rainbow"],cupNext:"▶ Next match",cupRetry:"🔁 Try again",cupWon:"Cup champion! 🏆",cupLose:"So close! One more try 💪",cupAgain:"🏆 New cup",unl:"🎉 New colour unlocked!",kleft:"kittens left"}};
+for(const k in CT)Object.assign(TX[k],CT[k]);
+const RW=()=>window.AnnabelleRewards;
+/* cup: 5 matches vs. gentler-to-smarter computer cats on 5 board themes; stars + kitten colours are saved. Losing only means replaying the match. */
+const OPP=[["#b8c1cc","#6b737c"],["#f2e3c6","#a8895a"],["#d6ecff","#6f9ec9"],["#ffc0de","#c75b94"],["#6b5d8a","#2e2552"]];
+const CUPS=[.6,.4,.26,.14,.05];   // chance that the cat just plays a random move
+const BT=[["#f6deb0","#a8683a"],["#eaf7e4","#5fa86a"],["#eaf6ff","#6aa3d8"],["#ffeaf3","#d86aa0"],["#ddd6f7","#4a3a8a"]];
+const SKINS=[["#f5973a","#c96a14"],["#ff8fb8","#c04a7c"],["#b48cf0","#6a3fb0"],["#ffd23f","#b8860b"],null];
+function cpGet(){let o={};try{o=JSON.parse(localStorage.getItem("annabelle-checkers-cup")||"{}")||{}}catch(e){}return{done:Math.max(0,Math.min(5,+o.done||0)),cups:+o.cups||0,stars:Array.isArray(o.stars)?o.stars.slice(0,5):[],skins:Math.max(1,Math.min(5,+o.skins||1))}}
+function cpSave(c){try{localStorage.setItem("annabelle-checkers-cup",JSON.stringify(c))}catch(e){}}
+const skinSel=()=>{let v=0;try{v=+localStorage.getItem("annabelle-checkers-skin")||0}catch(e){}return v<cpGet().skins?v:0};
+let cupR=0;
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
@@ -153,6 +175,10 @@ function applyLang(){
  $("tTitle").textContent=t("title"); document.title=t("title");
  $("flags").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${l}</button>`).join("");
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
+ {const c=cpGet(),nx=c.done>=5?0:c.done;$("bCup").textContent=c.done>=5?t("cupAgain"):t("cup")+(c.done?" "+(c.done+1)+"/5":"");
+  $("cupBar").innerHTML=[0,1,2,3,4].map(i=>`<span title="${t("cupN")[i]}" style="opacity:${i<c.done?1:.35}">${i<c.done?(c.stars[i]>=3?"🥇":"🏅"):i===4?"🏆":"🐾"}</span>`).join("")+(c.cups?`<small style="font-size:14px">×${c.cups}</small>`:"");
+  $("cupOpp").textContent=t("rnd")+" "+(nx+1)+"/5 · "+t("cupN")[nx];
+  $("skinRow").classList.toggle("on",c.skins>1);$("skinRow").innerHTML=c.skins>1?`<span style="font-weight:800;font-size:14px">${t("skinT")}</span>`+SKINS.map((k,i)=>`<button class="skn ${i===skinSel()?"sel":""} ${i>=c.skins?"lock":""}" data-skin="${i}" title="${t("skinN")[i]}" aria-label="${t("skinN")[i]}" style="background:${k?k[0]:"conic-gradient(#ff5d8f,#ffd23f,#7ddc6a,#4dc3ff,#c58cf0,#ff5d8f)"}">${i>=c.skins?"🔒":""}</button>`).join(""):""}
  $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("apprT").textContent=t("apprT");$("apprS").textContent=t("apprS");$("apprYes").textContent=t("apprYes");$("apprNo").textContent=t("apprNo");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
  if(G)updTurn();
  kbHints();
@@ -172,20 +198,27 @@ const SFX={click:()=>tone(600,.08,"triangle",.15),move:()=>tone(420,.12,"triangl
  lose:()=>[392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.3,"triangle",.18),i*170)),
  drop:()=>{tone(500,.18,"sawtooth",.1,250);setTimeout(()=>tone(300,.3,"sawtooth",.1,150),170)},
  back:()=>{tone(440,.12,"triangle",.2);setTimeout(()=>tone(660,.12,"triangle",.2),110);setTimeout(()=>tone(880,.2,"triangle",.2),220)}};
+/* tiny gentle background loop while playing (follows the mute button) */
+const MUS={on:localStorage.getItem("annabelle-music")!=="0",id:0,i:0};
+const MEL=[392,0,494,0,587,494,0,392,440,0,523,0,659,523,494,0],BAS=[98,98,131,131,110,110,123,123];
+function musicStart(){musicStop();if(!MUS.on)return;MUS.i=0;MUS.id=setInterval(()=>{if(muted||!MUS.on||!G||G.over||G.paused||document.hidden)return;const i=MUS.i++,n=MEL[i%16];if(n)tone(n,.25,"triangle",.03);if(i%2===0)tone(BAS[(i>>1)%8],.35,"sine",.04)},260)}
+function musicStop(){clearInterval(MUS.id);MUS.id=0}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 // ---- game ----
 const S=100,NS="http://www.w3.org/2000/svg";
 let G=null; // {b,turn,mode,sel,chain,bonus,yarn,hist,over,busy}
-const isCPU=p=>(G.mode==="easy"||G.mode==="normal")&&p===1;
+const isCPU=p=>(G.mode==="easy"||G.mode==="normal"||G.mode==="cup")&&p===1;
 const V=n=>G&&G.flip?7-n:n; // board view: the guest sees the board turned around so own kittens are at the bottom
 function newGame(mode,yarn){
  const b=[];for(let r=0;r<8;r++){b.push([]);for(let c=0;c<8;c++)b[r].push((r+c)%2&&r<3?{p:1,k:0,id:r*8+c}:(r+c)%2&&r>4?{p:0,k:0,id:r*8+c}:null)}
  G={b,turn:0,mode,sel:null,chain:null,bonus:false,yarn:[],hist:[],over:false,busy:false};
- G.seq=0;
+ G.seq=0;G.cr=mode==="cup"?cupR:-1;G.lost=0;
  if(mode==="online"){G.online=1;G.me=NET.me;G.flip=NET.me===1;NET.myRe=NET.oppRe=false}
  placeYarn();if(yarn)G.yarn=yarn;
  $("win").classList.remove("on");$("againBtn").style.display="";$("undoBtn").style.visibility=mode==="online"?"hidden":"";
  show("game");draw();updTurn();if(G.online)saveSess();
+ musicStart();if(RW())RW().award({game:"checkers",event:"play"});
+ if(G.cr>=0)bubble(3,3,t("rnd")+" "+(G.cr+1)+"/5 · "+t("cupN")[G.cr],2200);
 }
 function placeYarn(){const e=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2&&!G.b[r][c])e.push([r,c]);G.yarn=[];for(let i=0;i<2&&e.length;i++)G.yarn.push(e.splice(Math.random()*e.length|0,1)[0])}
 const inb=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
@@ -198,9 +231,10 @@ function legal(b,p,chain,bonus){
  let all=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(b[r][c]&&b[r][c].p===p)all=all.concat(pieceMoves(b,r,c,false));
  const caps=all.filter(m=>m.cap);return caps.length?caps:all}
 function sqXY(r,c){return[c*S,r*S]}
+const BTH=()=>BT[G&&G.cr>=0?G.cr:0];
 function draw(){
  const sv=$("board");sv.innerHTML="";
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){const q=document.createElementNS(NS,"rect");q.setAttribute("x",c*S);q.setAttribute("y",r*S);q.setAttribute("width",S);q.setAttribute("height",S);q.setAttribute("fill",(r+c)%2?"#a8683a":"#f6deb0");q.setAttribute("class","sq");q.dataset.r=r;q.dataset.c=c;sv.appendChild(q)}
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){const q=document.createElementNS(NS,"rect");q.setAttribute("x",c*S);q.setAttribute("y",r*S);q.setAttribute("width",S);q.setAttribute("height",S);q.setAttribute("fill",(r+c)%2?BTH()[1]:BTH()[0]);q.setAttribute("class","sq");q.dataset.r=r;q.dataset.c=c;sv.appendChild(q)}
  for(const[r,c]of G.yarn){sv.insertAdjacentHTML("beforeend",`<g transform="translate(${V(c)*S+50},${V(r)*S+50})"><g class="yarn"><circle r="26" fill="#ff5fa2"/><path d="M-24 -6 Q0 -30 24 -6 M-25 6 Q0 -18 25 6 M-20 16 Q0 -4 20 16 M-8 -25 Q10 0 -6 25" stroke="#c2186b" stroke-width="3" fill="none"/></g><path d="M20 18 q14 8 22 -2" stroke="#ff5fa2" stroke-width="3" fill="none"/></g>`)}
  const L=G.over||isCPU(G.turn)||(G.online&&G.turn!==G.me)?[]:legal(G.b,G.turn,G.chain,G.bonus);
  if(G.sel){sv.insertAdjacentHTML("beforeend",`<rect class="selr" x="${V(G.sel[1])*S+3}" y="${V(G.sel[0])*S+3}" width="94" height="94" rx="10"/>`);
@@ -210,7 +244,8 @@ function draw(){
 }
 function kitten(pc,r,c){
  const g=document.createElementNS(NS,"g");g.setAttribute("class","pc");g.dataset.id=pc.id;g.style.transform=`translate(${V(c)*S+50}px,${V(r)*S+50}px)`;
- const body=pc.p?"#9aa3ad":"#f5973a",dark=pc.p?"#6b737c":"#c96a14",flip=pc.p?-1:1;
+ const vsCpu=G&&(G.mode==="easy"||G.mode==="normal"||G.mode==="cup"),sk=vsCpu&&!pc.p?SKINS[skinSel()]:null,rb=vsCpu&&!pc.p&&skinSel()===4,op=G&&G.cr>=0&&pc.p?OPP[G.cr]:null;
+ const body=pc.p?(op?op[0]:"#9aa3ad"):rb?"hsl("+(performance.now()/8%360|0)+",85%,66%)":sk?sk[0]:"#f5973a",dark=pc.p?(op?op[1]:"#6b737c"):rb?"#7a4aa8":sk?sk[1]:"#c96a14",flip=pc.p?-1:1;
  let h=`<path class="tail" d="M22 20 q26 4 22 -24" stroke="${dark}" stroke-width="8" fill="none" stroke-linecap="round"/>`;
  if(pc.k)h+=`<g>${Array.from({length:12},(_,i)=>`<circle cx="${Math.cos(i*Math.PI/6)*33}" cy="${Math.sin(i*Math.PI/6)*33+4}" r="12" fill="${pc.p?"#5d4e3c":"#b5651d"}"/>`).join("")}</g>`;
  h+=`<path d="M-30 -14 L-26 -42 L-6 -26 Z M30 -14 L26 -42 L6 -26 Z" fill="${body}" stroke="${dark}" stroke-width="3"/><path d="M-25 -20 L-23 -34 L-13 -26Z M25 -20 L23 -34 L13 -26Z" fill="#ffb3c7"/>`;
@@ -235,7 +270,7 @@ function doMove(m){
  SFX.move();
  let victim=null;if(m.cap){victim=b[m.cap[0]][m.cap[1]];b[m.cap[0]][m.cap[1]]=null;}
  setTimeout(()=>{
-  if(victim){const ve=pcEl(victim.id);SFX.meow();bubble(m.cap[0],m.cap[1],victim.p?pickT("fun"):t("meow"),900);
+  if(victim){if(!victim.p)G.lost++;const ve=pcEl(victim.id);SFX.meow();bubble(m.cap[0],m.cap[1],victim.p?pickT("fun"):t("meow"),900);
    if(ve){const x=V(m.cap[1])*S+50,y=V(m.cap[0])*S+50,ex=victim.p?900:-100;ve.style.transition="none";
     ve.animate([{transform:`translate(${x}px,${y}px)`},{transform:`translate(${x}px,${y-90}px) rotate(20deg)`,offset:.35},{transform:`translate(${(x+ex)/2}px,${y-20}px) rotate(-15deg)`,offset:.7},{transform:`translate(${ex}px,${y+30}px)`}],{duration:900,easing:"ease-in"}).onfinish=()=>ve.remove();}}
   let crowned=false;if(!pc.k&&((pc.p===0&&m.r===0)||(pc.p===1&&m.r===7))){pc.k=1;crowned=true;SFX.roar();bubble(m.r,m.c,"🦁 "+t("king"));}
@@ -270,6 +305,7 @@ async function cpuStep(){
  // easy = goofy: sometimes the silliest move, mostly random, rarely the best; normal = usually smart but sleepy 40% of the time (captures stay mandatory)
  let m,goofy=false;const ranked=()=>L.map(x=>[evalMove(x),x]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]),rp=Math.random();
  if(G.mode==="easy"){if(rp<.35&&L.length>1){m=ranked().pop();goofy=true}else if(rp<.85)m=L[Math.random()*L.length|0];else m=ranked()[0]}
+ else if(G.mode==="cup"){const pr=CUPS[G.cr];if(rp<pr&&L.length>1){m=L[Math.random()*L.length|0];goofy=G.cr<2&&Math.random()<.5}else m=ranked()[0]}
  else m=rp<.4?L[Math.random()*L.length|0]:ranked()[0];
  await doMove(m);if(goofy&&!G.over&&Math.random()<.7)bubble(m.r,m.c,pickT("goofy"),1500);if(G.chain&&isCPU(G.turn))setTimeout(cpuStep,500);
 }
@@ -329,14 +365,30 @@ setInterval(()=>{if(!G||!$("game").classList.contains("active"))return;const els
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));if(id==="game")fit()}
 function fit(){const w=$("wrap");const s=Math.max(200,Math.min(w.clientWidth-4,w.clientHeight-8));$("board").style.width=$("board").style.height=s+"px"}
 addEventListener("resize",fit);
-window.toMenu=function(){netLeave();$("win").classList.remove("on");G=null;show("menu")};
+window.toMenu=function(){musicStop();netLeave();$("win").classList.remove("on");G=null;show("menu");applyLang()};
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
-function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🤍🦁🤍":"🧡🦁🧡";$("againBtn").style.display="";$("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti()}else if(G.online)SFX.lose()}
+function cupWin(w){ // cup flow: win = next match (stars by kittens left), loss = kindly replay the same match
+ const c=cpGet(),r=G.cr,R=RW();let left=0;for(const row of G.b)for(const q of row)if(q&&q.p===0)left++;
+ if(w===0){
+  const stars=left>=8?3:left>=5?2:1;c.stars[r]=Math.max(c.stars[r]||0,stars);if(r>=c.done)c.done=r+1;
+  const before=c.skins,fin=r===4;c.skins=Math.max(c.skins,Math.min(5,r+2));if(fin){c.cups++;c.skins=5}cpSave(c);
+  $("winT").textContent=fin?t("cupWon"):t("winYou");$("winS").innerHTML=(fin?"🏆🦁🏆":"🧡🦁🧡")+`<div style="font-size:22px;margin-top:4px">${"⭐".repeat(stars)+"☆".repeat(3-stars)} · ${left} ${t("kleft")}${c.skins>before?"<br>"+t("unl"):""}</div>`;
+  $("againBtn").textContent=fin?t("cupAgain"):t("cupNext");$("againBtn").dataset.lg="next";
+  if(R){R.award({game:"checkers",event:"levelClear",level:r+1,score:left*10});R.award({game:"checkers",event:"star",stars});R.award({game:"checkers",event:"win",coins:fin?20:undefined});R.award({game:"checkers",event:"score",score:left*10})}
+ }else{
+  $("winT").textContent=t("cupLose");$("winS").textContent="🐱💪";$("againBtn").textContent=t("cupRetry");$("againBtn").dataset.lg="retry";if(R)R.award({game:"checkers",event:"score",score:left*10})}
+}
+function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🤍🦁🤍":"🧡🦁🧡";$("againBtn").style.display="";delete $("againBtn").dataset.lg;musicStop();
+ if(G.mode==="cup")cupWin(w);
+ else if(RW()){const R=RW(),mine=G.online?w===G.me:G.mode!=="two"&&w===0;if(mine){let left=0;for(const row of G.b)for(const q of row)if(q&&q.p===(G.online?G.me:0))left++;R.award({game:"checkers",event:"win"});R.award({game:"checkers",event:"score",score:left*10});const st=left>=8?3:left>=5?2:1;if(!G.online||true)R.award({game:"checkers",event:"star",stars:st})}}
+ $("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti();if(G.cr===4&&!w)setTimeout(confetti,1500)}else if(G.online)SFX.lose();else SFX.lose();
+ if(RW())setTimeout(()=>RW().flush(),500)}
 function confetti(){const cv=$("conf"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:120},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*3,c:`hsl(${Math.random()*360},90%,60%)`,a:Math.random()*6}));let n=0;(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.a+=.1;x.fillStyle=p.c;x.fillRect(p.x+Math.sin(p.a)*8,p.y,8,12)});if(++n<220)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
-$("againBtn").addEventListener("click",()=>{if(G.online){NET.myRe=true;netSend({t:"rematch"});$("winT").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch();return}const m=G.mode;$("win").classList.remove("on");newGame(m)});
+$("againBtn").addEventListener("click",()=>{const lg=$("againBtn").dataset.lg;delete $("againBtn").dataset.lg;if(lg){if(lg==="next"){const c=cpGet();cupR=c.done>=5?0:c.done;if(c.done>=5){c.done=0;cpSave(c)}}$("win").classList.remove("on");newGame("cup");return}if(G.online){NET.myRe=true;netSend({t:"rematch"});$("winT").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch();return}const m=G.mode;$("win").classList.remove("on");newGame(m)});
 document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=e.target.closest("[data-mode]");
  if(L){lang=L.dataset.lang;localStorage.setItem("annabelle-lang",lang);SFX.click();applyLang()}
- if(M){ac();SFX.click();newGame(M.dataset.mode)}});
+ const SK2=e.target.closest("[data-skin]");if(SK2&&+SK2.dataset.skin<cpGet().skins){try{localStorage.setItem("annabelle-checkers-skin",SK2.dataset.skin)}catch(_){}SFX.click();applyLang()}
+ if(M){ac();SFX.click();if(M.dataset.mode==="cup"){const c=cpGet();cupR=c.done>=5?0:c.done;if(c.done>=5){c.done=0;cpSave(c)}}newGame(M.dataset.mode)}});
 $("muteBtn").addEventListener("click",()=>{muted=!muted;localStorage.setItem("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});
 // ---- online play: WebRTC via PeerJS (room code or link), with pause / save / resync on disconnect ----
 const ROOM_SECS=300;

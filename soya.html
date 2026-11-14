@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffc7d9">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%88%E2%80%8D%E2%AC%9B%3C/text%3E%3C/svg%3E">
-<title>סויה החתול</title><script src="safe.js"></script>
+<title>סויה החתול</title><script src="safe.js"></script><script src="rewards.js" defer></script>
 <style>
 :root{--ink:#4a2c6b;--accent:#ff7a3d;--accent2:#7c5cff;--ok:#34c47c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -933,5 +933,126 @@ $('stage').addEventListener('pointermove',e=>{ if(e.pointerType==='mouse'&&e.but
 })();
 </script>
 
+<style>
+/* ===== friendship levels, daily quests, rooms (added) ===== */
+#jourBtn{position:relative}
+#jourBtn b{position:absolute;bottom:-4px;inset-inline-end:-4px;min-width:22px;height:22px;border-radius:999px;background:var(--accent2);color:#fff;font-size:12px;line-height:22px;text-align:center;padding:0 4px;box-shadow:0 2px 0 #0003}
+#jour .card{gap:10px;overflow-y:auto}
+#jour h2{margin:0}
+.jlv{display:flex;align-items:center;gap:10px;width:100%;font-weight:900}
+.jlv .bdg{font-size:38px;line-height:1;filter:drop-shadow(0 3px 0 #0002)}
+.jlv .xp{flex:1}
+.xpbar{height:14px;border-radius:9px;background:#0001;overflow:hidden;box-shadow:inset 0 0 0 1px #0001;margin-top:4px}
+.xpbar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#ffd34d,#ff8a1f);transition:width .6s}
+.jsec{font-weight:900;font-size:15px;align-self:stretch;opacity:.85}
+.qrow{display:flex;align-items:center;gap:8px;width:100%;background:#f4eefc;border-radius:14px;padding:6px 10px;font-weight:800;font-size:14px}
+.qrow .qe{font-size:24px}.qrow .qt{flex:1;line-height:1.15}.qrow .qc{font-weight:900;color:var(--accent2);direction:ltr}
+.qrow.done{background:#d8f7e3}.qrow.done .qc{color:#2fb36a}
+.rooms{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%}
+.rm{width:clamp(54px,16vw,72px);padding:5px 2px;border-radius:14px;background:#f4eefc;font-size:11px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.1;box-shadow:0 3px 0 #0002}
+.rm i{display:block;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 3px #fff8,0 0 0 2px #0002;font-style:normal;line-height:30px;font-size:16px}
+.rm.sel{background:#ffe066;box-shadow:0 0 0 3px var(--accent2),0 3px 0 #0002}.rm.lock{opacity:.5;filter:grayscale(.6)}
+html.desk .rm:hover{transform:translateY(-2px)}html.desk .rm:focus-visible,html.desk #jourBtn:focus-visible{outline:4px solid #2a8fd0;outline-offset:2px}
+#lvUp{position:absolute;inset:0;z-index:4500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#2a1a4acc;text-align:center;color:#fff;padding:20px;overflow:hidden}
+#lvUp.show{display:flex}
+#lvUp .big1{font-size:clamp(70px,22vw,120px);animation:lvpop .7s cubic-bezier(.3,1.8,.5,1) both;filter:drop-shadow(0 6px 0 #0004)}
+#lvUp h2{margin:0;font-size:clamp(28px,8vw,48px);text-shadow:0 4px 0 var(--accent)}
+#lvUp p{margin:0;font-weight:800;font-size:clamp(16px,4.4vw,22px);max-width:420px}
+@keyframes lvpop{0%{transform:scale(0) rotate(-30deg)}100%{transform:scale(1) rotate(0)}}
+#lvUp .cf{position:absolute;top:-8%;font-size:26px;animation:cfall linear forwards;pointer-events:none}
+@keyframes cfall{to{transform:translateY(120vh) rotate(540deg)}}
+#musRow{display:flex;gap:8px}
+</style>
+<div class="panel" id="jour"><div class="card">
+  <h2 id="jT"></h2>
+  <div class="jlv"><span class="bdg" id="jBdg"></span><div class="xp"><div id="jLv"></div><div class="xpbar"><i id="jBar" style="width:0%"></i></div><div id="jNext" style="font-size:12px;opacity:.8"></div></div></div>
+  <div class="jsec" id="jQT"></div><div id="jQ" style="display:flex;flex-direction:column;gap:6px;width:100%"></div>
+  <div class="jsec" id="jRT"></div><div class="rooms" id="jRooms"></div>
+  <div id="musRow"><button class="big pk" id="jMus"></button></div>
+  <button class="big go" id="jClose">✔️</button>
+</div></div>
+<div id="lvUp"><div class="big1" id="lvE">🌟</div><h2 id="lvT"></h2><p id="lvS"></p></div>
+<script>
+(()=>{
+const R=()=>window.AnnabelleRewards, aw=o=>{ try{ const r=R(); if(r) r.award(Object.assign({game:'soya'},o)); }catch(e){} }, fl=()=>{ try{ const r=R(); if(r) r.flush(); }catch(e){} };
+const J={
+ he:{title:'המסע של סויה',lv:'דרגת חברות',next:'עוד {n} נקודות לדרגה הבאה',max:'דרגה מקסימלית! 👑',qt:'משימות היום',rt:'החדרים של סויה',lock:'דרגה {n}',music:'מוזיקה',
+  q:{feed:'להאכיל את סויה',drink:'לתת לסויה מים',play:'לשחק עם כדור או לייזר',trick:'לבקש טריקים',pet:'ללטף את סויה',photo:'לצלם תמונה',toy:'לקנות צעצוע ולשחק',sleep:'לשלוח אותו לישון'},
+  rooms:{cozy:'נעים',mint:'מנטה',lav:'סגלגל',sun:'שקיעה',night:'לילה'},
+  lvUp:'דרגה {n}!',lvS:'סויה אוהב אותך יותר! קיבלת +3 🐾',roomNew:'חדר חדש נפתח: {r}!',qDone:'משימה הושלמה! +2 🐾',qAll:'כל המשימות של היום! +5 🐾 🎉',titles:['גור חתולים','חתלתול סקרן','חתול שובב','חבר טוב','חתול מפונק','מגן הבית','אלוף המשחקים','כוכב הבית','אגדת החתולים','מלך החתולים'],xp:'+{n} ⭐'},
+ fr:{title:'Le voyage de Soya',lv:'Niveau d\'amitié',next:'Encore {n} points pour le niveau suivant',max:'Niveau maximum ! 👑',qt:'Défis du jour',rt:'Les chambres de Soya',lock:'Niveau {n}',music:'Musique',
+  q:{feed:'Nourrir Soya',drink:'Donner de l\'eau à Soya',play:'Jouer à la pelote ou au laser',trick:'Demander des tours',pet:'Caresser Soya',photo:'Prendre une photo',toy:'Acheter un jouet et jouer',sleep:'Envoyer Soya dormir'},
+  rooms:{cozy:'Cosy',mint:'Menthe',lav:'Lavande',sun:'Coucher de soleil',night:'Nuit'},
+  lvUp:'Niveau {n} !',lvS:'Soya t\'aime encore plus ! Tu gagnes +3 🐾',roomNew:'Nouvelle chambre : {r} !',qDone:'Défi réussi ! +2 🐾',qAll:'Tous les défis du jour ! +5 🐾 🎉',titles:['Bébé chat','Chaton curieux','Chat coquin','Bon copain','Chat gâté','Gardien de la maison','Champion des jeux','Star de la maison','Légende des chats','Roi des chats'],xp:'+{n} ⭐'},
+ en:{title:'Soya\'s Journey',lv:'Friendship level',next:'{n} more points to the next level',max:'Max level! 👑',qt:'Today\'s quests',rt:'Soya\'s rooms',lock:'Level {n}',music:'Music',
+  q:{feed:'Feed Soya',drink:'Give Soya water',play:'Play with the yarn or laser',trick:'Ask for tricks',pet:'Pet Soya',photo:'Take a photo',toy:'Buy a toy and play',sleep:'Send Soya to sleep'},
+  rooms:{cozy:'Cozy',mint:'Mint',lav:'Lavender',sun:'Sunset',night:'Night'},
+  lvUp:'Level {n}!',lvS:'Soya loves you even more! You got +3 🐾',roomNew:'New room unlocked: {r}!',qDone:'Quest done! +2 🐾',qAll:'All of today\'s quests! +5 🐾 🎉',titles:['Baby kitty','Curious kitten','Playful cat','Best friend','Spoiled cat','House guardian','Game champion','House star','Cat legend','King of cats'],xp:'+{n} ⭐'}};
+const jj=()=>J[lang]||J.he;
+const BADGE=['🐱','😺','😸','💞','🎀','🛡️','🏆','🌟','🎖️','👑'];
+const NEED=L=>5*L*(L-1); // total xp needed to reach level L  (L2=10, L3=30, ... L10=450)
+const MAXL=10;
+const ROOMS=[['cozy',1,''],['mint',3,'hue-rotate(80deg)'],['lav',5,'hue-rotate(205deg) saturate(1.05)'],['sun',7,'hue-rotate(-28deg) saturate(1.3) brightness(1.04)'],['night',9,'hue-rotate(215deg) saturate(1.15) brightness(.72)']];
+const RCOL={cozy:'#ffd9b8',mint:'#bfe8c8',lav:'#d8c8f5',sun:'#ffb089',night:'#4a4a8a'};
+const QPOOL=[['feed','🍽️',1],['drink','💧',1],['play','🧶',2],['trick','🎲',2],['pet','💖',12],['photo','📸',1],['toy','🎁',1],['sleep','💤',1]];
+if(typeof P.xp!=='number') P.xp=0; if(typeof P.room!=='string') P.room='cozy'; if(typeof P.pq!=='number') P.pq=0;
+const level=()=>{ let L=1; while(L<MAXL&&P.xp>=NEED(L+1)) L++; return L; };
+function hash(s){ let h=7; for(const c of s) h=(h*31+c.charCodeAt(0))>>>0; return h; }
+function newQ(){ const d=new Date().toDateString(); if(P.q&&P.q.d===d) return; let h=hash(d), pool=QPOOL.slice(), ids=[]; while(ids.length<3){ const i=h%pool.length; ids.push(pool.splice(i,1)[0][0]); h=Math.floor(h/7)+13; } P.q={d,ids,c:{},done:[],all:0}; save(); }
+newQ();
+const qdef=k=>QPOOL.find(q=>q[0]===k);
+function applyRoom(){ const r=ROOMS.find(r=>r[0]===P.room&&level()>=r[1])||ROOMS[0]; const f=r[2]||''; const rm=$('room'); if(rm) rm.style.filter=f||'none'; }
+function xpFx(n){ try{ const [hx,hy]=headXY(); fx(jj().xp.replace('{n}',n),hx+rnd(-20,20),hy-50); }catch(e){} }
+function confettiDOM(el,n=36){ const cols=['🎉','⭐','💖','🐾','✨','🎈']; for(let i=0;i<n;i++){ const s=document.createElement('span'); s.className='cf'; s.textContent=cols[i%cols.length]; s.style.left=Math.random()*100+'%'; s.style.fontSize=(18+Math.random()*22)+'px'; s.style.animationDuration=(2+Math.random()*2.2)+'s'; s.style.animationDelay=(Math.random()*.8)+'s'; el.appendChild(s); } }
+let lvTimer=0;
+function levelUp(L){ const j=jj(), room=ROOMS.find(r=>r[1]===L);
+  P.paws+=3; $('pawN').textContent=P.paws; save();
+  const o=$('lvUp'); o.querySelectorAll('.cf').forEach(e=>e.remove()); $('lvE').textContent=BADGE[L-1]; $('lvT').textContent=j.lvUp.replace('{n}',L)+' '+j.titles[L-1];
+  $('lvS').textContent=j.lvS+(room?' · '+j.roomNew.replace('{r}',(j.rooms[room[0]])):''); o.dir=tx().dir; o.classList.add('show'); confettiDOM(o,44);
+  try{ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,i*.09,.3,'triangle',.13)); tone(262,0,.9,'sine',.1); }catch(e){}
+  try{ anim('a-dance',3000); setFace('happy'); }catch(e){} setTimeout(()=>{ try{ say(fmt(tx().hi),2500); }catch(e){} },900);
+  aw({event:'levelClear',level:L,score:P.xp}); if(L>=5&&L%2===1) aw({event:'star',stars:3}); else aw({event:'star',stars:Math.min(3,1+(L>>2))}); fl();
+  clearTimeout(lvTimer); lvTimer=setTimeout(()=>o.classList.remove('show'),4200); refreshBtn(); applyRoom(); }
+$('lvUp').addEventListener('pointerdown',()=>{ $('lvUp').classList.remove('show'); });
+function gain(n,k){ if(!n) return; const L0=level(); P.xp+=n; if(n>=1) xpFx(Math.round(n)); const L1=level(); save(); refreshBtn(); if(L1>L0) setTimeout(()=>levelUp(L1),700); }
+function qAdd(k,n=1){ newQ(); const q=P.q; if(!q.ids.includes(k)||q.done.includes(k)) return; q.c[k]=(q.c[k]||0)+n; const d=qdef(k);
+  if(q.c[k]>=d[2]){ q.done.push(k); P.paws+=2; $('pawN').textContent=P.paws; try{ SFX.unlock(); }catch(e){} setTimeout(()=>toast(jj().qDone),400); gain(6,'q'); aw({event:'star',stars:Math.min(3,q.done.length)});
+    if(q.done.length>=3&&!q.all){ q.all=1; P.paws+=5; P.pq++; $('pawN').textContent=P.paws; setTimeout(()=>{ toast(jj().qAll,3200); try{ SFX.unlock(); }catch(e){} },1800); gain(10,'all'); aw({event:'win'}); aw({event:'score',score:P.xp}); setTimeout(fl,2600); } }
+  save(); if($('jour').classList.contains('show')) renderJour(); }
+function act(k,xp){ qAdd(k); gain(xp,k); }
+// ---- hooks on existing actions ----
+$('bar').addEventListener('click',e=>{ const b=e.target.closest('.act'); if(!b) return; const a=b.dataset.a;
+  if(a==='feed') act('feed',3); else if(a==='drink') act('drink',2); else if(a==='play'||a==='laser') act('play',3); else if(a==='trick') act('trick',4); else if(a==='sleep'&&S.state!=='sleep') act('sleep',2); },true);
+{ let pw=0; const tr=$('toyRow'); tr.addEventListener('click',()=>{ pw=P.paws; },true); tr.addEventListener('click',()=>{ if(P.paws<pw) act('toy',5); }); }
+const _tp=takePhoto; takePhoto=function(){ act('photo',3); return _tp.apply(this,arguments); };
+let sk=0; const _st=stroke; stroke=function(){ const r=_st.apply(this,arguments); qAdd('pet'); if(++sk%4===0) gain(1,'pet'); if(sk%12===0) aw({event:'combo',score:sk%48||12}); return r; };
+const _sg=startGame; startGame=function(){ const r=_sg.apply(this,arguments); aw({event:'play'}); newQ(); applyRoom(); refreshBtn(); return r; };
+$('homeBtn').addEventListener('click',()=>{ aw({event:'score',score:P.xp}); fl(); });
+// ---- UI ----
+const side=$('side'); const jb=document.createElement('button'); jb.className='iconbtn'; jb.id='jourBtn'; jb.innerHTML='🏆<b>1</b>'; side.insertBefore(jb,side.firstChild);
+function refreshBtn(){ jb.querySelector('b').textContent=level(); }
+function renderJour(){ const j=jj(), L=level(); $('jT').textContent=j.title; $('jBdg').textContent=BADGE[L-1];
+  $('jLv').textContent=j.lv+' '+L+' · '+j.titles[L-1]; const lo=NEED(L), hi=NEED(Math.min(MAXL,L+1)); const pct=L>=MAXL?100:Math.max(0,Math.min(100,(P.xp-lo)/(hi-lo)*100)); $('jBar').style.width=pct+'%';
+  $('jNext').textContent=L>=MAXL?j.max:j.next.replace('{n}',Math.ceil(hi-P.xp));
+  newQ(); $('jQT').textContent='🎯 '+j.qt+' ('+P.q.done.length+'/3)';
+  $('jQ').innerHTML=P.q.ids.map(k=>{ const d=qdef(k), c=Math.min(d[2],P.q.c[k]||0), dn=P.q.done.includes(k); return `<div class="qrow ${dn?'done':''}"><span class="qe">${d[1]}</span><span class="qt">${j.q[k]}</span><span class="qc">${dn?'✅':c+'/'+d[2]}</span></div>`; }).join('');
+  $('jRT').textContent='🏠 '+j.rt; $('jRooms').innerHTML=ROOMS.map(([k,need])=>{ const lk=L<need; return `<button class="rm ${k===P.room&&!lk?'sel':''} ${lk?'lock':''}" data-room="${k}"><i style="background:${RCOL[k]}">${lk?'🔒':''}</i>${lk?j.lock.replace('{n}',need):j.rooms[k]}</button>`; }).join('');
+  $('jMus').textContent=(musOn?'🎵 ':'🔕 ')+j.music; $('jClose').textContent='✔️'; $('jour').dir=tx().dir; }
+$('jRooms').addEventListener('click',e=>{ const b=e.target.closest('[data-room]'); if(!b) return; const r=ROOMS.find(r=>r[0]===b.dataset.room); if(level()<r[1]){ try{ SFX.mrrp(); }catch(e){} return; } P.room=r[0]; save(); applyRoom(); try{ SFX.pop(); }catch(e){} renderJour(); });
+jb.onclick=()=>{ try{ ac(); SFX.click(); }catch(e){} renderJour(); $('jour').classList.add('show'); };
+$('jClose').onclick=()=>$('jour').classList.remove('show');
+// ---- tiny music-box loop (own on/off, respects the mute button, silent while sleeping / panels) ----
+let musOn=localStorage.getItem('soya-music')!=='0'; const SC=[392,440,523,587,659,784], PAT=[0,2,4,2,1,3,5,3,2,4,5,4,3,1,2,0]; let ms=0;
+setInterval(()=>{ if(muted||!musOn||!running||document.hidden||document.body.classList.contains('sleeping')||S.state==='sleep') return; const i=PAT[ms%PAT.length]; tone(SC[i],0,.55,'sine',.035); tone(SC[i]*2,.01,.25,'sine',.012); if(ms%8===0) tone(SC[0]/2,0,1.4,'sine',.03); ms++; },520);
+$('jMus').onclick=()=>{ musOn=!musOn; try{ localStorage.setItem('soya-music',musOn?'1':'0'); }catch(e){} renderJour(); try{ SFX.click(); }catch(e){} };
+const alx=applyLang; applyLang=function(){ alx.apply(this,arguments); try{ jb.setAttribute('aria-label',jj().title); }catch(e){} };
+document.addEventListener('keydown',e=>{ if(e.code==='KeyJ'&&!e.ctrlKey&&!e.metaKey&&running&&!startVisible()&&!(e.target&&e.target.tagName==='INPUT')){ if($('jour').classList.contains('show')) $('jClose').click(); else jb.click(); } else if(e.code==='Escape'&&$('lvUp').classList.contains('show')){ $('lvUp').classList.remove('show'); } },true);
+// Esc closes our panel too
+document.addEventListener('keydown',e=>{ if(e.code==='Escape'&&$('jour').classList.contains('show')){ e.preventDefault(); e.stopImmediatePropagation(); $('jClose').click(); } },true);
+function startVisible(){ return !$('start').classList.contains('hide'); }
+applyRoom(); refreshBtn(); try{ applyLang(); }catch(e){}
+window.__soyaProg={gain,level,qAdd,P,levelUp,renderJour,NEED,get musOn(){return musOn}};
+})();
+</script>
 </body>
 </html>

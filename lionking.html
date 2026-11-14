@@ -74,6 +74,12 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 .star.on{filter:none;animation:pop .5s cubic-bezier(.3,1.8,.5,1) forwards}
 .star.off{animation:pop2 .4s forwards}
 @keyframes pop{to{transform:scale(1)}}@keyframes pop2{to{transform:scale(.85)}}
+.goals{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:min(78vw,300px)}
+.goals div{background:#fff;border-radius:12px;padding:3px 12px;font-size:clamp(14px,3.8vw,16px);font-weight:800;box-shadow:0 2px 0 #0002}
+.goals div.ok{background:#d9f7e6;color:#1f7a49}
+.unl{font-weight:900;color:#2fb36a;font-size:17px}
+#cfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+@media (max-height:480px){.goals{flex-direction:row;flex-wrap:wrap;justify-content:center;min-width:0}}
 .stats{display:grid;grid-template-columns:auto auto;gap:3px 16px;font-weight:800;font-size:clamp(15px,4vw,18px)}
 .stats b{color:#c24d10;direction:ltr;unicode-bidi:isolate}
 .sub{font-weight:800;font-size:17px;max-width:420px}
@@ -97,6 +103,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 </style>
 <!--pwa--><link rel="manifest" href="manifests/lionking.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/lionking-192.png"><meta name="apple-mobile-web-app-title" content="האריה הקטן"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/lionking-apple-180.png"><script src="pwa.js" data-app="lionking" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="[id$=MenuBtn]" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -106,6 +113,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
   <div id="rgrp"><button class="pb" id="bRoll" aria-label="roll"><span class="ic">🌀</span></button><button class="pb" id="bRoar" aria-label="roar"><span class="meter" id="roarCd"></span><span class="ic">🦁</span></button><button class="pb" id="bJ" aria-label="jump"><svg viewBox="0 0 40 40"><path d="M20 5 L35 22 H26 V35 H14 V22 H5 Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></button></div>
 </div>
 <div id="toast"></div>
+<canvas id="cfx"></canvas>
 
 <div class="ov show" id="menu"><div class="mwrap">
   <canvas id="tcub" width="360" height="300"></canvas>
@@ -114,6 +122,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
     <button class="big go" id="playBtn"></button>
     <div class="mstats" id="tBest"></div>
     <div class="langs" id="diffs"></div>
+    <div class="langs" id="maps"></div>
     <div class="tip" id="tTip"></div>
     <div class="langs" id="langs"></div>
     <div class="rot hidden" id="tRot"></div>
@@ -135,6 +144,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
   <h2 id="tWin"></h2>
   <div class="stars" id="stars"><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span></div>
   <div class="sub" id="tWinS"></div>
+  <div class="goals" id="goalsList"></div>
+  <div class="unl" id="tUnl"></div>
   <div class="stats" id="stats"></div>
   <div class="best" id="tRec"></div>
   <div class="row"><button class="big go" id="wAgainBtn"></button><button class="big home" id="wMenuBtn"></button></div>
@@ -194,6 +205,18 @@ const T={
   silly:["Ha! The bug fell on its own nose 🤣","Tickle tickle! It tickles, it doesn't hurt 🕊️","Boing! It slipped on a banana peel 🍌","Achoo! It sneezed and forgot to bite 🤧"],
   pitSilly:["Bloop! A big bubble bounced you back 💧","The cloud caught you! One, two… hop ☁️","A frog hopped you back 🐸"],
   trip:["Whoops! The bug tripped over its own feet 🥴","The lizard dozed off for a second 💤"]}};
+Object.assign(T.he,{diff_hard:"🔥 מאתגר",map_day:"🌅 יום",map_night:"🌙 לילה",nightLock:"🔒 מפת הלילה נפתחת אחרי שמסיימים את ההרפתקה!",nightUnl:"🌙 נפתחה מפת לילה חדשה!",
+  g_bugs:"אספי {n} חרקים",g_foes:"הביסי {n} אויבים",g_paws:"מצאי {n} כפות זהב",g_hearts:"סיימי עם {n} לבבות",goalDone:"משימה הושלמה! ✅",starsBest:"⭐ {n}/3"});
+Object.assign(T.fr,{diff_hard:"🔥 Défi",map_day:"🌅 Jour",map_night:"🌙 Nuit",nightLock:"🔒 La carte de nuit s'ouvre après l'aventure !",nightUnl:"🌙 Nouvelle carte de nuit débloquée !",
+  g_bugs:"Ramasse {n} insectes",g_foes:"Bats {n} ennemis",g_paws:"Trouve {n} pattes d'or",g_hearts:"Finis avec {n} cœurs",goalDone:"Mission réussie ! ✅",starsBest:"⭐ {n}/3"});
+Object.assign(T.en,{diff_hard:"🔥 Challenge",map_day:"🌅 Day",map_night:"🌙 Night",nightLock:"🔒 The night map opens after you finish the adventure!",nightUnl:"🌙 New night map unlocked!",
+  g_bugs:"Collect {n} bugs",g_foes:"Beat {n} foes",g_paws:"Find {n} golden paws",g_hearts:"Finish with {n} hearts",goalDone:"Goal complete! ✅",starsBest:"⭐ {n}/3"});
+const RW=()=>window.AnnabelleRewards;
+const NIGHT_KEY="annabelle-lionking-night", MAP_KEY="annabelle-lionking-map", STARS_KEY="annabelle-lionking-stars";
+const nightOK=()=>{ try{ return localStorage.getItem(NIGHT_KEY)==="1"; }catch(e){ return false; } };
+let MAP=(()=>{ try{ return localStorage.getItem(MAP_KEY)==="night"&&localStorage.getItem(NIGHT_KEY)==="1"?"night":"day"; }catch(e){ return "day"; } })();
+function setMap(m){ MAP=(m==="night"&&nightOK())?"night":"day"; try{ localStorage.setItem(MAP_KEY,MAP); }catch(e){} }
+const starsGet=()=>{ try{ return JSON.parse(localStorage.getItem(STARS_KEY))||{}; }catch(e){ return {}; } };
 const LN={he:"עברית",fr:"Français",en:"English"};
 let lang="he"; try{ lang=localStorage.getItem("annabelle-lang")||"he"; }catch(e){} if(!T[lang]) lang="he";
 const t=()=>T[lang];
@@ -299,7 +322,8 @@ function setMuted(m){ muted=m; lsSet("annabelle-muted",m?"1":"0"); if(master) ma
 /* difficulty presets: easy (default, for little players) / normal (original tuning) */
 const PRESETS={
  easy:  {hearts:5,inv:2.6,pitInv:2,pitFree:true,beetleV:22,lizV:40,shrink:4,silly:.3,trip:.1,bossTired:.9,bossTell:.3,bossSpd:.85,bones:2,extra:true},
- normal:{hearts:3,inv:1.6,pitInv:1.4,pitFree:false,beetleV:32,lizV:58,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1,bones:3,extra:false}
+ normal:{hearts:3,inv:1.6,pitInv:1.4,pitFree:false,beetleV:32,lizV:58,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1,bones:3,extra:false},
+ hard:  {hearts:3,inv:1.2,pitInv:1.2,pitFree:false,beetleV:38,lizV:66,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1.12,bones:4,extra:false}
 };
 const pick=a=>a[Math.random()*a.length|0];
 const DIFF_KEY="annabelle-lion-diff";
@@ -349,6 +373,7 @@ function makeBugs(){ const B=[]; const add=(x,y,h)=>B.push({x,y,heal:!!h,got:fal
   line(5300,5420,330,4); line(6100,6180,330,3);
   line(6880,6990,356,3); arc(7080,7360,240,60,7); add(7400,300,1); line(7500,7620,356,3);
   if(D.extra) [[800,330],[2560,340],[3840,330],[5360,300],[6500,300],[7200,200]].forEach(q=>add(q[0],q[1],1));
+  if(MAP==="night"){ arc(1700,1900,296,50,5); arc(2480,2680,296,50,6); arc(3900,4080,296,50,5); arc(6000,6120,300,40,4); line(7640,7800,356,4); }
   return B; }
 /* derived solids */
 const SOLID=GROUND.map(g=>[g[0],G,g[1]-g[0],LH+200]).concat(ROCKS.map(r=>[r[0],r[1],r[2],r[3]]));
@@ -617,7 +642,7 @@ function resetLevel(fromCp){
   const sp=fromCp&&cp?cp:{x:60,y:G};
   P=newPlayer(sp.x,sp.y); P.hearts=D.hearts;
   EN=EN_DEF.map(d=>({k:d[0],x:d[1],a:d[2],b:d[3],y:(d[0]==="porc"&&d[1]>7000)?252:G,dir:-1,st:"walk",t:Math.random()*5,vx:0,vy:0,rot:0,fade:1,stunT:0}));
-  if(!keep){ BUGS=makeBugs(); PAWS=PAWS_DEF.map(p=>({...p,got:false})); cp=null; }
+  if(!keep){ BUGS=makeBugs(); PAWS=PAWS_DEF.map(p=>({...p,got:false})); cp=null; resetGoals(); }
   else { PAWS.forEach((p,i)=>p.got=stats.paws[i]); }
   // enemies already behind the checkpoint are gone
   if(fromCp&&cp) EN.forEach(e=>{ if(e.x<cp.x-40) e.st="gone"; });
@@ -785,15 +810,21 @@ function updateItems(dt){
   BUGS.forEach(b=>{ if(b.got) return; if(Math.abs(b.x-cx)<18&&Math.abs(b.y-cy)<22){ b.got=true; combo++; comboT=.6;
     if(b.heal){ if(P.hearts<D.hearts){ P.hearts++; toast(t().heal); } SFX.heal(); spark(b.x,b.y,12,"#ff7aa0",120); pop(b.x,b.y-14,"❤️"); }
     else { SFX.bug(combo); spark(b.x,b.y,6,"#fff3a0",90); pop(b.x,b.y-14,"+10","#fff3a0"); }
-    stats.bugs++; P.roarM=Math.min(1,P.roarM+.1); } });
+    stats.bugs++; P.roarM=Math.min(1,P.roarM+.1); if(combo===6){ try{ RW()&&RW().award({game:"lionking",event:"combo",score:combo}); }catch(e){} } } });
   PAWS.forEach((w,i)=>{ if(w.got) return; if(Math.abs(w.x-cx)<22&&Math.abs(w.y-cy)<26){ w.got=true; stats.paws[i]=true; SFX.paw(); stop(.12); shake(4); spark(w.x,w.y,24,"#ffd23f",200); ring(w.x,w.y,70,"rgba(255,220,90,",.6);
     toast(t().paw.replace("{n}",stats.paws.filter(Boolean).length)); } });
   // checkpoints
-  CPS.forEach(c=>{ if((!cp||c.x>cp.x)&&P.x>=c.x&&P.mode==="normal"&&Math.abs(P.y-c.y)<40){ cp={x:c.x,y:c.y}; SFX.cp(); spark(c.x,c.y-50,14,"#7ae0ff",130); toast(t().cp); } });
+  CPS.forEach(c=>{ if((!cp||c.x>cp.x)&&P.x>=c.x&&P.mode==="normal"&&Math.abs(P.y-c.y)<40){ cp={x:c.x,y:c.y}; SFX.cp(); spark(c.x,c.y-50,14,"#7ae0ff",130); toast(t().cp); try{ RW()&&RW().award({game:"lionking",event:"levelClear",level:(stats.cpN=(stats.cpN||0)+1),score:stats.bugs*10}); }catch(e){} } });
+  if(!(stats.gc=(stats.gc||0)+1&31)) checkGoals();
   // signs
   SIGNS.forEach(s=>{ if(Math.abs(P.x-s.x)<60&&!hintsShown[s.k]) hint(s.k); });
   // rhino and giraffe hint trigger handled by signs
 }
+/* ---- mini goals ---- */
+function goalList(){ const tot=BUGS.filter(b=>!b.heal).length; const k=MAP==="night";
+  return [{id:"bugs",n:Math.round(tot*(k?.7:.55)),v:()=>stats.bugs},{id:"foes",n:k?8:5,v:()=>stats.foes},k?{id:"paws",n:3,v:()=>stats.paws.filter(Boolean).length}:{id:"paws",n:2,v:()=>stats.paws.filter(Boolean).length},{id:"hearts",n:2,v:()=>P.hearts,end:true}]; }
+let GOALS=[]; function resetGoals(){ GOALS=goalList(); GOALS.forEach(g=>g.ok=false); }
+function checkGoals(){ GOALS.forEach(g=>{ if(!g.ok&&!g.end&&g.v()>=g.n){ g.ok=true; toast(t().goalDone+" "+t()["g_"+g.id].replace("{n}",g.n)); SFX.paw&&SFX.cp(); spark(P.x,P.y-30,16,"#7ae0ff",160); } }); }
 /* ---- monkey toss ---- */
 function updateMonkey(dt){ const m=monkey; m.t+=dt;
   if(m.st==="idle"){ if(P.mode==="normal"&&P.on&&P.x>MONKEY.pad0&&P.x<MONKEY.pad1&&Math.abs(P.y-G)<2){ m.st="grab"; m.t=0; SFX.monkey(); } }
@@ -938,7 +969,22 @@ const TER=GROUND.map(([x0,x1])=>{ const lip=new Path2D(); lip.moveTo(x0,G+8); li
   return {x0,x1,lip,peb}; });
 const THORN=new Path2D(); (function(){ for(let x=0;x<200;x+=10){ THORN.moveTo(x,0); THORN.lineTo(x+3,-12-((x*7)%9)); THORN.lineTo(x+5,-2); THORN.lineTo(x+8,-9-((x*13)%7)); THORN.lineTo(x+10,0); } })();
 function skyGrad(hz){ const g=ctx.createLinearGradient(0,0,0,hz); g.addColorStop(0,"#4e4a9c"); g.addColorStop(.35,"#a45ea0"); g.addColorStop(.62,"#ee7d84"); g.addColorStop(.85,"#ffb468"); g.addColorStop(1,"#ffd98c"); return g; }
+const STARS_N=Array.from({length:70},(_,i)=>({x:(Math.sin(i*91.7)*.5+.5),y:(Math.sin(i*37.3+1)*.5+.5),r:.8+((i*7)%5)*.35,ph:i*1.9}));
+const GLOW=(()=>{ const g=document.createElement("canvas"); g.width=g.height=128; const x=g.getContext("2d"), gr=x.createRadialGradient(64,64,2,64,64,64); gr.addColorStop(0,"rgba(255,236,150,1)"); gr.addColorStop(.35,"rgba(255,206,100,.5)"); gr.addColorStop(1,"rgba(255,180,60,0)"); x.fillStyle=gr; x.fillRect(0,0,128,128); return g; })();
+const NFLY=Array.from({length:44},(_,i)=>({x:120+i*190+((i*53)%90),y:210+((i*37)%150),ph:i*1.3}));
+function nightGrad(hz){ const g=ctx.createLinearGradient(0,0,0,hz); g.addColorStop(0,"#3b3a9c"); g.addColorStop(.4,"#6a50b0"); g.addColorStop(.75,"#b074b8"); g.addColorStop(1,"#f0a8a8"); return g; }
+function drawNightSky(hz){ const c=ctx; c.fillStyle=nightGrad(hz); c.fillRect(0,0,W,H);
+  c.fillStyle="#fff"; STARS_N.forEach(s=>{ c.globalAlpha=.35+.65*Math.abs(Math.sin(tm*1.3+s.ph)); const x=((s.x*W-cam.x*S*.02)%W+W)%W, y=s.y*hz*.8; c.beginPath(); c.arc(x,y,s.r*(S>1.5?1.3:1),0,TAU); c.fill(); }); c.globalAlpha=1;
+  const mx=W*.7, my=Math.max(70,hz*.22)+INS.t*.3, R=26*S*.8; const mg=c.createRadialGradient(mx,my,R*.5,mx,my,R*3); mg.addColorStop(0,"rgba(255,255,230,.55)"); mg.addColorStop(1,"rgba(255,255,230,0)"); c.fillStyle=mg; c.fillRect(mx-R*3,my-R*3,R*6,R*6);
+  circ(c,mx,my,R); c.fillStyle="#fffbe6"; c.fill(); c.fillStyle="rgba(200,190,170,.5)"; [[-.3,-.2,.22],[.25,.15,.17],[.05,.4,.12]].forEach(([a,b,r])=>{ circ(c,mx+a*R,my+b*R,r*R); c.fill(); });
+  for(let i=0;i<3;i++){ const per=VW+400, x=((i*397+tm*4-cam.x*.04)%per+per)%per-200, y=40+((i*53)%60); cloud(c,x*S,y*S*.9+INS.t,S*(.8+(i%3)*.25)); } }
+function nightPass(){ const c=ctx; c.setTransform(DPR,0,0,DPR,0,0); c.globalCompositeOperation="multiply"; c.fillStyle="#8c96e6"; c.fillRect(0,0,W,H);
+  c.globalCompositeOperation="lighter";
+  if(P&&state!=="menu"){ const px=(P.x-cam.x)*S, py=(P.y-24-cam.y)*S, R=92*S; c.globalAlpha=.42+Math.sin(tm*3)*.04; c.drawImage(GLOW,px-R,py-R,R*2,R*2); }
+  NFLY.forEach(f=>{ const x=(f.x-cam.x*1)+Math.sin(tm*.9+f.ph)*14; if(x<-20||x>VW+20) return; const y=f.y-cam.y*0+Math.sin(tm*1.3+f.ph*2)*10-(cam.y-camNeutral()); const a=.35+.65*Math.max(0,Math.sin(tm*2.2+f.ph)); c.globalAlpha=a*.8; const r=7*S; c.drawImage(GLOW,x*S-r,y*S-r,r*2,r*2); });
+  c.globalAlpha=1; c.globalCompositeOperation="source-over"; }
 function drawSky(){ const c=ctx; c.setTransform(DPR,0,0,DPR,0,0);
+  if(MAP==="night"){ drawNightSky(Math.max(60,layerY(LAY[0])*1)); return; }
   c.fillStyle=skyGrad(Math.max(60,layerY(LAY[0])*1)); c.fillRect(0,0,W,H);
   // sun
   const sx=W*.66, sy=layerY(LAY[0])-150*S*.55-40*S*(cine&&cine.flare?cine.flare*.3:0);
@@ -1144,6 +1190,7 @@ function render(){ const c=ctx; c.direction="ltr";
   if(wallUp>0){ const w=ARENA_WALL; drawRock([w[0],w[1]+(1-wallUp)*w[3],w[2],w[3]*wallUp+30,"wall"]); }
   ONEWAY.forEach(drawOneway); drawDecorFront(); SIGNS.forEach(drawSign); CPS.forEach(drawCheckpoint);
   drawEntities(); if(P&&state!=="menu") drawPlayer(); drawFX();
+  if(MAP==="night") nightPass();
   if(cine&&cine.flare){ c.setTransform(DPR,0,0,DPR,0,0); c.fillStyle="rgba(255,236,170,"+(cine.flare*.18)+")"; c.fillRect(0,0,W,H); }
   if(state==="play"&&P&&P.hearts===1&&!cine){ c.setTransform(DPR,0,0,DPR,0,0); const g=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.4,W/2,H/2,Math.max(W,H)*.75); g.addColorStop(0,"rgba(255,0,40,0)"); g.addColorStop(1,"rgba(255,0,40,"+(.16+Math.sin(tm*5)*.06)+")"); c.fillStyle=g; c.fillRect(0,0,W,H); }
   drawHUD();
@@ -1159,16 +1206,20 @@ function applyLang(){ const L=t(); document.documentElement.lang=lang; document.
   $("tPause").textContent=L.pause; $("resumeBtn").textContent=L.resume; $("pCpBtn").textContent=L.fromCp; $("restartBtn").textContent=L.restart; $("pMenuBtn").textContent=L.menu;
   $("tOver").textContent=L.over; $("tOverS").textContent=(L.oversilly?pick(L.oversilly)+" ":"")+L.overS; $("cpBtn").textContent=L.retry; $("againBtn").textContent=L.restart; $("oMenuBtn").textContent=L.menu;
   $("tWin").textContent=L.win; $("tWinS").textContent=L.winS; $("wAgainBtn").textContent=L.again; $("wMenuBtn").textContent=L.menu;
-  $("diffs").innerHTML=""; ["easy","normal"].forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===diff?" sel":""); b.textContent=L["diff_"+k]; b.onclick=()=>{ setDiff(k); SFX.click(); applyLang(); }; $("diffs").appendChild(b); });
+  $("diffs").innerHTML=""; ["easy","normal","hard"].forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===diff?" sel":""); b.textContent=L["diff_"+k]; b.onclick=()=>{ setDiff(k); SFX.click(); applyLang(); }; $("diffs").appendChild(b); });
+  $("maps").innerHTML=""; ["day","night"].forEach(k=>{ const lock=k==="night"&&!nightOK(), b=document.createElement("button"); b.className="lang"+(k===MAP?" sel":"")+(lock?" lock":""); b.textContent=(lock?"🔒 ":"")+L["map_"+k]; b.style.opacity=lock?".7":"";
+    b.onclick=()=>{ if(lock){ SFX.boing(); toast(L.nightLock); return; } setMap(k); SFX.click(); resetLevel(false); applyLang(); }; $("maps").appendChild(b); });
+  { const sv=starsGet()[MAP+"-"+diff]; if(sv) $("tBest").innerHTML+="<span>"+L.starsBest.replace("{n}",sv)+"</span>"; }
   const box=$("langs"); box.querySelectorAll(".lang").forEach(b=>b.remove());
   Object.keys(LN).forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===lang?" sel":""); b.textContent=LN[k]; b.onclick=()=>{ lang=k; lsSet("annabelle-lang",k); SFX.click(); applyLang(); }; box.insertBefore(b,box.querySelector(".an-nav")); });
   $("muteBtn").textContent=muted?"🔇":"🔊"; }
-function startGame(fromCp){ ac(); SFX.click(); resetLevel(!!fromCp); state="play"; showOv(null); $("pad").classList.remove("ride"); playSong("savanna"); tempoMul=1; songName="savanna";
+function startGame(fromCp){ ac(); SFX.click(); resetLevel(!!fromCp); state="play"; showOv(null); $("pad").classList.remove("ride"); playSong("savanna"); tempoMul=MAP==="night"?.86:1; songName="savanna";
+  if(!fromCp){ try{ RW()&&RW().award({game:"lionking",event:"play"}); }catch(e){} }
   if(!fromCp) setTimeout(()=>{ if(state==="play") hint("run"); },700); }
 window.toMenu=function(){ state="menu"; stopSong(); showOv("menu"); applyLang(); };
 function pauseGame(){ if(state!=="play") return; state="pause"; showOv("pause"); $("pad").classList.add("hidden"); $("pCpBtn").classList.toggle("hidden",!cp); releaseAll(); }
 function resumeGame(){ if(state!=="pause") return; state="play"; showOv(null); ac(); }
-function gameOver(){ if(state!=="play") return; state="over"; stopSong(); showOv("over"); $("pad").classList.add("hidden"); releaseAll(); }
+function gameOver(){ if(state!=="play") return; state="over"; stopSong(); try{ const R=RW(); if(R){ R.award({game:"lionking",event:"score",score:stats.bugs*10+stats.foes*50}); R.flush(); } }catch(e){} showOv("over"); $("pad").classList.add("hidden"); releaseAll(); }
 function finishWin(){ const s=stats, paws=s.paws.filter(Boolean).length, total=BUGS.filter(b=>!b.heal).length+BUGS.filter(b=>b.heal).length;
   const sec=Math.round(s.time), score=s.bugs*10+paws*250+s.foes*50+1000+Math.min(P.hearts,3)*200+Math.max(0,420-sec)*5;
   const stars=1+(s.bugs>=total*.5?1:0)+(paws>=2?1:0);
@@ -1178,7 +1229,20 @@ function finishWin(){ const s=stats, paws=s.paws.filter(Boolean).length, total=B
   $("tRec").textContent=rec?L.rec:"";
   const st=$("stars").children; for(let i=0;i<3;i++){ st[i].className="star"; ((i)=>setTimeout(()=>{ st[i].className="star "+(i<stars?"on":"off"); if(i<stars) SFX.bug(i*2); },350+i*380))(i); }
   window.__lionResult={score,stars,paws,bugs:s.bugs,total,time:sec};
+  checkGoals(); GOALS.filter(g=>g.end).forEach(g=>{ if(g.v()>=g.n) g.ok=true; });
+  $("goalsList").innerHTML=GOALS.map(g=>`<div class="${g.ok?"ok":""}">${g.ok?"✅":"🎯"} ${L["g_"+g.id].replace("{n}",g.n)}</div>`).join("");
+  const sk=MAP+"-"+diff, sv=starsGet(); if((sv[sk]||0)<stars){ sv[sk]=stars; try{ localStorage.setItem(STARS_KEY,JSON.stringify(sv)); }catch(e){} }
+  const firstWin=!nightOK(); try{ localStorage.setItem(NIGHT_KEY,"1"); }catch(e){} $("tUnl").textContent=firstWin?L.nightUnl:"";
+  const goalsDone=GOALS.filter(g=>g.ok).length; burstConf(60); shake(6);
+  try{ const R=RW(); if(R){ R.award({game:"lionking",event:"levelClear",level:(stats.cpN||0)+1,score}); R.award({game:"lionking",event:"star",stars}); R.award({game:"lionking",event:"score",score}); R.award({game:"lionking",event:"win"}); if(goalsDone>=3) R.award({game:"lionking",event:"combo",score:goalsDone}); R.flush(); } }catch(e){}
 }
+/* confetti burst on the win card */
+let bursts=[], bRaf=0;
+function burstConf(n){ const cols=["#ff7a3d","#7c5cff","#34c47c","#ffd23f","#ff5d8f","#3fc5ff"]; for(let i=0;i<n;i++){ bursts.push({x:innerWidth*(.2+.6*Math.random()),y:innerHeight*.15,vx:(Math.random()-.5)*9,vy:Math.random()*-6,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[i%6],s:6+Math.random()*7,life:2.2}); }
+  const c=$("cfx"), x=c.getContext("2d"), d=Math.min(2,devicePixelRatio||1); c.width=innerWidth*d; c.height=innerHeight*d; let lt=performance.now(); cancelAnimationFrame(bRaf);
+  (function stp(now){ const dt=Math.min(.05,(now-lt)/1000); lt=now; x.setTransform(d,0,0,d,0,0); x.clearRect(0,0,innerWidth,innerHeight);
+    bursts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.22; p.vx*=.99; p.r+=p.vr; p.life-=dt; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.globalAlpha=Math.min(1,p.life*2); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); x.restore(); });
+    bursts=bursts.filter(p=>p.life>0); if(bursts.length) bRaf=requestAnimationFrame(stp); else x.clearRect(0,0,innerWidth,innerHeight); })(lt); }
 /* buttons */
 $("playBtn").onclick=()=>startGame(false);
 $("resumeBtn").onclick=resumeGame; $("pCpBtn").onclick=()=>startGame(true); $("restartBtn").onclick=()=>{ cp=null; startGame(false); };
@@ -1238,7 +1302,7 @@ function frame(now){ const d=Math.min(.1,(now-last)/1000); last=now;
 /* test hook */
 window.__lion={ get state(){ return state; }, get P(){ return P; }, get boss(){ return BOSS; }, get stats(){ return stats; }, get cam(){ return cam; }, keys, press, step:(n)=>{ for(let i=0;i<(n||1);i++) step(STEP); },
   tp:(x,y)=>{ P.x=x; P.y=y==null?G:y; P.vx=0; P.vy=0; P.mode="normal"; P.on=false; cam.x=Math.max(0,x-VW*.45); }, info:()=>({state,x:Math.round(P.x),y:Math.round(P.y),mode:P.mode,hearts:P.hearts,bugs:stats&&stats.bugs,boss:BOSS&&{st:BOSS.st,hp:BOSS.hp,x:Math.round(BOSS.x)},cp,S,VW,VH}),
-  setCp:(x,y)=>{ cp={x,y:y||G}; }, start:startGame, hearts:(n)=>{ P.hearts=n; }, setDiff, rideO:()=>rideO, monkey:()=>monkey };
+  setCp:(x,y)=>{ cp={x,y:y||G}; }, setMap:(m)=>{ setMap(m); resetLevel(false); }, get map(){ return MAP; }, get goals(){ return GOALS; }, bugsTotal:()=>BUGS.length, start:startGame, hearts:(n)=>{ P.hearts=n; }, setDiff, rideO:()=>rideO, monkey:()=>monkey };
 /* init */
 resize(); resetLevel(false); applyLang(); requestAnimationFrame(frame);
 </script>

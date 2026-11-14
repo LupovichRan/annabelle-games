@@ -17,7 +17,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 .iconbtn{width:48px;height:48px;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 4px 0 #0003;font-size:23px;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
 .iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0003}
 .corner{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-end:12px;z-index:60}
-#top{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-start:12px;inset-inline-end:70px;z-index:20;display:none;gap:8px;align-items:center;flex-wrap:wrap}
+#top{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-start:12px;inset-inline-end:126px;z-index:20;display:none;gap:8px;align-items:center;flex-wrap:wrap}
 body.play #top{display:flex}
 .pill{background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:900;font-size:clamp(14px,3.9vw,19px);box-shadow:0 3px 0 #0003;white-space:nowrap}
 .pill.warn{background:#ff6f91;color:#fff}
@@ -66,15 +66,22 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
 .desk .corner{top:14px}
 #nogl{position:fixed;inset:0;z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#7a3fb0;padding:24px;text-align:center;font-size:20px;font-weight:700}
 #nogl.show{display:flex}
+.m2{inset-inline-end:68px}
+.stars span{display:inline-block}.stars span.on{animation:starpop .55s both cubic-bezier(.2,1.8,.4,1);color:#ffe14d}.stars span:not(.on){opacity:.5}
+@keyframes starpop{0%{transform:scale(0) rotate(-90deg);opacity:0}100%{transform:scale(1) rotate(0)}}
+#oM.joy{animation:joy .6s 3}@keyframes joy{50%{transform:translateY(-16px) scale(1.18) rotate(-8deg)}}
+.chipd{font-size:14px;font-weight:800;background:#ffe14d;color:#4a2379;border-radius:999px;padding:3px 12px;box-shadow:0 3px 0 #0003}
+@media (prefers-reduced-motion:reduce){.mascot,#oM.joy{animation:none}}
 @media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){.ov{zoom:1.2}}
 @media (hover:hover) and (pointer:fine) and (min-width:1600px) and (min-height:930px){.ov{zoom:1.4}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/hole.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/hole-192.png"><meta name="apple-mobile-web-app-title" content="החור הרעבתן"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/hole-apple-180.png"><script src="pwa.js" data-app="hole" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas><canvas id="conf"></canvas>
-<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn corner m2" id="musBtn" aria-label="music">🎵</button>
 <div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><span class="pill" id="pGoal"></span><span class="pill" id="pTime"></span><span class="pill" id="pCombo" style="display:none"></span></div>
 <div id="bar"><div id="barf"></div></div>
 <div id="hint"></div><div id="cap"></div>
@@ -84,6 +91,7 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
   <div class="mascot">😸</div><h1 id="mT"></h1><div class="sub" id="mS"></div>
   <div class="row" id="dRow"><button class="big o" data-d="0"></button><button class="big p" data-d="1"></button><button class="big r" data-d="2"></button></div>
   <button class="big g" id="playBtn"></button>
+  <button class="big r" id="dailyBtn" style="min-height:54px;font-size:20px"></button>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
 <div class="ov" id="picker"><h2 id="pkT"></h2><div class="tiles" id="mapTiles"></div><div class="stg" id="stgTiles" style="display:none"></div><button class="big s" id="pkBack" style="max-width:300px"></button></div>
 <div class="ov" id="mission"><div class="card"><div class="mascot" style="font-size:64px">🐱</div><h2 id="miT"></h2><div class="sub" id="miG" style="font-size:20px"></div><div class="sub" id="miD"></div><button class="big g" id="goBtn"></button></div></div>
@@ -104,7 +112,7 @@ he:{title:"החור הרעבתן",sub:"בלעי הכול והפכי לחור ע�
  goSize:"הגיעי לגודל {n}",goCollect:"בלעי {n} {item}",goGold:"מצאי {n} כדורי צמר זהובים ✨",goRescue:"הצילי {n} גורים מהבועות 🐱",goZone:"בלעי את כל מה שבאזור {zone}!",goCombo:"בלעי {n} דברים ברצף!",goRace:"הגיעי לגודל {n} לפני {rival}!",goEndless:"בלעי כמה שיותר ב-2 דקות!",
  stage:"שלב",go:"קדימה! 🐾",next:"לשלב הבא ▶",again:"עוד פעם 🔁",maps:"למפות",resume:"המשך ▶",paused:"הפסקה",
  win:"כל הכבוד!",lose:"כמעט! נסי שוב",timeUp:"נגמר הזמן ⏰",rivalWon:"החור המתחרה הגיע ראשון! 😹",endDone:"סוף הזמן!",score:"ניקוד",best:"שיא",newBest:"שיא חדש! 🎉",
- time:"זמן",size:"גודל",rival:"החור המתחרה",rivalAnd:"החור הכתום",
+ dailyT:"אתגר היום",daily:"📅 אתגר היום",dailyDone:"✅ אתגר היום – עוד פעם?",dailyBonus:"אתגר היום הושלם! 🎁",time:"זמן",size:"גודל",rival:"החור המתחרה",rivalAnd:"החור הכתום",
  tooBig:["גדול מדי! 😹","עוד קצת לגדול…","הוא כבד מדי 🙀","תאכלי עוד ותגדלי!"],
  cheer:["נאם!","יאמי! 😋","פיגי פיגי!","מעולה!","ווואו!","ענק! 🎉","מיאו-ואו! 😻"],
  grow:["גדלת! ✨","בול גדול יותר!","את ענקית! 🐾"],
@@ -118,7 +126,7 @@ fr:{title:"Le Gouffre Gourmand",sub:"Avale tout et deviens un trou géant ! 🐾
  goSize:"Atteins la taille {n}",goCollect:"Avale {n} {item}",goGold:"Trouve {n} pelotes dorées ✨",goRescue:"Sauve {n} chatons des bulles 🐱",goZone:"Avale tout dans la zone {zone} !",goCombo:"Avale {n} choses d'affilée !",goRace:"Atteins la taille {n} avant {rival} !",goEndless:"Avale le plus possible en 2 minutes !",
  stage:"Niveau",go:"Allons-y ! 🐾",next:"Niveau suivant ▶",again:"Encore 🔁",maps:"Cartes",resume:"Continuer ▶",paused:"Pause",
  win:"Bravo !",lose:"Presque ! Réessaie",timeUp:"Temps écoulé ⏰",rivalWon:"Le trou rival est arrivé le premier ! 😹",endDone:"Temps écoulé !",score:"Score",best:"Record",newBest:"Nouveau record ! 🎉",
- time:"Temps",size:"Taille",rival:"le trou rival",rivalAnd:"le trou orange",
+ dailyT:"Défi du jour",daily:"📅 Défi du jour",dailyDone:"✅ Défi du jour – encore ?",dailyBonus:"Défi du jour réussi ! 🎁",time:"Temps",size:"Taille",rival:"le trou rival",rivalAnd:"le trou orange",
  tooBig:["Trop gros ! 😹","Grandis encore un peu…","Trop lourd 🙀","Mange et grandis !"],
  cheer:["Miam !","Délicieux ! 😋","Gloup !","Super !","Waouh !","Énorme ! 🎉","Miaou-waouh ! 😻"],
  grow:["Tu grandis ! ✨","Plus grand !","Tu es géante ! 🐾"],
@@ -132,7 +140,7 @@ en:{title:"Hungry Hole",sub:"Swallow everything and grow into a giant hole! 🐾
  goSize:"Reach size {n}",goCollect:"Swallow {n} {item}",goGold:"Find {n} golden yarn balls ✨",goRescue:"Rescue {n} kittens from bubbles 🐱",goZone:"Swallow everything in the {zone} zone!",goCombo:"Swallow {n} things in a row!",goRace:"Reach size {n} before {rival}!",goEndless:"Swallow as much as you can in 2 minutes!",
  stage:"Stage",go:"Let's go! 🐾",next:"Next stage ▶",again:"Again 🔁",maps:"Maps",resume:"Resume ▶",paused:"Paused",
  win:"Well done!",lose:"So close! Try again",timeUp:"Time's up ⏰",rivalWon:"The rival hole got there first! 😹",endDone:"Time's up!",score:"Score",best:"Best",newBest:"New best! 🎉",
- time:"Time",size:"Size",rival:"the rival hole",rivalAnd:"the orange hole",
+ dailyT:"Daily challenge",daily:"📅 Daily challenge",dailyDone:"✅ Daily challenge – again?",dailyBonus:"Daily challenge done! 🎁",time:"Time",size:"Size",rival:"the rival hole",rivalAnd:"the orange hole",
  tooBig:["Too big! 😹","Grow a bit more…","So heavy 🙀","Eat more and grow!"],
  cheer:["Nom!","Yummy! 😋","Gulp!","Great!","Wooow!","Huge! 🎉","Meow-wow! 😻"],
  grow:["You grew! ✨","Bigger hole!","You're giant! 🐾"],
@@ -160,9 +168,21 @@ const SFX={click(){tone(560,.08,"triangle",.14)},
  power(){tone(600,.1,"triangle",.12);tone(900,.12,"triangle",.12,0,.08);tone(1300,.16,"triangle",.1,0,.16)},
  win(){[523,659,784,1046].forEach((f,i)=>tone(f,.22,"triangle",.13,0,i*.13))},
  lose(){tone(380,.4,"sine",.12,160);tone(300,.5,"sine",.1,120,.2)},
- hint(){tone(260,.1,"square",.05,200)}};
+ hint(){tone(260,.1,"square",.05,200)},
+ star(i){tone(660+i*220,.2,"triangle",.14);tone(1320+i*330,.28,"sine",.08,0,.06)},
+ fan(){[392,523,659,784,1046,1318].forEach((f,i)=>tone(f,.28,"triangle",.13,0,i*.08));noise(.5,.05,5000,9000)},
+ whoosh(){noise(.2,.08,600,2400)}};
+/* tiny background music loop (off by default; the 🎵 button; respects mute) */
+let musicOn=ls.get("annabelle-music")==="1",mT=null,mStep=0;
+const MEL=[0,4,7,12,9,7,4,2,0,2,4,7,9,7,4,0],BAS=[0,0,-5,-5,-3,-3,-7,-7];
+function musicTick(){if(!musicOn||muted||document.hidden||!AC||AC.state!=="running")return;const s=mStep++;tone(262*Math.pow(2,MEL[s%16]/12),.3,"triangle",.045);if(s%2===0)tone(131*Math.pow(2,BAS[(s>>1)%8]/12),.55,"sine",.05)}
+function musicSet(on){musicOn=on;ls.set("annabelle-music",on?"1":"0");clearInterval(mT);mT=null;if(on){ac();mT=setInterval(musicTick,270)}$("musBtn").style.opacity=on?1:.55}
 /* ================= progress ================= */
-const KEY="annabelle-hole-v1";let SV={s:{},e:{}};try{SV=Object.assign({s:{},e:{}},JSON.parse(ls.get(KEY)||"{}"))}catch(e){}
+const KEY="annabelle-hole-v1";let SV={s:{},e:{},dd:null};try{SV=Object.assign({s:{},e:{},dd:null},JSON.parse(ls.get(KEY)||"{}"))}catch(e){}
+const RW=()=>window.AnnabelleRewards;
+function dayKey(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function dayHash(){let h=7;for(const ch of dayKey())h=(h*31+ch.charCodeAt(0))>>>0;return h}
+const dailyDone=()=>!!(SV.dd&&SV.dd.day===dayKey());
 const save=()=>ls.set(KEY,JSON.stringify(SV));
 const stars=(m,s)=>SV.s[m+"-"+s]||0,mapStars=m=>[0,1,2,3].reduce((a,s)=>a+stars(m,s),0);
 const stageOpen=(m,s)=>mapOpen(m)&&(s===0||stars(m,s-1)>0),mapOpen=m=>m===0||stars(m-1,1)>0;
@@ -223,6 +243,8 @@ const MAPS=[
   mix:[["shell",24],["fish",12],["yarn",10],["icecube",10],["umbrella",16],["sandcastle",12],["cooler",10,["#5ac8ff","#ff7aa8"]],["surf",10,PAST],["palm",14],["stall",6,PAST],["boat",4,PAST],["bench",4],["hut",8,["#ffd23f|#ff6f91","#5ac8ff|#ff9f6b"]],["lighthouse",4,["#ff6f91","#5ac8ff"]]]}];
 const WS=1800;
 const RIV=[{c0:"#ff9f43",c1:"#c4601c",rim:"#ffd18a"},{c0:"#4fd1c5",c1:"#1b7a86",rim:"#b8f2ea"}];
+function dailyMap(){const open=MAPS.map((_,i)=>i).filter(i=>i===0||(SV.s[(i-1)+"-1"]||0)>0);return open[dayHash()%open.length]}
+function dailyStage(m){const k=dayHash()%3;return{goal:k===0?{type:"size",v:78+m*8}:k===1?{type:"collect",kind:MAPS[m].coll,n:18+m*2}:{type:"combo",n:10+m},time:90-m*3,riv:1,hz:2}}
 function stagesFor(m){const M=MAPS[m],rs=["rescue","gold","zone","combo","rescue","gold"][m],tm=m*4;
  return[
   {goal:{type:"size",v:72+m*8},time:95-tm,riv:0,hz:0},
@@ -238,8 +260,8 @@ addEventListener("resize",resize);resize();
 function mkHole(x,y,R,rival){return{x:x,y:y,vx:0,vy:0,R:R,R2:R*R,R0:R,blink:2+rnd()*2,mouth:0,inv:0,squash:0,boost:0,rival:rival,face:1,tx:x,ty:y,aiT:0,col:null,wob:rnd()*6}}
 function overlapFree(objs,x,y,r){for(let i=0;i<objs.length;i++){const o=objs[i],d=Math.hypot(o.x-x,o.y-y);if(d<(o.r+r)*.92+4)return false}return true}
 function placeObj(objs,ty,col,extra,zone){const r=OBJ[ty].r;for(let k=0;k<50;k++){let x=120+rnd()*(WS-240),y=120+rnd()*(WS-240);if(zone){x=zone.x+r+rnd()*(zone.w-2*r);y=zone.y+r+rnd()*(zone.h-2*r)}const M=G.M;if(M.water==="left"&&x<260)continue;if(M.water==="bottom"&&y>WS-260)continue;if(!zone&&Math.hypot(x-WS/2,y-WS/2)<170)continue;if(M.road&&!zone&&Math.abs(y-WS/2)<90&&ty!=="car")continue;if(overlapFree(objs,x,y,r)){const o=Object.assign({ty:ty,col:col,x:x,y:y,r:r,sw:0,by:null,wob:0,sh:rnd()*6,alive:true},extra||{});objs.push(o);return o}}return null}
-function startStage(m,s,df){ac();mapSel=m;G={m:m,s:s,df:df,M:MAPS[m],t:0,over:false,paused:true,started:false,combo:0,comboT:0,maxCombo:0,score:0,prog:0,eaten:0,free:0,magnet:0,speed:0,floats:[],fx:[],pups:[],pupT:6,hint:0,hintT:0,cap:"",capT:0,tier:0,hz:[],objs:[],riv:[],zone:null,zoneLeft:0,goalTxt:"",lastEat:0};
- const M=G.M,st=s>=0?stagesFor(m)[s]:{goal:{type:"endless"},time:120,riv:1,hz:2};G.st=st;
+function startStage(m,s,df){ac();mapSel=m;G={m:m,s:s,endless:s===-1,daily:s===-2,shk:0,df:df,M:MAPS[m],t:0,over:false,paused:true,started:false,combo:0,comboT:0,maxCombo:0,score:0,prog:0,eaten:0,free:0,magnet:0,speed:0,floats:[],fx:[],pups:[],pupT:6,hint:0,hintT:0,cap:"",capT:0,tier:0,hz:[],objs:[],riv:[],zone:null,zoneLeft:0,goalTxt:"",lastEat:0};
+ const M=G.M,st=s>=0?stagesFor(m)[s]:s===-2?dailyStage(m):{goal:{type:"endless"},time:120,riv:1,hz:2};G.st=st;
  const tmul=[1.5,1,.8][df],gmul=[.85,1,1.1][df];G.goal=Object.assign({},st.goal);if(G.goal.v)G.goal.v=Math.round(G.goal.v*gmul);if(G.goal.n&&G.goal.type!=="rescue"&&G.goal.type!=="gold")G.goal.n=Math.max(3,Math.round(G.goal.n*gmul));
  G.left=st.time*tmul;G.time0=G.left;
  const R0=26;G.me=mkHole(WS/2,WS/2,R0,false);G.R0=R0;
@@ -261,7 +283,8 @@ function startStage(m,s,df){ac();mapSel=m;G={m:m,s:s,df:df,M:MAPS[m],t:0,over:fa
  G.cam={x:G.me.x,y:G.me.y,span:380+R0*6};
  G.goalTxt=goalText();
  document.body.classList.add("play");$("menu").classList.remove("show");$("picker").classList.remove("show");$("over").classList.remove("show");$("pause").classList.remove("show");
- $("miT").textContent=(s<0?T("maps0")[m]+" · "+T("endless").replace(/⏱️ /,""):T("maps0")[m]+" · "+T("stage")+" "+(s+1));$("miG").textContent=G.goalTxt;$("miD").textContent=T("d"+df);$("goBtn").textContent=T("go");$("mission").classList.add("show");
+ RW()&&RW().award({game:"hole",event:"play"});
+ $("miT").textContent=(s===-2?T("dailyT")+" · "+T("maps0")[m]:s<0?T("maps0")[m]+" · "+T("endless").replace(/⏱️ /,""):T("maps0")[m]+" · "+T("stage")+" "+(s+1));$("miG").textContent=G.goalTxt;$("miD").textContent=T("d"+df);$("goBtn").textContent=T("go");$("mission").classList.add("show");
  hud();$("hint").textContent="";$("cap").textContent="";}
 function goalText(){const g=G.goal,it=T("items")[G.M.coll];switch(g.type){case"size":return fmt(T("goSize"),{n:g.v});case"collect":return fmt(T("goCollect"),{n:g.n,item:it});case"gold":return fmt(T("goGold"),{n:g.n});case"rescue":return fmt(T("goRescue"),{n:g.n});case"zone":return fmt(T("goZone"),{zone:T("zones")[G.m]});case"combo":return fmt(T("goCombo"),{n:g.n});case"race":return fmt(T("goRace"),{n:g.v,rival:T("rivalAnd")});default:return T("goEndless")}}
 function begin(){if(!G||G.started)return;G.started=true;G.paused=false;$("mission").classList.remove("show");G.hint=1;G.hintT=4;showHint(T(window.AnnabelleDesk&&AnnabelleDesk.isDesk&&AnnabelleDesk.isDesk()?"keys":"drag"));SFX.click()}
@@ -294,13 +317,17 @@ function respawn(h,keep){let k=0,x,y;do{x=140+rnd()*(WS-280);y=140+rnd()*(WS-280
 function win(){if(G.over)return;G.over=true;finish(true)}
 function lose(why){if(G.over)return;G.over=true;finish(false,why)}
 function finish(ok,why){document.body.classList.remove("play");$("joy").style.display="none";J.on=false;
- const ratio=G.s<0?0:G.left/G.time0;let st=ok?(ratio>=.55?3:ratio>=.3?2:1):0;G.stars=st;G.ok=ok;
- if(G.s<0){const b=SV.e[G.m]||0;G.newBest=G.score>b;if(G.newBest){SV.e[G.m]=G.score;save()}}
- else if(ok){if(st>stars(G.m,G.s)){SV.s[G.m+"-"+G.s]=st;save()}}
- $("oM").textContent=G.s<0?"😸":ok?"😻":"😿";$("oT").textContent=G.s<0?T("endDone"):ok?T("win"):(why==="rival"?T("rivalWon"):why==="time"?T("timeUp"):T("lose"));
- $("oSt").textContent=G.s<0?"":"★".repeat(st)+"☆".repeat(3-st);$("oS").textContent=T("score")+": "+G.score;$("oB").textContent=G.s<0?(G.newBest?T("newBest"):T("best")+": "+(SV.e[G.m]||0)):"";
+ const ratio=G.endless?0:G.left/G.time0;let st=ok?(ratio>=.55?3:ratio>=.3?2:1):0;G.stars=st;G.ok=ok;let newStars=0,firstDaily=false;
+ if(G.endless){const b=SV.e[G.m]||0;G.newBest=G.score>b;if(G.newBest){SV.e[G.m]=G.score;save()}}
+ else if(ok&&G.daily){const same=SV.dd&&SV.dd.day===dayKey();firstDaily=!same;newStars=Math.max(0,st-(same?SV.dd.stars:0));SV.dd={day:dayKey(),stars:Math.max(st,same?SV.dd.stars:0)};save()}
+ else if(ok){newStars=Math.max(0,st-stars(G.m,G.s));if(st>stars(G.m,G.s)){SV.s[G.m+"-"+G.s]=st;save()}}
+ {const R_=RW();if(R_){if(ok&&G.s>=0)R_.award({game:"hole",event:"levelClear",level:G.m*4+G.s+1,score:G.score});if(newStars>0)R_.award({game:"hole",event:"star",stars:newStars});if(G.maxCombo>=3)R_.award({game:"hole",event:"combo",score:G.maxCombo});R_.award({game:"hole",event:"score",score:G.score});if(ok&&(G.s===3||firstDaily))R_.award(firstDaily?{game:"hole",event:"win",coins:8}:{game:"hole",event:"win"})}}
+ G.firstDaily=firstDaily;
+ $("oM").textContent=G.endless?"😸":ok?"😻":"😿";$("oM").classList.toggle("joy",ok||G.endless);$("oT").textContent=G.endless?T("endDone"):ok?T("win"):(why==="rival"?T("rivalWon"):why==="time"?T("timeUp"):T("lose"));
+ $("oSt").innerHTML=G.endless?"":[0,1,2].map(i=>'<span class="'+(i<st?"on":"")+'" style="animation-delay:'+(.65+i*.32)+'s">'+(i<st?"★":"☆")+"</span>").join("");$("oS").textContent=T("score")+": "+G.score;$("oB").innerHTML=G.endless?(G.newBest?T("newBest"):T("best")+": "+(SV.e[G.m]||0)):G.firstDaily?'<span class="chipd">'+T("dailyBonus")+"</span>":"";
  const hasNext=ok&&G.s>=0&&G.s<3;$("nextBtn").style.display=hasNext?"":"none";$("nextBtn").textContent=T("next");$("againBtn").textContent=T("again");$("oMenu").textContent=T("maps");
- setTimeout(()=>{$("over").classList.add("show");if(ok||G.s<0){confetti();SFX.win();SFX.meow()}else SFX.lose()},550)}
+ const nst=st,endl=G.endless;
+ setTimeout(()=>{$("over").classList.add("show");if(ok||endl){confetti();SFX.win();SFX.meow();for(let i=0;i<nst;i++)setTimeout(()=>SFX.star(i),650+i*320);if(nst===3||G.firstDaily)setTimeout(()=>SFX.fan(),1500)}else SFX.lose();RW()&&RW().flush()},550)}
 function update(dt){const g=G;if(!g||g.over||g.paused)return;g.t+=dt;
  if(g.freeze>0)g.freeze-=dt;else if(g.s>=0||true)g.left-=dt;
  if(g.hintT>0){g.hintT-=dt;if(g.hintT<=0)showHint("")}
@@ -322,7 +349,8 @@ function update(dt){const g=G;if(!g||g.over||g.paused)return;g.t+=dt;
  const holes=[me].concat(g.riv);
  for(const h of holes){h.R+=(Math.sqrt(h.R2)-h.R)*Math.min(1,dt*7);if(h.mouth>0)h.mouth-=dt;h.blink-=dt;if(h.blink<-.14)h.blink=2+rnd()*3;h.wob+=dt*3}
  // tier up
- const t2=tierOf(me.R);if(t2>g.tier){g.tier=t2;SFX.grow();showCap(pick(T("grow")),1.6);burst(me.x,me.y,26);me.squash=.4}
+ const t2=tierOf(me.R);if(g.shk>0)g.shk=Math.max(0,g.shk-dt*2.2);
+ if(t2>g.tier){g.tier=t2;g.shk=.5;SFX.grow();showCap(pick(T("grow")),1.6);burst(me.x,me.y,26);me.squash=.4}
  else if(t2<g.tier)g.tier=t2;
  if(me.squash>0)me.squash-=dt;
  // magnet
@@ -335,7 +363,7 @@ function update(dt){const g=G;if(!g||g.over||g.paused)return;g.t+=dt;
    if(o.r<=H.R*.9){if(d<H.R*.86){eatObj(H,o);break}}
    else if(H===me&&d<H.R+o.r*.25){if(o.wob<=0){o.wob=.5;if(g.hintT<=0&&g.t-g.hint>2.6){g.hint=g.t;showCap(pick(T("tooBig")),1.2);SFX.hint()}}}}}
  // holes eating holes
- for(const A of holes)for(const B of holes){if(A===B||B.inv>0||A.inv>0)continue;if(A.R>B.R*1.22&&Math.hypot(A.x-B.x,A.y-B.y)<A.R*.7){A.R2+=B.R2*.35;A.mouth=.3;if(B===me){showCap(pick(T("eaten")),2);SFX.boing();respawn(B,.72);B.x=clamp(B.x,40,WS-40)}else{if(A===me){showCap(pick(T("ateRival")),1.8);SFX.meow();burst(B.x,B.y,24)}respawn(B,.7)}}}
+ for(const A of holes)for(const B of holes){if(A===B||B.inv>0||A.inv>0)continue;if(A.R>B.R*1.22&&Math.hypot(A.x-B.x,A.y-B.y)<A.R*.7){A.R2+=B.R2*.35;A.mouth=.3;if(B===me){g.shk=.9;showCap(pick(T("eaten")),2);SFX.boing();respawn(B,.72);B.x=clamp(B.x,40,WS-40)}else{if(A===me){showCap(pick(T("ateRival")),1.8);SFX.meow();burst(B.x,B.y,24)}respawn(B,.7)}}}
  // keep the map stocked: small things grow back (a few at a time, away from the cub)
  g.refT=(g.refT||0)-dt;if(g.refT<=0){g.refT=1.2;let n=0;for(const o of g.objs)if(o.alive)n++;if(n<110){const ty=pick(g.M.mix.filter(e=>OBJ[e[0]].r<=Math.max(30,me.R*.8)))[0],o=placeObj(g.objs,ty,null);if(o&&Math.hypot(o.x-me.x,o.y-me.y)<260)o.alive=false;if(g.objs.length>700)g.objs=g.objs.filter(q=>q.alive)}}
  // power-ups
@@ -390,7 +418,7 @@ function drawFace(H){const x=H.x,y=H.y,R=H.R;ctx.save();ctx.translate(x,y);const
  ctx.restore()}
 function render(){if(!glOK||!G)return;const g=G,c=g.cam,s=Math.min(VW,VH)/c.span;
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=g.M.pal.edge;ctx.fillRect(0,0,VW,VH);
- ctx.setTransform(dpr*s,0,0,dpr*s,dpr*(VW/2-c.x*s),dpr*(VH/2-c.y*s));
+ {const sh=g.shk>0?(rnd()-.5)*g.shk*16:0,sh2=g.shk>0?(rnd()-.5)*g.shk*16:0;ctx.setTransform(dpr*s,0,0,dpr*s,dpr*(VW/2-c.x*s+sh),dpr*(VH/2-c.y*s+sh2))}
  const M=g.M,vx0=c.x-VW/2/s-120,vx1=c.x+VW/2/s+120,vy0=c.y-VH/2/s-160,vy1=c.y+VH/2/s+120;
  // ground
  ctx.fillStyle=bgPattern(M);ctx.fillRect(0,0,WS,WS);
@@ -430,7 +458,7 @@ function drawHaz(h){ctx.save();ctx.translate(h.x,h.y);const t=G.t;
  ctx.restore()}
 function drawPup(p){const bob=Math.sin(p.t*4)*5;ctx.save();ctx.translate(p.x,p.y+bob);ctx.fillStyle="rgba(60,30,90,.2)";ctx.beginPath();ctx.ellipse(0,26-bob,22,8,0,0,TAU);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,0,24,0,TAU);ctx.fill();ctx.strokeStyle="#ff4d8d";ctx.lineWidth=4;ctx.stroke();ctx.font="30px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText({magnet:"🧲",speed:"👟",fish:"🐟",clock:"⏰"}[p.ty],0,2);ctx.restore()}
 /* confetti */
-let cf=null;function confetti(){const c=$("conf"),x=c.getContext("2d"),P=[];const cols=["#ff5d73","#ffd23f","#5fd38d","#4aa8ff","#b07cff","#ff9f43"];for(let i=0;i<140;i++)P.push({x:c.width/2+(rnd()-.5)*c.width*.3,y:c.height*.4,vx:(rnd()-.5)*9,vy:-5-rnd()*9,r:4+rnd()*6,c:cols[i%6],a:rnd()*6});const end=Date.now()+3200;cancelAnimationFrame(cf);(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.3;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
+let cf=null;function confetti(){const c=$("conf"),x=c.getContext("2d"),P=[];const cols=["#ff5d73","#ffd23f","#5fd38d","#4aa8ff","#b07cff","#ff9f43"];for(let i=0;i<140;i++)P.push({x:c.width/2+(rnd()-.5)*c.width*.3,y:c.height*.4,vx:(rnd()-.5)*9,vy:-5-rnd()*9,r:4+rnd()*6,c:cols[i%6],a:rnd()*6,k:i%3});const end=Date.now()+3200;cancelAnimationFrame(cf);(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.3;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);const k=p.k;if(k===1){x.beginPath();for(let q=0;q<10;q++){const rr_=q%2?p.r*.45:p.r*1.3,an=q*PI/5;x.lineTo(Math.cos(an)*rr_,Math.sin(an)*rr_)}x.fill()}else if(k===2){x.beginPath();x.arc(0,0,p.r*.7,0,TAU);x.fill()}else x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cf=requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
 /* ================= loop ================= */
 let last=performance.now(),acc=0;
 function frame(now){requestAnimationFrame(frame);if(document.hidden){last=now;return}let dt=Math.min(.1,(now-last)/1000);last=now;acc+=dt;let n=0;while(acc>=1/60&&n<6){update(1/60);acc-=1/60;n++}if(n===6)acc=0;if(G)render();updJoy()}
@@ -473,11 +501,13 @@ function buildStages(m){mapSel=m;$("pkT").textContent=T("maps0")[m];$("mapTiles"
   b.innerHTML='<span class="ic">'+icon+'</span><span>'+T("stage")+" "+(s+1)+'</span><span class="st">'+"★".repeat(stars(m,s))+"☆".repeat(3-stars(m,s))+'</span>';b.onclick=()=>{if(!open){SFX.hint();return}SFX.click();startStage(m,s,diff)};el.appendChild(b)});
  const e=document.createElement("button");e.className="tile endl"+(stars(m,0)>0?"":" lock");e.innerHTML='<span>'+T("endless")+'</span><span class="tl">'+T("best")+": "+(SV.e[m]||0)+'</span>';e.onclick=()=>{if(stars(m,0)<=0){SFX.hint();return}SFX.click();startStage(m,-1,diff)};el.appendChild(e);$("pkBack").textContent=T("back")}
 $("playBtn").onclick=()=>openPicker();
+$("dailyBtn").onclick=()=>{ac();SFX.click();startStage(dailyMap(),-2,diff)};
+$("musBtn").onclick=()=>{ac();musicSet(!musicOn);SFX.click()};musicSet(musicOn);
 document.querySelectorAll("#dRow .big").forEach(b=>b.onclick=()=>{diff=+b.dataset.d;ls.set("annabelle-hole-diff",String(diff));SFX.click();drawTexts()});
 $("goBtn").onclick=begin;
 $("nextBtn").onclick=()=>{SFX.click();if(G&&G.s>=0&&G.s<3)startStage(G.m,G.s+1,G.df)};$("againBtn").onclick=()=>{SFX.click();if(G)startStage(G.m,G.s,G.df)};$("oMenu").onclick=()=>{SFX.click();openPicker(G?G.m:null)};
 document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();if($("picker").classList.contains("show"))($("stgTiles").style.display!=="none"?buildStages(mapSel):buildMaps())}});
-function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=T("title");$("mT").textContent=T("title");$("mS").textContent=T("sub");$("playBtn").textContent=T("play");$("rules").textContent=T("rules");
+function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=T("title");$("mT").textContent=T("title");$("mS").textContent=T("sub");$("playBtn").textContent=T("play");$("rules").textContent=T("rules");$("dailyBtn").textContent=dailyDone()?T("dailyDone")+" "+"★".repeat(SV.dd.stars||0):T("daily");
  document.querySelectorAll("#dRow .big").forEach(b=>{b.textContent=T("d"+b.dataset.d);b.classList.toggle("sel",+b.dataset.d===diff);b.classList.toggle("off",+b.dataset.d!==diff)});
  $("flags").innerHTML=[["he","עברית"],["fr","Français"],["en","English"]].map(a=>'<button class="lang '+(a[0]===lang?"sel":"")+'" data-lang="'+a[0]+'">'+a[1]+"</button>").join("");$("nglT").textContent=T("title")}
 /* ================= boot ================= */

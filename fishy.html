@@ -17,7 +17,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 .iconbtn{width:48px;height:48px;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 4px 0 #0003;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
 .iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0003}
 .corner{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-end:12px;z-index:60}
-#top{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-start:12px;inset-inline-end:70px;z-index:20;display:none;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
+#top{position:fixed;top:max(10px,env(safe-area-inset-top));inset-inline-start:12px;inset-inline-end:126px;z-index:20;display:none;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
 #top>*{pointer-events:auto}
 body.play #top{display:flex}
 .pill{background:#fff;color:var(--ink);border-radius:999px;padding:5px 12px;font-weight:900;font-size:clamp(14px,3.9vw,19px);box-shadow:0 3px 0 #0003;white-space:nowrap;min-height:34px;display:flex;align-items:center;gap:5px}
@@ -32,7 +32,7 @@ body.play #top{display:flex}
 .ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));z-index:30;text-align:center;overflow-y:auto}
 .ov.show{display:flex}
 #menu{background:linear-gradient(#0000,#0000 25%,#0b3a6acc);justify-content:space-between}
-#menu .top{padding-top:8px}
+#menu .top{padding-top:8px}@media (max-width:560px){#menu .top{padding-top:56px}}
 #menu .bot{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;max-width:440px}
 #picker,#brief,#over,#pause{background:#0a3a64dd;justify-content:safe center}
 h1{margin:0;font-size:clamp(34px,10.5vw,60px);color:#ffe14d;text-shadow:0 4px 0 #a2410f,0 0 26px #ffe14d88;line-height:1.05;padding:0 44px}
@@ -63,15 +63,23 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
 #nogl{position:fixed;inset:0;z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b4d86;padding:24px;text-align:center;font-size:20px;font-weight:700}
 #nogl.show{display:flex}
 .desk .corner{top:14px}
+.m2{inset-inline-end:68px}
+.stars{font-size:44px;letter-spacing:4px;filter:drop-shadow(0 3px 0 #0006)}
+.stars span{display:inline-block}.stars span.on{animation:starpop .55s both cubic-bezier(.2,1.8,.4,1);color:#ffe14d}.stars span:not(.on){opacity:.5}
+@keyframes starpop{0%{transform:scale(0) rotate(-90deg);opacity:0}100%{transform:scale(1) rotate(0)}}
+#mascot.joy{animation:joy .6s 3}@keyframes joy{50%{transform:translateY(-14px) scale(1.12) rotate(-6deg)}}
+.chipd{font-size:14px;font-weight:800;background:#ffe14d;color:#16466b;border-radius:999px;padding:3px 12px;box-shadow:0 3px 0 #0003;display:inline-block}
+@media (prefers-reduced-motion:reduce){#mascot.joy{animation:none}}
 @media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){.ov{zoom:1.2}}
 @media (hover:hover) and (pointer:fine) and (min-width:1600px) and (min-height:930px){.ov{zoom:1.4}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/fishy.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/fishy-192.png"><meta name="apple-mobile-web-app-title" content="דגיגון רעבתן"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/fishy-apple-180.png"><script src="pwa.js" data-app="fishy" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas><canvas id="conf"></canvas>
-<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
+<button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn corner m2" id="musBtn" aria-label="music">🎵</button>
 <div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pHe"></span><span class="pill" id="pGoal"></span><span class="pill hide" id="pTime"></span><span id="meterw"><i id="meterf"></i><b id="meterT"></b></span></div>
 <div id="combo"></div>
 <div id="cap"></div>
@@ -80,6 +88,7 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
  <div class="bot"><div class="sub" id="mBest"></div>
   <button class="big g" id="playBtn"></button>
   <button class="big b" id="endBtn"></button>
+  <button class="big o" id="dailyBtn" style="min-height:54px;font-size:20px"></button>
   <div class="row"><button class="big o" id="dEasy"></button><button class="big p" id="dNorm"></button><button class="big s" id="dHard"></button></div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
 <div class="ov" id="picker"><h2 id="pkT"></h2><div id="worlds"></div><button class="big s" id="pkBack" style="max-width:300px"></button></div>
@@ -96,8 +105,8 @@ const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k
 const TX={
 he:{title:"דגיגון רעבתן",sub:"אוכלים קטנים, גדלים, בורחים מהגדולים! 🐟",play:"▶ שחקי",endless:"🌊 שחייה חופשית",dEasy:"🐣 קל ומצחיק",dNorm:"🐯 רגיל",dHard:"🦁 קשה",
  rules:"שוחים עם האצבע (או עכבר / חצים). אוכלים דגים קטנים ממך כדי לגדול – ובורחים מדגים גדולים עם ❗. אפשר לאסוף בועות כוח!",
- pick:"בחרי שלב",back:"↩ חזרה",start:"▶ יאללה!",worlds:["שונית האלמוגים","יער האצות","הספינה השקועה","שונית הממתקים"],
- kinds:{shrimp:"שרימפסים",crab:"סרטנים"},bosses:{puff:"הדג־נפוח הרגזן",cat:"דג־החתול הענק",angler:"דג הפנס המצחיק",whale:"הלווייתן הרדום"},
+ pick:"בחרי שלב",back:"↩ חזרה",start:"▶ יאללה!",worlds:["שונית האלמוגים","יער האצות","הספינה השקועה","שונית הממתקים","מערת הזוהר"],dailyT:"אתגר היום",daily:"📅 אתגר היום",dailyDone:"✅ אתגר היום – עוד פעם?",dailyBonus:"אתגר היום הושלם! 🎁",
+ kinds:{shrimp:"שרימפסים",crab:"סרטנים"},bosses:{puff:"הדג־נפוח הרגזן",cat:"דג־החתול הענק",angler:"דג הפנס המצחיק",whale:"הלווייתן הרדום",king:"מלך הפנסים הזוהר"},
  g_size:"גדלי עד גודל {n}!",g_eat:"אכלי {n} {k}",g_golden:"תפסי {n} דגי זהב! ✨",g_school:"אכלי את כל להקת הדגיגים הבוהקת ({n})",g_pearls:"אספי {n} פנינים 💎",g_survive:"שרדי {n} שניות בלי להיבהל",g_boss:"גדלי עד גודל {n} ואכלי את {k}!",
  hint0:"שחי עם האצבע • הדגים עם ❗ גדולים ממך – תברחי!",hint1:"תפסי את הדג הזהוב לפני שהוא בורח!",hint2:"הפנינים נוצצות על קרקעית הים – החצים מראים לך איפה",hint3:"בועת סיכה מגינה עלייך • בועת צמצום מכווצת את הגדולים",
  hearts:"❤️",lvl:"גודל",win:"כל הכבוד! 🎉",lose:"אוי… נגמרו הלבבות",timeout:"נגמר הזמן ⏰",stagesN:"שלב {w}-{n}",stat:"⏱ {t} שנ' · 🐟 {e} · 💔 {h}",endS:"שחית {t} שנ' · אכלת {e} דגים · {s} נקודות",best:"שיא חדש! 🏆",bestIs:"שיא שחייה חופשית: {b}",
@@ -105,8 +114,8 @@ he:{title:"דגיגון רעבתן",sub:"אוכלים קטנים, גדלים, ב
  cheers:["נאם!","יאמי!","וואו!","מעולה!","קומבו!!","דג-טסטי!","ענק!!"],grow:"גדלת! 🎈",shield:"מגן!",speed:"מהירות!",magnet:"מגנט!",shrink:"הגדולים התכווצו!",gulp:"גלופ! 🫧",sting:"איי! עקץ 😵",full:"הוא שבע 😴",big:"גדול מדי!",revenge:"נקמה מתוקה! 😋",unlock:"נפתח שלב חדש!",boss:"עכשיו אפשר לאכול את הבוס!",hop:"אוי, הנפוח מתנפח!",gold:"דג זהב! ✨"},
 fr:{title:"Petit Poisson Gourmand",sub:"Mange les petits, grandis, fuis les gros ! 🐟",play:"▶ Jouer",endless:"🌊 Nage libre",dEasy:"🐣 Facile",dNorm:"🐯 Normal",dHard:"🦁 Difficile",
  rules:"Nage avec le doigt (ou souris / flèches). Mange les poissons plus petits pour grandir – et fuis ceux marqués ❗. Ramasse les bulles magiques !",
- pick:"Choisis un niveau",back:"↩ Retour",start:"▶ C'est parti !",worlds:["Récif de corail","Forêt d'algues","L'épave","Récif bonbon"],
- kinds:{shrimp:"crevettes",crab:"crabes"},bosses:{puff:"le Poisson-globe grognon",cat:"le Gros Poisson-chat",angler:"la Baudroie rigolote",whale:"la Baleine endormie"},
+ pick:"Choisis un niveau",back:"↩ Retour",start:"▶ C'est parti !",worlds:["Récif de corail","Forêt d'algues","L'épave","Récif bonbon","Grotte lumineuse"],dailyT:"Défi du jour",daily:"📅 Défi du jour",dailyDone:"✅ Défi du jour – encore ?",dailyBonus:"Défi du jour réussi ! 🎁",
+ kinds:{shrimp:"crevettes",crab:"crabes"},bosses:{puff:"le Poisson-globe grognon",cat:"le Gros Poisson-chat",angler:"la Baudroie rigolote",whale:"la Baleine endormie",king:"le Roi des lanternes"},
  g_size:"Grandis jusqu'à la taille {n} !",g_eat:"Mange {n} {k}",g_golden:"Attrape {n} poisson(s) doré(s) ! ✨",g_school:"Mange tout le banc brillant ({n})",g_pearls:"Ramasse {n} perles 💎",g_survive:"Survis {n} secondes sans te faire avaler",g_boss:"Grandis jusqu'à la taille {n} et mange {k} !",
  hint0:"Nage avec le doigt • Les poissons avec ❗ sont plus gros – fuis !",hint1:"Attrape le poisson doré avant qu'il file !",hint2:"Les perles brillent au fond – les flèches t'aident",hint3:"La bulle bouclier te protège • la bulle rétrécit les gros",
  hearts:"❤️",lvl:"Taille",win:"Bravo ! 🎉",lose:"Oh… plus de cœurs",timeout:"Temps écoulé ⏰",stagesN:"Niveau {w}-{n}",stat:"⏱ {t} s · 🐟 {e} · 💔 {h}",endS:"{t} s · {e} poissons · {s} points",best:"Record ! 🏆",bestIs:"Record nage libre : {b}",
@@ -114,8 +123,8 @@ fr:{title:"Petit Poisson Gourmand",sub:"Mange les petits, grandis, fuis les gros
  cheers:["Miam !","Délicieux !","Waouh !","Super !","Combo !!","Poisson-tastique !","Énorme !!"],grow:"Tu grandis ! 🎈",shield:"Bouclier !",speed:"Vitesse !",magnet:"Aimant !",shrink:"Les gros rétrécissent !",gulp:"Glouf ! 🫧",sting:"Aïe ! Piqué 😵",full:"Il est rassasié 😴",big:"Trop gros !",revenge:"Douce revanche ! 😋",unlock:"Nouveau niveau !",boss:"Tu peux manger le boss !",hop:"Oh, le globe gonfle !",gold:"Poisson doré ! ✨"},
 en:{title:"Hungry Fishy",sub:"Eat the small, grow big, dodge the bigger! 🐟",play:"▶ Play",endless:"🌊 Free swim",dEasy:"🐣 Easy",dNorm:"🐯 Normal",dHard:"🦁 Hard",
  rules:"Swim with your finger (or mouse / arrows). Eat fish smaller than you to grow – and run from the ones marked ❗. Grab the magic bubbles!",
- pick:"Pick a stage",back:"↩ Back",start:"▶ Let's go!",worlds:["Coral Reef","Kelp Forest","Sunken Ship","Candy Reef"],
- kinds:{shrimp:"shrimp",crab:"crabs"},bosses:{puff:"the Grumpy Puffer",cat:"the Giant Catfish",angler:"the Silly Lantern Fish",whale:"the Sleepy Whale"},
+ pick:"Pick a stage",back:"↩ Back",start:"▶ Let's go!",worlds:["Coral Reef","Kelp Forest","Sunken Ship","Candy Reef","Glow Cave"],dailyT:"Daily challenge",daily:"📅 Daily challenge",dailyDone:"✅ Daily challenge – again?",dailyBonus:"Daily challenge done! 🎁",
+ kinds:{shrimp:"shrimp",crab:"crabs"},bosses:{puff:"the Grumpy Puffer",cat:"the Giant Catfish",angler:"the Silly Lantern Fish",whale:"the Sleepy Whale",king:"the Glow King"},
  g_size:"Grow to size {n}!",g_eat:"Eat {n} {k}",g_golden:"Catch {n} golden fish! ✨",g_school:"Eat the whole shiny school ({n})",g_pearls:"Collect {n} pearls 💎",g_survive:"Survive {n} seconds without being gulped",g_boss:"Grow to size {n} and eat {k}!",
  hint0:"Swim with your finger • Fish marked ❗ are bigger – run!",hint1:"Catch the golden fish before it escapes!",hint2:"Pearls sparkle on the sea floor – the arrows help you",hint3:"Shield bubbles protect you • shrink bubbles shrink the big ones",
  hearts:"❤️",lvl:"Size",win:"Great job! 🎉",lose:"Oh no… out of hearts",timeout:"Time's up ⏰",stagesN:"Stage {w}-{n}",stat:"⏱ {t}s · 🐟 {e} · 💔 {h}",endS:"{t}s · {e} fish · {s} points",best:"New best! 🏆",bestIs:"Free swim best: {b}",
@@ -140,7 +149,15 @@ const SFX={click(){tone(560,.08,"triangle",.16)},
  win(){[523,659,784,1046,1318,1568].forEach((f,i)=>tone(f,.24,"triangle",.22,null,i*.09));noise(.7,3500,"highpass",.08,7000,.35)},
  lose(){[392,330,262,196].forEach((f,i)=>tone(f,.3,"triangle",.2,null,i*.16))},
  siren(){tone(500,.3,"square",.08,800);tone(800,.3,"square",.08,500,.3)},
- star(i){tone(600+i*160,.2,"triangle",.22,null,0)},bump(){tone(150,.08,"sine",.18,100)},blip(){tone(880,.05,"square",.05)}};
+ star(i){tone(600+i*160,.2,"triangle",.22,null,0);tone(1200+i*320,.3,"sine",.09,null,.06)},fan(){[392,523,659,784,1046,1318].forEach((f,i)=>tone(f,.28,"triangle",.16,null,i*.08));noise(.5,5000,"highpass",.06,9000,.3)},bump(){tone(150,.08,"sine",.18,100)},blip(){tone(880,.05,"square",.05)}};
+/* tiny background music loop (off by default; the 🎵 button; respects mute) */
+let musicOn=ls.get("annabelle-music")==="1",mT=null,mStep=0;
+const MEL=[0,2,4,7,4,2,0,-3,0,4,7,9,7,4,2,0],BAS=[0,0,-3,-3,-5,-5,-8,-8];
+function musicTick(){if(!musicOn||muted||document.hidden||!AC||AC.state!=="running")return;const s=mStep++;tone(262*Math.pow(2,MEL[s%16]/12),.34,"sine",.06);if(s%2===0)tone(131*Math.pow(2,BAS[(s>>1)%8]/12),.6,"sine",.06)}
+function musicSet(on){musicOn=on;ls.set("annabelle-music",on?"1":"0");clearInterval(mT);mT=null;if(on){ac();mT=setInterval(musicTick,300)}$("musBtn").style.opacity=on?1:.55}
+const RW=()=>window.AnnabelleRewards;
+function dayKey(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function dayHash(){let h=11;for(const ch of dayKey())h=(h*31+ch.charCodeAt(0))>>>0;return h}
 /* ============ data ============ */
 const K=1.9;                                   // world-unit scale
 const PS=[18,26,37,52,74,104,146].map(v=>Math.round(v*K));           // body length of the player at each growth tier
@@ -150,7 +167,8 @@ const WORLDS=[
  {c:["#8be9ff","#1aa0d6","#0b5f9e"],sand:"#f8dca6",tint:"#ff8fb8",prey:["minnow","guppy","clown","shrimp"],pred:["grouper","catfish"],deco:"coral",boss:"puff"},
  {c:["#a6f1c6","#22b788","#0b6b66"],sand:"#d9e7a0",tint:"#3ec97a",prey:["minnow","tang","shrimp","angel"],pred:["catfish","grouper"],deco:"kelp",boss:"cat"},
  {c:["#78c9ff","#2467b8","#0d2c6b"],sand:"#c9b38a",tint:"#9b7b4f",prey:["guppy","crab","angel","tang"],pred:["angler","grouper"],deco:"ship",boss:"angler"},
- {c:["#ffd0ec","#c27cf0","#6b3bb0"],sand:"#ffe6f2",tint:"#ff5fa8",prey:["clown","minnow","shrimp","angel"],pred:["catfish","grouper"],deco:"candy",boss:"whale"}];
+ {c:["#ffd0ec","#c27cf0","#6b3bb0"],sand:"#ffe6f2",tint:"#ff5fa8",prey:["clown","minnow","shrimp","angel"],pred:["catfish","grouper"],deco:"candy",boss:"whale"},
+ {c:["#9b8bff","#3f2db0","#140a4c"],sand:"#6a58b8",tint:"#7dffd8",prey:["minnow","tang","angel","clown"],pred:["angler","catfish"],deco:"glow",boss:"angler"}];
 // goal kinds: size(v=tier #), eat(kind,v), golden(v), school(v), pearls(v), survive(v=sec), boss
 const STAGES=[
  {w:0,goal:{k:"size",v:2},par:60,danger:1,haz:0,start:0},
@@ -168,7 +186,11 @@ const STAGES=[
  {w:3,goal:{k:"golden",v:2},par:100,limit:160,danger:3,haz:3,start:2},
  {w:3,goal:{k:"survive",v:75},par:75,danger:4,haz:3,start:2},
  {w:3,goal:{k:"school",v:14},par:90,limit:170,danger:3,haz:3,start:2},
- {w:3,goal:{k:"boss",boss:"whale",v:6},par:160,danger:3,haz:3,start:4,bsize:125,bneed:6}];
+ {w:3,goal:{k:"boss",boss:"whale",v:6},par:160,danger:3,haz:3,start:4,bsize:125,bneed:6},
+ {w:4,goal:{k:"size",v:4},par:90,danger:3,haz:3,start:1},
+ {w:4,goal:{k:"pearls",v:6},par:110,limit:190,danger:3,haz:3,start:2,hint:2},
+ {w:4,goal:{k:"golden",v:3},par:115,limit:175,danger:4,haz:3,start:2},
+ {w:4,goal:{k:"boss",boss:"king",v:6},par:170,danger:4,haz:3,start:4,bsize:132,bneed:6}];
 STAGES.forEach((s,i)=>{s.i=i;s.n=i%4+1;if(s.bsize)s.bsize=Math.round(s.bsize*K)});
 const SPEC={
  plankton:{beh:"drift",sp:14,pal:["#fff7a8","#bdf7ff","#ffffff"]},
@@ -191,7 +213,10 @@ const SPEC={
 const WW=3200,WH=1700,SURF=0;
 let W=1,H=1,dpr=1,cx=null,ctx=null;
 /* ============ run state ============ */
-const store={stars:{},end:0,diff:"normal"};
+const store={stars:{},end:0,diff:"normal",daily:null};
+try{const d=JSON.parse(ls.get("annabelle-fishy-daily")||"null");if(d&&typeof d.day==="string"&&d.stars>=0&&d.stars<=3)store.daily={day:d.day,stars:d.stars|0}}catch(e){}
+const dailyDone=()=>!!(store.daily&&store.daily.day===dayKey());
+function dailyStage(){const h=dayHash(),w=h%WORLDS.length,gs=[{k:"size",v:3},{k:"golden",v:2},{k:"school",v:10},{k:"pearls",v:5}],g=gs[(h>>>3)%4];return{w,i:100,n:0,daily:true,goal:g,par:100,limit:g.k==="size"?0:170,danger:3,haz:3,start:1+((h>>>5)%2)}}
 try{const s=JSON.parse(ls.get("annabelle-fishy-stars")||"{}");if(s&&typeof s==="object")for(const k in s)if(/^\d+$/.test(k)&&s[k]>=0&&s[k]<=3)store.stars[k]=s[k]|0}catch(e){}
 store.end=+ls.get("annabelle-fishy-endless")||0;store.diff=ls.get("annabelle-fishy-diff")||"normal";if(!DIFFS[store.diff])store.diff="normal";
 const saveStars=()=>ls.set("annabelle-fishy-stars",JSON.stringify(store.stars));
@@ -221,7 +246,7 @@ function newRun(stage,endlessW){
  if(gl){
   if(gl.k==="school"){const n=gl.v;let cxp=rnd(WW*.15,WW*.85),cyp=rnd(WH*.25,WH*.6);if(Math.abs(cxp-G.P.x)<900)cxp=G.P.x<WW/2?WW*.88:WW*.12;const sch={lead:null};for(let i=0;i<n;i++){const f=mk("minnow",Math.max(12*K,G.P.sz*.5),cxp+rnd(-60,60),cyp+rnd(-50,50));f.tag="goal";f.sch=sch;f.off={x:rnd(-90,90),y:rnd(-70,70)};if(!sch.lead)sch.lead=f;G.fish.push(f)}}
   if(gl.k==="pearls"){for(let i=0;i<gl.v;i++){G.pearls.push({x:rnd(120,WW-120),y:WH-rnd(40,70),got:false,ph:rnd(0,6)})}}
-  if(gl.k==="boss"){const b=mk("puff",stage.bsize,WW*.82,WH*.55);b.kind=gl.boss==="puff"?"puff":gl.boss==="cat"?"catfish":gl.boss==="angler"?"angler":"whale";b.boss=true;b.sp=SPEC[b.kind].sp;b.size=stage.bsize;b.beh=gl.boss==="whale"?"bosswhale":"pred";G.boss=b;G.fish.push(b)}
+  if(gl.k==="boss"){const b=mk("puff",stage.bsize,WW*.82,WH*.55);b.kind=gl.boss==="puff"?"puff":gl.boss==="cat"?"catfish":gl.boss==="angler"||gl.boss==="king"?"angler":"whale";b.boss=true;b.sp=SPEC[b.kind].sp;b.size=stage.bsize;b.beh=gl.boss==="whale"?"bosswhale":"pred";G.boss=b;G.fish.push(b)}
  }
  // keep the player clear of predators at the start
  const P=G.P;for(const f of G.fish)if(f.beh==="pred"&&Math.hypot(f.x-P.x,f.y-P.y)<600){f.x=P.x+(f.x<P.x?-1:1)*700;f.x=clamp(f.x,60,WW-60)}
@@ -233,6 +258,7 @@ function makeDecor(wi,R){
   if(kind==="coral")tp=["branch","tube","fan","bone","yarn","rock"][R()*6|0];
   else if(kind==="kelp")tp=["kelp","kelp","kelp","rock","bone","yarn"][R()*6|0];
   else if(kind==="ship")tp=["rock","kelp","tube","bone","yarn","branch"][R()*6|0];
+  else if(kind==="glow")tp=["mush","crystal","mush","tube","crystal","fan"][R()*6|0];
   else tp=["lolly","gum","swirl","lolly","gum","bone"][R()*6|0];
   d.push({t:tp,x,s:.7+R()*.9,c:R()*6|0,ph:R()*6,l:R()<.35?0:1})}
  if(kind==="ship")d.push({t:"wreck",x:WW*.28,s:1.6,c:0,ph:0,l:1});
@@ -363,7 +389,7 @@ function hurt(kind,src){
  G.combo=0;$("combo").classList.remove("on");
  return true}
 function eatFish(f){
- const P=G.P;f.eat=1;P.mouth=1;G.eaten++;G.combo++;G.comboT=2.3;
+ const P=G.P;f.eat=1;P.mouth=1;G.eaten++;G.combo++;G.comboT=2.3;G.maxCombo=Math.max(G.maxCombo||0,G.combo);
  const gain=Math.max(.15,Math.min(1.25,f.size/P.sz*1.25))*(f.tag==="gold"?3:1);
  const pts=Math.round(f.size*(1+Math.min(G.combo,10)*.15));G.score+=pts;
  SFX.nom(G.combo);burst(f.x,f.y,8,"#ffe14d",100,3);addPop(f.x,f.y-10,"+"+pts,"#ffe14d");
@@ -480,12 +506,14 @@ function takeItem(it){
 function finish(win,why){
  if(!G||G.state!=="play")return;
  G.state=win?"win":"lose";G.why=why||"";
- const st=G.stage;let stars=0,newUnlock=false;
+ const st=G.stage;let stars=0,newUnlock=false,newStars=0,firstDaily=false;
  if(win&&st){stars=1+(G.hits<=1?1:0)+(G.hits===0&&G.t<=st.par*G.D.par?1:0);
-  const old=store.stars[st.i]||0;if(stars>old){store.stars[st.i]=stars;saveStars()}
-  if(old===0&&st.i<STAGES.length-1)newUnlock=true}
- G.starsGot=stars;G.newUnlock=newUnlock;
+  if(st.daily){const same=dailyDone();firstDaily=!same;newStars=Math.max(0,stars-(same?store.daily.stars:0));store.daily={day:dayKey(),stars:Math.max(stars,same?store.daily.stars:0)};ls.set("annabelle-fishy-daily",JSON.stringify(store.daily))}
+  else{const old=store.stars[st.i]||0;newStars=Math.max(0,stars-old);if(stars>old){store.stars[st.i]=stars;saveStars()}
+   if(old===0&&st.i<STAGES.length-1)newUnlock=true}}
+ G.starsGot=stars;G.newUnlock=newUnlock;G.firstDaily=firstDaily;
  let nb=false;if(G.end&&G.score>store.end){store.end=G.score;ls.set("annabelle-fishy-endless",String(G.score));nb=true}G.newBest=nb;
+ {const R_=RW();if(R_){if(win&&st&&!st.daily)R_.award({game:"fishy",event:"levelClear",level:st.i+1,score:G.score});if(newStars>0)R_.award({game:"fishy",event:"star",stars:newStars});if((G.maxCombo||0)>=3)R_.award({game:"fishy",event:"combo",score:G.maxCombo});R_.award({game:"fishy",event:"score",score:G.score});if(win&&(firstDaily||(st&&st.goal.k==="boss")))R_.award(firstDaily?{game:"fishy",event:"win",coins:8}:{game:"fishy",event:"win"})}}
  SFX[win?"win":"lose"]();
  setTimeout(()=>showOver(),win?900:700)}
 /* ============ drawing ============ */
@@ -593,6 +621,8 @@ function drawDeco(c,d,base,t,wi){
   case"yarn":{const r=22*s;c.fillStyle=cols[1];c.beginPath();c.arc(0,-r,r,0,6.3);c.fill();c.strokeStyle="#fff9";c.lineWidth=2.5;for(let i=0;i<4;i++){c.beginPath();c.arc(0,-r,r*(.45+i*.15),i*.8,i*.8+2.4);c.stroke()}c.strokeStyle=cols[1];c.lineWidth=3;c.beginPath();c.moveTo(r*.6,-r*.3);c.quadraticCurveTo(r*1.6,-r*.2,r*2,0);c.stroke();break}
   case"rock":{c.fillStyle=W0.tint+"99";c.beginPath();c.ellipse(0,-14*s,40*s,24*s,0,3.14,6.28);c.lineTo(40*s,0);c.lineTo(-40*s,0);c.fill();c.fillStyle="#fff2";c.beginPath();c.ellipse(-10*s,-26*s,14*s,7*s,-.3,0,6.3);c.fill();break}
   case"kelp":{c.strokeStyle=cols[3%2]==="x"?"#000":(wi===1?"#2fa86a":"#3ec97a");c.lineWidth=11*s;c.lineCap="round";const h=(120+((d.x*7)%90))*s;c.beginPath();for(let k=0;k<=8;k++){const y=-k/8*h,x=Math.sin(t*1.2+d.ph+k*.7)*(8+k*3)*s;k?c.lineTo(x,y):c.moveTo(x,y)}c.stroke();c.strokeStyle="#7be8a8";c.lineWidth=4*s;c.stroke();break}
+  case"mush":{c.fillStyle="#7dffd822";c.beginPath();c.arc(0,-48*s,46*s,0,6.3);c.fill();c.fillStyle="#d9e7ff";c.fillRect(-6*s,-40*s,12*s,40*s);const pu=.75+.25*Math.sin(t*2+d.ph);c.fillStyle=cols[0];c.beginPath();c.ellipse(0,-42*s,30*s,24*s*pu,0,Math.PI,0);c.fill();c.fillStyle="#fff9";for(const [x,y] of[[-12,-52],[6,-58],[16,-48]]){c.beginPath();c.arc(x*s,y*s,3.5*s,0,6.3);c.fill()}break}
+  case"crystal":{const hs=[60,86,48];c.fillStyle="#7dffd833";c.beginPath();c.arc(0,-40*s,44*s,0,6.3);c.fill();for(let i=0;i<3;i++){const x=(i-1)*20*s,h=hs[i]*s;c.fillStyle=i===1?"#9bffe6":"#6fd8f5";c.beginPath();c.moveTo(x-11*s,0);c.lineTo(x-4*s,-h);c.lineTo(x+11*s,0);c.closePath();c.fill();c.fillStyle="#fff7";c.beginPath();c.moveTo(x-4*s,-h);c.lineTo(x-1*s,-h*.4);c.lineTo(x-7*s,-h*.5);c.closePath();c.fill()}break}
   case"lolly":{c.strokeStyle="#fff";c.lineWidth=7*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-90*s);c.stroke();const r=28*s;c.fillStyle=cols[0];c.beginPath();c.arc(0,-90*s-r*.7,r,0,6.3);c.fill();c.strokeStyle="#fff";c.lineWidth=5*s;c.beginPath();c.arc(0,-90*s-r*.7,r*.6,0,4.5);c.arc(0,-90*s-r*.7,r*.25,0,4);c.stroke();break}
   case"gum":{c.fillStyle=cols[0];c.beginPath();c.moveTo(-26*s,0);c.quadraticCurveTo(-30*s,-56*s,0,-62*s);c.quadraticCurveTo(30*s,-56*s,26*s,0);c.fill();c.fillStyle="#fff7";c.beginPath();c.ellipse(-8*s,-36*s,6*s,12*s,.3,0,6.3);c.fill();break}
   case"swirl":{c.strokeStyle=cols[1];c.lineWidth=10*s;c.lineCap="round";c.beginPath();for(let k=0;k<30;k++){const a=k*.45,r=(4+k*1.6)*s;const x=Math.cos(a)*r,y=-40*s+Math.sin(a)*r*.8;k?c.lineTo(x,y):c.moveTo(x,y)}c.stroke();break}
@@ -708,7 +738,7 @@ function indicators(c,sx,sy,S,t){
   const a=Math.atan2(py-H/2,px-W/2),ex=clamp(W/2+Math.cos(a)*W,36,W-36),ey=clamp(H/2+Math.sin(a)*H,86,H-36);
   c.save();c.translate(ex,ey);c.rotate(a);c.fillStyle=q.k==="pearl"?"#fff":q.k==="boss"?"#7dffb0":"#ffe14d";c.strokeStyle="#0008";c.lineWidth=3;c.beginPath();c.moveTo(16,0);c.lineTo(-10,-13);c.lineTo(-4,0);c.lineTo(-10,13);c.closePath();c.stroke();c.fill();c.restore()}}
 function menuBg(c,t){
- const wd=WORLDS[(Math.floor(t/12))%4];const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,wd.c[0]);g.addColorStop(.5,wd.c[1]);g.addColorStop(1,wd.c[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ const wd=WORLDS[(Math.floor(t/12))%WORLDS.length];const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,wd.c[0]);g.addColorStop(.5,wd.c[1]);g.addColorStop(1,wd.c[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
  c.fillStyle="#ffffff22";for(let i=0;i<14;i++){c.beginPath();c.arc((i*97+t*14*(1+i%3))%(W+40)-20,(H-((i*173+t*30)%(H+40)))+20,4+i%5*2,0,6.3);c.fill()}
  const fk=["guppy","clown","angel","tang","minnow"];
  for(let i=0;i<5;i++){const L=60+i*14,x=((t*(30+i*11)+i*210)%(W+240))-120,y=H*(.28+i*.12)+Math.sin(t+i)*18;const f={t:t+i,id:i,vx:30,vy:0,face:1};c.save();c.translate(W-x,y);c.scale(-1,1);drawBody(c,f,L,SPEC[fk[i]],{});c.restore()}
@@ -739,7 +769,7 @@ const stageText=s=>{const gl=s.goal;let k=t("g_"+(gl.k==="eat"?"eat":gl.k));cons
 function show(id){["menu","picker","brief","over","pause"].forEach(x=>$(x).classList.toggle("show",x===id))}
 function drawTexts(){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");
- $("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("endBtn").textContent=t("endless");
+ $("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("endBtn").textContent=t("endless");$("dailyBtn").textContent=dailyDone()?t("dailyDone")+" "+"★".repeat(store.daily.stars):t("daily");
  $("dEasy").textContent=t("dEasy");$("dNorm").textContent=t("dNorm");$("dHard").textContent=t("dHard");
  for(const d of["Easy","Norm","Hard"]){const key=d==="Easy"?"easy":d==="Norm"?"normal":"hard";$("d"+d).classList.toggle("sel",store.diff===key);$("d"+d).classList.toggle("off",store.diff!==key)}
  $("rules").textContent=t("rules");$("mBest").textContent=store.end?t("bestIs").replace("{b}",store.end):"";
@@ -749,39 +779,41 @@ function drawTexts(){
  buildPicker();hc={}}
 function stars(n){return"★".repeat(n)+"☆".repeat(3-n)}
 function buildPicker(){
- const wc=["#1aa0d6","#22b788","#2467b8","#c27cf0"];
- let h="";for(let w=0;w<4;w++){let s="";let tot=0;for(let n=0;n<4;n++){const i=w*4+n,st=STAGES[i],ok=unlocked(i),sv=store.stars[i]||0;tot+=sv;
+ const wc=["#1aa0d6","#22b788","#2467b8","#c27cf0","#4b3ad0"];
+ let h="";for(let w=0;w<WORLDS.length;w++){let s="";let tot=0;for(let n=0;n<4;n++){const i=w*4+n,st=STAGES[i],ok=unlocked(i),sv=store.stars[i]||0;tot+=sv;
   s+=`<button class="sb${st.goal.k==="boss"?" boss":""}${ok?"":" lock"}" data-st="${i}" ${ok?"":"disabled"}>${ok?(st.goal.k==="boss"?"👑":(w+1)+"-"+(n+1)):"🔒"}<small>${ok?stars(sv):""}</small></button>`}
   h+=`<div class="wc" style="background:linear-gradient(${WORLDS[w].c[0]}aa,${wc[w]})"><h3><span>${t("worlds")[w]}</span><span style="font-size:15px">★ ${tot}/12</span></h3><div class="st">${s}</div></div>`}
  $("worlds").innerHTML=h}
 function toMenu(){mode="menu";G=null;paused=false;document.body.classList.remove("play");$("cap").classList.remove("on");$("combo").classList.remove("on");stopConf();show("menu");drawTexts()}
 window.toMenu=toMenu;
 function toPicker(){mode="menu";G=null;paused=false;document.body.classList.remove("play");$("cap").classList.remove("on");stopConf();buildPicker();show("picker")}
-function showBrief(i){const s=STAGES[i];curStage=s;$("bW").textContent=t("worlds")[s.w];$("bT").textContent=t("stagesN").replace("{w}",s.w+1).replace("{n}",s.n);$("bG").textContent=stageText(s);
+function showBrief(i){const s=typeof i==="object"?i:STAGES[i];curStage=s;$("bW").textContent=t("worlds")[s.w];$("bT").textContent=s.daily?t("dailyT"):t("stagesN").replace("{w}",s.w+1).replace("{n}",s.n);$("bG").textContent=stageText(s);
  const D=DIFFS[store.diff];$("bH").textContent=t("hearts")+" ×"+D.hearts+" · "+t("dEasy").slice(0,0)+({easy:t("dEasy"),normal:t("dNorm"),hard:t("dHard")})[store.diff];show("brief")}
-function startStage(s){ac();curStage=s;newRun(s);mode="play";paused=false;document.body.classList.add("play");show(null);$("pTime").classList.add("hide");hc={};idleT=0;SFX.pop()}
-function startEndless(){ac();curStage=null;newRun(null,Math.floor(Math.random()*4));mode="play";paused=false;document.body.classList.add("play");show(null);hc={};SFX.pop()}
+function startStage(s){ac();RW()&&RW().award({game:"fishy",event:"play"});curStage=s;newRun(s);mode="play";paused=false;document.body.classList.add("play");show(null);$("pTime").classList.add("hide");hc={};idleT=0;SFX.pop()}
+function startEndless(){ac();RW()&&RW().award({game:"fishy",event:"play"});curStage=null;newRun(null,Math.floor(Math.random()*WORLDS.length));mode="play";paused=false;document.body.classList.add("play");show(null);hc={};SFX.pop()}
 function showOver(){
  if(!G)return;mode="over";const win=G.state==="win";document.body.classList.remove("play");$("cap").classList.remove("on");
  const e=G.end;$("oT").textContent=win?t("win"):G.why==="timeout"?t("timeout"):e?t("endS").split("·")[0].slice(0,0)+t("lose"):t("lose");
  if(e)$("oT").textContent=t("lose");
- $("oStars").textContent=win&&G.stage?stars(G.starsGot):"";
+ $("oStars").innerHTML=win&&G.stage?[0,1,2].map(i=>'<span class="'+(i<G.starsGot?"on":"")+'" style="animation-delay:'+(.4+i*.3)+'s">'+(i<G.starsGot?"★":"☆")+"</span>").join(""):"";
  const tm=Math.round(G.t);$("oS").textContent=e?t("endS").replace("{t}",tm).replace("{e}",G.eaten).replace("{s}",G.score):t("stat").replace("{t}",tm).replace("{e}",G.eaten).replace("{h}",G.hits);
- $("oB").textContent=G.newBest?t("best"):(win&&G.newUnlock?t("unlock"):"");
+ $("oB").textContent=G.newBest?t("best"):(win&&G.firstDaily?t("dailyBonus"):win&&G.newUnlock?t("unlock"):"");$("mascot").classList.toggle("joy",win);
  $("nextBtn").style.display=win&&G.stage&&G.stage.i<STAGES.length-1&&unlocked(G.stage.i+1)?"":"none";
  $("againBtn").style.display="";$("stagesBtn").style.display=G.stage?"":"none";
  const mc=$("mascot").getContext("2d");mc.clearRect(0,0,220,220);drawKitten(mc,110,120,70,win?"happy":"sad");
- show("over");
- if(win){confetti();[0,1,2].forEach(i=>{if(i<G.starsGot)setTimeout(()=>SFX.star(i),250+i*220)})}}
+ show("over");RW()&&RW().flush();
+ if(win){confetti();[0,1,2].forEach(i=>{if(i<G.starsGot)setTimeout(()=>SFX.star(i),400+i*300)});if(G.starsGot===3||G.firstDaily)setTimeout(()=>SFX.fan(),1300)}}
 function doPause(on){if(!G||G.state!=="play")return;paused=on;if(on){$("pT").textContent=t("paused");show("pause")}else{show(null);lastNow=performance.now()}}
 /* confetti */
 let confRaf=0;
-function confetti(){const cf=$("conf"),c=cf.getContext("2d"),Wc=cf.width,Hc=cf.height,cols=["#ffd23f","#ff6f91","#5fd38d","#5cc8ff","#a58bff","#ff9a3c"];confP=[];for(let i=0;i<110;i++)confP.push({x:Math.random()*Wc,y:-Math.random()*Hc*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:5+Math.random()*7,c:cols[i%6],a:Math.random()*6});
- const end=performance.now()+3200;cancelAnimationFrame(confRaf);(function f(){c.clearRect(0,0,Wc,Hc);confP.forEach(p=>{p.x+=p.vx*dpr;p.y+=p.vy*dpr;p.a+=.15;c.fillStyle=p.c;c.save();c.translate(p.x,p.y);c.rotate(p.a);c.fillRect(-p.r,-p.r/2,p.r*2,p.r);c.restore()});if(performance.now()<end)confRaf=requestAnimationFrame(f);else c.clearRect(0,0,Wc,Hc)})()}
+function confetti(){const cf=$("conf"),c=cf.getContext("2d"),Wc=cf.width,Hc=cf.height,cols=["#ffd23f","#ff6f91","#5fd38d","#5cc8ff","#a58bff","#ff9a3c"];confP=[];for(let i=0;i<110;i++)confP.push({x:Math.random()*Wc,y:-Math.random()*Hc*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:5+Math.random()*7,c:cols[i%6],a:Math.random()*6,k:i%3});
+ const end=performance.now()+3200;cancelAnimationFrame(confRaf);(function f(){c.clearRect(0,0,Wc,Hc);confP.forEach(p=>{p.x+=p.vx*dpr;p.y+=p.vy*dpr;p.a+=.15;c.fillStyle=p.c;c.save();c.translate(p.x,p.y);c.rotate(p.a);if(p.k===1){c.beginPath();for(let q=0;q<10;q++){const rr=q%2?p.r*.45:p.r*1.3,an=q*Math.PI/5;c.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}c.fill()}else if(p.k===2){c.beginPath();c.arc(0,0,p.r*.7,0,6.3);c.fill()}else c.fillRect(-p.r,-p.r/2,p.r*2,p.r);c.restore()});if(performance.now()<end)confRaf=requestAnimationFrame(f);else c.clearRect(0,0,Wc,Hc)})()}
 function stopConf(){cancelAnimationFrame(confRaf);const cf=$("conf");cf.getContext("2d").clearRect(0,0,cf.width,cf.height)}
 /* ============ events ============ */
 $("playBtn").onclick=()=>{SFX.click();ac();toPicker()};
 $("endBtn").onclick=()=>{SFX.click();startEndless()};
+$("dailyBtn").onclick=()=>{SFX.click();ac();showBrief(dailyStage())};
+$("musBtn").onclick=()=>{ac();musicSet(!musicOn);SFX.click()};
 for(const [id,k] of[["dEasy","easy"],["dNorm","normal"],["dHard","hard"]])$(id).onclick=()=>{store.diff=k;ls.set("annabelle-fishy-diff",k);SFX.click();drawTexts()};
 $("worlds").addEventListener("click",e=>{const b=e.target.closest(".sb");if(!b||b.disabled)return;SFX.click();showBrief(+b.dataset.st)});
 $("pkBack").onclick=()=>{SFX.click();toMenu()};$("bBack").onclick=()=>{SFX.click();toPicker()};$("bGo").onclick=()=>startStage(curStage);
@@ -813,7 +845,7 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden){lastNow=now
  if(mode==="play"&&!paused){acc+=dt;let n=0;while(acc>=1/60&&n<6){update(1/60);acc-=1/60;n++}if(n>=6)acc=0}
  render()}
 /* ============ init ============ */
-resize();updMute();drawTexts();
+resize();updMute();drawTexts();musicSet(musicOn);
 if(!cv.getContext("2d")){$("nglT").textContent=t("noGL");$("nglB").textContent=t("home");$("nglB").onclick=()=>{location.href="index.html"};$("nogl").classList.add("show")}
 requestAnimationFrame(frame);
 /* test hooks */

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><!--pt--><script src="playtime.js" data-app="cats"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="cats"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -55,6 +55,7 @@
   .level .dots i{width:9px;height:12px;border-radius:3px;background:#fff9}
   .level .best{font-size:16px;font-weight:700;background:#0002;border-radius:999px;padding:2px 10px;min-height:24px}
   .level .best.empty{background:none}
+  .l15{background:linear-gradient(#b07cff,#7c3fe0)}
   .l3{background:linear-gradient(#4dc3ff,#1f8fe8)} .l6{background:linear-gradient(#5fd38d,#2fb36a)} .l10{background:linear-gradient(#ffb84d,#ff8a1f)} .l12{background:linear-gradient(#ff7aa8,#e8487f)}
 
   /* ---------- game ---------- */
@@ -79,6 +80,28 @@
   .desk .khint{display:block;font-size:14px;font-weight:700;opacity:.85;text-align:center;line-height:1.5;max-width:92vw}
   .khint kbd{font:800 12px inherit;font-family:inherit;background:#fff;border:1px solid #b9a3e0;border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 2px}
   .desk .khint{margin-top:2px}
+  .level .stars{font-size:15px;letter-spacing:1px;min-height:20px;line-height:1}
+  .xrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .xbtn{padding:10px 18px;border-radius:999px;background:#fff9;font-size:19px;font-weight:800;box-shadow:0 3px 0 #0001;min-height:46px}
+  .xbtn.sel{background:#fff;box-shadow:0 0 0 4px #3fc5ff,0 4px 0 #0002;color:#0a6aa8}
+  .xbtn.dd{background:linear-gradient(#ffb84d,#ff8a1f);color:#fff;box-shadow:0 4px 0 #0002}
+  .front.snd{background:#fff;font-size:clamp(30px,45cqi,64px);flex-direction:column}
+  .card.sndup .front.snd{animation:wob .5s}
+  @keyframes wob{0%,100%{transform:rotateY(180deg)}30%{transform:rotateY(180deg) scale(1.12)}60%{transform:rotateY(180deg) scale(.95)}}
+  #peekBtn{position:relative}#peekBtn small{position:absolute;right:-2px;bottom:-2px;background:#7c5cff;color:#fff;border-radius:999px;font-size:13px;font-weight:900;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+  #peekBtn.dis{filter:grayscale(1) opacity(.45);pointer-events:none}
+  #game.onl #peekBtn,#game.onl #bestPill,#game.onl #movesPill{display:none}#oSc,#oTurn{display:none}#game.onl #oSc,#game.onl #oTurn{display:block}
+  #oTurn{background:#fff;border-radius:999px;padding:8px 14px;font-size:clamp(15px,2.2vw,20px);font-weight:900;box-shadow:0 4px 0 #0002;white-space:nowrap}
+  #oTurn.me{background:#34c47c;color:#fff;animation:pulse 1s infinite}
+  #game.onl #grid.myturn .card:not(.up){filter:drop-shadow(0 0 6px #34c47c)}
+  #game.onl #grid:not(.myturn) .card{cursor:default}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:35;overflow:hidden}
+  #fx span{position:absolute;font-size:22px;will-change:transform,opacity}
+  #winStars{font-size:clamp(40px,8vw,70px);letter-spacing:6px;min-height:60px}#winStars span{display:inline-block;animation:starPop .5s cubic-bezier(.3,1.8,.5,1) both}@keyframes starPop{from{transform:scale(0) rotate(-90deg)}to{transform:none}}
+  #winStars span.off{filter:grayscale(1) opacity(.4)}
+  #win .goal{font-size:clamp(16px,2.4vw,22px);font-weight:800;background:#fff;border-radius:999px;padding:4px 16px}
+  #win.show h2{animation:cardIn .5s cubic-bezier(.3,1.6,.5,1)}@keyframes cardIn{from{transform:scale(.5) translateY(30px);opacity:0}to{transform:none;opacity:1}}
+  .pill.pop{animation:pillPop .45s}@keyframes pillPop{40%{transform:scale(1.25) rotate(-3deg)}}
   .desk #grid.kb .card.cur{outline:5px solid #2a8fd0;outline-offset:5px;border-radius:22px}
   .desk .card:not(.up){cursor:pointer}.desk .card.up{cursor:default}
   .desk .iconbtn{width:62px;height:62px}
@@ -116,18 +139,21 @@
   .go{background:linear-gradient(#5fd38d,#2fb36a)} .home{background:linear-gradient(#a58bff,#7c5cff)}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
   /* phone fit: 3 level cards in one row, tighter on short screens */
-  @media (max-width:600px){#levels{flex-wrap:nowrap;gap:8px}.level{width:auto;flex:1 1 0;max-width:130px;padding:10px 4px 8px}.level .dots{display:none}.level .n{font-size:36px}.level .t{font-size:16px}.level .best{font-size:14px}}
+  @media (max-width:600px){#levels{flex-wrap:wrap;gap:8px}.level{width:auto;flex:1 1 calc(33% - 8px);max-width:150px;padding:8px 4px 6px}.level .dots{display:none}.level .n{font-size:34px}.level .t{font-size:15px}.level .best{font-size:13px}.mode{width:calc(33% - 8px);min-width:0;padding:10px 4px;font-size:15px}.mode .pic{height:48px}.mode .pic svg{width:40px;height:40px}.mode .pic .word{font-size:15px;padding:6px 6px}#modes{flex-wrap:nowrap;gap:8px}.lbl{display:none}.bar{gap:6px}.bar .iconbtn{width:46px;height:46px;font-size:22px}.bar .pill{padding:6px 10px}.bar>div[style]{width:46px!important}}
   @media (max-height:700px){.mode{padding:8px 8px}.mode .pic{height:48px}.mode .pic svg{width:44px;height:44px}.label{margin-top:0}}
 
 /*landscape-fit*/@media (orientation:landscape) and (max-height:500px){#menu{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}}
 /* desktop fit: bigger menus on tall windows */
-@media (min-width:900px) and (min-height:820px){.desk #menu{zoom:1.2}}
-@media (min-width:1100px) and (min-height:960px){.desk #menu{zoom:1.38}}
-@media (min-width:1400px) and (min-height:1150px){.desk #menu{zoom:1.7}}
-.desk #menu{overflow-y:auto;justify-content:safe center}
+@media (min-width:900px) and (min-height:820px){.desk #menu{zoom:1.05}}
+@media (min-width:1100px) and (min-height:960px){.desk #menu{zoom:1.2}}
+@media (min-width:1400px) and (min-height:1150px){.desk #menu{zoom:1.45}}
+.desk #menu{overflow-y:auto;justify-content:safe center}.desk .level .dots{display:none}
+@media (max-width:600px){.lang{padding:7px 12px;font-size:17px}.langs{gap:7px}.xbtn{padding:8px 14px;font-size:17px;min-height:40px}.heads svg{width:36px}.level .n{font-size:30px}.level{padding:6px 4px 5px}.mode .pic{height:40px}.mode{padding:8px 4px;gap:3px}.label{font-size:17px;margin-top:0}.level>span:nth-child(4){display:none}.title{font-size:clamp(30px,8.5vw,44px);padding:0 46px}}
+@media (max-height:780px){.heads{display:none}.level .dots{display:none}.level{padding:10px 8px 8px}#menu{gap:1vh}.title{font-size:clamp(30px,5vw,48px)}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/cats.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/cats-192.png"><meta name="apple-mobile-web-app-title" content="זוגות חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/cats-apple-180.png"><script src="pwa.js" data-app="cats" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="" data-relabel="#homeBtn,#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script><script src="net1v1.js"></script><script src="kidmusic.js"></script>
 </head>
 <body>
 
@@ -142,6 +168,7 @@
   <div class="row" id="modes"></div>
   <div class="label" id="tLevel"></div>
   <div class="row" id="levels"></div>
+  <div class="xrow" id="xrow"></div>
   <div class="khint" id="kh"></div>
 </section>
 
@@ -149,21 +176,26 @@
 <section class="screen" id="game">
   <div class="bar">
     <button class="iconbtn" id="homeBtn" aria-label="menu">🏠</button>
-    <div class="pill"><span id="tMoves"></span>: <b id="moves">0</b></div>
-    <div class="pill">🏆 <span id="tBest"></span>: <b id="best">–</b></div>
+    <div class="pill" id="movesPill">👆 <span class="lbl"><span id="tMoves"></span>: </span><b id="moves">0</b></div>
+    <div class="pill" id="bestPill">🏆 <span class="lbl"><span id="tBest"></span>: </span><b id="best">–</b></div>
+    <div class="pill" id="oSc"></div><div id="oTurn"></div>
     <div class="spacer"></div>
+    <button class="iconbtn" id="peekBtn" aria-label="peek">🔮<small id="peekN">1</small></button>
+    <button class="iconbtn" id="musBtn" aria-label="music">🎵</button>
     <div style="width:58px"></div>
   </div>
   <div id="board"><div id="grid"></div></div>
 </section>
 
-<div id="silly" aria-live="polite"></div>
+<div id="silly" aria-live="polite"></div><div id="fx"></div>
 <div id="fact"><div id="factPic"></div><div><div class="nm" id="factName"></div><div class="tx" id="factText"></div></div></div>
 
 <div id="win">
   <div class="jumpers" id="jumpers"></div>
   <h2 id="winTitle"></h2>
   <div class="sub" id="winSub"></div>
+  <div id="winStars"></div>
+  <div class="goal" id="winGoal"></div>
   <div class="rec" id="winRec"></div>
   <div class="row">
     <button class="big go" id="againBtn"></button>
@@ -211,6 +243,15 @@ const ANIMALS = {
   snowleopard:{fur:"#dfe3e6",dark:"#4d555c",muzzle:"#f7f8f9",eye:"#9fd0c4",nose:"#c99a9a",inner:"#f3e1e1",ears:"round",pattern:"rosettes",bg:"#dcecff",voice:"purr",
             name:{he:"נמר השלג",fr:"panthère des neiges",en:"snow leopard"},
             fact:{he:"נמר השלג מתעטף בזנב הארוך והפרוותי שלו כמו בצעיף כדי להתחמם.",fr:"La panthère des neiges s'enroule dans sa longue queue touffue comme dans une écharpe pour avoir chaud.",en:"Snow leopards wrap their long, fluffy tails around themselves like a scarf to keep warm."}},
+  serval:  {fur:"#e9c46a",dark:"#2f2416",muzzle:"#fff6df",eye:"#c7a23a",nose:"#c9806f",inner:"#f7d7c4",ears:"point",pattern:"spots",bg:"#e6f7d4",voice:"chirp",
+            name:{he:"סרוואל",fr:"serval",en:"serval"},
+            fact:{he:"לסרוואל יש את הרגליים הארוכות ביותר ביחס לגוף מכל החתולים, והוא יכול לקפוץ בערך 3 מטרים למעלה!",fr:"Le serval a les pattes les plus longues du monde des félins par rapport à son corps, et il peut sauter à environ 3 mètres de haut !",en:"The serval has the longest legs for its body size of any cat, and it can jump about 3 metres high!"}},
+  caracal: {fur:"#c9743f",dark:"#4a2a18",muzzle:"#fbeadb",eye:"#d9b23a",nose:"#c46a62",inner:"#f1b9a0",ears:"point",tufts:true,pattern:"none",bg:"#ffe2d6",voice:"growl",
+            name:{he:"קרקל",fr:"caracal",en:"caracal"},
+            fact:{he:"הקרקל יכול לקפוץ כ־3 מטרים באוויר כדי לתפוס ציפורים!",fr:"Le caracal peut bondir à environ 3 mètres dans les airs pour attraper des oiseaux !",en:"The caracal can leap about 3 metres into the air to catch birds!"}},
+  siamese: {fur:"#f2e3c6",dark:"#4a3426",muzzle:"#8a6a55",eye:"#5fb4ff",nose:"#b87a7a",inner:"#e0a8a8",ears:"point",pattern:"none",bg:"#e6e1ff",voice:"meow",
+            name:{he:"חתול סיאמי",fr:"chat siamois",en:"Siamese cat"},
+            fact:{he:"גורי חתולים סיאמיים נולדים כמעט לבנים, והכתמים הכהים מופיעים כשהם גדלים!",fr:"Les chatons siamois naissent presque blancs : leurs marques foncées apparaissent en grandissant !",en:"Siamese kittens are born almost white – their dark points appear as they grow!"}},
   puma:    {fur:"#c99a66",dark:"#5a3e26",muzzle:"#fbf3ea",eye:"#d9b04a",nose:"#c47f73",inner:"#efd3b8",ears:"round",pattern:"puma",bg:"#f0ffd6",voice:"purr",
             name:{he:"פומה",fr:"puma",en:"puma (cougar)"},
             fact:{he:"לפומה יש הרבה שמות – קוגר ואריה הרים – והיא לא יכולה לשאוג, אבל היא מגרגרת כמו חתול!",fr:"Le puma a plusieurs noms (couguar, lion des montagnes). Il ne rugit pas, mais il ronronne comme un chat !",en:"The puma has many names – cougar, mountain lion – and it can't roar, but it purrs like a house cat!"}}
@@ -218,15 +259,21 @@ const ANIMALS = {
 const KEYS = Object.keys(ANIMALS);
 
 const T = {
-  he:{dir:"rtl",title:"המשחק של אנאבל",keys:"<kbd>1</kbd>–<kbd>4</kbd> רמה · <kbd>M</kbd> סוג משחק · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> הפיכת קלף · <kbd>Esc</kbd> תפריט",mode:"בחרי משחק",mPics:"תמונות זהות",mNames:"חיה ושם",level:"בחרי רמה",pairs:"זוגות",
-      lv:["זעיר","קל","בינוני","קשה"],oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","קרוב! 😺","חמוד, עוד פעם! 🤪"],cheer:["יש! 😻","מיאוווו! 🎉","זוג מושלם! 🌟","את אלופה! 🏆","הידד! 🥳"],tip:"✨ פסססט… הקלף הנוצץ!",moves:"מהלכים",best:"שיא",win:"כל הכבוד, אנאבל!",winSub:"סיימת ב־{n} מהלכים",rec:"שיא חדש! 🏆",again:"🔁 עוד פעם",menu:"🏠 תפריט",word:"אריה"},
-  fr:{dir:"ltr",title:"Le jeu d'Annabelle",keys:"<kbd>1</kbd>–<kbd>4</kbd> niveau · <kbd>M</kbd> type de jeu · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> retourner · <kbd>Échap</kbd> menu",mode:"Choisis un jeu",mPics:"Images identiques",mNames:"Animal et nom",level:"Choisis un niveau",pairs:"paires",
-      lv:["Minuscule","Facile","Moyen","Difficile"],oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Presque ! 😺","Mignon, encore ! 🤪"],cheer:["Oui ! 😻","Miaouuu ! 🎉","Paire parfaite ! 🌟","Championne ! 🏆","Hourra ! 🥳"],tip:"✨ Psst… la carte qui brille !",moves:"Coups",best:"Record",win:"Bravo, Annabelle !",winSub:"Terminé en {n} coups",rec:"Nouveau record ! 🏆",again:"🔁 Rejouer",menu:"🏠 Menu",word:"lion"},
-  en:{dir:"ltr",title:"Annabelle's Game",keys:"<kbd>1</kbd>–<kbd>4</kbd> level · <kbd>M</kbd> game type · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> flip · <kbd>Esc</kbd> menu",mode:"Pick a game",mPics:"Matching pictures",mNames:"Animal & name",level:"Pick a level",pairs:"pairs",
-      lv:["Tiny","Easy","Medium","Hard"],oops:["Oopsie! 🙈","Hee hee, not that one! 😹","Meow-ps! 🙊","Close! 😺","Cute, try again! 🤪"],cheer:["Yes! 😻","Meowww! 🎉","Perfect pair! 🌟","You're a champ! 🏆","Hooray! 🥳"],tip:"✨ Psst… the sparkly card!",moves:"Moves",best:"Best",win:"Well done, Annabelle!",winSub:"Finished in {n} moves",rec:"New record! 🏆",again:"🔁 Play again",menu:"🏠 Menu",word:"lion"}
+  he:{dir:"rtl",title:"המשחק של אנאבל",keys:"<kbd>1</kbd>–<kbd>5</kbd> רמה · <kbd>M</kbd> סוג משחק · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> הפיכת קלף · <kbd>Esc</kbd> תפריט",mode:"בחרי משחק",mPics:"תמונות זהות",mNames:"חיה ושם",level:"בחרי רמה",pairs:"זוגות",
+      lv:["זעיר","קל","בינוני","קשה","ענק"],oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","קרוב! 😺","חמוד, עוד פעם! 🤪"],cheer:["יש! 😻","מיאוווו! 🎉","זוג מושלם! 🌟","את אלופה! 🏆","הידד! 🥳"],tip:"✨ פסססט… הקלף הנוצץ!",moves:"מהלכים",best:"שיא",win:"כל הכבוד, אנאבל!",winSub:"סיימת ב־{n} מהלכים",rec:"שיא חדש! 🏆",again:"🔁 עוד פעם",menu:"🏠 תפריט",word:"אריה"},
+  fr:{dir:"ltr",title:"Le jeu d'Annabelle",keys:"<kbd>1</kbd>–<kbd>5</kbd> niveau · <kbd>M</kbd> type de jeu · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> retourner · <kbd>Échap</kbd> menu",mode:"Choisis un jeu",mPics:"Images identiques",mNames:"Animal et nom",level:"Choisis un niveau",pairs:"paires",
+      lv:["Minuscule","Facile","Moyen","Difficile","Géant"],oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Presque ! 😺","Mignon, encore ! 🤪"],cheer:["Oui ! 😻","Miaouuu ! 🎉","Paire parfaite ! 🌟","Championne ! 🏆","Hourra ! 🥳"],tip:"✨ Psst… la carte qui brille !",moves:"Coups",best:"Record",win:"Bravo, Annabelle !",winSub:"Terminé en {n} coups",rec:"Nouveau record ! 🏆",again:"🔁 Rejouer",menu:"🏠 Menu",word:"lion"},
+  en:{dir:"ltr",title:"Annabelle's Game",keys:"<kbd>1</kbd>–<kbd>5</kbd> level · <kbd>M</kbd> game type · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> flip · <kbd>Esc</kbd> menu",mode:"Pick a game",mPics:"Matching pictures",mNames:"Animal & name",level:"Pick a level",pairs:"pairs",
+      lv:["Tiny","Easy","Medium","Hard","Giant"],oops:["Oopsie! 🙈","Hee hee, not that one! 😹","Meow-ps! 🙊","Close! 😺","Cute, try again! 🤪"],cheer:["Yes! 😻","Meowww! 🎉","Perfect pair! 🌟","You're a champ! 🏆","Hooray! 🥳"],tip:"✨ Psst… the sparkly card!",moves:"Moves",best:"Best",win:"Well done, Annabelle!",winSub:"Finished in {n} moves",rec:"New record! 🏆",again:"🔁 Play again",menu:"🏠 Menu",word:"lion"}
 };
+const TY = {
+ he:{mVoice:"צליל וחיה",daily:"📅 יומי",dailyDone:"📅 יומי ✅",online:"🌐 אונליין",onlineHint:"🌐 בחרי רמה לשחק מול חברה",need:"עוד {n} מהלכים פחות לכוכב הבא ⭐",allStars:"כל הכוכבים! 🌟",dailyWin:"האתגר היומי הושלם! 🎁",streak:"רצף של {n}! 🔥",peekSay:"הצצה קסומה! 🔮",you:"את",win2:"ניצחת! 🏆",lose2:"החברה ניצחה הפעם 😸",tie:"תיקו! 🤝",yourTurn:"🟢 תורך",theirTurn:"⏳ התור שלה",left:"החברה יצאה מהמשחק 👋",waitRe:"מחכה לחברה… 🕐",shareT:"בואי לשחק איתי זוגות של חתולים! 🃏🐱",onSub:"{a} : {b} זוגות"},
+ fr:{mVoice:"Son et animal",daily:"📅 Du jour",dailyDone:"📅 Du jour ✅",online:"🌐 En ligne",onlineHint:"🌐 Choisis un niveau pour jouer avec un ami",need:"Encore {n} coups de moins pour la prochaine étoile ⭐",allStars:"Toutes les étoiles ! 🌟",dailyWin:"Défi du jour réussi ! 🎁",streak:"Série de {n} ! 🔥",peekSay:"Coup d'œil magique ! 🔮",you:"Toi",win2:"Tu as gagné ! 🏆",lose2:"Ton ami gagne cette fois 😸",tie:"Égalité ! 🤝",yourTurn:"🟢 À toi",theirTurn:"⏳ Son tour",left:"Ton ami a quitté la partie 👋",waitRe:"J'attends ton ami… 🕐",shareT:"Viens jouer aux paires de chats avec moi ! 🃏🐱",onSub:"{a} : {b} paires"},
+ en:{mVoice:"Sound & animal",daily:"📅 Daily",dailyDone:"📅 Daily ✅",online:"🌐 Online",onlineHint:"🌐 Pick a level to play with a friend",need:"{n} fewer moves for the next star ⭐",allStars:"All the stars! 🌟",dailyWin:"Daily challenge done! 🎁",streak:"Streak of {n}! 🔥",peekSay:"Magic peek! 🔮",you:"You",win2:"You win! 🏆",lose2:"Your friend wins this time 😸",tie:"A tie! 🤝",yourTurn:"🟢 Your turn",theirTurn:"⏳ Their turn",left:"Your friend left the game 👋",waitRe:"Waiting for your friend… 🕐",shareT:"Come play Cat Memory with me! 🃏🐱",onSub:"{a} : {b} pairs"}};
+for (const k in TY) Object.assign(T[k], TY[k]);
 const LANGS = [["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
-const LEVELS = [3,6,10,12];   // 3 = new tiny starter level; 6/10/12 unchanged so saved bests stay valid
+const LEVELS = [3,6,10,12,15];   // 3 = tiny starter level, 15 = new "giant" level; the older levels keep their saved bests
+const MODES = ["pics","names","voice"];
 
 /* ============================================================
    SVG cat-face generator
@@ -345,9 +392,13 @@ function meow(base, t0=0, dur=.5){
 }
 const SFX = {
   flip(){ tone(660,0,.09,"triangle",.15,990); },
-  match(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.07,.18,"triangle",.17)); },
+  match(n=1){ const b=1+Math.min(n-1,4)*.06; [523,659,784,1047].forEach((f,i)=>tone(f*b,i*.07,.18,"triangle",.17)); tone(2093*b,.28,.2,"sine",.05); },
+  star(i=0){ tone(784+i*220,0,.2,"triangle",.16); tone(1568+i*440,.06,.3,"sine",.09); },
+  peek(){ [880,1175,1568,1976].forEach((f,i)=>tone(f,i*.05,.14,"sine",.1)); noise(0,.4,.05,3000); },
+  turn(){ tone(660,0,.1,"triangle",.12); tone(880,.09,.14,"triangle",.12); },
+  pop(){ tone(500,0,.07,"square",.05,900); },
   oops(){ tone(392,0,.14,"sine",.08,330); },
-  win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach((f,i)=>tone(f,.9,.8,"triangle",.08)); },
+  win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach((f,i)=>tone(f,.9,.8,"triangle",.08)); [1568,2093,1760,2349,2637].forEach((f,i)=>tone(f,1.0+i*.08,.14,"sine",.06)); },
   click(){ tone(880,0,.06,"sine",.12); },
   voice(v){
     switch(v){
@@ -363,17 +414,29 @@ const SFX = {
   }
 };
 
+const MUS = window.KidMusic ? KidMusic((f,d,ty,v)=>tone(f,0,d,ty,v), {canPlay:()=>!muted&&AC&&AC.state==="running", base:294, ms:300, mel:[0,4,7,9,12,9,7,4,2,5,9,12,9,5,2,0], bas:[0,0,-3,-3,-5,-5,-7,-7]}) : null;
 /* ============================================================
    STATE / UI
    ============================================================ */
 let lang = localStorage.getItem("annabelle-lang") || "he";
 if (!T[lang]) lang="he";
-let mode = localStorage.getItem("annabelle-mode") || "pics";
+let mode = localStorage.getItem("annabelle-mode") || "pics"; if(!MODES.includes(mode)) mode="pics";
+let gm = mode, daily = false, onlineSel = false, streak = 0, maxStreak = 0, peeks = 1, netp = false, cardData = [];
+const ON = {on:false,host:false,me:0,turn:0,sc:[0,0],seq:0,rcv:0,lock:false,open:[],pend:false,over:false,mode:"pics",pairs:6,deck:[]};
+const KD = ["pic","word","snd"];
+const RW = ()=>window.AnnabelleRewards, rw = o=>{ try{ const R=RW(); R&&R.award(Object.assign({game:"cats"},o)); }catch(e){} }, rwFlush = ()=>{ try{ const R=RW(); R&&R.flush(); }catch(e){} };
+const dayKey = ()=>{ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
+const dayHash = ()=>{ let h=7; for(const ch of dayKey()) h=(h*31+ch.charCodeAt(0))>>>0; return h; };
+function mulberry(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return((t^t>>>14)>>>0)/4294967296; }; }
 let missStreak = 0, sillyT = null, glowT = null;
 let pairs = 6, cards = [], open = [], lock = false, moves = 0, found = 0, cur = 0, gridCols = 1;
 const $ = id => document.getElementById(id);
 const bestKey = (m,p)=>`annabelle-best-${m}-${p}`;
 const getBest = (m,p)=>{ const v=parseInt(localStorage.getItem(bestKey(m,p))); return isNaN(v)?null:v; };
+const starKey = (m,p)=>`annabelle-cats-stars-${m}-${p}`;
+const getStars = (m,p)=>{ const v=parseInt(localStorage.getItem(starKey(m,p))); return isNaN(v)?0:Math.max(0,Math.min(3,v)); };
+const starLimits = p=>[Math.ceil(p*1.7),Math.ceil(p*2.6)];          // moves for 3 stars / 2 stars
+const calcStars = (mv,p)=>{ const [a,b]=starLimits(p); return mv<=a?3:mv<=b?2:1; };
 
 function applyLang(){
   const t=T[lang];
@@ -388,20 +451,27 @@ function renderMenu(){
   $("langs").innerHTML = LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
   $("modes").innerHTML =
     `<button class="mode ${mode==="pics"?"sel":""}" data-mode="pics"><div class="pic">${face("tiger")}${face("tiger")}</div>${t.mPics}</button>`+
-    `<button class="mode ${mode==="names"?"sel":""}" data-mode="names"><div class="pic">${face("lion")}<span class="word">${ANIMALS.lion.name[lang]}</span></div>${t.mNames}</button>`;
+    `<button class="mode ${mode==="names"?"sel":""}" data-mode="names"><div class="pic">${face("lion")}<span class="word">${ANIMALS.lion.name[lang]}</span></div>${t.mNames}</button>`+
+    `<button class="mode ${mode==="voice"?"sel":""}" data-mode="voice"><div class="pic">${face("cheetah")}<span class="word">🔊</span></div>${t.mVoice}</button>`;
   $("levels").innerHTML = LEVELS.map((n,i)=>{
-    const b=getBest(mode,n), cols = n===3?3:n===6?4:n===10?5:6;
+    const b=getBest(mode,n), cols = n===3?3:n===6?4:n===10?5:6, sg=getStars(mode,n);
     return `<button class="level l${n}" data-pairs="${n}"><span class="t">${t.lv[i]}</span><span class="n">${n}</span>
       <span class="dots" style="grid-template-columns:repeat(${cols},9px)">${"<i></i>".repeat(n*2)}</span>
-      <span class="t">${t.pairs}</span><span class="best ${b===null?"empty":""}">${b!==null?"🏆 "+b:"&nbsp;"}</span></button>`;}).join("");
+      <span class="t">${t.pairs}</span><span class="stars">${"⭐".repeat(sg)}${"☆".repeat(3-sg)}</span><span class="best ${b===null?"empty":""}">${b!==null?"🏆 "+b:"&nbsp;"}</span></button>`;}).join("");
+  $("xrow").innerHTML = `<button class="xbtn dd" data-daily="1">${localStorage.getItem("annabelle-cats-daily")===dayKey()?t.dailyDone:t.daily}</button><button class="xbtn ${onlineSel?"sel":""}" data-online="1">${t.online}</button><button class="xbtn" data-mus="1" aria-label="music">🎵</button>`;
+  $("tLevel").textContent = onlineSel ? t.onlineHint : t.level;
+  const mb=document.querySelector("#xrow [data-mus]"); if(mb&&MUS) mb.style.opacity=MUS.on?1:.55;
 }
 $("menuHeads").innerHTML = ["kitten","lion","tiger","cheetah"].map(face).join("");
 
 document.addEventListener("click", e=>{
-  const L=e.target.closest("[data-lang]"), M=e.target.closest("[data-mode]"), P=e.target.closest("[data-pairs]");
-  if(L){ lang=L.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
+  const L=e.target.closest("[data-lang]"), M=e.target.closest("[data-mode]"), P=e.target.closest("[data-pairs]"), D=e.target.closest("[data-daily]"), O=e.target.closest("[data-online]"), U=e.target.closest("[data-mus]");
+  if(L){ lang=L.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); if(NT)NT.drawLang(); }
   else if(M){ mode=M.dataset.mode; localStorage.setItem("annabelle-mode",mode); SFX.click(); renderMenu(); }
-  else if(P){ SFX.click(); startGame(+P.dataset.pairs); }
+  else if(D){ ac(); SFX.click(); startGame(8,{daily:true}); }
+  else if(O){ SFX.click(); onlineSel=!onlineSel; renderMenu(); }
+  else if(U){ ac(); if(MUS) MUS.toggle(); SFX.click(); }
+  else if(P){ ac(); SFX.click(); if(onlineSel){ startOnline(+P.dataset.pairs); } else startGame(+P.dataset.pairs); }
 });
 
 function updateMute(){ $("muteBtn").textContent = muted?"🔇":"🔊"; }
@@ -409,36 +479,77 @@ $("muteBtn").addEventListener("click",()=>{ muted=!muted; localStorage.setItem("
 updateMute();
 
 function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id)); }
-$("homeBtn").onclick = ()=>{ SFX.click(); hideFact(); show("menu"); renderMenu(); };
-$("menuBtn").onclick = ()=>{ SFX.click(); stopWin(); show("menu"); renderMenu(); };
-$("againBtn").onclick = ()=>{ SFX.click(); stopWin(); startGame(pairs); };
+window.__cats={get ON(){return ON},get NT(){return NT},get cards(){return cards},calcStars,starLimits,startGame,get gm(){return gm},get peeks(){return peeks},get streak(){return streak},get maxStreak(){return maxStreak},doPeek,dayHash,get netp(){return netp}};
+function toMenu(){ if(NT) NT.leaveToMenu(); ON.on=false; ON.over=false; netp=false; onlineSel=false; $("game").classList.remove("onl"); $("grid").classList.remove("myturn"); hideFact(); show("menu"); renderMenu(); }
+$("homeBtn").onclick = ()=>{ SFX.click(); toMenu(); };
+$("menuBtn").onclick = ()=>{ SFX.click(); stopWin(); toMenu(); };
+$("againBtn").onclick = ()=>{ SFX.click(); if(ON.on){ if(NT.myRe) return; NT.rematch(); $("againBtn").disabled=true; $("winRec").textContent=T[lang].waitRe; return; } stopWin(); startGame(pairs,{daily}); };
+$("peekBtn").onclick = ()=>doPeek();
+if(MUS) MUS.onChange(on=>{ $("musBtn").style.opacity=on?1:.55; const mb=document.querySelector("#xrow [data-mus]"); if(mb) mb.style.opacity=on?1:.55; });
+$("musBtn").onclick = ()=>{ ac(); if(MUS) MUS.toggle(); SFX.click(); };
 
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
-
-function startGame(n){
-  pairs=n; moves=0; found=0; open=[]; lock=false; cur=0; missStreak=0; hideFact(); clearTimeout(glowT); $("silly").classList.remove("show");
-  const chosen = shuffle(KEYS.slice()).slice(0,n);
-  const deck=[];
-  chosen.forEach(k=>{ deck.push({k,kind:"pic"}); deck.push({k,kind: mode==="names"?"word":"pic"}); });
-  shuffle(deck);
+function shuffle(a,r){ r=r||Math.random; for(let i=a.length-1;i>0;i--){const j=r()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+function frontHTML(k,kind){
+  const A=ANIMALS[k];
+  if(kind==="word") return `<div class="face front word" style="background:${A.bg}"><span dir="auto">${A.name[lang]}</span></div>`;
+  if(kind==="snd")  return `<div class="face front snd">🔊<svg viewBox="0 0 100 24" width="46%"><path d="M4 12 Q14 0 24 12 T44 12 T64 12 T84 12 T96 12" stroke="#7c5cff" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>`;
+  return `<div class="face front" style="background:${A.bg}">${face(k)}</div>`;
+}
+function fillFront(el,k,kind){ el.dataset.key=k; el.dataset.kind=kind; el.querySelector(".inner").lastElementChild.outerHTML=frontHTML(k,kind); }
+function startGame(n,o){
+  o=o||{}; ac(); stopWin(); $("againBtn").style.display=""; $("againBtn").disabled=false;
+  pairs=n; moves=0; found=0; open=[]; lock=false; cur=0; missStreak=0; streak=0; maxStreak=0; netp=false; daily=!!o.daily;
+  ON.on=!!o.online; ON.over=false; ON.pend=false; ON.lock=false; ON.open=[];
+  peeks = ON.on ? 0 : 1; updPeek(); hideFact(); clearTimeout(glowT); $("silly").classList.remove("show");
+  gm = daily ? MODES[dayHash()%3] : (ON.on ? ON.mode : mode);
+  const rng = daily ? mulberry(dayHash()) : Math.random;
+  const guest = ON.on && !ON.host;
+  let deck;
+  if(guest){ deck = Array.from({length:n*2},()=>null); }
+  else{
+    const chosen = shuffle(KEYS.slice(),rng).slice(0,n);
+    deck=[];
+    chosen.forEach(k=>{ deck.push({k,kind:"pic"}); deck.push({k,kind: gm==="names"?"word":gm==="voice"?"snd":"pic"}); });
+    shuffle(deck,rng);
+  }
+  cardData = deck; ON.deck = ON.on&&ON.host ? deck : [];
   const g=$("grid"); g.innerHTML="";
   cards = deck.map((c,i)=>{
     const el=document.createElement("div");
-    el.className="card"; el.dataset.key=c.k; el.dataset.idx=i;
-    const front = c.kind==="word"
-      ? `<div class="face front word" style="background:${ANIMALS[c.k].bg}"><span dir="auto">${ANIMALS[c.k].name[lang]}</span></div>`
-      : `<div class="face front" style="background:${ANIMALS[c.k].bg}">${face(c.k)}</div>`;
-    el.innerHTML = `<div class="inner"><div class="face back">${PAW}</div>${front}</div>`;
+    el.className="card"; el.dataset.idx=i;
+    el.innerHTML = `<div class="inner"><div class="face back">${PAW}</div>${c?frontHTML(c.k,c.kind):'<div class="face front"></div>'}</div>`;
+    if(c){ el.dataset.key=c.k; el.dataset.kind=c.kind; }
     el.addEventListener("pointerup", ev=>{ if(ev.pointerType==="mouse"&&ev.button!==0) return; tap(el); });
     el.addEventListener("pointermove", ev=>{ if(ev.pointerType==="mouse"){ g.classList.remove("kb"); setCur(+el.dataset.idx); } });
     g.appendChild(el); return el;
   });
   setCur(0);
   $("moves").textContent="0";
-  const b=getBest(mode,n); $("best").textContent = b===null?"–":b;
+  const b=getBest(gm,n); $("best").textContent = b===null?"–":b;
+  $("game").classList.toggle("onl",ON.on);
+  if(ON.on){ ON.sc=[0,0]; ON.seq=0; ON.rcv=0; ON.turn=0; updOnlineUi(true); } else $("grid").classList.remove("myturn");
+  rw({event:"play"});
   show("game"); layout();
+  if(daily) silly([T[lang].daily]);
 }
-
+function updPeek(){ $("peekN").textContent=peeks; $("peekBtn").classList.toggle("dis",peeks<=0); }
+function spark(el){
+  const r=el.getBoundingClientRect(), fx=$("fx"), E=["✨","⭐","🐾","💖","✨"];
+  if(!el.animate) return;
+  for(let i=0;i<8;i++){
+    const sp=document.createElement("span"); sp.textContent=E[i%E.length]; sp.style.left=(r.left+r.width/2-10)+"px"; sp.style.top=(r.top+r.height/2-10)+"px"; fx.appendChild(sp);
+    const a=Math.PI*2*i/8+Math.random()*.5, d=50+Math.random()*60;
+    sp.animate([{transform:"translate(0,0) scale(.4)",opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d-30}px) scale(1.2) rotate(${(Math.random()-.5)*160}deg)`,opacity:0}],{duration:700+Math.random()*300,easing:"ease-out"}).onfinish=()=>sp.remove();
+  }
+}
+function popPill(id){ const e=$(id); e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop"); }
+function doPeek(){
+  if(ON.on||lock||open.length||peeks<=0||!cards.length||!$("game").classList.contains("active")) return;
+  ac(); peeks--; updPeek(); lock=true; SFX.peek(); silly([T[lang].peekSay]);
+  const hid=cards.filter(c=>!c.classList.contains("matched")&&!c.classList.contains("up"));
+  hid.forEach(c=>c.classList.add("up"));
+  setTimeout(()=>{ hid.forEach(c=>c.classList.remove("up")); lock=false; },1500);
+}
 function setCur(i){ cards.forEach((c,j)=>c.classList.toggle("cur",j===i)); cur=i; }
 // keyboard (laptop): arrows move a focus ring, Space/Enter flips, Esc = menu
 document.addEventListener("keydown", e=>{
@@ -447,8 +558,8 @@ document.addEventListener("keydown", e=>{
   const winOn=$("win").classList.contains("show");
   if(winOn){ if(act&&!btn){ e.preventDefault(); $("againBtn").click(); } else if(k==="Escape"){ e.preventDefault(); $("menuBtn").click(); } return; }
   if($("menu").classList.contains("active")){
-    if(k>="1"&&k<="4"){ const b=document.querySelectorAll("#levels .level")[+k-1]; if(b){ e.preventDefault(); b.click(); } }
-    else if(k==="m"||k==="M"){ e.preventDefault(); const nb=document.querySelector('#modes .mode:not(.sel)'); if(nb) nb.click(); }
+    if(k>="1"&&k<="5"){ const b=document.querySelectorAll("#levels .level")[+k-1]; if(b){ e.preventDefault(); b.click(); } }
+    else if(k==="m"||k==="M"){ e.preventDefault(); const ms=[...document.querySelectorAll('#modes .mode')]; const i=ms.findIndex(b=>b.classList.contains('sel')); const nb=ms[(i+1)%ms.length]; if(nb) nb.click(); }
     return;
   }
   if(!$("game").classList.contains("active")||!cards.length) return;
@@ -483,30 +594,37 @@ window.addEventListener("orientationchange", ()=>setTimeout(layout,200));
 
 function silly(arr){ const el=$("silly"); el.textContent=arr[Math.random()*arr.length|0]; el.classList.add("show"); clearTimeout(sillyT); sillyT=setTimeout(()=>el.classList.remove("show"),1500); }
 function clearGlow(){ clearTimeout(glowT); cards.forEach(c=>c.classList.remove("glow")); }
+function revealCard(el){
+  el.classList.add("up"); SFX.flip();
+  if(el.dataset.kind==="snd"&&ANIMALS[el.dataset.key]){ el.classList.add("sndup"); setTimeout(()=>SFX.voice(ANIMALS[el.dataset.key].voice),120); }
+}
 function tap(el){
+  if(ON.on) return onlineTap(el);
   if(lock || el.classList.contains("up")) return;
   ac(); if(open.length===0) hideFact();
   clearGlow();
-  el.classList.add("up"); SFX.flip(); open.push(el);
+  revealCard(el); open.push(el);
   if(open.length<2){
     // friendly help: after 2 misses in a row, the twin of the card you just opened sparkles for a moment
     if(missStreak>=2){ const twin=cards.find(c=>c!==el && c.dataset.key===el.dataset.key && !c.classList.contains("up"));
       if(twin){ twin.classList.add("glow"); silly([T[lang].tip]); glowT=setTimeout(clearGlow,2600); } }
     return;
   }
-  moves++; $("moves").textContent=moves;
+  moves++; $("moves").textContent=moves; popPill("movesPill");
   const [a,b]=open;
   if(a.dataset.key===b.dataset.key){
-    open=[]; found++; missStreak=0; silly(T[lang].cheer);
-    setTimeout(()=>{ a.classList.add("matched"); b.classList.add("matched"); SFX.match(); SFX.voice(ANIMALS[a.dataset.key].voice); showFact(a.dataset.key); },250);
+    open=[]; found++; missStreak=0; streak++; maxStreak=Math.max(maxStreak,streak);
+    silly([streak>=2 ? T[lang].streak.replace("{n}",streak) : T[lang].cheer[Math.random()*T[lang].cheer.length|0]]);
+    if(streak>0&&streak%4===0){ peeks++; updPeek(); popPill("peekBtn"); }
+    const sn=streak;
+    setTimeout(()=>{ a.classList.add("matched"); b.classList.add("matched"); SFX.match(sn); if(gm!=="voice") SFX.voice(ANIMALS[a.dataset.key].voice); spark(a); spark(b); showFact(a.dataset.key); },250);
     if(found===pairs) setTimeout(win, 1300);
   } else {
-    lock=true; missStreak++; silly(T[lang].oops);
+    lock=true; missStreak++; streak=0; silly(T[lang].oops);
     setTimeout(()=>{ a.classList.add("wiggle"); b.classList.add("wiggle"); SFX.oops(); },450);
-    setTimeout(()=>{ a.classList.remove("up","wiggle"); b.classList.remove("up","wiggle"); open=[]; lock=false; },1050);
+    setTimeout(()=>{ a.classList.remove("up","wiggle","sndup"); b.classList.remove("up","wiggle","sndup"); open=[]; lock=false; },1050);
   }
 }
-
 let factTimer=null;
 function showFact(k){
   const a=ANIMALS[k];
@@ -519,14 +637,23 @@ function hideFact(){ $("fact").classList.remove("show"); }
 
 /* ---------- win ---------- */
 function win(){
-  const t=T[lang], old=getBest(mode,pairs), rec = old===null || moves<old;
-  if(rec) localStorage.setItem(bestKey(mode,pairs), moves);
+  const t=T[lang], old=getBest(gm,pairs), rec = old===null || moves<old;
+  if(rec) localStorage.setItem(bestKey(gm,pairs), moves);
+  const stars=calcStars(moves,pairs), prev=getStars(gm,pairs);
+  if(stars>prev) localStorage.setItem(starKey(gm,pairs), stars);
   $("best").textContent = rec?moves:old;
   $("winTitle").textContent=t.win; $("winSub").textContent=t.winSub.replace("{n}",moves);
   $("winRec").textContent = rec ? t.rec : "";
+  $("winStars").innerHTML=[0,1,2].map(i=>`<span class="${i<stars?"":"off"}" style="animation-delay:${.3+i*.3}s">${i<stars?"⭐":"☆"}</span>`).join("");
+  for(let i=0;i<stars;i++) setTimeout(()=>SFX.star(i),400+i*300);
+  const lim=starLimits(pairs); $("winGoal").textContent = stars>=3 ? t.allStars : t.need.replace("{n}",moves-(stars===2?lim[0]:lim[1]));
+  // rewards
+  rw({event:"levelClear",level:pairs,score:Math.max(0,pairs*100-moves*10)}); rw({event:"star",stars}); if(maxStreak>=3) rw({event:"combo",score:maxStreak});
+  const sc=Math.max(0,pairs*100-moves*10); rw({event:"score",score:sc}); try{ if(sc>(+localStorage.getItem("annabelle-cats-best")||0)) localStorage.setItem("annabelle-cats-best",String(sc)); }catch(e){}
+  if(daily&&localStorage.getItem("annabelle-cats-daily")!==dayKey()){ localStorage.setItem("annabelle-cats-daily",dayKey()); rw({event:"win",coins:12}); $("winGoal").textContent=t.dailyWin; } else rw({event:"win"});
   $("jumpers").innerHTML = shuffle(KEYS.slice()).slice(0,5).map((k,i)=>face(k).replace("<svg",`<svg style="animation-delay:${i*.12}s"`)).join("");
-  hideFact(); $("win").classList.add("show"); SFX.win(); setTimeout(()=>SFX.voice("roar"),1400);
-  confetti();
+  hideFact(); $("againBtn").disabled=false; $("againBtn").textContent=t.again; $("win").classList.add("show"); SFX.win(); setTimeout(()=>SFX.voice("roar"),1400);
+  confetti(); setTimeout(rwFlush,900);
 }
 let confRaf=null;
 function confetti(){
@@ -547,6 +674,105 @@ function confetti(){
 }
 function stopWin(){ $("win").classList.remove("show"); cancelAnimationFrame(confRaf); const cv=$("confetti"); cv.getContext("2d").clearRect(0,0,cv.width,cv.height); }
 
+/* ============================================================
+   ONLINE 1-vs-1 – both players flip cards on the SAME board, taking turns (host-authoritative:
+   the host owns the deck and only tells the guest what a card is when it is flipped)
+   ============================================================ */
+const int = (x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
+const NT = window.Net1v1 ? Net1v1({pid:"annabelle-cats-", shareTxt:{he:T.he.shareT,fr:T.fr.shareT,en:T.en.shareT},
+  sfx:{join:()=>SFX.match(1),click:()=>SFX.click(),drop:()=>SFX.oops(),back:()=>SFX.match(2),huh:()=>SFX.pop()},
+  hideMenu(){ show("none"); }, showMenu(){ toMenu(); },
+  onLink(){ onlineSel=true; },
+  cleanStart(d){ return d&&d.g==="cats"&&MODES.includes(d.md)&&LEVELS.includes(d.p) ? {md:d.md,p:d.p} : null; },
+  makeStart(){ return {g:"cats",md:ON.mode,p:ON.pairs}; },
+  onHostStart(){ ON.host=true; ON.me=0; startGame(ON.pairs,{online:true}); },
+  onGuestStart(c){ ON.host=false; ON.me=1; ON.mode=c.md; ON.pairs=c.p; startGame(c.p,{online:true}); },
+  onResume(){ olSnap(); },
+  onData:olData, onLeft:olLeft, onPause(on){ netp=on; }}) : null;
+function startOnline(n){ if(!NT) return; ON.mode=mode; ON.pairs=n; ON.host=true; NT.showLobby(); }
+function updOnlineUi(first){
+  const t=T[lang], mine=ON.turn===ON.me&&!ON.over;
+  $("oSc").textContent="🙋 "+ON.sc[ON.me]+" : "+ON.sc[ON.me^1]+" 👭";
+  const tg=$("oTurn"); tg.textContent=ON.over?"":(mine?t.yourTurn:t.theirTurn); tg.classList.toggle("me",mine);
+  $("grid").classList.toggle("myturn",mine&&!ON.lock);
+  if(!first&&mine&&!ON.over) SFX.turn();
+}
+function olReady(){ return ON.on&&!ON.over&&!netp&&ON.turn===ON.me&&!ON.lock&&ON.open.length<2&&!ON.pend; }
+function onlineTap(el){
+  const i=+el.dataset.idx; if(!olReady()||el.classList.contains("up")||el.classList.contains("matched")) return;
+  if(ON.open.length===0) hideFact();
+  if(ON.host){ hostFlip(i,0); } else { NT.send({t:"mv",i}); ON.pend=true; setTimeout(()=>{ ON.pend=false; },1800); }
+}
+function hostCan(who,i){ const el=cards[i]; return ON.on&&ON.host&&!ON.over&&!netp&&ON.turn===who&&!ON.lock&&ON.open.length<2&&int(i,0,cards.length-1)&&el&&!el.classList.contains("up")&&!el.classList.contains("matched"); }
+function hostFlip(i,who){
+  if(!hostCan(who,i)) return false;
+  const c=ON.deck[i], el=cards[i]; ON.open.push(i); revealCard(el);
+  NT.send({t:"fl",s:ON.seq++,i,k:KEYS.indexOf(c.k),d:KD.indexOf(c.kind)});
+  if(ON.open.length===2){ ON.lock=true; setTimeout(hostResolve,1100); updOnlineUi(true); }
+  return true;
+}
+function hostResolve(){
+  if(!ON.on||!ON.host||ON.open.length!==2) return;
+  if(netp){ setTimeout(hostResolve,500); return; }
+  const [a,b]=ON.open, m=ON.deck[a].k===ON.deck[b].k;
+  if(m) ON.sc[ON.turn]++; else ON.turn^=1;
+  const done=found+(m?1:0)===pairs;
+  NT.send({t:"rs",s:ON.seq++,m:m?1:0,tu:ON.turn,a:ON.sc[0],b:ON.sc[1],o:done?1:0});
+  applyResolve(a,b,m,done,m?ON.turn^0:-1);
+}
+function applyResolve(a,b,m,done){
+  const A=cards[a],B=cards[b]; ON.open=[]; ON.lock=false;
+  if(m){ found++; streak++; setTimeout(()=>{ A.classList.add("matched"); B.classList.add("matched"); SFX.match(1); if(gm!=="voice") SFX.voice(ANIMALS[A.dataset.key].voice); spark(A); spark(B); showFact(A.dataset.key); },100); popPill("oSc"); }
+  else { A.classList.add("wiggle"); B.classList.add("wiggle"); SFX.oops(); setTimeout(()=>{ A.classList.remove("up","wiggle","sndup"); B.classList.remove("up","wiggle","sndup"); },520); }
+  updOnlineUi(false);
+  if(done){ ON.over=true; updOnlineUi(true); setTimeout(onlineFinish,1300); }
+}
+function onlineFinish(){
+  if(!ON.on) return; ON.over=true; NT.setOver(true);
+  const t=T[lang], a=ON.sc[ON.me], b=ON.sc[ON.me^1];
+  $("winTitle").textContent = a>b?t.win2:a<b?t.lose2:t.tie; $("winSub").textContent=t.onSub.replace("{a}",a).replace("{b}",b); $("winRec").textContent=""; $("winGoal").textContent="";
+  const st=a>b?3:a===b?2:1; $("winStars").innerHTML=[0,1,2].map(i=>`<span class="${i<st?"":"off"}" style="animation-delay:${.3+i*.3}s">${i<st?"⭐":"☆"}</span>`).join("");
+  for(let i=0;i<st;i++) setTimeout(()=>SFX.star(i),400+i*300);
+  rw({event:"levelClear",level:pairs,score:a*100}); rw({event:"score",score:a*100}); rw({event:"star",stars:st}); if(a>b) rw({event:"win"});
+  $("jumpers").innerHTML = shuffle(KEYS.slice()).slice(0,5).map((k,i)=>face(k).replace("<svg",`<svg style="animation-delay:${i*.12}s"`)).join("");
+  hideFact(); $("againBtn").disabled=false; $("againBtn").style.display=""; $("againBtn").textContent=t.again; $("win").classList.add("show");
+  if(a>=b){ SFX.win(); confetti(); } else SFX.oops();
+  setTimeout(rwFlush,900);
+}
+function olLeft(){ if(!ON.on) return; ON.over=true; const t=T[lang]; $("winTitle").textContent=t.left; $("winSub").textContent="👋"; $("winRec").textContent=""; $("winGoal").textContent=""; $("winStars").innerHTML=""; $("jumpers").innerHTML=""; $("againBtn").style.display="none"; $("win").classList.add("show"); }
+function olSnap(){
+  if(!ON.on||!cards.length) return;
+  if(ON.host){
+    const ks=[],ds=[],st=[]; cards.forEach((el,i)=>{ const up=el.classList.contains("up"),mt=el.classList.contains("matched"); st.push(mt?2:up?1:0); ks.push(up||mt?KEYS.indexOf(ON.deck[i].k):-1); ds.push(up||mt?KD.indexOf(ON.deck[i].kind):0); });
+    NT.send({t:"sy",s:ON.seq,tu:ON.turn,a:ON.sc[0],b:ON.sc[1],f:found,ks,ds,st});
+  }
+}
+function olApplySnap(d){
+  const n=cards.length;
+  const arr=(a,lo,hi)=>Array.isArray(a)&&a.length===n&&a.every(v=>int(v,lo,hi));
+  if(ON.host||!ON.on||!int(d.s,0,99999)||!int(d.tu,0,1)||!int(d.a,0,15)||!int(d.b,0,15)||!int(d.f,0,15)||!arr(d.ks,-1,KEYS.length-1)||!arr(d.ds,0,2)||!arr(d.st,0,2)) return;
+  if(d.s===ON.rcv) return;
+  found=d.f; ON.open=[]; ON.lock=false;
+  cards.forEach((el,i)=>{ el.classList.remove("up","matched","wiggle","glow"); if(d.st[i]>0&&d.ks[i]>=0){ fillFront(el,KEYS[d.ks[i]],KD[d.ds[i]]); el.classList.add("up"); if(d.st[i]===2) el.classList.add("matched"); else ON.open.push(i); } });
+  ON.turn=d.tu; ON.sc=[d.a,d.b]; ON.rcv=d.s; ON.lock=ON.open.length===2; updOnlineUi(true);
+}
+function olData(d){
+  const ty=d.t, n=cards.length;
+  if(ty==="mv"&&ON.host){ if(int(d.i,0,n-1)) hostFlip(d.i,1); }
+  else if(ty==="fl"&&!ON.host){
+    if(d.s!==ON.rcv||!int(d.i,0,n-1)||!int(d.k,0,KEYS.length-1)||!int(d.d,0,2)||ON.open.length>=2||ON.over) return;
+    const el=cards[d.i]; if(el.classList.contains("up")||el.classList.contains("matched")) return;
+    ON.rcv++; ON.pend=false; if(ON.open.length===0) hideFact();
+    fillFront(el,KEYS[d.k],KD[d.d]); ON.open.push(d.i); revealCard(el);
+    if(ON.open.length===2){ ON.lock=true; updOnlineUi(true); }
+  }
+  else if(ty==="rs"&&!ON.host){
+    if(d.s!==ON.rcv||ON.open.length!==2||!(d.m===0||d.m===1)||!int(d.tu,0,1)||!int(d.a,0,15)||!int(d.b,0,15)||!(d.o===0||d.o===1)||ON.over) return;
+    ON.rcv++; const [a,b]=ON.open, m=cards[a].dataset.key===cards[b].dataset.key;
+    ON.turn=d.tu; ON.sc=[d.a,d.b]; applyResolve(a,b,m,d.o===1);
+  }
+  else if(ty==="sy"&&!ON.host) olApplySnap(d);
+}
 applyLang();
 </script>
 </body>

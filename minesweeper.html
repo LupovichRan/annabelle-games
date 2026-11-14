@@ -43,7 +43,7 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .tl.d{background:#ffb3b3}
 .tl .n{direction:ltr;display:flex;align-items:center;gap:0;line-height:1}
 .tl .n i{font-style:normal;font-size:.55em;opacity:.55}
-.tl.pop{animation:tp .25s}@keyframes tp{from{transform:scale(.6)}}
+.tl.pop{animation:tp .25s}@keyframes tp{0%{transform:scale(.5,.8)}60%{transform:scale(1.12,.92)}}
 .n1{color:#2a7de1}.n2{color:#2e9a3a}.n3{color:#e23b3b}.n4{color:#7b3fc4}.n5{color:#b5541c}.n6{color:#0c8f8f}.n7{color:#333}.n8{color:#888}
 .flagbtn{min-width:72px;padding:0 8px;height:48px;border-radius:999px;border:3px solid #e8862d;background:#fff;font:800 17px Rubik,Arial;color:#5a3b1a;flex:0 0 auto}
 .flagbtn.on{background:#e8862d;color:#fff;animation:pulse2 1s infinite alternate}@keyframes pulse2{to{transform:scale(1.06)}}
@@ -74,9 +74,33 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 @media (min-width:1100px) and (min-height:960px){.desk #menu{zoom:1.38}}
 @media (min-width:1400px) and (min-height:1150px){.desk #menu{zoom:1.7}}
 .desk #menu{justify-content:safe center}
+#stages{justify-content:flex-start;gap:10px;padding:14px 10px;overflow:auto}
+#stGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;width:100%;max-width:520px}
+.stb{min-height:84px;border-radius:18px;border:none;background:linear-gradient(#8fdc5a,#5fb83a);color:#fff;font:900 26px Rubik,Arial;box-shadow:0 5px 0 #3f8f26;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative}
+.stb small{font-size:15px;letter-spacing:1px;color:#fff3a0;text-shadow:0 1px 0 #0003}
+.stb:active{transform:translateY(3px);box-shadow:0 2px 0 #3f8f26}
+.stb.lock{background:linear-gradient(#cfd5dc,#9aa3ad);box-shadow:0 5px 0 #6c747e;opacity:.8}
+.stb.cur{animation:pulse2 .9s infinite alternate}
+.stb sub{font-size:11px;font-weight:800;opacity:.9}
+.mini{min-height:44px;min-width:44px;padding:4px 16px;border-radius:999px;border:2px solid #e8862d;background:#fff;font:800 16px Rubik,Arial;color:#5a3b1a}
+.mini.on{background:#e8862d;color:#fff}
+#winStars{font-size:54px;line-height:1;direction:ltr;display:flex;gap:6px;justify-content:center}
+#winStars span{display:inline-block;color:#d8cdb4;transform:scale(.2);opacity:0}
+#winStars span.got{color:#ffc720;text-shadow:0 3px 0 #c98a00;animation:starin .5s forwards}
+#winStars span.no{opacity:1;transform:scale(1)}
+@keyframes starin{0%{transform:scale(.2) rotate(-90deg);opacity:0}70%{transform:scale(1.35) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+#winGoal{font-size:15px;font-weight:700;opacity:.85}
+#win .card{animation:cardin .45s cubic-bezier(.2,1.4,.4,1)}@keyframes cardin{from{transform:scale(.4) translateY(40px);opacity:0}}
+.wshake{animation:wsh .45s}@keyframes wsh{15%{transform:translate(-7px,3px)}35%{transform:translate(6px,-4px)}55%{transform:translate(-4px,2px)}75%{transform:translate(3px,-1px)}}
+.stagebanner{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:17;pointer-events:none;background:#fff;border:4px solid #e8862d;border-radius:22px;padding:10px 22px;font:900 30px Rubik,Arial;color:#e8862d;text-align:center;box-shadow:0 6px 0 #0002;animation:sbn 2.3s forwards}
+.stagebanner small{display:block;font-size:16px;color:#5a3b1a;font-weight:700}
+@keyframes sbn{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}15%{transform:translate(-50%,-50%) scale(1.15);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{transform:translate(-50%,-90%) scale(1);opacity:0}}
+.tl.pop{animation:tp .3s cubic-bezier(.3,1.6,.5,1)}
+.tl.pf{animation:pf .5s}@keyframes pf{40%{transform:scale(1.25) rotate(-8deg)}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/minesweeper.webmanifest"><meta name="theme-color" content="#fff6d6"><link rel="icon" type="image/png" sizes="192x192" href="icons/minesweeper-192.png"><meta name="apple-mobile-web-app-title" content="גינת החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/minesweeper-apple-180.png"><script src="pwa.js" data-app="minesweeper" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#winNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -90,8 +114,19 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
     <button class="big" data-mode="easy" id="bEasy"></button>
     <button class="big p" data-mode="normal" id="bNorm"></button>
   </div>
+  <div class="row">
+    <button class="big" data-mode="hard" id="bHard" style="background:linear-gradient(#ff8a7a,#e0453a);box-shadow:0 4px 0 #962a22"></button>
+    <button class="big" data-mode="daily" id="bDaily" style="background:linear-gradient(#ffd54f,#f2a900);box-shadow:0 4px 0 #a97400"></button>
+    <button class="big g" id="bStages" style="background:linear-gradient(#6fc3ff,#2a8fd0);box-shadow:0 4px 0 #1a5f8e"></button>
+  </div>
+  <div class="row"><button class="mini" id="musBtn"></button></div>
   <div class="best" id="bestT"></div>
   <div class="khint" id="kh"></div>
+</section>
+<section class="screen" id="stages">
+  <h1 id="stTitle"></h1>
+  <div id="stGrid"></div>
+  <button class="big g" id="stBack"></button>
 </section>
 <section class="screen" id="game">
   <div class="bar">
@@ -104,31 +139,41 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
   <div id="wrap"><div id="grid"></div></div>
   <div class="khg" id="kh2"></div>
 </section>
-<div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><div id="winB" class="best"></div><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
+<div id="win"><div class="card"><h2 id="winT"></h2><div id="winS" style="font-size:44px"></div><div id="winStars"></div><div id="winGoal"></div><div id="winB" class="best"></div><button class="big" id="nextBtn" style="display:none"></button><button class="big" id="againBtn"></button><div id="winNav"></div></div></div>
 <div id="oops"><div class="card"><div style="font-size:64px" class="dance">🐶</div><h2 id="oopsT"></h2><div id="oopsS" style="font-size:20px;font-weight:800"></div><button class="big" id="oopsBtn"></button></div></div>
 <canvas id="conf"></canvas>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
- he:{title:"גינת החתולים",tiny:"🌼 גינה זעירה · 6×6",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
+ he:{hard:'🌲 גדולה · 10×12',daily:'📅 גינה יומית',stages:'🗺️ שלבים',stg:'שלב',goal:'🎯 בלי להעיר כלבים = 3 כוכבים!',nextS:'▶ לשלב הבא',musOn:'🎵 מוזיקה',musOff:'🎵 כבויה',starRule:'בלי להעיר כלבים: 3 ⭐ · עד שניים: 2 ⭐',stTitle:'שלבי הגינה',back:'⬅ חזרה',dailyHint:'🎁 הגינה של היום היא אותה גינה לכולם!',lock:'🔒',title:"גינת החתולים",tiny:"🌼 גינה זעירה · 6×6",easy:"🌱 קל · 8×8",normal:"🌳 רגיל · 9×11",
   rules:["🌱 בגינה ישנים כלבים עצבניים 🐶💤 מתחת לדשא. אל תעירי אותם!","👆 לחצי על משבצת כדי לחפור. המספר 🐾 אומר כמה כלבים ישנים מסביב.","🐾 לחצי על כפתור הכפה (או לחיצה ארוכה) כדי לסמן כלב.","🌿 פתחי את כל המשבצות בלי כלבים כדי לנצח!","😸 לחתול יש 9 נשמות – יש לך לבבות ❤️ אם מעירים כלב!"],
-  keys:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> זעירה · בלוח: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> חפירה · <kbd>X</kbd> סימון · <kbd>F</kbd> מצב סימון · <kbd>H</kbd> רמז · <kbd>Esc</kbd> תפריט · קליק ימני = סימון",dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
+  keys:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> זעירה · <kbd>4</kbd> גדולה · <kbd>5</kbd> יומית · <kbd>6</kbd> שלבים · בלוח: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> חפירה · <kbd>X</kbd> סימון · <kbd>F</kbd> מצב סימון · <kbd>H</kbd> רמז · <kbd>Esc</kbd> תפריט · קליק ימני = סימון",dig:"👆 חפירה",flag:"🐾 סימון",dogs:"🐶",oops:"אופס! הערת כלב 🐶",lost:"איבדת לב ❤️ – נשארו N",lastH:"איבדת את הלב האחרון 💔",cont:"המשיכי ▶",run:"רוצי! 😹",
   winT:"ניצחת, אנאבל! 🎉",lose:"אופס! הכלבים התעוררו 🐶",again:"🔁 עוד משחק",retry:"🔁 נסי שוב",best:"שיא",newBest:"שיא חדש! 🏆",sec:"שנ׳"},
- fr:{title:"Le jardin des chats",tiny:"🌼 Mini-jardin · 6×6",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
+ fr:{hard:'🌲 Grand jardin · 10×12',daily:'📅 Jardin du jour',stages:'🗺️ Niveaux',stg:'Niveau',goal:'🎯 Sans réveiller de chien = 3 étoiles !',nextS:'▶ Niveau suivant',musOn:'🎵 Musique',musOff:'🎵 Coupée',starRule:"Aucun chien réveillé : 3 ⭐ · jusqu'à 2 : 2 ⭐",stTitle:'Les niveaux du jardin',back:'⬅ Retour',dailyHint:'🎁 Le jardin du jour est le même pour tous !',lock:'🔒',title:"Le jardin des chats",tiny:"🌼 Mini-jardin · 6×6",easy:"🌱 Facile · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Des chiens grognons 🐶💤 dorment sous l'herbe. Ne les réveille pas !","👆 Touche une case pour creuser. Le chiffre 🐾 dit combien de chiens dorment autour.","🐾 Touche le bouton patte (ou appui long) pour marquer un chien.","🌿 Ouvre toutes les cases sans chien pour gagner !","😸 Un chat a 9 vies – tu as des cœurs ❤️ si un chien se réveille !"],
-  keys:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Mini · Sur le plateau : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> creuser · <kbd>X</kbd> marquer · <kbd>F</kbd> mode patte · <kbd>H</kbd> indice · <kbd>Échap</kbd> menu · clic droit = marquer",dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
+  keys:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Mini · <kbd>4</kbd> Grand · <kbd>5</kbd> Jour · <kbd>6</kbd> Niveaux · Sur le plateau : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> creuser · <kbd>X</kbd> marquer · <kbd>F</kbd> mode patte · <kbd>H</kbd> indice · <kbd>Échap</kbd> menu · clic droit = marquer",dig:"👆 Creuser",flag:"🐾 Marquer",dogs:"🐶",oops:"Oups ! Tu as réveillé un chien 🐶",lost:"Tu as perdu un cœur ❤️ – il en reste N",lastH:"Tu as perdu ton dernier cœur 💔",cont:"Continue ▶",run:"Cours ! 😹",
   winT:"Tu as gagné, Annabelle ! 🎉",lose:"Oups ! Les chiens se sont réveillés 🐶",again:"🔁 Rejouer",retry:"🔁 Réessaie",best:"Record",newBest:"Nouveau record ! 🏆",sec:"s"},
- en:{title:"Cat Garden",tiny:"🌼 Tiny garden · 6×6",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
+ en:{hard:'🌲 Big garden · 10×12',daily:'📅 Daily garden',stages:'🗺️ Stages',stg:'Stage',goal:'🎯 Wake no dogs = 3 stars!',nextS:'▶ Next stage',musOn:'🎵 Music',musOff:'🎵 Off',starRule:'No dogs woken: 3 ⭐ · up to two: 2 ⭐',stTitle:'Garden stages',back:'⬅ Back',dailyHint:"🎁 Today's garden is the same for everyone!",lock:'🔒',title:"Cat Garden",tiny:"🌼 Tiny garden · 6×6",easy:"🌱 Easy · 8×8",normal:"🌳 Normal · 9×11",
   rules:["🌱 Grumpy dogs 🐶💤 are sleeping under the grass. Don't wake them!","👆 Tap a tile to dig. The 🐾 number tells how many dogs sleep nearby.","🐾 Tap the paw button (or long-press) to mark a dog.","🌿 Open all the tiles without dogs to win!","😸 A cat has 9 lives – you have hearts ❤️ if a dog wakes up!"],
-  keys:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Tiny · On the board: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> dig · <kbd>X</kbd> mark · <kbd>F</kbd> mark mode · <kbd>H</kbd> hint · <kbd>Esc</kbd> menu · right-click = mark",dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
+  keys:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Tiny · <kbd>4</kbd> Big · <kbd>5</kbd> Daily · <kbd>6</kbd> Stages · On the board: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> dig · <kbd>X</kbd> mark · <kbd>F</kbd> mark mode · <kbd>H</kbd> hint · <kbd>Esc</kbd> menu · right-click = mark",dig:"👆 Dig",flag:"🐾 Mark",dogs:"🐶",oops:"Oops! You woke a dog 🐶",lost:"You lost a heart ❤️ – N left",lastH:"You lost your last heart 💔",cont:"Continue ▶",run:"Run! 😹",
   winT:"You won, Annabelle! 🎉",lose:"Oops! The dogs woke up 🐶",again:"🔁 Play again",retry:"🔁 Try again",best:"Best",newBest:"New record! 🏆",sec:"s"}};
 const FUN={
  he:{oops:["אופס! הערת כלב 🐶","הכלב התעורר ופיהק ענק 🥱","בו! הכלב התעטש 🤧","הכלב מצמץ: מי העיר אותי? 😴"],back:["הכלב פיהק וחזר לישון 😴","חרררר… הכלב שוב נרדם 💤"],quip:["החתול מחפש דג 🐟","מיאו! אפשר לחפור עוד? 😸","הדשא מדגדג ברגליים 🌿","הכלבים מנחרים… שששש 🤫","החתול עושה סלטה! 🤸"],big:["וואו, כמה מקום! 🌿","חפרנו מלא! 🎉"],glow:"הכפה הקסומה מראה מקום בטוח ✨"},
  fr:{oops:["Oups ! Tu as réveillé un chien 🐶","Le chien bâille très fort 🥱","Atchoum ! Le chien a éternué 🤧","Le chien cligne : qui m'a réveillé ? 😴"],back:["Le chien a bâillé et s'est rendormi 😴","Rrrr… le chien ronfle déjà 💤"],quip:["Le chat cherche un poisson 🐟","Miaou ! On creuse encore ? 😸","L'herbe chatouille les pattes 🌿","Les chiens ronflent… chut 🤫","Le chat fait une galipette ! 🤸"],big:["Waouh, quelle place ! 🌿","On a creusé plein de cases ! 🎉"],glow:"La patte magique montre une case sûre ✨"},
  en:{oops:["Oops! You woke a dog 🐶","The dog woke up with a giant yawn 🥱","Achoo! The dog sneezed 🤧","The dog blinks: who woke me? 😴"],back:["The dog yawned and fell asleep again 😴","Zzzz… the dog is snoring again 💤"],quip:["The cat is looking for a fish 🐟","Meow! Can we dig more? 😸","The grass tickles my paws 🌿","The dogs are snoring… shhh 🤫","The cat does a somersault! 🤸"],big:["Wow, so much space! 🌿","We dug up lots of tiles! 🎉"],glow:"The magic paw shows a safe tile ✨"}};
 const pickf=a=>a[Math.random()*a.length|0];
-const LV={tiny:{c:6,r:6,d:4,l:5,h:5},easy:{c:8,r:8,d:7,l:5,h:5},normal:{c:9,r:11,d:12,l:5,h:5}}; // tiny: fewer dogs than hearts, so it cannot be lost
+const LV={tiny:{c:6,r:6,d:4,l:5,h:5},easy:{c:8,r:8,d:7,l:5,h:5},normal:{c:9,r:11,d:12,l:5,h:5},hard:{c:10,r:12,d:18,l:5,h:5},daily:{c:9,r:10,d:13,l:5,h:5}};
+const STG=[[5,5,3],[6,6,4],[6,8,6],[7,9,8],[8,10,10],[8,11,12],[9,11,13],[9,12,15],[10,12,17],[10,13,20]]; // gentle ladder, max ~15% dogs
+const NSTG=STG.length;
+function cfg(m){if(/^s\d+$/.test(m)){const q=STG[+m.slice(1)-1];return{c:q[0],r:q[1],d:q[2],l:5,h:5}}if(m==="daily"){const o=Object.assign({},LV.daily);o.d=11+(daySeed()%5);return o}return LV[m]}
+const tdKey=()=>typeof window.__annabelleToday==="string"?window.__annabelleToday:(d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate())(new Date());
+function daySeed(){let h=2166136261;for(const ch of tdKey()){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function mulb(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const RW=()=>window.AnnabelleRewards;
+const SK="annabelle-minesweeper-stars",DK="annabelle-minesweeper-daily";
+const getStars=()=>{try{return JSON.parse(localStorage.getItem(SK))||{}}catch(e){return{}}};
+const starsFor=h=>h===0?3:h<=2?2:1; // tiny: fewer dogs than hearts, so it cannot be lost
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
@@ -139,31 +184,58 @@ function applyLang(){
  $("tTitle").textContent=t("title"); document.title=t("title");
  $("flags").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${l}</button>`).join("");
  $("rules").innerHTML=t("rules").map(s=>`<p>${s}</p>`).join("");
- $("bTiny").textContent=t("tiny");$("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("againBtn").textContent=t("again");
- const b=getBest();$("bestT").textContent=["tiny","easy","normal"].filter(k=>b[k]).map(k=>`🏆 ${t(k).split("·")[0].trim()}: ${b[k]} ${t("sec")}`).join("   ");
- $("kh").innerHTML=t("keys");$("kh2").innerHTML=t("keys").split(" · ").slice(3).join("<br>").replace(/^[^:：]*[:：] ?/,"");
+ $("bTiny").textContent=t("tiny");$("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bHard").textContent=t("hard");$("bDaily").textContent=t("daily");$("bStages").textContent=t("stages");$("stTitle").textContent=t("stTitle");$("stBack").textContent=t("back");updMus();$("againBtn").textContent=t("again");
+ const b=getBest();$("bestT").textContent=["tiny","easy","normal","hard"].filter(k=>b[k]).map(k=>`🏆 ${t(k).split("·")[0].trim()}: ${b[k]} ${t("sec")}`).join("   ");
+ $("kh").innerHTML=t("keys");$("kh2").innerHTML=t("keys").split(" · ").slice(6).join("<br>").replace(/^[^:：]*[:：] ?/,"");
  if(G)hud();
 }
 let AC=null,muted=localStorage.getItem("annabelle-muted")==="1";
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
 function tone(f,d,type="sine",v=.2,f2){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),n=a.currentTime;o.type=type;o.frequency.setValueAtTime(f,n);if(f2)o.frequency.exponentialRampToValueAtTime(f2,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(a.destination);o.start(n);o.stop(n+d)}
-const SFX={click:()=>tone(600,.08,"triangle",.15),dig:()=>tone(320,.1,"triangle",.18,480),flag:()=>tone(880,.1,"sine",.18,660),
+function noise(d,v=.12,fc=900){if(muted)return;const a=ac();if(!a)return;const n=a.currentTime,len=Math.max(1,a.sampleRate*d|0),buf=a.createBuffer(1,len,a.sampleRate),dt=buf.getChannelData(0);for(let i=0;i<len;i++)dt[i]=(Math.random()*2-1)*(1-i/len);const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type="lowpass";f.frequency.value=fc;const g=a.createGain();g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);s.connect(f).connect(g).connect(a.destination);s.start(n)}
+const SFX={click:()=>tone(600,.08,"triangle",.15),dig:(k)=>{noise(.12,.14,700+(k||0)*120);tone(300+(k||0)*40,.1,"triangle",.14,480+(k||0)*60)},flag:()=>{tone(880,.08,"sine",.16,990);setTimeout(()=>tone(1320,.1,"sine",.12),70)},
+ star:i=>tone(660+i*220,.35,"triangle",.2,700+i*240),pop:()=>tone(900,.06,"sine",.08,1500),
+ lock:()=>{tone(200,.15,"square",.1,150)},
  bark:()=>{tone(260,.12,"square",.12,180);setTimeout(()=>tone(280,.14,"square",.12,170),180)},
  meow:()=>{tone(700,.12,"sawtooth",.08,1100);setTimeout(()=>tone(1100,.25,"sawtooth",.08,500),120)},
- win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.25,"triangle",.2),i*140))};
+ win:()=>{[523,659,784,1046,1319].forEach((f,i)=>setTimeout(()=>{tone(f,.3,"triangle",.2);tone(f/2,.3,"sine",.1)},i*130));setTimeout(()=>{[523,659,784].forEach(f=>tone(f,.8,"triangle",.14))},750)}};
+// tiny background music (optional, off by default, respects mute)
+let musOn=localStorage.getItem("annabelle-music")==="1",musT=null,musI=0;
+const MEL=[0,2,4,2,5,4,2,1,0,2,4,7,5,4,2,0],PEN=[262,294,330,392,440,523,587,659];
+function musTick(){clearTimeout(musT);musT=null;if(!musOn)return;
+ if(!muted&&!document.hidden&&G&&$("game").classList.contains("active")&&!G.paused&&!G.over){const n=MEL[musI%16];tone(PEN[n%8],.5,"sine",.045);if(musI%4===0)tone(PEN[n%8]/2,.9,"triangle",.04)}
+ musI++;musT=setTimeout(musTick,470)}
+function musKick(){if(musOn&&!musT)musTick()}
+function updMus(){const b=$("musBtn");b.textContent=musOn?t("musOn"):t("musOff");b.classList.toggle("on",musOn)}
+$("musBtn").addEventListener("click",()=>{musOn=!musOn;localStorage.setItem("annabelle-music",musOn?"1":"0");ac();SFX.click();updMus();if(musOn)musKick()});
+const FX=[];let fxOn=false;
+function fxLoop(){const cv=$("conf"),x=cv.getContext("2d");if(cv.width!==innerWidth||cv.height!==innerHeight){cv.width=innerWidth;cv.height=innerHeight}
+ x.clearRect(0,0,cv.width,cv.height);
+ for(let i=FX.length-1;i>=0;i--){const p=FX[i];p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.a+=p.vr;p.life--;if(p.life<=0||p.y>cv.height+40){FX.splice(i,1);continue}
+  x.save();x.globalAlpha=Math.min(1,p.life/18);x.translate(p.x,p.y);x.rotate(p.a);
+  if(p.e){x.font=p.s+"px sans-serif";x.textAlign="center";x.fillText(p.e,0,0)}else{x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66)}
+  x.restore()}
+ if(FX.length)requestAnimationFrame(fxLoop);else{fxOn=false;x.clearRect(0,0,cv.width,cv.height)}}
+function burst(x,y,n,o){o=o||{};n=Math.min(n,Math.max(0,260-FX.length));for(let i=0;i<n;i++){const an=(o.cone?(-Math.PI/2+(Math.random()-.5)*o.cone):Math.random()*6.283),sp=(o.sp||5)*(.4+Math.random()*.8);
+ FX.push({x,y,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp,g:o.g==null?.25:o.g,a:Math.random()*6,vr:(Math.random()-.5)*.4,life:(o.life||50)+Math.random()*20|0,s:(o.s||10)*(.7+Math.random()*.6),c:o.cols?o.cols[Math.random()*o.cols.length|0]:`hsl(${Math.random()*360},90%,60%)`,e:o.em&&Math.random()<(o.emP||1)?o.em[Math.random()*o.em.length|0]:null})}
+ if(!fxOn&&FX.length){fxOn=true;requestAnimationFrame(fxLoop)}}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 let G=null,timer=null,cur=0;
 function newGame(mode){
- const L=LV[mode],land=innerWidth>innerHeight;
+ const L=cfg(mode),land=innerWidth>innerHeight;
  const C=land?Math.max(L.c,L.r):L.c,R=land?Math.min(L.c,L.r):L.r;
- G={mode,C,R,D:L.d,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:L.h||5,lastAct:Date.now(),glow:-1,nextSilly:Date.now()+14000};
+ G={mode,C,R,D:L.d,streak:0,maxStreak:0,rng:mode==="daily"?mulb(daySeed()):Math.random,lives:L.l,cells:[],started:false,over:false,flagMode:false,t0:0,sec:0,opened:0,hits:0,hints:L.h||5,lastAct:Date.now(),glow:-1,nextSilly:Date.now()+14000};
  for(let i=0;i<C*R;i++)G.cells.push({dog:false,n:0,o:false,f:false});
  const g=$("grid");g.innerHTML="";g.style.gridTemplateColumns=`repeat(${C},1fr)`;
  cur=(R>>1)*C+(C>>1);
  for(let i=0;i<C*R;i++){const b=document.createElement("button");b.className="tl"+(i===cur?" cur":"");b.dataset.i=i;b.tabIndex=-1;g.appendChild(b)}
  clearInterval(timer);timer=setInterval(tick,500);
  show("game");setFlag(false);hud();
+ RW()&&RW().award({game:"minesweeper",event:"play"});
+ const sn=/^s\d+$/.test(mode)?+mode.slice(1):0;
+ banner(sn?`${t("stg")} ${sn}`:mode==="daily"?t("daily").replace(/^\S+\s*/,""):t(mode).split("·")[0].replace(/^\S+\s*/,""),t("goal"));musKick();
 }
+function banner(a,b){const d=document.createElement("div");d.className="stagebanner";d.innerHTML=`${a}<small>${b}</small>`;document.body.appendChild(d);setTimeout(()=>d.remove(),2300)}
 function tick(){if(!G||!G.started||G.over)return;const now=Date.now();G.sec=Math.floor((now-G.t0)/1000);hud();
  if(G.paused||$("win").classList.contains("on"))return;
  if(G.glow<0&&now-G.lastAct>11000){const cand=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o&&!G.cells[i].f);
@@ -174,7 +246,7 @@ const rndT=(a,b)=>a+Math.random()*(b-a);
 function act(){if(!G)return;G.lastAct=Date.now();if(G.glow>=0){const e=$("grid").children[G.glow];if(e)e.classList.remove("glow");G.glow=-1}}
 const nb=i=>{const r=Math.floor(i/G.C),c=i%G.C,o=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<G.R&&cc>=0&&cc<G.C)o.push(rr*G.C+cc)}return o};
 function plant(safe){const ban=new Set([safe,...nb(safe)]);const pool=[];for(let i=0;i<G.cells.length;i++)if(!ban.has(i))pool.push(i);
- for(let k=0;k<G.D;k++){const j=pool.splice(Math.random()*pool.length|0,1)[0];G.cells[j].dog=true}
+ for(let k=0;k<G.D;k++){const j=pool.splice(G.rng()*pool.length|0,1)[0];G.cells[j].dog=true}
  G.cells.forEach((c,i)=>c.n=nb(i).filter(j=>G.cells[j].dog).length)}
 function hud(){const f=G.cells.filter(c=>c.f||(c.o&&c.dog)).length;
  const left=G.cells.filter(c=>!c.dog&&!c.o).length;$("info").textContent=`🌿${left} 🐶${Math.max(0,G.D-f)} ⏱️${G.sec}`;$("hintBtn").textContent=`💡${G.hints}`;$("hintBtn").disabled=!G.hints;$("hintBtn").style.opacity=G.hints?1:.4;$("hearts").textContent=G.lives?"❤️"+G.lives:"🤍"}
@@ -182,16 +254,16 @@ function setFlag(v){G.flagMode=v;const b=$("flagBtn");b.classList.toggle("on",v)
 function render(i){const c=G.cells[i],b=$("grid").children[i];b.className="tl"+(i===cur?" cur":"")+(i===G.glow&&!c.o?" glow":"");b.innerHTML="";
  if(c.o){if(c.dog){b.classList.add("d");b.textContent="🐶"}else{b.classList.add("o");if(c.n)b.innerHTML=`<span class="n n${c.n}"><i>🐾</i>${c.n}</span>`;else if(i%5===2)b.innerHTML='<span style="opacity:.6;font-size:.7em">🐟</span>'}}
  else if(c.f){b.classList.add("f");b.textContent="🐾"}}
-function open(i){const st=[i];let any=false;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);$("grid").children[j].classList.add("pop");if(!c.n&&!c.dog)st.push(...nb(j))}return any}
+function open(i){const st=[i];let any=false,fxn=0;while(st.length){const j=st.pop(),c=G.cells[j];if(c.o)continue;if(c.f){if(c.dog)continue;c.f=false}c.o=true;G.opened++;any=true;render(j);const te=$("grid").children[j];te.classList.add("pop");if(fxn++<14){const r=te.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,fxn<5?5:2,{sp:4,cols:["#8b5a2b","#a9743a","#6fae3f","#c99a5b"],s:7,life:28,g:.35})}if(!c.n&&!c.dog)st.push(...nb(j))}return any}
 function tap(i,forceFlag){if(!G||G.over||G.paused)return;const c=G.cells[i];ac();act();if(c.o){if(c.n&&!c.dog&&!forceFlag)chord(i);return}
  if(forceFlag||G.flagMode){c.f=!c.f;render(i);SFX.flag();hud();return}
  if(c.f)return;
  if(!G.started){G.started=true;G.t0=Date.now();plant(i)}
- if(c.dog){c.o=true;render(i);G.lives--;G.hits++;hud();dogWake(i);return}
- const before=G.opened;open(i);SFX.dig();if(G.opened-before>=10)toast(pickf(FUN[lang].big),1500);hud();checkWin()}
+ if(c.dog){c.o=true;render(i);G.lives--;G.hits++;G.streak=0;hud();dogWake(i);return}
+ const before=G.opened;open(i);SFX.dig(c.n);G.streak++;if(G.streak>G.maxStreak)G.maxStreak=G.streak;if(G.streak===8||G.streak===16||G.streak===30){toast("😸 x"+G.streak+" ✨",1100);SFX.pop();const r=$("grid").getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,26,{sp:7,em:["⭐","✨"],s:22,life:45})}if(G.opened-before>=10)toast(pickf(FUN[lang].big),1500);hud();checkWin()}
 function chord(i){const ns=nb(i).filter(j=>!G.cells[j].o);if(nb(i).filter(j=>G.cells[j].f||(G.cells[j].o&&G.cells[j].dog)).length!==G.cells[i].n)return;
  const rest=ns.filter(j=>!G.cells[j].f);if(!rest.length)return;let hit=false;
- for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;dogWake(j);}}else open(j)}
+ for(const j of rest){const c=G.cells[j];if(c.o)continue;if(c.dog){if(!hit){hit=true;c.o=true;render(j);G.lives--;G.hits++;G.streak=0;dogWake(j);}}else open(j)}
  SFX.dig();hud();if(!G.over)checkWin()}
 function hint(){if(!G||G.over||G.paused||!G.hints)return;ac();act();
  if(!G.started){const m=(G.R>>1)*G.C+(G.C>>1);G.hints--;setFlag(false);G.cells[m].f=false;tap(m);return}
@@ -200,7 +272,7 @@ function hint(){if(!G||G.over||G.paused||!G.hints)return;ac();act();
  const i=pool[Math.random()*pool.length|0];G.hints--;G.cells[i].f=false;open(i);$("grid").children[i].animate([{transform:"scale(1.4)",background:"#fff59d"},{transform:"scale(1)"}],{duration:600});SFX.dig();hud();checkWin()}
 function toast(s,ms=1500){const d=document.createElement("div");d.className="toast";d.textContent=s;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function dogWake(i){G.paused=true;if(G.lives<=0)G.over=true;SFX.bark();setTimeout(SFX.meow,300);
- const b=$("grid").children[i];b.classList.add("awake");
+ const b=$("grid").children[i];b.classList.add("awake");$("wrap").classList.remove("wshake");void $("wrap").offsetWidth;$("wrap").classList.add("wshake");{const r=b.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,14,{sp:6,em:["💢","💤","❗"],s:22,life:40,g:.1})}
  const hb=document.createElement("div");hb.className="heartbreak";hb.textContent="💔";const r=$("hearts").getBoundingClientRect();hb.style.left=(r.left+r.width/2)+"px";hb.style.top=(r.top+r.height/2)+"px";document.body.appendChild(hb);setTimeout(()=>hb.remove(),1600);$("hearts").classList.add("shake");setTimeout(()=>$("hearts").classList.remove("shake"),700);
  const d=document.createElement("div");d.className="chase";d.textContent="🐈      🐕";document.body.appendChild(d);
  d.animate([{transform:"translateX(110vw)"},{transform:"translateX(-70vw)"}],{duration:3000,easing:"ease-in-out"}).onfinish=()=>d.remove();
@@ -210,10 +282,21 @@ function dogWake(i){G.paused=true;if(G.lives<=0)G.over=true;SFX.bark();setTimeou
 function checkWin(){const closed=G.cells.map((c,i)=>i).filter(i=>!G.cells[i].dog&&!G.cells[i].o);if(closed.some(i=>!G.cells[i].f))return;
  closed.forEach(i=>{G.cells[i].f=false;G.cells[i].o=true;G.opened++;render(i)});
  G.over=true;G.sec=Math.floor((Date.now()-G.t0)/1000);hud();G.cells.forEach((c,i)=>{if(c.dog&&!c.o){c.f=true;render(i)}});
- const b=getBest(),nb_=b[G.mode]==null||G.sec<b[G.mode];if(nb_){b[G.mode]=G.sec;localStorage.setItem(BK,JSON.stringify(b))}
+ const b=getBest(),nb_=b[G.mode]==null||G.sec<b[G.mode];if(nb_){b[G.mode]=G.sec;try{localStorage.setItem(BK,JSON.stringify(b))}catch(e){}}
+ const stars=starsFor(G.hits),sn=/^s\d+$/.test(G.mode)?+G.mode.slice(1):0,sm=getStars(),prev=sm[G.mode]||0;
+ if(stars>prev){sm[G.mode]=stars;try{localStorage.setItem(SK,JSON.stringify(sm))}catch(e){}}
+ const score=Math.max(50,700-G.sec*3)+stars*100+G.maxStreak*5;G.stars=stars;
+ const level=sn||({tiny:1,easy:2,normal:3,hard:4,daily:5})[G.mode]||1;
+ const R=RW();if(R){R.award({game:"minesweeper",event:"levelClear",level,score});if(stars>prev)R.award({game:"minesweeper",event:"star",stars:stars-prev});R.award({game:"minesweeper",event:"combo",score:G.maxStreak});R.award({game:"minesweeper",event:"score",score});R.award({game:"minesweeper",event:"win"});
+  if(G.mode==="daily"){let dn=null;try{dn=localStorage.getItem(DK)}catch(e){}if(dn!==tdKey()){try{localStorage.setItem(DK,tdKey())}catch(e){}R.award({game:"minesweeper",event:"win",coins:10})}}}
  setTimeout(()=>{$("winT").textContent=t("winT");$("winS").innerHTML='<span class="dance">😸</span><span class="dance" style="animation-delay:.25s">🐟</span><span class="dance">😺</span><span class="dance" style="animation-delay:.25s">🐟</span>';
-  $("winB").textContent=`⏱️ ${G.sec} ${t("sec")} · `+(nb_?t("newBest"):`${t("best")}: ${b[G.mode]} ${t("sec")}`);$("againBtn").textContent=t("again");$("win").classList.add("on");SFX.win();confetti()},500)}
-function lose(){G.cells.forEach((c,i)=>{if(c.dog){c.o=true;render(i)}});$("winT").textContent=t("lose");$("winS").innerHTML='<span class="dance">🙀</span> 🐶🐶';$("winB").textContent="";$("againBtn").textContent=t("retry");$("win").classList.add("on")}
+  $("winB").textContent=`⏱️ ${G.sec} ${t("sec")} · `+(nb_?t("newBest"):`${t("best")}: ${b[G.mode]} ${t("sec")}`);$("againBtn").textContent=t("again");
+  $("winGoal").textContent=t("starRule");$("winStars").innerHTML=[1,2,3].map(i=>`<span class="${i<=stars?"":"no"}">★</span>`).join("");
+  const nx=$("nextBtn");nx.style.display=sn&&sn<NSTG?"":"none";nx.textContent=t("nextS");
+  $("win").classList.add("on");SFX.win();confetti();
+  [...$("winStars").children].forEach((e,i)=>{if(i<stars)setTimeout(()=>{e.classList.add("got");SFX.star(i)},500+i*350)});
+  R&&setTimeout(()=>R.flush(),1700)},500)}
+function lose(){const R=RW();if(R){R.award({game:"minesweeper",event:"score",score:G.opened*5});}$("winStars").innerHTML="";$("winGoal").textContent="";$("nextBtn").style.display="none";G.cells.forEach((c,i)=>{if(c.dog){c.o=true;render(i)}});$("winT").textContent=t("lose");$("winS").innerHTML='<span class="dance">🙀</span> 🐶🐶';$("winB").textContent="";$("againBtn").textContent=t("retry");$("win").classList.add("on");R&&R.flush()}
 // input: tap + long press
 let lp=null,lpFired=false;
 let lastPT="touch";
@@ -232,7 +315,8 @@ document.addEventListener("keydown",e=>{
  const act=k==="Enter"||k===" ";
  if(on("oops")){if(act||k==="ArrowRight"||k==="ArrowLeft"){if(!btn||btn.id!=="oopsBtn"){e.preventDefault();$("oopsBtn").click()}}else if(k==="Escape"){e.preventDefault();$("oopsBtn").click();$("menuBtn").click()}return}
  if(on("win")){if(act){if(!btn){e.preventDefault();$("againBtn").click()}}else if(k==="Escape"){e.preventDefault();toMenu()}return}
- if($("menu").classList.contains("active")){const m=k==="1"?"easy":k==="2"?"normal":k==="3"?"tiny":null;if(m){e.preventDefault();ac();SFX.click();newGame(m)}return}
+ if($("menu").classList.contains("active")){if(k==="6"){e.preventDefault();ac();SFX.click();openStages();return}const m=k==="1"?"easy":k==="2"?"normal":k==="3"?"tiny":k==="4"?"hard":k==="5"?"daily":null;if(m){e.preventDefault();ac();SFX.click();newGame(m)}return}
+ if($("stages").classList.contains("active")){if(k==="Escape"){e.preventDefault();$("stBack").click()}else if(/^[0-9]$/.test(k)){const b=$("stGrid").children[k==="0"?9:+k-1];if(b)b.click()}return}
  if(!G||!$("game").classList.contains("active"))return;
  const kk=k.length===1?k.toLowerCase():k,rtl=document.documentElement.dir==="rtl";
  let dr=0,dc=0;
@@ -255,7 +339,15 @@ function fit(){if(!G)return;const w=$("wrap");const s=Math.floor(Math.min((w.cli
 addEventListener("resize",fit);
 window.toMenu=function(){$("win").classList.remove("on");clearInterval(timer);G=null;applyLang();show("menu")};
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
-function confetti(){const cv=$("conf"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:120},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*3,c:`hsl(${Math.random()*360},90%,60%)`,a:Math.random()*6,f:Math.random()<.2}));let n=0;x.font="22px sans-serif";(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.a+=.1;if(p.f)x.fillText("🐟",p.x,p.y);else{x.fillStyle=p.c;x.fillRect(p.x+Math.sin(p.a)*8,p.y,8,12)}});if(++n<220)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
+function confetti(){for(let k=0;k<4;k++)setTimeout(()=>burst(innerWidth*(.15+.23*k),innerHeight*.9,40,{cone:1.6,sp:15,g:.3,life:70,s:11,em:["🐟","🐾","⭐"],emP:.3}),k*160)}
+$("nextBtn").addEventListener("click",()=>{const n=+G.mode.slice(1)+1;$("win").classList.remove("on");SFX.click();newGame("s"+n)});
+function openStages(){const sm=getStars(),h=[];let curN=0;for(let n=1;n<=NSTG;n++){if(!sm["s"+n]&&!curN)curN=n}
+ for(let n=1;n<=NSTG;n++){const un=n===1||sm["s"+(n-1)]>0,st=sm["s"+n]||0,q=STG[n-1];
+  h.push(`<button class="stb${un?"":" lock"}${n===curN?" cur":""}" data-st="${n}" aria-label="${t("stg")} ${n}">${un?n:t("lock")}<small>${un?"★".repeat(st)+"☆".repeat(3-st):""}</small><sub>${q[0]}×${q[1]}</sub></button>`)}
+ $("stGrid").innerHTML=h.join("");show("stages")}
+$("bStages").addEventListener("click",()=>{ac();SFX.click();openStages()});
+$("stBack").addEventListener("click",()=>{SFX.click();show("menu")});
+$("stGrid").addEventListener("click",e=>{const b=e.target.closest(".stb");if(!b)return;const n=+b.dataset.st;if(b.classList.contains("lock")){SFX.lock();b.animate([{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"none"}],{duration:200});return}ac();SFX.click();newGame("s"+n)});
 $("againBtn").addEventListener("click",()=>{const m=G.mode;$("win").classList.remove("on");newGame(m)});
 document.addEventListener("click",e=>{const L=e.target.closest("[data-lang]"),M=e.target.closest("[data-mode]");
  if(L){lang=L.dataset.lang;localStorage.setItem("annabelle-lang",lang);SFX.click();applyLang()}

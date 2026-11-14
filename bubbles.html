@@ -57,6 +57,13 @@
   .lvl.locked{filter:grayscale(.85);opacity:.6}
   .lv1{background:linear-gradient(#5fd38d,#2fb36a)} .lv2{background:linear-gradient(#4dc3ff,#1f8fe8)} .lv3{background:linear-gradient(#ffb84d,#ff8a1f)}
   .lv4{background:linear-gradient(#ff7aa8,#e8487f)} .lv5{background:linear-gradient(#b48bff,#7c5cff)}
+  .lv6{background:linear-gradient(#5fd3c8,#1fa89b)} .lv7{background:linear-gradient(#8fb4ff,#4a74e0)} .lv8{background:linear-gradient(#ffd24d,#e6a300)}
+  .lv9{background:linear-gradient(#ff9a7a,#e8583a)} .lv10{background:linear-gradient(#d68bff,#a03fe0)}
+  .daily{background:linear-gradient(#ffd54f,#f2a900);color:#5a3b00} .mini{padding:6px 16px;border-radius:999px;background:#fff8;font-size:17px;font-weight:700;box-shadow:0 3px 0 #0001} .mini.sel{background:#fff;box-shadow:0 0 0 4px var(--accent2),0 4px 0 #0002}
+  .levels{gap:6px}
+  .stars span{display:inline-block}.stars.pop span.on{animation:starpop .55s both}.stars.pop span.on:nth-child(2){animation-delay:.25s}.stars.pop span.on:nth-child(3){animation-delay:.5s}
+  @keyframes starpop{0%{transform:scale(.1) rotate(-120deg);opacity:0}65%{transform:scale(1.5) rotate(15deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+  .ov .card{animation:cardin .4s cubic-bezier(.2,1.4,.4,1)}@keyframes cardin{from{transform:scale(.5) translateY(30px);opacity:0}}
 
   /* ---------- HUD ---------- */
   #hud{position:fixed;left:0;right:0;top:0;z-index:10;padding:max(8px,env(safe-area-inset-top)) 8px 6px;display:flex;flex-direction:column;gap:6px;pointer-events:none;
@@ -134,6 +141,7 @@ html.desk .heads .bub{width:clamp(44px,min(17vw,11vh),104px);height:clamp(44px,m
 </style>
 <!--pwa--><link rel="manifest" href="manifests/bubbles.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/bubbles-192.png"><meta name="apple-mobile-web-app-title" content="בועות"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/bubbles-apple-180.png"><script src="pwa.js" data-app="bubbles" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-relabel="#pMenuBtn,#eMenuBtn,#wMenuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas>
@@ -160,6 +168,7 @@ html.desk .heads .bub{width:clamp(44px,min(17vw,11vh),104px);height:clamp(44px,m
   <div class="how" id="tHow"></div>
   <div class="langs" id="diffs"></div>
   <button class="big go" id="playBtn"></button>
+  <div class="row"><button class="big daily" id="dailyBtn" data-lv="99"></button><button class="mini" id="musBtn"></button></div>
   <div class="label" id="tLevels"></div>
   <div class="levels" id="levels"></div>
 </section>
@@ -383,6 +392,7 @@ const SFX = {
   boing(){ tone(260,0,.28,"sine",.17,720); tone(520,.12,.18,"triangle",.08,300); },
   giggle(){ [900,1100,950,1250].forEach((f,i)=>tone(f,i*.07,.07,"triangle",.07)); },
   mission(){ [659,784,988].forEach((f,i)=>tone(f,i*.08,.16,"triangle",.14)); },
+  star(i){ tone(660+i*220,0,.3,"triangle",.14,700+i*240); },
   level(){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.22,"triangle",.16)); },
   tryagain(){ [523,466,440].forEach((f,i)=>tone(f,i*.16,.25,"sine",.12)); },
   win(){ [523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,i*.13,.22,"square",.07)); [262,330,392].forEach(f=>tone(f,.9,.8,"triangle",.08)); },
@@ -403,7 +413,7 @@ const SFX = {
 
 /* ============ TEXTS ============ */
 const T = {
-  he:{dir:"rtl",title:"בועות החתולים של אנאבל",how:"פוצצי רק את הבועות עם החיות הנכונות לפני שנגמר הזמן!",play:"▶ שחקי",levels:"שלבים",lv:"שלב",best:"שיא",
+  he:{daily:"אתגר יומי",musOn:"🎵 מוזיקה",musOff:"🎵 כבויה",dir:"rtl",title:"בועות החתולים של אנאבל",how:"פוצצי רק את הבועות עם החיות הנכונות לפני שנגמר הזמן!",play:"▶ שחקי",levels:"שלבים",lv:"שלב",best:"שיא",
       collect:"אספי רק:",go:"▶ יאללה!",newT:"משימה חדשה!",combo:"קומבו",sec:"שנ׳",paused:"הפסקה",resume:"▶ המשך",restart:"🔁 מההתחלה",menu:"🏠 תפריט",
       next:"לשלב הבא ⬅",again:"🔁 עוד פעם",passT:"שלב {n} הושלם!",passS:"ניקוד: {s}",failT:"כמעט!",failS:"צברת {s} מתוך {g}. עוד ניסיון ותצליחי!",
       rec:"שיא חדש! 🏆",win:"כל הכבוד, אנאבל!",winS:"עברת את כל השלבים! ניקוד כולל: {n}",
@@ -412,7 +422,7 @@ const T = {
       oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","בלגן חמוד! 🤪","גיגי! 🙃"],giggle:["חי חי!","חחח 😆","גיגול! 💧","ציק ציק!"],
       cheer:["מיאוווו! 😻","את אלופה! 🏆","וואו! 🌟","פיצוץ מושלם! 🎉","הידד! 🥳"],look:"👀 הנה!",
       failFun:["כמעט! החתולים צוחקים איתך 😹","אופס, הבועות ברחו! 💧","עוד קצת ותצליחי! 😺","הבועות מדגדגות! 🤭"]},
-  fr:{dir:"ltr",title:"Les bulles félines d'Annabelle",how:"Éclate seulement les bulles avec les bons animaux avant la fin du temps !",play:"▶ Jouer",levels:"Niveaux",lv:"Niveau",best:"Record",
+  fr:{daily:"Défi du jour",musOn:"🎵 Musique",musOff:"🎵 Coupée",dir:"ltr",title:"Les bulles félines d'Annabelle",how:"Éclate seulement les bulles avec les bons animaux avant la fin du temps !",play:"▶ Jouer",levels:"Niveaux",lv:"Niveau",best:"Record",
       collect:"Attrape seulement :",go:"▶ C'est parti !",newT:"Nouvelle mission !",combo:"Combo",sec:"s",paused:"Pause",resume:"▶ Continuer",restart:"🔁 Recommencer",menu:"🏠 Menu",
       next:"Niveau suivant ➡",again:"🔁 Rejouer",passT:"Niveau {n} réussi !",passS:"Score : {s}",failT:"Presque !",failS:"Tu as {s} points sur {g}. Encore un essai et tu vas y arriver !",
       rec:"Nouveau record ! 🏆",win:"Bravo, Annabelle !",winS:"Tu as réussi tous les niveaux ! Score total : {n}",
@@ -421,7 +431,7 @@ const T = {
       oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Quel joli désordre ! 🤪","Boing ! 🙃"],giggle:["Hi hi !","Ha ha 😆","Glouglou ! 💧","Tchic tchic !"],
       cheer:["Miaouuu ! 😻","Tu es une championne ! 🏆","Waouh ! 🌟","Éclatement parfait ! 🎉","Hourra ! 🥳"],look:"👀 Ici !",
       failFun:["Presque ! Les chats rient avec toi 😹","Oups, les bulles se sont sauvées ! 💧","Encore un peu et tu y es ! 😺","Les bulles chatouillent ! 🤭"]},
-  en:{dir:"ltr",title:"Annabelle's Cat Bubbles",how:"Pop only the bubbles with the right animals before time runs out!",play:"▶ Play",levels:"Levels",lv:"Level",best:"Best",
+  en:{daily:"Daily challenge",musOn:"🎵 Music",musOff:"🎵 Off",dir:"ltr",title:"Annabelle's Cat Bubbles",how:"Pop only the bubbles with the right animals before time runs out!",play:"▶ Play",levels:"Levels",lv:"Level",best:"Best",
       collect:"Pop only:",go:"▶ Let's go!",newT:"New mission!",combo:"Combo",sec:"s",paused:"Paused",resume:"▶ Resume",restart:"🔁 Restart",menu:"🏠 Menu",
       next:"Next level ➡",again:"🔁 Play again",passT:"Level {n} complete!",passS:"Score: {s}",failT:"So close!",failS:"You got {s} of {g} points. One more try and you'll do it!",
       rec:"New record! 🏆",win:"Well done, Annabelle!",winS:"You beat every level! Total score: {n}",
@@ -442,6 +452,12 @@ const TARGETS = {
   lynx:     {keys:["lynx"], ex:[], name:{he:"שונרים",fr:"lynx",en:"lynxes"}},
   cheetah:  {keys:["cheetah"], ex:[], name:{he:"ברדלסים",fr:"guépards",en:"cheetahs"}},
   panther:  {keys:["panther"], ex:[], name:{he:"פנתרים שחורים",fr:"panthères noires",en:"black panthers"}},
+  kitten:   {keys:["kitten"], ex:["cat"], name:{he:"חתלתולים",fr:"chatons",en:"kittens"}},
+  cat:      {keys:["cat"], ex:["kitten"], name:{he:"חתולים אפורים",fr:"chats gris",en:"grey cats"}},
+  bigcats:  {keys:["lion","lioness","tiger"], ex:[], name:{he:"חתולים גדולים",fr:"grands félins",en:"big cats"}},
+  jaguar:   {keys:["jaguar"], ex:["leopard","panther"], name:{he:"יגוארים",fr:"jaguars",en:"jaguars"}},
+  snow:     {keys:["snowleopard"], ex:["leopard"], name:{he:"נמרי שלג",fr:"panthères des neiges",en:"snow leopards"}},
+  puma:     {keys:["puma"], ex:["lioness"], name:{he:"פומות",fr:"pumas",en:"pumas"}},
   leopard:  {keys:["leopard"], ex:["panther","snowleopard","jaguar"], name:{he:"נמרים",fr:"léopards",en:"leopards"}}
 };
 
@@ -456,8 +472,26 @@ const LEVELS = [
   {n:11,speed:95,flee:.35,thorns:1,time:55,goal:140,targets:["cheetah","panther","lions","spotted"],
      obs:[{m:"rot",x:.5,y:.5,len:.48,spd:.7,spiky:1},{m:"slide",x:.15,y:.5,len:.2,ax:"y",amp:.3,per:5,vert:1,spiky:1},{m:"slide",x:.85,y:.5,len:.2,ax:"y",amp:.3,per:5,vert:1,spiky:1,ph:Math.PI}]},
   {n:13,speed:110,flee:.45,thorns:2,time:55,goal:160,targets:["leopard","cheetah","tiger","housecats","spotted"],
-     obs:[{m:"rot",x:.5,y:.5,len:.44,spd:-1,spiky:1},{m:"slide",x:.5,y:.17,len:.32,ax:"x",amp:.28,per:5},{m:"slide",x:.5,y:.85,len:.32,ax:"x",amp:.28,per:5,ph:Math.PI},{m:"rot",x:.16,y:.32,len:.15,spd:2.2}]}
+     obs:[{m:"rot",x:.5,y:.5,len:.44,spd:-1,spiky:1},{m:"slide",x:.5,y:.17,len:.32,ax:"x",amp:.28,per:5},{m:"slide",x:.5,y:.85,len:.32,ax:"x",amp:.28,per:5,ph:Math.PI},{m:"rot",x:.16,y:.32,len:.15,spd:2.2}]},
+  /* 6-10: new missions (kittens, jaguars, pumas, snow leopards, big cats) */
+  {n:11,speed:100,flee:.3,thorns:1,time:55,goal:150,targets:["kitten","cat","jaguar","puma"],
+     obs:[{m:"slide",x:.5,y:.28,len:.36,ax:"x",amp:.26,per:6},{m:"rot",x:.5,y:.7,len:.38,spd:-.8}]},
+  {n:12,speed:106,flee:.38,thorns:2,time:55,goal:160,targets:["snow","puma","bigcats","lynx"],
+     obs:[{m:"rot",x:.5,y:.5,len:.4,spd:.9},{m:"slide",x:.18,y:.5,len:.2,ax:"y",amp:.3,per:5,vert:1},{m:"slide",x:.82,y:.5,len:.2,ax:"y",amp:.3,per:5,vert:1,ph:Math.PI}]},
+  {n:13,speed:112,flee:.42,thorns:2,time:55,goal:170,targets:["jaguar","leopard","kitten","panther"],
+     obs:[{m:"rot",x:.5,y:.5,len:.46,spd:1,spiky:1},{m:"slide",x:.5,y:.15,len:.3,ax:"x",amp:.3,per:5},{m:"slide",x:.5,y:.87,len:.3,ax:"x",amp:.3,per:5,ph:Math.PI}]},
+  {n:14,speed:118,flee:.48,thorns:2,time:50,goal:180,targets:["bigcats","spotted","cat","puma","snow"],
+     obs:[{m:"rot",x:.3,y:.35,len:.3,spd:1.3},{m:"rot",x:.7,y:.65,len:.3,spd:-1.3},{m:"slide",x:.5,y:.5,len:.28,ax:"x",amp:.3,per:4.5,spiky:1}]},
+  {n:15,speed:124,flee:.5,thorns:3,time:50,goal:200,targets:["leopard","jaguar","snow","cheetah","lynx","panther"],
+     obs:[{m:"rot",x:.5,y:.5,len:.48,spd:-1.1,spiky:1},{m:"slide",x:.5,y:.15,len:.32,ax:"x",amp:.28,per:5},{m:"slide",x:.5,y:.86,len:.32,ax:"x",amp:.28,per:5,ph:Math.PI},{m:"rot",x:.15,y:.3,len:.15,spd:2.2},{m:"rot",x:.85,y:.7,len:.15,spd:-2.2}]}
 ];
+const DAILY=99; // special daily-challenge level (not part of the ladder)
+function dkey(){ return typeof window.__annabelleToday==="string"?window.__annabelleToday:(d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate())(new Date()); }
+function dseed(){ let h=2166136261; for(const ch of dkey()){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+function dailyDef(){ const names=Object.keys(TARGETS), sd=dseed(), a=names[sd%names.length], b=names[(sd>>>5)%names.length], c=names[(sd>>>11)%names.length];
+  const tg=[...new Set([a,b,c])]; return {...LEVELS[2+(sd>>>3)%4],targets:tg,goal:140,time:60,thorns:1}; }
+const levelDef = i => i===DAILY ? dailyDef() : LEVELS[i];
+const RW = () => window.AnnabelleRewards;
 /* difficulty: "normal" = the original numbers, "easy" (default) = fewer/larger/slower bubbles, more time, gentle penalties, auto help */
 const DIFF_KEY="annabelle-bubbles-diff";
 let diff = localStorage.getItem(DIFF_KEY)==="normal" ? "normal" : "easy";
@@ -604,7 +638,7 @@ function rerollAnimals(){
   animals.forEach((b,i)=>{ b.key = i<want ? pick(tgt().keys) : pick(d); b.sq=1; sparkle(b.x,b.y,b.r); });
 }
 function startLevel(i){
-  lvI=i; L=tune(LEVELS[i]); score=0; combo=0; tgtI=0; tgtCount=0; ending=false; lastTick=-1; timeLeft=L.time; sinceGood=0; helpB=null; giggleT=4+Math.random()*3;
+  lvI=i; L=tune(levelDef(i)); stopConfetti(); score=0; combo=0; tgtI=0; tgtCount=0; ending=false; lastTick=-1; timeLeft=L.time; sinceGood=0; helpB=null; giggleT=4+Math.random()*3;
   particles=[]; flyers=[]; floats=[]; wrongs=[]; spawnQ=[]; bubbles=[];
   showHUD(true); resize();
   N=Math.round(L.n*areaScale()); R0=rAvg(N);
@@ -622,7 +656,9 @@ function startLevel(i){
   if(L.thorns) hints.push(`<div class="hint"><i>🌵</i>${t.hThorn.replace("{n}",L.thornPen)}</div>`);
   $("readyHints").innerHTML=hints.join("");
   $("readyHints").style.cssText="display:flex;flex-direction:column;gap:6px";
+  if(i===DAILY) $("readyTitle").textContent="📅 "+t.daily;
   showOv("ready"); state="ready";
+  RW()&&RW().award({game:"bubbles",event:"play"}); musKick();
 }
 
 /* ============ HUD ============ */
@@ -687,7 +723,7 @@ function popBubble(b){
     floats.push({x:b.x,y:b.y+b.r*.5,txt:`+${L.goodSec} ${t.sec}`,col:"#1f8fe8",life:1,max:1,size:20});
     if(m>1 && (combo-1)%3===0) floats.push({x:W/2,y:A.y0+100,txt:`${t.combo} ×${m}!`,col:"#7c5cff",life:1.3,max:1.3,size:40,rtl:lang==="he"});
     SFX.good(combo); SFX.voice(ANIMALS[b.key].voice);
-    if(combo%5===0){ funny(W/2,A.y0+150,t.cheer,"#e8487f",36); }
+    if(combo%5===0){ funny(W/2,A.y0+150,t.cheer,"#e8487f",36); RW()&&RW().award({game:"bubbles",event:"combo",score:combo}); }
     spawnQ.push({t:.4+Math.random()*.6});
     if(tgtCount>=SWITCH_EVERY && L.targets.length>1){
       tgtCount=0; tgtI=(tgtI+1)%L.targets.length; renderTarget(); rerollAnimals(); banner(); SFX.mission();
@@ -874,17 +910,24 @@ function starHTML(n){ return [0,1,2].map(i=>`<span class="${i<n?"on":""}">★</s
 function endLevel(){
   state="end"; $("timerPill").classList.remove("low"); $("banner").classList.remove("show");
   const t=T[lang], st=starsFor(score), pass=st>0, old=LS.best(lvI), rec=pass&&(old===null||score>old);
+  const R=RW(), oldSt=LS.stars(lvI);
   if(rec) localStorage.setItem("annabelle-bubbles-best-"+lvI,score);
-  if(st>LS.stars(lvI)) localStorage.setItem("annabelle-bubbles-stars-"+lvI,st);
-  if(pass && LS.unlocked()<lvI+2) localStorage.setItem("annabelle-bubbles-unlocked",Math.min(LEVELS.length,lvI+2));
-  if(pass && lvI===LEVELS.length-1){ return winGame(st); }
+  if(st>oldSt) localStorage.setItem("annabelle-bubbles-stars-"+lvI,st);
+  if(pass && lvI!==DAILY && LS.unlocked()<lvI+2) localStorage.setItem("annabelle-bubbles-unlocked",Math.min(LEVELS.length,lvI+2));
+  if(R){ R.award({game:"bubbles",event:"score",score});
+    if(pass){ R.award({game:"bubbles",event:"levelClear",level:lvI===DAILY?11:lvI+1,score}); R.award({game:"bubbles",event:"win"});
+      if(st>oldSt) R.award({game:"bubbles",event:"star",stars:st-oldSt});
+      if(lvI===DAILY){ let dn=null; try{dn=localStorage.getItem("annabelle-bubbles-daily");}catch(_){} if(dn!==dkey()){ try{localStorage.setItem("annabelle-bubbles-daily",dkey());}catch(_){} R.award({game:"bubbles",event:"win",coins:10}); } } } }
+  if(pass && lvI===LEVELS.length-1){ if(R) R.flush(); return winGame(st); }
   $("endStars").innerHTML=starHTML(st);
-  $("endTitle").textContent= pass ? t.passT.replace("{n}",lvI+1) : pick(t.failFun);
+  $("endTitle").textContent= pass ? (lvI===DAILY ? "📅 "+t.daily+" ✓" : t.passT.replace("{n}",lvI+1)) : pick(t.failFun);
   $("endSub").textContent= pass ? t.passS.replace("{s}",score) : t.failS.replace("{s}",score).replace("{g}",L.goal);
   $("endRec").textContent= rec ? t.rec : "";
-  $("nextBtn").classList.toggle("hidden",!pass); $("nextBtn").textContent=t.next;
+  $("nextBtn").classList.toggle("hidden",!pass||lvI===DAILY); $("nextBtn").textContent=t.next;
+  $("endStars").classList.remove("pop"); void $("endStars").offsetWidth; $("endStars").classList.add("pop");
   $("againBtn").textContent=t.again; $("eMenuBtn").textContent=t.menu;
-  showOv("end"); pass ? (SFX.level(), setTimeout(()=>SFX.voice("roar"),500)) : SFX.tryagain();
+  showOv("end"); pass ? (SFX.level(), setTimeout(()=>SFX.voice("roar"),500), confetti(), [0,1,2].forEach(k=>{ if(k<st) setTimeout(()=>SFX.star(k),300+k*250); })) : SFX.tryagain();
+  if(R) setTimeout(()=>R.flush(),1500);
 }
 function winGame(st){
   const t=T[lang]; let total=0; LEVELS.forEach((_,i)=>total+=LS.best(i)||0);
@@ -904,6 +947,15 @@ $("againBtn").onclick=()=>{ SFX.click(); startLevel(lvI); };
 $("wAgainBtn").onclick=()=>{ SFX.click(); stopConfetti(); startLevel(lvI); };
 $("nextBtn").onclick=()=>{ SFX.click(); startLevel(Math.min(LEVELS.length-1,lvI+1)); };
 $("goBtn").onclick=()=>{ ac(); SFX.click(); showOv(null); state="play"; lastT=performance.now(); updateHUD(); };
+$("dailyBtn").addEventListener("click",()=>{});
+let musOn=localStorage.getItem("annabelle-bubbles-music")==="1", musT=null, musI=0;
+const PEN=[262,294,330,392,440,523,587,659], MEL=[0,2,4,2,5,4,2,1,0,2,4,7,5,4,2,0];
+function musTick(){ clearTimeout(musT); musT=null; if(!musOn) return;
+  if(!muted&&!document.hidden&&state==="play"){ const n=MEL[musI%16]; tone(PEN[n],0,.5,"sine",.045); if(musI%4===0) tone(PEN[n]/2,0,.9,"triangle",.04); }
+  musI++; musT=setTimeout(musTick,470); }
+function musKick(){ if(musOn&&!musT) musTick(); }
+function updMus(){ const b=$("musBtn"); if(!b) return; b.textContent=musOn?T[lang].musOn:T[lang].musOff; b.classList.toggle("sel",musOn); }
+$("musBtn").onclick=()=>{ musOn=!musOn; try{localStorage.setItem("annabelle-bubbles-music",musOn?"1":"0");}catch(_){} ac(); SFX.click(); updMus(); musKick(); };
 $("playBtn").onclick=()=>{ ac(); SFX.click(); startLevel(LS.unlocked()-1); };
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) pause(); });
 
@@ -911,7 +963,7 @@ function applyLang(){
   const t=T[lang]; document.documentElement.lang=lang; document.documentElement.dir=t.dir; document.title=t.title;
   $("tTitle").textContent=t.title; $("tHow").textContent=t.how; $("playBtn").textContent=t.play; $("tLevels").textContent=t.levels;
   $("tLv").textContent=t.lv; $("pauseTitle").textContent=t.paused; $("resumeBtn").textContent=t.resume; $("restartBtn").textContent=t.restart; $("pMenuBtn").textContent=t.menu;
-  $("goBtn").textContent=t.go; renderMenu();
+  $("goBtn").textContent=t.go; $("dailyBtn").textContent="📅 "+t.daily; updMus(); renderMenu();
 }
 function renderMenu(){
   const t=T[lang], un=LS.unlocked();
@@ -959,7 +1011,7 @@ const KH={
   he:"חיצים / WASD – הזיזי סמן · רווח / Enter – פוצצי · P / Esc – הפסקה · M – שקט",
   fr:"Flèches / WASD : viser · Espace / Entrée : éclater · P / Échap : pause · M : son",
   en:"Arrows / WASD: aim · Space / Enter: pop · P / Esc: pause · M: sound"};
-const KHM={ he:"Tab / חיצים לבחירה · Enter לאישור · 1-5 שלב · M – שקט", fr:"Tab / flèches : choisir · Entrée : valider · 1-5 : niveau · M : son", en:"Tab / arrows: choose · Enter: confirm · 1-5: level · M: sound"};
+const KHM={ he:"Tab / חיצים לבחירה · Enter לאישור · 1-9/0 שלב · D יומי · M – שקט", fr:"Tab / flèches : choisir · Entrée : valider · 1-9/0 : niveau · D : défi · M : son", en:"Tab / arrows: choose · Enter: confirm · 1-9/0: level · D: daily · M: sound"};
 function updateKeyHint(){ $("keyhint").textContent=(state==="play"||state==="paused"?KH:KHM)[lang]||KH.en; }
 const kc={x:0,y:0,on:false}, keys={};
 function ovFocusables(id){ const el=$(id); return el?[...el.querySelectorAll("button:not(:disabled)")].filter(b=>b.offsetParent!==null||b.getClientRects().length):[]; }
@@ -1003,7 +1055,7 @@ document.addEventListener("keydown",e=>{
   if(!ov) return;
   if(state==="paused"&&(k==="Escape"||e.code==="KeyP")){ e.preventDefault(); SFX.click(); resume(); return; }
   if(k==="Escape"&&ov!=="menu"){ e.preventDefault(); SFX.click(); toMenu(); return; }
-  if(ov==="menu"&&/^[1-5]$/.test(k)){ const b=document.querySelector(`[data-lv="${+k-1}"]`); if(b&&!b.disabled){ e.preventDefault(); b.click(); } return; }
+  if(ov==="menu"&&/^[0-9d]$/i.test(k)){ const b=document.querySelector(`[data-lv="${/d/i.test(k)?99:k==="0"?9:+k-1}"]`); if(b&&!b.disabled){ e.preventDefault(); b.click(); } return; }
   if(k.startsWith("Arrow")||wasd){
     const f=ovFocusables(ov); if(!f.length) return; e.preventDefault();
     let i=f.indexOf(document.activeElement); const dir=(k==="ArrowRight"||k==="ArrowDown"||wasd==="d"||wasd==="s")?1:-1;

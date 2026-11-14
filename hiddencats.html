@@ -79,6 +79,15 @@ html.aired .app{height:calc(100dvh - 40px)}
 .panel .big{width:100%}
 .stars{font-size:clamp(34px,9vw,48px);letter-spacing:4px}
 .stars .off{filter:grayscale(1);opacity:.3}
+.stars span{display:inline-block}.stars.pop span:not(.off){animation:starpop .55s both}.stars.pop span:nth-child(2){animation-delay:.25s}.stars.pop span:nth-child(3){animation-delay:.5s}
+@keyframes starpop{0%{transform:scale(.1) rotate(-120deg);opacity:0}65%{transform:scale(1.5) rotate(15deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.panel{animation:panelin .4s cubic-bezier(.2,1.4,.4,1)}@keyframes panelin{from{transform:scale(.5) translateY(30px);opacity:0}}
+.grid{overflow:auto;grid-auto-rows:minmax(104px,1fr)}
+.card.dly{background:linear-gradient(#fff3b0,#ffd54f)}
+.mus{min-height:44px;padding:4px 16px;border-radius:999px;border:2px solid #e8862d;background:#fff;font:800 16px Rubik,Arial;color:#5a3b1a}.mus.on{background:#e8862d;color:#fff}
+.pburst{position:fixed;pointer-events:none;z-index:30;font-size:22px;transform:translate(-50%,-50%)}
+.banner{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:40;pointer-events:none;background:#fff;border:4px solid #ff7aa8;border-radius:22px;padding:10px 22px;font:900 28px Rubik,Arial;color:#e8487f;text-align:center;animation:bnr 2s forwards}
+@keyframes bnr{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}15%{transform:translate(-50%,-50%) scale(1.15);opacity:1}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-90%);opacity:0}}
 .row2{display:flex;gap:10px;width:100%}.row2 .big{flex:1;padding:10px 8px;font-size:clamp(17px,4.6vw,21px)}
 .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:21}
 .confetti span{position:absolute;top:-40px;font-size:26px;animation:fall linear forwards}
@@ -112,6 +121,7 @@ html.aired .app{height:calc(100dvh - 40px)}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/hiddencats.webmanifest"><meta name="theme-color" content="#ffe3c4"><meta name="apple-mobile-web-app-title" content="מצאי חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/hiddencats-apple-180.png"><script src="pwa.js" data-app="hiddencats" data-slots='[["#langs1", "after"], ["#pauseOv .panel", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs1" data-pauseslot="#pauseOv .panel" data-relabel="#pMenu" defer></script><script src="share.js" data-slot="#langs1" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -124,6 +134,7 @@ html.aired .app{height:calc(100dvh - 40px)}
   <div class="langs" id="langs1"></div>
   <button class="big" id="playBtn"><span>▶</span><span data-t="play"></span></button>
   <button class="big alt" id="levelsBtn"><span>🗺️</span><span data-t="levels"></span></button>
+  <button class="mus" id="musBtn"></button>
   <div class="totals" id="totals"></div>
   <p class="kd" id="kMenu" dir="auto"></p>
 </section>
@@ -184,19 +195,19 @@ const T={
   find:n=>`🐾 מצאי ${n} חתולים! הקישי עליהם`,found:n=>`מצאת את כל ${n} החתולים!`,allDone:"מצאת את כל החתולים בכל השלבים! 🏆",time:t=>`⏱ זמן: ${t}`,best:t=>`השיא שלך: ${t}`,
   zoomTip:"🤏 להגדלה: שתי אצבעות או ＋",dad:"אבא ראה 4 חתולים... ואת?",already:"כבר מצאת! 😺",hintTip:"😼 פסס… הנה חתול!",funMiss:["זה רק שיח 🌿","אין פה חתול… רק פרפר 🦋","חחח, כמעט! 🙈","הממ… חתול ערמומי! 🕵️"],funFound:["מיאוו! 😻","תפסת אותו! 🎉","וואו, עיניים של נץ! 🦅","הידד! 🥳"],noHints:"אין עוד רמזים 💡",stars:(a,b)=>`⭐ ${a}/${b}`,
   kinds:{cat:"חתול!",tiger:"טיגריס!",lion:"אריה!",cub:"גור טיגריס!",lcub:"גור אריות!",white:"החתול הלבן!"},
-  names:["הגינה של אבא","המטבח","הספרייה","רחוב מושלג","הג'ונגל","הסוואנה בלילה"]},
+  names:["הגינה של אבא","המטבח","הספרייה","רחוב מושלג","הג'ונגל","הסוואנה בלילה"],names2:["מסיבה במטבח","חתולי הספרייה","שלג וחתלתולים","ג'ונגל גדול","לילה מלא עיניים"],daily:"החיפוש היומי",musOn:"🎵 מוזיקה",musOff:"🎵 כבויה",dailyBan:"📅 החיפוש של היום!"},
  fr:{title:"Trouve les chats",tagline:"Des chats, des bébés, des tigres et des lions se cachent partout. Combien vas-tu en trouver ?",play:"Jouer",cont:"Continuer",levels:"Niveaux",paused:"Pause",resume:"Reprendre",restart:"Recommencer",menu:"Menu",welldone:"Bravo, Annabelle !",next:"Niveau suivant",again:"Rejouer",
   soundOn:"🔊 Son : activé",soundOff:"🔇 Son : coupé",
   find:n=>`🐾 Trouve ${n} chats ! Touche-les`,found:n=>`Tu as trouvé les ${n} chats !`,allDone:"Tu as trouvé tous les chats de tous les niveaux ! 🏆",time:t=>`⏱ Temps : ${t}`,best:t=>`Ton record : ${t}`,
   zoomTip:"🤏 Zoom : deux doigts ou ＋",dad:"Papa a vu 4 chats... et toi ?",already:"Déjà trouvé ! 😺",hintTip:"😼 Psst… un chat par ici !",funMiss:["Ce n'est qu'un buisson 🌿","Pas de chat… juste un papillon 🦋","Ha ha, presque ! 🙈","Hmm… un chat rusé ! 🕵️"],funFound:["Miaou ! 😻","Tu l'as eu ! 🎉","Waouh, yeux d'aigle ! 🦅","Hourra ! 🥳"],noHints:"Plus d'indices 💡",stars:(a,b)=>`⭐ ${a}/${b}`,
   kinds:{cat:"Un chat !",tiger:"Un tigre !",lion:"Un lion !",cub:"Un bébé tigre !",lcub:"Un lionceau !",white:"Le chat blanc !"},
-  names:["Le jardin de papa","La cuisine","La bibliothèque","La rue enneigée","La jungle","La savane la nuit"]},
+  names:["Le jardin de papa","La cuisine","La bibliothèque","La rue enneigée","La jungle","La savane la nuit"],names2:["Fête en cuisine","Chats de la bibliothèque","Neige et chatons","Grande jungle","Nuit pleine d'yeux"],daily:"Recherche du jour",musOn:"🎵 Musique",musOff:"🎵 Coupée",dailyBan:"📅 La recherche du jour !"},
  en:{title:"Find the Cats",tagline:"Cats, cubs, tigers and lions are hiding everywhere. How many can you find?",play:"Play",cont:"Continue",levels:"Levels",paused:"Paused",resume:"Keep playing",restart:"Restart",menu:"Menu",welldone:"Well done, Annabelle!",next:"Next level",again:"Again",
   soundOn:"🔊 Sound: on",soundOff:"🔇 Sound: off",
   find:n=>`🐾 Find ${n} cats! Tap them`,found:n=>`You found all ${n} cats!`,allDone:"You found every cat in every level! 🏆",time:t=>`⏱ Time: ${t}`,best:t=>`Your best: ${t}`,
   zoomTip:"🤏 Zoom: two fingers or ＋",dad:"Dad saw 4 cats... and you?",already:"Already found! 😺",hintTip:"😼 Psst… a cat is right here!",funMiss:["That's just a bush 🌿","No cat… just a butterfly 🦋","Hee hee, almost! 🙈","Hmm… a sneaky cat! 🕵️"],funFound:["Meow! 😻","You got it! 🎉","Wow, eagle eyes! 🦅","Hooray! 🥳"],noHints:"No more hints 💡",stars:(a,b)=>`⭐ ${a}/${b}`,
   kinds:{cat:"A cat!",tiger:"A tiger!",lion:"A lion!",cub:"A tiger cub!",lcub:"A lion cub!",white:"The white cat!"},
-  names:["Dad's Garden","The Kitchen","The Library","Snowy Street","The Jungle","Savanna at Night"]}
+  names:["Dad's Garden","The Kitchen","The Library","Snowy Street","The Jungle","Savanna at Night"],names2:["Kitchen Party","Library Cats","Snow & Kittens","Big Jungle","Night Full of Eyes"],daily:"Daily Hunt",musOn:"🎵 Music",musOff:"🎵 Off",dailyBan:"📅 Today's hunt!"}
 };
 const LANGS=[["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","🇬🇧 English"]];
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!T[lang]) lang="he";
@@ -221,6 +232,7 @@ const SFX={
  cub(){ meow(820+Math.random()*120,.4,.2); },
  big(){ meow(190,.7,.3); tone(95,.5,"triangle",.12,.02,70); },
  miss(){ if(muted) return; tone(320,.32,"sine",.13,0,150); tone(480,.1,"triangle",.05,.02); },
+ star(i){ tone(660+i*220,.3,"triangle",.14,0,700+i*240); },
  hint(){ [1200,1500,1800,2400].forEach((f,i)=>tone(f,.15,"triangle",.09,i*.07)); },
  win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.25,"triangle",.16,i*.13)); [523,659,784].forEach(f=>tone(f,.8,"sine",.08,.6)); setTimeout(()=>meow(600),900); }
 };
@@ -228,7 +240,7 @@ const SFX={
 /* ---------------- save ---------------- */
 const SAVE_KEY="annabelle-hiddencats";
 let save; try{ save=JSON.parse(localStorage.getItem(SAVE_KEY))||{}; }catch(e){ save={}; }
-save.unlocked=save.unlocked||1; save.stars=save.stars||{}; save.best=save.best||{};
+save.unlocked=save.unlocked||1; save.stars=save.stars||{}; save.best=save.best||{}; if(save.stars[5]) save.unlocked=Math.max(save.unlocked,7);
 function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(save)); }catch(e){} }
 
 /* ---------------- art helpers ---------------- */
@@ -476,7 +488,16 @@ const EXT={
   return s; }
 };
 
-const LEVEL_ICONS=["🌹","🍳","📚","⛄","🌴","🌙"];
+const LEVEL_ICONS=["🌹","🍳","📚","⛄","🌴","🌙","🎂","🐾","🐱","🦁","👀"];
+const NL=11, DAILY=100;
+// levels 7-11: the five scenes again, with more cats, new kinds and new hiding spots
+const VARS=[{s:1,n:7,kinds:["cat","cat","cub"]},{s:2,n:8,kinds:["cat","cat","lcub"]},{s:3,n:9,kinds:["cat","cat","cub","lcub"]},{s:4,n:10,kinds:["tiger","cub","lion","lcub","cat","cat"]},{s:5,n:11,kinds:["lion","lcub","cat","cub","tiger"],dim:1}];
+const sceneOf=i=>i<6?i:i===DAILY?1+(dseed()%5):VARS[i-6].s;
+function tdKey(){ return typeof window.__annabelleToday==="string"?window.__annabelleToday:(d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate())(new Date()); }
+function dseed(){ let h=2166136261; for(const ch of tdKey()){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+const lvName=i=>i===DAILY?t().daily:i<6?t().names[i]:t().names2[i-6];
+const lvIcon=i=>i===DAILY?"📅":LEVEL_ICONS[i];
+const RW=()=>window.AnnabelleRewards;
 
 /* level 1: Ran's garden picture (570x572, caption cropped). Every cat, checked tile by tile. */
 const GARDEN={w:570,h:572,cats:[
@@ -494,7 +515,7 @@ const MIN_S=1.0; // head ~42 scene units wide -> >=22px on a 360px phone
 function catScale(sp,sc,kind){ return Math.max(sp.s*sc.f,MIN_S)*(kind==="cub"||kind==="lcub"?.92:1); }
 function buildLevel(i,rnd,extra){
  if(i===0) return {w:GARDEN.w,h:GARDEN.h,oy:0,svg:`<image href="${GARDEN_IMG}" x="0" y="0" width="570" height="572"/>`,cats:GARDEN.cats.map(c=>({...c,found:false}))};
- const sc=SCENES[i], r=rng(1000+i*77); const S={bg:[],fg:[],top:[],tint:[],spots:[],spot(x,y,rot,s,pose,above){ this.spots.push({x,y,rot:rot||0,s:s||1,pose:pose||"peek",above:!!above}); }};
+ const si=sceneOf(i); let sc=SCENES[si]; const r=rng(1000+si*77); if(i>=6){ const v=i===DAILY?{n:sc.n+1,kinds:sc.kinds}:VARS[i-6]; sc={...sc,n:v.n,kinds:v.kinds,dim:v.dim||sc.dim}; if(i===DAILY) rnd=rng(dseed()); } const S={bg:[],fg:[],top:[],tint:[],spots:[],spot(x,y,rot,s,pose,above){ this.spots.push({x,y,rot:rot||0,s:s||1,pose:pose||"peek",above:!!above}); }};
  sc.build(S,r);
  const rr=rnd||Math.random; const order=S.spots.map((_,k)=>k); for(let k=order.length-1;k>0;k--){ const j=Math.floor(rr()*(k+1)); [order[k],order[j]]=[order[j],order[k]]; }
  const pick=[]; for(const k of order){ if(pick.length>=sc.n) break; const sp=S.spots[k]; if(pick.some(q=>Math.hypot(S.spots[q].x-sp.x,S.spots[q].y-sp.y)<62)) continue; pick.push(k); }
@@ -503,7 +524,7 @@ function buildLevel(i,rnd,extra){
   const s=catScale(sp,sc,kind);
   return {x:sp.x,y:sp.y,rot:sp.rot,s,pose:sp.pose,above:sp.above,dim:!!sc.dim,kind,col,spot:k,r:Math.max(26,36*s),found:false}; });
  const ex=Math.max(0,Math.round(extra||0)), T=Math.round(ex/2), B=ex-T;
- const lv={w:600,h:800+ex,oy:-T,cats,spots:S.spots,parts:{ext:EXT[i]?EXT[i](T,B,r):"",bg:S.bg.join(""),fg:S.fg.join(""),top:S.top.join(""),tint:S.tint.join("")}};
+ const lv={w:600,h:800+ex,oy:-T,cats,spots:S.spots,parts:{ext:EXT[si]?EXT[si](T,B,r):"",bg:S.bg.join(""),fg:S.fg.join(""),top:S.top.join(""),tint:S.tint.join("")}};
  lv.svg=compose(lv); return lv;
 }
 function compose(lv,ti,mode){ const P=lv.parts;
@@ -519,18 +540,18 @@ function show(id){ if(window.kbdFocusScreen) setTimeout(()=>kbdFocusScreen(id),3
 function applyLang(){ const L=t(); document.documentElement.lang=lang; document.documentElement.dir=lang==="he"?"rtl":"ltr"; document.title=L.title;
  document.querySelectorAll("[data-t]").forEach(el=>{ const v=L[el.dataset.t]; if(typeof v==="string") el.textContent=v; });
  ["langs1","langs2"].forEach(id=>{ $(id).innerHTML=LANGS.map(([k,n])=>`<button class="lang${k===lang?" sel":""}" data-lang="${k}">${n}</button>`).join(""); });
- updateMute(); renderMenu(); if(G) { $("lvname").textContent=`${G.i+1}. ${L.names[G.i]}`; } if($("levels").classList.contains("active")) renderLevels(); }
+ updateMute(); updMus(); renderMenu(); if(G) { $("lvname").textContent=G.i===DAILY?"📅 "+lvName(G.i):`${G.i+1}. ${lvName(G.i)}`; } if($("levels").classList.contains("active")) renderLevels(); }
 document.addEventListener("click",e=>{ const b=e.target.closest(".lang"); if(b){ lang=b.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); } });
 function updateMute(){ $("muteMenu").textContent=muted?"🔇":"🔊"; $("muteBtn2").textContent=muted?t().soundOff:t().soundOn; }
 function toggleMute(){ muted=!muted; localStorage.setItem("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); }
 $("muteMenu").onclick=toggleMute; $("muteBtn2").onclick=toggleMute;
 function totalStars(){ return Object.values(save.stars).reduce((a,b)=>a+b,0); }
 function renderMenu(){ $("menuHeads").innerHTML=headIcon("cat",CATCOL[0])+headIcon("tiger")+headIcon("lion")+headIcon("cat",CATCOL[3]);
- $("totals").textContent=t().stars(totalStars(),18); $("playBtn").lastElementChild.textContent=save.unlocked>1?t().cont:t().play; }
-function renderLevels(){ const L=t(); $("grid").innerHTML=L.names.map((n,i)=>{ const lock=i+1>save.unlocked, st=save.stars[i]||0;
-  return `<button class="card${lock?" locked":""}" data-lv="${i}"><span class="no">${i+1}</span><span class="ic">${LEVEL_ICONS[i]}</span><span class="nm">${n}</span><span class="st">${[0,1,2].map(k=>k<st?"⭐":"<span style='opacity:.25;filter:grayscale(1)'>⭐</span>").join("")}</span>${lock?'<span class="lk">🔒</span>':""}</button>`; }).join(""); }
-$("grid").onclick=e=>{ const c=e.target.closest(".card"); if(!c) return; const i=+c.dataset.lv; if(i+1>save.unlocked){ SFX.miss(); return; } SFX.click(); startLevel(i); };
-$("playBtn").onclick=()=>{ SFX.click(); startLevel(Math.min(save.unlocked,6)-1); };
+ $("totals").textContent=t().stars(totalStars(),NL*3); $("playBtn").lastElementChild.textContent=save.unlocked>1?t().cont:t().play; }
+function renderLevels(){ const L=t(); $("grid").innerHTML=[...Array(NL).keys(),DAILY].map(i=>{ const n=lvName(i), lock=i!==DAILY&&i+1>save.unlocked, st=save.stars[i]||0;
+  return `<button class="card${lock?" locked":""}${i===DAILY?" dly":""}" data-lv="${i}"><span class="no">${i===DAILY?"":i+1}</span><span class="ic">${lvIcon(i)}</span><span class="nm">${n}</span><span class="st">${[0,1,2].map(k=>k<st?"⭐":"<span style='opacity:.25;filter:grayscale(1)'>⭐</span>").join("")}</span>${lock?'<span class="lk">🔒</span>':""}</button>`; }).join(""); }
+$("grid").onclick=e=>{ const c=e.target.closest(".card"); if(!c) return; const i=+c.dataset.lv; if(i!==DAILY&&i+1>save.unlocked){ SFX.miss(); return; } SFX.click(); startLevel(i); };
+$("playBtn").onclick=()=>{ SFX.click(); startLevel(Math.min(save.unlocked,NL)-1); };
 $("levelsBtn").onclick=()=>{ SFX.click(); renderLevels(); show("levels"); };
 $("lvBack").onclick=()=>{ SFX.click(); renderMenu(); show("menu"); };
 
@@ -544,10 +565,10 @@ function startLevel(i){
  const lv=buildLevel(i,window.__seedRnd||null,stageExtra()); G={i,lv,hints:HINTS,used:0,elapsed:0,last:performance.now(),paused:false,done:false,lastMiss:null,lastFind:0,misses:0,autoHints:0};
  world.style.width=lv.w+"px"; world.style.height=lv.h+"px";
  world.innerHTML=`<svg viewBox="0 ${lv.oy} ${lv.w} ${lv.h}" xmlns="http://www.w3.org/2000/svg">${lv.svg}<g id="marks"></g></svg>`;
- $("lvname").textContent=`${i+1}. ${t().names[i]}`; $("hintsLeft").textContent=HINTS; $("hintBtn").disabled=false;
+ $("lvname").textContent=i===DAILY?"📅 "+lvName(i):`${i+1}. ${lvName(i)}`; G.streak=0; G.maxStreak=0; $("hintsLeft").textContent=HINTS; $("hintBtn").disabled=false;
  $("paws").innerHTML=lv.cats.map(()=>"<span>🐾</span>").join(""); updateCount();
  $("pauseOv").classList.remove("active"); $("winOv").classList.remove("active");
- fit(); toast((i===0?t().dad+" ":"")+t().find(lv.cats.length),3000);
+ fit(); toast((i===0?t().dad+" ":"")+t().find(lv.cats.length),3000); banner(i===DAILY?t().dailyBan:(i+1)+". "+lvName(i)); RW()&&RW().award({game:"hiddencats",event:"play"}); musKick();
  clearTimeout(tipT); if(!tipShown){ tipShown=true; tipT=setTimeout(()=>{ if(G&&!G.done&&G.i===i) toast(t().zoomTip,3000,true); },3100); }
 }
 function updateCount(){ const n=G.lv.cats.filter(c=>c.found).length; $("count").textContent=`🐾 ${n}/${G.lv.cats.length}`; [...$("paws").children].forEach((p,k)=>p.classList.toggle("on",k<n)); }
@@ -586,14 +607,14 @@ function onTap(px,py){ if(!G||G.done||G.paused) return; const [x,y]=toScene(px,p
  if(best&&best.found){ floatText(px,py,t().already,"miss"); SFX.click(); return; }
  const now=performance.now();
  if(G.lastMiss&&now-G.lastMiss.t<380&&Math.hypot(G.lastMiss.x-px,G.lastMiss.y-py)<40){ zoomAt(px,py,view.z<2?2.5:1); G.lastMiss=null; return; }
- G.lastMiss={t:now,x:px,y:py}; SFX.miss(); floatText(px,py,["🍃","❓","🌸","🙈"][Math.floor(Math.random()*4)],"miss");
+ G.streak=0; G.lastMiss={t:now,x:px,y:py}; SFX.miss(); floatText(px,py,["🍃","❓","🌸","🙈"][Math.floor(Math.random()*4)],"miss");
  if(++G.misses%4===0) toast(t().funMiss[Math.floor(Math.random()*t().funMiss.length)],1600,true);
 }
 function found(c,px,py){ c.found=true; const k=c.kind; if(k==="tiger"||k==="lion") SFX.big(); else if(k==="cub"||k==="lcub") SFX.cub(); else SFX.cat();
  const m=document.getElementById("marks"); const rr=c.kind==="white"?c.r*.95:Math.max(c.r*.9,24);
  m.querySelectorAll(`[data-hint="${G.lv.cats.indexOf(c)}"]`).forEach(n=>n.remove());
  m.insertAdjacentHTML("beforeend",`<g class="found-ring"><circle cx="${c.x}" cy="${c.y}" r="${rr}" fill="#ff4d8d22" stroke="#fff" stroke-width="7" vector-effect="non-scaling-stroke"/><circle cx="${c.x}" cy="${c.y}" r="${rr}" fill="none" stroke="#ff2d7a" stroke-width="4" vector-effect="non-scaling-stroke"/></g>`);
- floatText(px,py,(t().kinds[k]||t().kinds.cat)+" 💖"); updateCount(); G.lastFind=G.elapsed; G.misses=0;
+ floatText(px,py,(t().kinds[k]||t().kinds.cat)+" 💖"); pburst(px,py,10,["💖","⭐","✨","🐾"]); G.streak++; if(G.streak>G.maxStreak) G.maxStreak=G.streak; if(G.streak===3||G.streak===5||G.streak===7) toast("😻 x"+G.streak+"!",1100,true); updateCount(); G.lastFind=G.elapsed; G.misses=0;
  if(!G.lv.cats.every(c=>c.found)&&Math.random()<.5) toast(t().funFound[Math.floor(Math.random()*t().funFound.length)],1300,true);
  if(G.lv.cats.every(c=>c.found)) win(); }
 function giveHint(free){ if(!G||G.done) return false;
@@ -616,16 +637,27 @@ $("restartBtn").onclick=()=>{ SFX.click(); startLevel(G.i); };
 $("pLevels").onclick=$("wLevels").onclick=()=>{ SFX.click(); $("pauseOv").classList.remove("active"); $("winOv").classList.remove("active"); renderLevels(); show("levels"); };
 $("pMenu").onclick=()=>{ SFX.click(); $("pauseOv").classList.remove("active"); renderMenu(); show("menu"); };
 $("againBtn").onclick=()=>{ SFX.click(); startLevel(G.i); };
-$("nextBtn").onclick=()=>{ SFX.click(); if(G.i<5) startLevel(G.i+1); else { $("winOv").classList.remove("active"); renderLevels(); show("levels"); } };
+$("nextBtn").onclick=()=>{ SFX.click(); if(G.i<NL-1) startLevel(G.i+1); else { $("winOv").classList.remove("active"); renderLevels(); show("levels"); } };
 function win(){ G.done=true; const i=G.i, stars=G.used<=2?3:G.used<=4?2:1;
- save.stars[i]=Math.max(save.stars[i]||0,stars); const prevBest=save.best[i]; if(!prevBest||G.elapsed<prevBest) save.best[i]=Math.round(G.elapsed); save.unlocked=Math.max(save.unlocked,Math.min(6,i+2)); persist();
+ const prevSt=save.stars[i]||0; save.stars[i]=Math.max(prevSt,stars); const prevBest=save.best[i]; if(!prevBest||G.elapsed<prevBest) save.best[i]=Math.round(G.elapsed); if(i!==DAILY) save.unlocked=Math.max(save.unlocked,Math.min(NL,i+2)); persist();
+ const R=RW(); if(R){ const sc=Math.max(50,900-Math.round(G.elapsed/1000)*3)+stars*100; R.award({game:"hiddencats",event:"levelClear",level:i===DAILY?12:i+1,score:sc}); if(stars>prevSt) R.award({game:"hiddencats",event:"star",stars:stars-prevSt}); R.award({game:"hiddencats",event:"combo",score:G.maxStreak}); R.award({game:"hiddencats",event:"score",score:sc}); R.award({game:"hiddencats",event:"win"});
+  if(i===DAILY){ let dn=null; try{dn=localStorage.getItem("annabelle-hiddencats-daily");}catch(e){} if(dn!==tdKey()){ try{localStorage.setItem("annabelle-hiddencats-daily",tdKey());}catch(e){} R.award({game:"hiddencats",event:"win",coins:10}); } } }
  setTimeout(()=>{ if(!G||G.i!==i) return; SFX.win(); const L=t();
-  $("winText").textContent=L.found(G.lv.cats.length)+(i===5&&Object.keys(save.stars).length>=6?" "+L.allDone:"");
+  $("winText").textContent=L.found(G.lv.cats.length)+(i===NL-1&&Object.keys(save.stars).length>=NL?" "+L.allDone:"");
   $("winStars").innerHTML=[0,1,2].map(k=>`<span class="${k<stars?"":"off"}">⭐</span>`).join("");
   $("winTime").textContent=L.time(fmt(G.elapsed))+" · "+L.best(fmt(save.best[i]));
   const kinds=[...new Set(G.lv.cats.map(c=>c.kind))].slice(0,3); $("winHeads").innerHTML=kinds.map(k=>headIcon(k==="white"?"cat":k,k==="white"?CATCOL[3]:k==="cat"?CATCOL[Math.floor(Math.random()*6)]:undefined)).join("");
-  $("nextBtn").style.display=""; $("nextBtn").firstElementChild.textContent=i<5?L.next:L.levels;
-  $("winOv").classList.add("active"); confetti(); },800); }
+  $("nextBtn").style.display=""; $("nextBtn").firstElementChild.textContent=(i<NL-1&&i!==DAILY)?L.next:L.levels; $("winStars").classList.remove("pop"); void $("winStars").offsetWidth; $("winStars").classList.add("pop"); [0,1,2].forEach(k=>{ if(k<stars) setTimeout(()=>SFX.star(k),400+k*250); });
+  $("winOv").classList.add("active"); confetti(); if(R) setTimeout(()=>R.flush(),1600); },800); }
+function pburst(px,py,n,em){ for(let k=0;k<n;k++){ const d=document.createElement("div"); d.className="pburst"; d.textContent=em[k%em.length]; d.style.left=px+"px"; d.style.top=py+"px"; document.body.appendChild(d); const a=Math.random()*6.283, r=40+Math.random()*60; const an=d.animate([{transform:"translate(-50%,-50%) scale(.3)",opacity:1},{transform:`translate(calc(-50% + ${Math.cos(a)*r}px),calc(-50% + ${Math.sin(a)*r-30}px)) scale(1.2)`,opacity:0}],{duration:700+Math.random()*400,easing:"ease-out"}); an.onfinish=()=>d.remove(); } }
+function banner(txt){ const d=document.createElement("div"); d.className="banner"; d.textContent=txt; document.body.appendChild(d); setTimeout(()=>d.remove(),2000); }
+// optional tiny music loop (off by default; respects mute)
+let musOn=localStorage.getItem("annabelle-hiddencats-music")==="1", musT=null, musI=0;
+const PEN=[262,294,330,392,440,523,587,659], MEL=[0,2,4,2,5,4,2,1,0,2,4,7,5,4,2,0];
+function musTick(){ clearTimeout(musT); musT=null; if(!musOn) return; if(!muted&&!document.hidden&&G&&!G.paused&&!G.done&&$("game").classList.contains("active")){ const n=MEL[musI%16]; tone(PEN[n],.5,"sine",.04); if(musI%4===0) tone(PEN[n]/2,.9,"triangle",.035); } musI++; musT=setTimeout(musTick,470); }
+function musKick(){ if(musOn&&!musT) musTick(); }
+function updMus(){ const b=$("musBtn"); b.textContent=musOn?t().musOn:t().musOff; b.classList.toggle("on",musOn); }
+$("musBtn").onclick=()=>{ musOn=!musOn; try{localStorage.setItem("annabelle-hiddencats-music",musOn?"1":"0");}catch(e){} ac(); SFX.click(); updMus(); musKick(); };
 function confetti(){ const c=$("confetti"); c.innerHTML=""; const em=["🐱","⭐","💖","🐾","🌸","🐯","🦁"]; for(let k=0;k<26;k++){ const s=document.createElement("span"); s.textContent=em[k%em.length]; s.style.left=(Math.random()*100)+"%"; s.style.animationDuration=(2.2+Math.random()*2)+"s"; s.style.animationDelay=(Math.random()*.8)+"s"; c.appendChild(s); } setTimeout(()=>c.innerHTML="",5000); }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&G&&$("game").classList.contains("active")&&!G.done){ G.paused?$("resumeBtn").click():$("pauseBtn").click(); } });
 document.addEventListener("visibilitychange",()=>{ if(document.hidden&&G&&!G.done&&$("game").classList.contains("active")&&!G.paused) $("pauseBtn").click(); });
