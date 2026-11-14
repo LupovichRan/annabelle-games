@@ -139,9 +139,9 @@
         if (e && e.type === "unavailable-id") createRoom(); else lobFail();
       });
     }
-    function hostRecover() {
+    function hostRecover(force) {
       if (!NET.waitCode || NET.gameOn) return; var gen = NET.gen, p = NET.peer;
-      if (p && !p.destroyed && p.open && !p.disconnected) return;
+      if (!force && p && !p.destroyed && p.open && !p.disconnected) return;
       try { p && p.destroy(); } catch (e) {}
       $("n1St").textContent = t("reconn");
       clearTimeout(NET.rt); NET.rt = setTimeout(function () { if (gen === NET.gen && NET.waitCode && !NET.gameOn) hostPeer(NET.waitCode, gen, "wait"); }, 1200);
@@ -300,7 +300,7 @@
       })();
     }
     function netKick() {
-      if (NET.waitCode && !NET.gameOn) { hostRecover(); return; }
+      if (NET.waitCode && !NET.gameOn) { var lg = Date.now() - (window.__hidAt || Date.now()) > 2500; window.__hidAt = 0; hostRecover(lg); return; }
       if (!NET.gameOn) return;
       if (NET.rec) { if (NET.host) { var p = NET.peer; if (p && p.disconnected && !p.destroyed) try { p.reconnect(); } catch (e) {} } else guestLoop(); }
       else netSend({ t: "ping" });
@@ -321,7 +321,7 @@
       if (NET.paused) { if (NET.conn && NET.conn.open && q < 2500) netResume(); return; }
       if (q > HARD) hardLost(); else weakSet(q > SOFT);
     }, 500);
-    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") { NET.last = Date.now(); NET.tickAt = Date.now(); netKick(); } });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) window.__hidAt = Date.now(); if (document.visibilityState === "visible") { NET.last = Date.now(); NET.tickAt = Date.now(); netKick(); } });
     addEventListener("online", netKick); addEventListener("pageshow", netKick); addEventListener("focus", netKick);
     $("n1NpLeave").addEventListener("click", function () { sfx.click(); netLeave(); if (opts.showMenu) opts.showMenu(); });
     $("n1Create").addEventListener("click", function () { sfx.click(); createRoom(); });

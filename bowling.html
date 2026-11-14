@@ -139,7 +139,7 @@ a.big{display:flex;align-items:center;justify-content:center;text-decoration:non
 <div id="weak"></div>
 <div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div id="oS" style="font-size:20px;font-weight:800;line-height:1.5"></div><div id="oB" style="font-weight:800;color:#ffe14d"></div><button class="big g" id="againBtn"></button><button class="big s" id="menuBtn"></button></div></div>
 
-<script>
+<script>document.addEventListener("visibilitychange",()=>{if(document.hidden)window.__hidAt=Date.now()});
 "use strict";
 const $=id=>document.getElementById(id);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -764,9 +764,9 @@ function hostPeer(code,gen,resume){
    return}
   if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
 }
-function hostRecover(){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
+function hostRecover(force){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
  if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
- if(p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
+ if(!force&&p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
  try{p&&p.destroy()}catch(e){}                        // a half-dead peer: start a fresh one with the SAME id
  $("lobStatus").textContent=t("reconn");
  clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
@@ -928,7 +928,7 @@ function hostLoop(){ // keep the room's peer alive so the friend can come back w
   NET.rt=setTimeout(go,4500)})();
 }
 function netKick(){ // phone woke up / network is back: retry right away
- if(NET.waitCode&&!(G&&G.online)){hostRecover();return}
+ if(NET.waitCode&&!(G&&G.online)){const lg=Date.now()-(window.__hidAt||Date.now())>2500;window.__hidAt=0;hostRecover(lg);return}
  if(!G||!G.online)return;
  if(NET.rec){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
  else netSend({t:"ping"});

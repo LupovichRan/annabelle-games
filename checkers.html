@@ -133,7 +133,7 @@ html.desk .screen{overflow-y:auto}
 <div id="pause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="pauseT"></h2><div id="pauseS" style="font-weight:700"></div><button class="big g" id="pauseLeave"></button></div></div>
 <div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big" style="background:linear-gradient(#5fd38d,#2fb36a);box-shadow:0 4px 0 #1d7c48" id="apprYes"></button><button class="big g" id="apprNo"></button></div></div></div>
 <canvas id="conf"></canvas>
-<script>
+<script>document.addEventListener("visibilitychange",()=>{if(document.hidden)window.__hidAt=Date.now()});
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
@@ -481,9 +481,9 @@ function hostPeer(code,gen,resume){
   if(resume||isDown()){if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&isDown()){const g=NET.gen;try{p.destroy()}catch(x){}hostPeer(code,g,true)}},3000)}return}
   if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
 }
-function hostRecover(){ // phone was in the background (WhatsApp, lock screen…): get the same room back online
+function hostRecover(force){ // phone was in the background (WhatsApp, lock screen…): get the same room back online
  if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
- if(p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
+ if(!force&&p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
  try{p&&p.destroy()}catch(e){}                        // a half-dead peer (a reconnect() does not renegotiate peers reliably): start a fresh one with the SAME id
  $("lobStatus").textContent=t("reconn");
  clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
@@ -620,7 +620,7 @@ function guestLoop(){
  go();
 }
 function netKick(){ // phone woke up / network is back: retry right away
- if(NET.waitCode&&!(G&&G.online)){hostRecover();return}
+ if(NET.waitCode&&!(G&&G.online)){const lg=Date.now()-(window.__hidAt||Date.now())>2500;window.__hidAt=0;hostRecover(lg);return}
  if(!G||!G.online)return;
  if(isDown()){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
  else netSend({t:"ping"});

@@ -135,7 +135,7 @@ html.desk .screen{overflow-y:auto}
 <div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big g" id="apprYes"></button><button class="big s" id="apprNo"></button></div></div></div>
 <div id="weak"></div><div id="toast"></div><div id="hint"></div>
 <canvas id="conf"></canvas>
-<script>
+<script>document.addEventListener("visibilitychange",()=>{if(document.hidden)window.__hidAt=Date.now()});
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
@@ -953,7 +953,7 @@ addEventListener("keydown",e=>{
 });
 addEventListener("keyup",e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;delete keys[KEYMAP[e.key]||k]});
 addEventListener("blur",()=>{for(const k in keys)delete keys[k];if(G&&!G.over&&!G.pause&&window.AnnabelleDesk&&AnnabelleDesk.isDesk())doPause(true)});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.over&&!G.pause)doPause(true);else if(!document.hidden&&G&&G.guest){G.sb=[];G.off=null}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.over&&!G.pause&&!G.online)doPause(true);else if(!document.hidden&&G&&G.guest){G.sb=[];G.off=null}});
 document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
 /* ---------- confetti ---------- */
 let cfR=0;
@@ -1058,9 +1058,9 @@ function hostPeer(code,gen,resume){
    return}
   if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
 }
-function hostRecover(){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
+function hostRecover(force){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
  if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
- if(p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
+ if(!force&&p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
  try{p&&p.destroy()}catch(e){}                        // a half-dead peer: start a fresh one with the SAME id
  $("lobStatus").textContent=t("reconn");
  clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
@@ -1289,7 +1289,7 @@ function hostLoop(){ // keep the room's peer alive so the friend can come back w
   NET.rt=setTimeout(go,4500)})();
 }
 function netKick(){ // phone woke up / network is back: retry right away
- if(NET.waitCode&&!(G&&G.online)){hostRecover();return}
+ if(NET.waitCode&&!(G&&G.online)){const lg=Date.now()-(window.__hidAt||Date.now())>2500;window.__hidAt=0;hostRecover(lg);return}
  if(!G||!G.online)return;
  if(NET.rec){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
  else netSend({t:"ping"});
