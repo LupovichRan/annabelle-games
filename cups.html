@@ -55,6 +55,7 @@ h2{margin:0;font-size:30px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/cups.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/cups-192.png"><meta name="apple-mobile-web-app-title" content="איפה הכדור?"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/cups-apple-180.png"><script src="pwa.js" data-app="cups" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
 </head>
 <body>
 <canvas id="cv"></canvas><canvas id="conf"></canvas>
@@ -179,7 +180,8 @@ function positionCup(c){c.g.position.set(c.x,c.lift*2.4+(c.jit?Math.sin(performa
 /* ===== round flow ===== */
 function say(s){$("cap").textContent=s||""}
 function hud(){$("pHe").textContent=t("hearts").repeat(hearts)+"🤍".repeat(Math.max(0,3-hearts));$("pSc").textContent=t("score")+" "+score;$("pLv").textContent=t("lvl")+" "+level}
-function startGame(){ac();over=false;level=1;hearts=3;score=0;streak=0;document.body.classList.add("play");$("menu").classList.remove("show");$("over").classList.remove("show");startRound();hud()}
+const RW=()=>window.AnnabelleRewards; // shared rewards (coins, stickers) – see rewards.js
+function startGame(){ac();RW()&&RW().award({game:"cups",event:"play"});over=false;level=1;hearts=3;score=0;streak=0;document.body.classList.add("play");$("menu").classList.remove("show");$("over").classList.remove("show");startRound();hud()}
 function startRound(){const c=cfg();if(cups.length!==c.n)buildCups(c.n);else{layout(c.n);cupAt=cups.map((_,i)=>i);cups.forEach((q,i)=>{q.slot=i;q.x=X[i];q.z=0;q.lift=0;q.tl=0;q.jit=0;positionCup(q)})}
  cups.forEach((q,i)=>{const col=c.same?0xe23b6a:CCOL[i%5];q.g.children[0].material=M(col)});
  ballCup=Math.random()*c.n|0;ph="intro";pt=0;sel=0;steps=[];swapLog=[];rv=null;$("picks").classList.remove("show");say(t("watch"));hud();
@@ -218,8 +220,9 @@ function updateGame(dt){
 function pickCupId(id){if(ph!=="choose")return;const ok=id===ballCup;ph="reveal";rv={cup:id,ok,t:0};$("picks").classList.remove("show");say("");SFX.drum();wasCorrect=ok;
  setTimeout(()=>{},0)}
 function endRound(){const ok=rv.ok;say(pick(ok?t("yes"):t("no")));
- if(ok){streak++;score+=10+level*2+Math.min(streak,6)*2;level++;if(score>best){best=score;ls.set("annabelle-cups-best",String(best))}}else{streak=0;hearts--}hud();ph="result";resultT=1.6}
+ if(ok){streak++;score+=10+level*2+Math.min(streak,6)*2;RW()&&(RW().award({game:"cups",event:"levelClear",level:level,score:score}),streak>=3&&RW().award({game:"cups",event:"combo",score:streak}));level++;if(score>best){best=score;ls.set("annabelle-cups-best",String(best))}}else{streak=0;hearts--}hud();ph="result";resultT=1.6}
 function gameOver(){over=true;ph="over";say("");$("picks").classList.remove("show");SFX.over();
+ if(RW()){const done=level-1,stars=done>=12?3:done>=8?2:done>=5?1:0;RW().award({game:"cups",event:"score",score:score});if(stars)RW().award({game:"cups",event:"star",stars:stars});if(done>=6)RW().award({game:"cups",event:"win"});setTimeout(()=>RW()&&RW().flush(),600)}
  const nb=score>best-0&&score>0&&score>=best;$("oT").textContent=t("oT");$("oS").textContent=t("oS").replace("{l}",level).replace("{s}",score);$("oB").textContent=nb&&score>0?t("best"):t("bestIs").replace("{b}",best);$("over").classList.add("show")}
 function toMenu(){paused=false;ph="menu";over=false;$("pause").classList.remove("show");$("over").classList.remove("show");$("picks").classList.remove("show");document.body.classList.remove("play");$("menu").classList.add("show");say("");ball.visible=false;blobB.visible=false;if(cups.length!==3)buildCups(3);else{layout(3);cupAt=[0,1,2];cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;c.lift=0;c.tl=0;c.jit=0})}drawTexts()}
 window.toMenu=toMenu;
