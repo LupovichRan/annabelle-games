@@ -101,6 +101,7 @@ h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 
   </div>
   <div class="sec" id="s-games"><div class="grid" id="gamesBox"></div></div>
 </div>
+<div class="sec on" id="s-prof" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><h2 style="margin:0 0 8px;font-size:20px">👥 שחקנים בטלפון הזה</h2><div id="pfList" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center"></div><div style="margin-top:10px"><input id="pfName" maxlength="12" placeholder="שם חדש" style="font-size:16px;padding:8px;border:2px solid #ffb84d;border-radius:12px;width:120px;font-family:inherit"> <button id="pfAdd" style="font-size:16px;padding:9px 14px;border-radius:12px;border:0;background:#27ae60;color:#fff;cursor:pointer;font-family:inherit">➕ שחקן חדש</button></div><div id="pfSt" style="min-height:20px;margin-top:6px;font-weight:700"></div></div></div>
 <div class="sec on" id="s-rst" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><button id="rstOpen" style="font-size:16px;padding:10px 16px;border-radius:14px;border:2px solid #ccc;background:#fff;cursor:pointer;font-family:inherit">🗑️ איפוס התקדמות (להורים)</button></div></div>
 <div class="sheet" id="rstSheet"><div class="c"><div class="e">🗑️</div><h3>איפוס התקדמות</h3><p id="rstQ"></p><input id="rstIn" inputmode="numeric" maxlength="3" style="font-size:26px;width:100px;text-align:center;border:3px solid #ffb84d;border-radius:12px;padding:6px;direction:ltr"><p id="rstSt" style="min-height:22px;font-weight:700"></p>
 <button id="rstA" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#e67e22;color:#fff;cursor:pointer;font-family:inherit">🎁 איפוס האלבום (מטבעות, מדבקות, פריטים)</button>
@@ -180,7 +181,7 @@ render();
 window.__album={render:render,setTab:function(t){tab=t;render()}};
 })();
 
-(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|avatar.*)$/;
+(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|profiles|profdata-.*)$/;
 function q(i){return document.getElementById(i)}
 function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
 q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
@@ -190,6 +191,29 @@ function doit(all){if(parseInt(q('rstIn').value,10)!==a+b){ask();q('rstSt').text
  ks.forEach(function(k){localStorage.removeItem(k)})}catch(e){}
  q('rstSt').style.color='#27ae60';q('rstSt').textContent='✅ אופס! מתחילים מחדש';setTimeout(function(){location.reload()},900)}
 q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true)};
+})();
+
+(function(){var MK='annabelle-profiles',DK='annabelle-profdata-',EM=['🐱','🦁','🐯','🐼','🦊','🐰'];
+var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|profiles|profdata-.*)$/;
+function q(i){return document.getElementById(i)}
+function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
+ if(!m||!Array.isArray(m.list)||!m.list.length||!m.list.some(function(p){return p.id===m.cur})){m={cur:'p1',list:[{id:'p1',name:'אנאבל',emo:'🐱'}]};save(m)}return m}
+function save(m){try{localStorage.setItem(MK,JSON.stringify(m))}catch(e){}}
+function keys(){var ks=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if((/^annabelle-/.test(k)||/^soya-/.test(k))&&!KEEP.test(k))ks.push(k)}}catch(e){}return ks}
+function snap(){var o={};keys().forEach(function(k){o[k]=localStorage.getItem(k)});return o}
+function stash(m){try{localStorage.setItem(DK+m.cur,JSON.stringify(snap()))}catch(e){q('pfSt').textContent='אין מקום לשמור';return false}return true}
+function clearAll(){keys().forEach(function(k){localStorage.removeItem(k)})}
+function load(id){var o=null;try{o=JSON.parse(localStorage.getItem(DK+id)||'null')}catch(e){}if(o)Object.keys(o).forEach(function(k){if(/^(annabelle|soya)-/.test(k)&&!KEEP.test(k))try{localStorage.setItem(k,String(o[k]))}catch(e){}})}
+function sw(id,fresh){var m=meta();if(id===m.cur)return;if(!stash(m))return;clearAll();if(!fresh)load(id);m.cur=id;save(m);location.reload()}
+function draw(){var m=meta(),box=q('pfList');box.textContent='';m.list.forEach(function(p){var b=document.createElement('button');b.textContent=p.emo+' '+p.name+(p.id===m.cur?' ✓':'');
+ b.style.cssText='font-size:17px;padding:10px 14px;border-radius:14px;cursor:pointer;font-family:inherit;border:3px solid '+(p.id===m.cur?'#27ae60':'#ccc')+';background:'+(p.id===m.cur?'#e8f8ee':'#fff');
+ b.onclick=function(){sw(p.id)};box.appendChild(b);
+ if(p.id!==m.cur){var d=document.createElement('button');d.textContent='🗑️';d.title='מחיקת שחקן';d.style.cssText='font-size:14px;padding:6px;border-radius:10px;border:1px solid #ccc;background:#fff;cursor:pointer;margin-inline-start:-4px';
+  d.onclick=function(){if(!confirm('למחוק את '+p.name+' וכל ההתקדמות שלו?'))return;var mm=meta();mm.list=mm.list.filter(function(x){return x.id!==p.id});save(mm);try{localStorage.removeItem(DK+p.id)}catch(e){}draw()};box.appendChild(d)}})}
+q('pfAdd').onclick=function(){var m=meta(),n=q('pfName').value.replace(/[<>]/g,'').trim().slice(0,12);if(!n){q('pfSt').textContent='כתבו שם 🙂';return}
+ if(m.list.length>=6){q('pfSt').textContent='אפשר עד 6 שחקנים';return}
+ var id='p'+Date.now().toString(36);m.list.push({id:id,name:n,emo:EM[m.list.length%EM.length]});save(m);sw(id,true)};
+draw();
 })();
 </script>
 </body>
