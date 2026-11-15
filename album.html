@@ -101,6 +101,11 @@ h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 
   </div>
   <div class="sec" id="s-games"><div class="grid" id="gamesBox"></div></div>
 </div>
+<div class="sec on" id="s-rst" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><button id="rstOpen" style="font-size:16px;padding:10px 16px;border-radius:14px;border:2px solid #ccc;background:#fff;cursor:pointer;font-family:inherit">🗑️ איפוס התקדמות (להורים)</button></div></div>
+<div class="sheet" id="rstSheet"><div class="c"><div class="e">🗑️</div><h3>איפוס התקדמות</h3><p id="rstQ"></p><input id="rstIn" inputmode="numeric" maxlength="3" style="font-size:26px;width:100px;text-align:center;border:3px solid #ffb84d;border-radius:12px;padding:6px;direction:ltr"><p id="rstSt" style="min-height:22px;font-weight:700"></p>
+<button id="rstA" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#e67e22;color:#fff;cursor:pointer;font-family:inherit">🎁 איפוס האלבום (מטבעות, מדבקות, פריטים)</button>
+<button id="rstB" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#c0392b;color:#fff;cursor:pointer;font-family:inherit">🧹 איפוס הכול (גם שלבים וכוכבים במשחקים)</button>
+<button id="rstX" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#eee;cursor:pointer;font-family:inherit">ביטול</button></div></div>
 <div class="sheet" id="sheet"><div class="c"><div class="e" id="shE"></div><h3 id="shN"></h3><p id="shD"></p><button id="shX"></button></div></div>
 <script>
 (function(){
@@ -173,6 +178,18 @@ R.visitAlbum();
 try{R.get().pend.forEach(function(p){if(p.t==='sticker')newIds[p.id]=1})}catch(e){}
 render();
 window.__album={render:render,setTab:function(t){tab=t;render()}};
+})();
+
+(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|avatar.*)$/;
+function q(i){return document.getElementById(i)}
+function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
+q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
+q('rstX').onclick=function(){q('rstSheet').classList.remove('on')};
+function doit(all){if(parseInt(q('rstIn').value,10)!==a+b){ask();q('rstSt').textContent='התשובה לא נכונה, נסו שוב';q('rstSt').style.color='#c0392b';return}
+ try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!/^annabelle-/.test(k)&&!/^soya-/.test(k))continue;if(all?!KEEP.test(k):k==='annabelle-rewards')ks.push(k)}
+ ks.forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+ q('rstSt').style.color='#27ae60';q('rstSt').textContent='✅ אופס! מתחילים מחדש';setTimeout(function(){location.reload()},900)}
+q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true)};
 })();
 </script>
 </body>
