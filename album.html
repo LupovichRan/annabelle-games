@@ -132,7 +132,7 @@ var tab='stk',shopCat='hat',newIds={};
 if(!R){document.body.innerHTML='<p style="padding:30px;font-size:22px">rewards.js missing</p>';return}
 function langs(){var l=R.lang();$('langs').innerHTML=[['he','עברית'],['fr','FR'],['en','EN']].map(function(x){return '<button data-l="'+x[0]+'" class="'+(x[0]===l?'sel':'')+'">'+x[1]+'</button>'}).join('')}
 $('langs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;try{localStorage.setItem('annabelle-lang',b.dataset.l)}catch(x){}render()});
-function head(){var l=R.lang(),t=L();document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';document.title=t.ttl;$('ttl').textContent=t.ttl;$('t1').textContent=t.t1;$('t2').textContent=t.t2;$('t3').textContent=t.t3;$('gT').textContent=t.gT;$('avN').textContent=t.avN;$('shX').textContent=t.ok;$('cn').textContent=R.coins();langs()}
+function head(){var l=R.lang(),t=L();document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';document.title=t.ttl;$('ttl').textContent=t.ttl;$('t1').textContent=t.t1;$('t2').textContent=t.t2;$('t3').textContent=t.t3;$('gT').textContent=t.gT;$('avN').textContent=t.avN;try{var _lv=R.level();$('avN').textContent=_lv.e+' '+({he:'רמה ',fr:'Niveau ',en:'Level '}[l])+_lv.level+' · '+_lv.title}catch(e){};$('shX').textContent=t.ok;$('cn').textContent=R.coins();langs()}
 function gift(){var t=L(),s=R.dailyStatus(),ch=$('chest');
  $('days').innerHTML=s.days.map(function(d){return '<div class="d '+(d.got?'got':'')+(d.today?' today':'')+'">'+(d.got?'🔥':'·')+'</div>'}).join('');
  ch.className='chest '+(s.available?'ready':'off');
@@ -181,7 +181,7 @@ render();
 window.__album={render:render,setTab:function(t){tab=t;render()}};
 })();
 
-(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|profiles|profdata-.*)$/;
+(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*)$/;
 function q(i){return document.getElementById(i)}
 function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
 q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
@@ -194,7 +194,7 @@ q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true
 })();
 
 (function(){var MK='annabelle-profiles',DK='annabelle-profdata-',EM=['🐱','🦁','🐯','🐼','🦊','🐰'];
-var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|profiles|profdata-.*)$/;
+var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*)$/;
 function q(i){return document.getElementById(i)}
 function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
  if(!m||!Array.isArray(m.list)||!m.list.length||!m.list.some(function(p){return p.id===m.cur})){m={cur:'p1',list:[{id:'p1',name:'אנאבל',emo:'🐱'}]};save(m)}return m}

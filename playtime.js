@@ -20,6 +20,16 @@
   var me = document.currentScript;
   var IS_LAUNCHER = !!(me && me.dataset.app === 'launcher') || /(^|\/)(index\.html)?$/.test(location.pathname);
 
+  // repair: an early version of the player-profiles feature could move the parent settings into a profile snapshot
+  try {
+    if (!localStorage.getItem('annabelle-parent')) {
+      var pm = JSON.parse(localStorage.getItem('annabelle-profiles') || 'null');
+      if (pm && Array.isArray(pm.list)) for (var pi = 0; pi < pm.list.length; pi++) {
+        var pd = JSON.parse(localStorage.getItem('annabelle-profdata-' + pm.list[pi].id) || 'null');
+        if (pd && typeof pd['annabelle-parent'] === 'string' && pd['annabelle-parent']) { localStorage.setItem('annabelle-parent', pd['annabelle-parent']); break; }
+      }
+    }
+  } catch (e) {}
   function rd(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v && typeof v === 'object' ? v : d; } catch (e) { return d; } }
   function wr(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
@@ -334,7 +344,8 @@
     ['runner','🏃','ריצה בסוואנה',/^annabelle-runner-/],['runner3d','🌅','ריצה תלת־ממדית',/^annabelle-runner3d-/],['soya','🐶','סויה',/^soya(?!home)/],['soyahome','🏡','סויה בבית',/^(annabelle-)?soyahome/],
     ['streetcats','🐈','חתולי הרחוב',/^annabelle-streetcats-/],['thunderkittens','⚡','לוחמי הברק',/^annabelle-tk-/],['tictactoe','❌','איקס עיגול',/^annabelle-ttt-/],['towerdefense','🏰','מגדלי הגנה',/^annabelle-td-/],
     ['bowling','🎳','באולינג',/^annabelle-bowling-/],['invaders','🚀','פולשי החלל',/^annabelle-retro-invaders/],['tetris','🧱','טטריס חתולים',/^annabelle-retro-tetris/],['breakout','🐾','שוברת הכלובים',/^annabelle-retro-breakout/],
-    ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/]];
+    ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/],
+    ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/]];
   var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
@@ -349,7 +360,7 @@
       if (rw && rw.stats) ['plays', 'wins', 'stars', 'best'].forEach(function (f) { if (rw.stats[f] && typeof rw.stats[f] === 'object') delete rw.stats[f][g[0]]; });
     });
     if (rw) wr('annabelle-rewards', rw);
-    if (['invaders', 'tetris', 'breakout', 'snake', 'crossing'].every(function (x) { return ids.indexOf(x) >= 0; })) try { localStorage.removeItem('annabelle-retro-zoo'); } catch (e) {}
+    if (['invaders', 'tetris', 'breakout', 'snake', 'crossing', 'pong', 'safari', 'simon'].every(function (x) { return ids.indexOf(x) >= 0; })) try { localStorage.removeItem('annabelle-retro-zoo'); localStorage.removeItem('annabelle-retro-hub'); } catch (e) {}
   }
   function resetScreen(fromMath) {
     var card = shell('🗑️ ' + 'איפוס התקדמות',
