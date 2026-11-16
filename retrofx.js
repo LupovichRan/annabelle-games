@@ -20,15 +20,15 @@
     '.rfx:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#0000 0 3px,#0003 3px 4px),repeating-linear-gradient(90deg,#ffffff08 0 2px,#0000 2px 26px);pointer-events:none}' +
     '#rfxL{left:0;border-right:5px solid #ff6fb5;box-shadow:inset -14px 0 24px -14px #ff6fb5aa}#rfxR{right:0;border-left:5px solid #5ff0ff;box-shadow:inset 14px 0 24px -14px #5ff0ffaa}' +
     '.rfx.on{display:flex}.rfx>*{position:relative}' +
-    '.rfx .mq{font-size:15px;font-weight:900;letter-spacing:3px;color:#ffe14d;text-shadow:0 0 10px #ff9d00,2px 2px 0 #b3002d;text-align:center;animation:rfxb 2.2s steps(2) infinite}' +
-    '.rfx .big{font-size:64px;line-height:1.1;filter:drop-shadow(0 0 12px #fff6);animation:rfxf 2.6s ease-in-out infinite}' +
-    '.rfx .zoo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:100%}.rfx .zoo span{font-size:30px;animation:rfxf 2.4s ease-in-out infinite}.rfx .zoo span.no{filter:grayscale(1) brightness(.35);opacity:.5;animation:none}' +
-    '.rfx .cnt{font-size:14px;font-weight:700;color:#5ff0ff;text-align:center;margin-top:6px}' +
-    '.rfx .pad{display:flex;gap:16px;align-items:flex-end;justify-content:center}.rfx .stick{width:14px;height:44px;background:#888;border-radius:6px;position:relative}.rfx .stick:before{content:"";position:absolute;left:-11px;top:-22px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9aa8,#e0193d 60%,#8f0020)}' +
-    '.rfx .btn{width:30px;height:30px;border-radius:50%;box-shadow:0 5px 0 #0008}.rfx .b1{background:#ffe14d}.rfx .b2{background:#5ff0ff}' +
-    '.rfx .ins{font-size:13px;font-weight:900;letter-spacing:1px;color:#fff;text-align:center;animation:rfxb 1.2s steps(2) infinite;margin-top:10px}' +
-    '.rfx .hi{width:100%;font-size:15px;font-weight:700}.rfx .hi h4{margin:0 0 8px;text-align:center;color:#ff6fb5;font-size:17px;letter-spacing:2px;text-shadow:0 0 8px #ff6fb5}' +
-    '.rfx .hi div{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;direction:ltr}.rfx .hi div:nth-child(2){color:#ffe14d}.rfx .hi i{font-style:normal;opacity:.7}.rfx .hi .none{justify-content:center;opacity:.6;font-size:13px}' +
+    '.rfx .rfx-mq{font-size:15px;font-weight:900;letter-spacing:3px;color:#ffe14d;text-shadow:0 0 10px #ff9d00,2px 2px 0 #b3002d;text-align:center;animation:rfxb 2.2s steps(2) infinite}' +
+    '.rfx .rfx-big{font-size:64px;line-height:1.1;filter:drop-shadow(0 0 12px #fff6);animation:rfxf 2.6s ease-in-out infinite}' +
+    '.rfx .rfx-zoo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:100%}.rfx .rfx-zoo span{font-size:30px;animation:rfxf 2.4s ease-in-out infinite}.rfx .rfx-zoo span.rfx-no{filter:grayscale(1) brightness(.35);opacity:.5;animation:none}' +
+    '.rfx .rfx-cnt{font-size:14px;font-weight:700;color:#5ff0ff;text-align:center;margin-top:6px}' +
+    '.rfx .rfx-pad{display:flex;gap:16px;align-items:flex-end;justify-content:center}.rfx .rfx-stick{width:14px;height:44px;background:#888;border-radius:6px;position:relative}.rfx .rfx-stick:before{content:"";position:absolute;left:-11px;top:-22px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9aa8,#e0193d 60%,#8f0020)}' +
+    '.rfx .rfx-btn{width:30px;height:30px;border-radius:50%;box-shadow:0 5px 0 #0008}.rfx .rfx-b1{background:#ffe14d}.rfx .rfx-b2{background:#5ff0ff}' +
+    '.rfx .rfx-ins{font-size:13px;font-weight:900;letter-spacing:1px;color:#fff;text-align:center;animation:rfxb 1.2s steps(2) infinite;margin-top:10px}' +
+    '.rfx .rfx-hi{width:100%;font-size:15px;font-weight:700}.rfx .rfx-hi h4{margin:0 0 8px;text-align:center;color:#ff6fb5;font-size:17px;letter-spacing:2px;text-shadow:0 0 8px #ff6fb5}' +
+    '.rfx .rfx-hi div{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;direction:ltr}.rfx .rfx-hi div:nth-child(2){color:#ffe14d}.rfx .rfx-hi i{font-style:normal;opacity:.7}.rfx .rfx-hi .rfx-none{justify-content:center;opacity:.6;font-size:13px}' +
     '@keyframes rfxb{50%{opacity:.45}}@keyframes rfxf{50%{transform:translateY(-7px)}}' +
     '@media (prefers-reduced-motion:reduce){.rfx *{animation:none!important}}';
   var L, R, lastKey = '';
@@ -43,11 +43,11 @@
     if (!hi.length && sv && typeof sv.best === 'number' && sv.best > 0) hi = [{s: sv.best}];
     var key = lang() + '|' + zoo.join(',') + '|' + JSON.stringify(hi); if (key === lastKey) return; lastKey = key;
     var ids = Object.keys(ZOO), have = ids.filter(function (a) { return zoo.indexOf(a) >= 0; });
-    L.innerHTML = '<div><div class="mq">★ RETRO ★</div></div><div class="big">' + (EMO[ID] || '🕹️') + '</div>' +
-      '<div><div class="pad"><div class="stick"></div><div class="btn b1"></div><div class="btn b2"></div></div><div class="ins">' + esc(t.ins) + ' 🧶</div></div>';
-    R.innerHTML = '<div class="hi"><h4>' + esc(t.hi) + '</h4>' + (hi.length ? hi.map(function (h, i) { return '<div><span>' + (i + 1) + '.</span><span>' + Math.round(h.s) + '</span></div>'; }).join('') : '<div class="none">' + esc(t.none) + '</div>') + '</div>' +
-      '<div><div class="zoo">' + ids.map(function (a, i) { var h = zoo.indexOf(a) >= 0; return '<span class="' + (h ? '' : 'no') + '" style="animation-delay:-' + (i * 0.23).toFixed(2) + 's">' + ZOO[a] + '</span>'; }).join('') + '</div>' +
-      '<div class="cnt">🏡 ' + have.length + '/' + ids.length + ' ' + esc(t.zoo) + '</div></div>';
+    L.innerHTML = '<div><div class="rfx-mq">★ RETRO ★</div></div><div class="rfx-big">' + (EMO[ID] || '🕹️') + '</div>' +
+      '<div><div class="rfx-pad"><div class="rfx-stick"></div><div class="rfx-btn rfx-b1"></div><div class="rfx-btn rfx-b2"></div></div><div class="rfx-ins">' + esc(t.ins) + ' 🧶</div></div>';
+    R.innerHTML = '<div class="rfx-hi"><h4>' + esc(t.hi) + '</h4>' + (hi.length ? hi.map(function (h, i) { return '<div><span>' + (i + 1) + '.</span><span>' + Math.round(h.s) + '</span></div>'; }).join('') : '<div class="rfx-none">' + esc(t.none) + '</div>') + '</div>' +
+      '<div><div class="rfx-zoo">' + ids.map(function (a, i) { var h = zoo.indexOf(a) >= 0; return '<span class="' + (h ? '' : 'rfx-no') + '" style="animation-delay:-' + (i * 0.23).toFixed(2) + 's">' + ZOO[a] + '</span>'; }).join('') + '</div>' +
+      '<div class="rfx-cnt">🏡 ' + have.length + '/' + ids.length + ' ' + esc(t.zoo) + '</div></div>';
   }
   function measure() {
     if (!L) return;

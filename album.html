@@ -70,7 +70,20 @@ h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 
 .desk .wrap{max-width:1100px}
 @media(min-width:1500px){html.desk .wrap{max-width:1300px}html.desk .stk{font-size:15px}html.desk .it,html.desk .gm{font-size:16px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+/* follow the home page theme: only the page background and the texts that sit directly on it (cards and sheets stay light) */
+html[data-th]{--abg:radial-gradient(circle at 50% -10%,#4a35b8,#1d1450 55%,#0c0822);--atab:#1d1450}
+html[data-th=ocean]{--abg:linear-gradient(#0f6fa8,#0a3d6b 60%,#06243f);--atab:#0f6fa8}
+html[data-th=jungle]{--abg:linear-gradient(#23824a,#145432 60%,#0b3321);--atab:#23824a}
+html[data-th=sunset]{--abg:linear-gradient(#b8452f,#a12f60 55%,#52267a);--atab:#b8452f}
+html[data-th=galaxy]{--abg:radial-gradient(circle at 70% 0%,#3a1f6e,#07051a 60%);--atab:#24134a}
+html[data-th=gold]{--abg:linear-gradient(#2e241a,#0d0a07);--atab:#2e241a}
+html[data-th] body{background:var(--abg) fixed}
+html[data-th] h1{color:#ffe14d;text-shadow:0 3px 0 #0006}
+html[data-th] .gh,html[data-th] #shopNote,html[data-th] #s-prof h2,html[data-th] #pfSt{color:#f0e9ff}
+html[data-th] .tabs{background:linear-gradient(var(--atab),#0000)}
+html[data-th] .stk.lock{background:#ffffffb3}
 </style>
+<script>try{var _t=(JSON.parse(localStorage.getItem('annabelle-home')||'{}')||{}).th||'neon';if(_t!=='classic')document.documentElement.setAttribute('data-th',/^(neon|ocean|jungle|sunset|galaxy|gold)$/.test(_t)?_t:'neon')}catch(e){document.documentElement.setAttribute('data-th','neon')}</script>
 <!--pwa--><link rel="manifest" href="manifests/album.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/album-192.png"><meta name="apple-mobile-web-app-title" content="האלבום של אנאבל"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/album-apple-180.png"><script src="pwa.js" data-app="album" data-slots='[]' defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="rewards.js"></script>
@@ -197,6 +210,7 @@ q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true
 var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*)$/;
 function q(i){return document.getElementById(i)}
 function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
+ if(m&&Array.isArray(m.list))m.list=m.list.filter(function(p){return p&&typeof p.id==='string'});
  if(!m||!Array.isArray(m.list)||!m.list.length||!m.list.some(function(p){return p.id===m.cur})){m={cur:'p1',list:[{id:'p1',name:'אנאבל',emo:'🐱'}]};save(m)}return m}
 function save(m){try{localStorage.setItem(MK,JSON.stringify(m))}catch(e){}}
 function keys(){var ks=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if((/^annabelle-/.test(k)||/^soya-/.test(k))&&!KEEP.test(k))ks.push(k)}}catch(e){}return ks}

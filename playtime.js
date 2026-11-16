@@ -360,7 +360,9 @@
       if (rw && rw.stats) ['plays', 'wins', 'stars', 'best'].forEach(function (f) { if (rw.stats[f] && typeof rw.stats[f] === 'object') delete rw.stats[f][g[0]]; });
     });
     if (rw) wr('annabelle-rewards', rw);
-    if (['invaders', 'tetris', 'breakout', 'snake', 'crossing', 'pong', 'safari', 'simon'].every(function (x) { return ids.indexOf(x) >= 0; })) try { localStorage.removeItem('annabelle-retro-zoo'); localStorage.removeItem('annabelle-retro-hub'); } catch (e) {}
+    // the shared sanctuary goes once a retro game was reset and no retro save is left at all
+    var RT = /^annabelle-retro-(invaders|tetris|breakout|snake|crossing|pong|safari|simon)$/;
+    if (ids.some(function (x) { return RT.test('annabelle-retro-' + x); }) && !allKeys().some(function (k) { return RT.test(k); })) try { localStorage.removeItem('annabelle-retro-zoo'); localStorage.removeItem('annabelle-retro-hub'); } catch (e) {}
   }
   function resetScreen(fromMath) {
     var card = shell('🗑️ ' + 'איפוס התקדמות',

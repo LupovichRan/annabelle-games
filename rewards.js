@@ -136,7 +136,12 @@
     return {level: L, xp: S.earned, cur: S.earned - a, need: b - a, pct: Math.max(0, Math.min(100, Math.round((S.earned - a) / (b - a) * 100))), e: r[1], title: T(r[2]), next: nx ? {level: nx[0], e: nx[1], title: T(nx[2])} : null};
   }
   function checkLevel() { var L = levelOf(S.earned); if (L > (S.lv || 1)) { S.lv = L; S.pend.push({t: 'level', n: L}); } }
-  function cleanName(n) { return String(n == null ? '' : n).replace(/[<>&"'`\\\/]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14); }
+  // names come from links: drop control, zero-width and bidi-override characters (keeps ZWJ / variation selectors so emoji survive)
+  function cleanName(n) {
+    n = String(n == null ? '' : n).replace(/[\u0000-\u0008\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u180E\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0]/g, '')
+      .replace(/[<>&"'`\\\/]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
+    return /[^ \u200D\uFE0E\uFE0F]/.test(n) ? n : '';
+  }
   function escH(x) { return String(x).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   var RETRO = {invaders: 1, tetris: 1, breakout: 1, snake: 1, crossing: 1, pong: 1, safari: 1, simon: 1};
   var MIND = {magic: 1, magic2: 1, cups: 1, tictactoe: 1, minesweeper: 1, checkers: 1, cats: 1, hiddencats: 1, escape: 1, towerdefense: 1, tetris: 1, simon: 1};
@@ -194,8 +199,20 @@
     n = cleanName(n) || '?';
     S.ch = S.ch.filter(function (c) { return !(c.g === g && c.n === n); });
     var c = {g: g, s: sc, n: n, t: Date.now(), won: (S.stats.best[g] || 0) >= sc};
-    S.ch.unshift(c); S.ch = S.ch.slice(0, 6); save();
+    S.ch.unshift(c);
+    while (S.ch.length > 6) { // beaten challenges make room first
+      var di = S.ch.length - 1;
+      for (var k = di; k > 0; k--) if (S.ch[k].won) { di = k; break; }
+      S.ch.splice(di, 1);
+    }
+    save();
     return {g: c.g, s: c.s, n: c.n, won: c.won, e: GAMES[g][0], name: gname(g)};
+  }
+  function removeChallenge(g, n) {
+    if (!S) load();
+    var k = S.ch.length;
+    S.ch = S.ch.filter(function (c) { return !(c.g === g && c.n === n); });
+    if (S.ch.length !== k) save();
   }
   function challenges() { if (!S) load(); return S.ch.map(function (c) { return {g: c.g, s: c.s, n: c.n, won: c.won, t: c.t, e: GAMES[c.g][0], name: gname(c.g), mine: S.stats.best[c.g] || 0}; }); }
   function bests() {
@@ -465,7 +482,7 @@
   function addStyle() {
     if (styled) return; styled = true;
     var st = document.createElement('style');
-    st.textContent = '.ar-toast{position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:2147482000;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:min(92vw,420px);' +
+    st.textContent = '.ar-toast{position:fixed;left:50%;width:max-content;top:max(10px,env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:2147482000;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:min(92vw,420px);' +
       'padding:10px 18px 10px 14px;border-radius:26px;background:linear-gradient(135deg,#fff7d6,#ffe1f0);border:3px solid #ffb84d;box-shadow:0 8px 0 #0002,0 10px 24px #0004;color:#5b3b8c;font:800 17px/1.15 Rubik,"Varela Round",Arial,sans-serif;opacity:0;transition:transform .45s cubic-bezier(.2,1.4,.4,1),opacity .25s}' +
       '.ar-toast.on{transform:translate(-50%,0);opacity:1}.ar-toast .e{font-size:38px;line-height:1;filter:drop-shadow(0 2px 0 #0002)}.ar-toast small{display:block;font-size:13px;font-weight:700;opacity:.8}';
     document.head.appendChild(st);
@@ -503,7 +520,7 @@
         else if (p.t === 'chal') { if (isGame(p.g)) chs.push(p); }
         else if (STK_BY[p.id]) stk.push(STK_BY[p.id]);
       });
-      if (lvMax) pre.push('<span class="e">' + rankOf(lvMax)[1] + '</span><span>' + T(TXT.level).replace('{n}', lvMax) + '<small>' + T(rankOf(lvMax)[2]) + '</small></span>');
+      if (lvMax && !document.querySelector('.lvup')) pre.push('<span class="e">' + rankOf(lvMax)[1] + '</span><span>' + T(TXT.level).replace('{n}', lvMax) + '<small>' + T(rankOf(lvMax)[2]) + '</small></span>');
       if (qall) pre.push('<span class="e">🎉</span><span>' + T(TXT.qall) + '<small>💰 +' + (qs.length * QUEST_COINS + QUEST_BONUS) + ' (' + T(TXT.bonus) + ' +' + QUEST_BONUS + ')</small></span>');
       else if (qs.length > 1) pre.push('<span class="e">✅</span><span>' + T(TXT.questN).replace('{n}', qs.length) + '<small>💰 +' + qs.length * QUEST_COINS + '</small></span>');
       else if (qs.length) pre.push('<span class="e">✅</span><span>' + T(TXT.quest) + '<small>' + T(qs[0].t) + ' · 💰 +' + QUEST_COINS + '</small></span>');
@@ -529,7 +546,7 @@
     award: award, flush: flush, coins: function () { if (!S) load(); return S.coins; }, spend: spend, get: function () { if (!S) load(); return JSON.parse(JSON.stringify(S)); },
     has: function (id) { if (!S) load(); return !!S.st[id]; }, stickers: stickers, catalog: catalog, dailyStatus: dailyStatus, claimDaily: claimDaily,
     shop: shop, buy: buy, equip: equip, avatar: avatar, avatarSVG: avatarSVG, lang: lang, t: T, GAMES: GAMES, gname: gname, COLORS: COLORS,
-    level: level, levelOf: levelOf, quests: quests, recent: recent, challenges: challenges, addChallenge: addChallenge, bests: bests, cleanName: cleanName,
+    level: level, levelOf: levelOf, quests: quests, recent: recent, challenges: challenges, addChallenge: addChallenge, removeChallenge: removeChallenge, bests: bests, cleanName: cleanName,
     visitAlbum: function () { if (!S) load(); S.stats.albumVisits++; checkStickers(); save(); },
     onChange: function (f) { if (typeof f === 'function') listeners.push(f); },
     _reload: function () { load(); }, _reset: function () { S = fresh(); save(); }
