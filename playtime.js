@@ -6,6 +6,13 @@
 (function () {
   'use strict';
   if (window.AnnabellePlaytime) return;
+  // Respect the OS "reduce motion" setting on every page: decorative CSS loops stop and transitions are instant
+  // (events such as animationend still fire, so game logic is unaffected).
+  try {
+    var rm = document.createElement('style');
+    rm.textContent = '@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}';
+    (document.head || document.documentElement).appendChild(rm);
+  } catch (e) {}
   var DEFAULT_LIMIT_MIN = 55;               // <- the daily limit (minutes); parent can change it in the panel
   var MIN_LIMIT = 15, MAX_LIMIT = 180, STEP = 5, BONUS_MIN = 15;
   var WARN = [300, 60];                      // warn at 5 min and 1 min left
