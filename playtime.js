@@ -325,6 +325,50 @@
       else { mathQ(); panelEl.querySelector('.msg').textContent = '✗'; }
     };
   }
+
+  /* ---------- parent: reset progress (all, or only chosen games) ---------- */
+  var RG = [['bubbles','🫧','בועות',/^annabelle-bubbles-/],['cats','🐱','חתולים (זוגות)',/^annabelle-cats-/],['checkers','♟️','דמקה',/^annabelle-(checkers-|ck-)/],['cups','🥤','איפה הכדור',/^annabelle-cups-/],
+    ['digrod','🎣','חכת השריר',/^annabelle-digrod/],['escape','🏠','בריחה',/^annabelle-escape/],['fishing','🐟','דיג',/^annabelle-fishing-/],['fishy','🐠','דגיגון',/^annabelle-fishy-/],['football','⚽','כדורגל',/^annabelle-football-/],
+    ['hiddencats','🔍','חתולים נסתרים',/^annabelle-hiddencats/],['hole','🕳️','החור הרעבתן',/^annabelle-hole-/],['kitchen','🍔','מסעדת החתולים',/^annabelle-kitchen/],['lionking','🦁','מלך האריות',/^annabelle-(lionking-|lion-)/],
+    ['magic','🎩','קסם הקלפים',/^annabelle-magic(-|$)/],['magic2','🐾','קסם החתולים',/^annabelle-magic2/],['minesweeper','🌼','מוקשים (גינה)',/^annabelle-minesweeper-/],['pacman','🟡','פקמן',/^annabelle-pacman-/],
+    ['runner','🏃','ריצה בסוואנה',/^annabelle-runner-/],['runner3d','🌅','ריצה תלת־ממדית',/^annabelle-runner3d-/],['soya','🐶','סויה',/^soya(?!home)/],['soyahome','🏡','סויה בבית',/^(annabelle-)?soyahome/],
+    ['streetcats','🐈','חתולי הרחוב',/^annabelle-streetcats-/],['thunderkittens','⚡','לוחמי הברק',/^annabelle-tk-/],['tictactoe','❌','איקס עיגול',/^annabelle-ttt-/],['towerdefense','🏰','מגדלי הגנה',/^annabelle-td-/],
+    ['bowling','🎳','באולינג',/^annabelle-bowling-/],['invaders','🚀','פולשי החלל',/^annabelle-retro-invaders/],['tetris','🧱','טטריס חתולים',/^annabelle-retro-tetris/],['breakout','🐾','שוברת הכלובים',/^annabelle-retro-breakout/],
+    ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/]];
+  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*)$/;
+  function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
+  function doReset(ids, everything) {
+    var ks = allKeys(), rw = rd('annabelle-rewards', null);
+    if (everything) {
+      ks.forEach(function (k) { if ((/^annabelle-/.test(k) || /^soya/.test(k)) && !KEEPK.test(k)) try { localStorage.removeItem(k); } catch (e) {} });
+      return;
+    }
+    RG.forEach(function (g) {
+      if (ids.indexOf(g[0]) < 0) return;
+      ks.forEach(function (k) { if (g[3].test(k)) try { localStorage.removeItem(k); } catch (e) {} });
+      if (rw && rw.stats) ['plays', 'wins', 'stars', 'best'].forEach(function (f) { if (rw.stats[f] && typeof rw.stats[f] === 'object') delete rw.stats[f][g[0]]; });
+    });
+    if (rw) wr('annabelle-rewards', rw);
+    if (['invaders', 'tetris', 'breakout', 'snake', 'crossing'].every(function (x) { return ids.indexOf(x) >= 0; })) try { localStorage.removeItem('annabelle-retro-zoo'); } catch (e) {}
+  }
+  function resetScreen(fromMath) {
+    var card = shell('🗑️ ' + 'איפוס התקדמות',
+      '<div class="stat" style="font-size:14px">בחרו אילו משחקים לאפס. כוכבים, שלבים שנפתחו ושיאים של המשחק יימחקו. מטבעות ומדבקות באלבום נשארים, אלא אם בוחרים "הכל".</div>' +
+      '<label class="row" style="font-weight:800"><input type="checkbox" data-all style="flex:none;width:22px;height:22px"><span class="lbl">הכל (כולל מטבעות, מדבקות ופריטים)</span></label>' +
+      '<div data-list style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:42dvh;overflow:auto">' + RG.map(function (g) { return '<label style="display:flex;align-items:center;gap:6px;font-size:15px;padding:4px"><input type="checkbox" data-g="' + g[0] + '" style="flex:none;width:20px;height:20px"><span>' + g[1] + ' ' + esc(g[2]) + '</span></label>'; }).join('') + '</div>' +
+      '<div class="msg" data-m></div>' +
+      '<div class="row"><button type="button" class="pri" data-a="go" style="background:#c0392b">🗑️ איפוס</button><button type="button" class="soft" data-a="cancel">' + esc(t('back')) + '</button></div>');
+    var all = card.querySelector('[data-all]'), boxes = [].slice.call(card.querySelectorAll('[data-g]')), msg = card.querySelector('[data-m]'), step = 0;
+    all.onchange = function () { boxes.forEach(function (b) { b.checked = false; b.disabled = all.checked; }); };
+    card.querySelector('[data-a=cancel]').onclick = function () { showPanel('', fromMath); };
+    var go = card.querySelector('[data-a=go]');
+    go.onclick = function () {
+      var ids = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.getAttribute('data-g'); });
+      if (!all.checked && !ids.length) { msg.textContent = 'לא נבחר כלום'; return; }
+      if (step === 0) { step = 1; msg.textContent = all.checked ? 'בטוחים? כל ההתקדמות תימחק. לחצו שוב לאישור' : 'בטוחים? ' + ids.length + ' משחקים יאופסו. לחצו שוב לאישור'; go.textContent = '⚠️ כן, לאפס'; return; }
+      doReset(ids, all.checked); msg.className = 'msg ok'; msg.textContent = '✅ אופס! מרענן…'; go.disabled = true; setTimeout(function () { location.reload(); }, 900);
+    };
+  }
   function showPanel(note, fromMath) {
     var s = play(), p = par(), r = lockReason(), playedMin = Math.floor(s.seconds / 60), bed = p.bed;
     var lockedNow = r === 'parent' || r === 'bed';
@@ -336,6 +380,7 @@
       '<div class="row"><span class="lbl">🌙 ' + esc(t('bedtime')) + '</span><button type="button" data-a="bed" class="' + (bed.on ? 'pri' : 'soft') + '">' + esc(bed.on ? t('on') : t('off')) + '</button></div>' +
       '<div class="row" dir="ltr"><input type="time" data-a="from" value="' + esc(bed.from) + '" aria-label="' + esc(t('from')) + '"><span style="flex:0">→</span><input type="time" data-a="to" value="' + esc(bed.to) + '" aria-label="' + esc(t('to')) + '"></div>' +
       '<div class="msg ok">' + esc(note || '') + '</div>' +
+      '<div class="row"><button type="button" class="soft" data-a="rst">🗑️ איפוס התקדמות</button></div>' +
       '<div class="row"><button type="button" class="' + (fromMath ? 'pri' : 'soft') + '" data-a="pin">' + esc(fromMath ? t('newpin') : t('chpin')) + '</button><button type="button" class="soft" data-a="done">' + esc(t('close')) + '</button></div>');
     function upd(fn, msg) { var pp = par(), ss = play(); fn(pp, ss); wr(KPAR, pp); wr(KP, ss); render(); showPanel(msg || t('saved'), fromMath); }
     card.querySelector('[data-a=minus]').onclick = function () { upd(function (pp) { pp.limit = Math.max(MIN_LIMIT, pp.limit - STEP); }); };
@@ -346,6 +391,7 @@
       if (lockedNow) { pp.lock = false; var b = bedInfo(pp); if (b.in) pp.skip = b.end; } else { pp.lock = true; delete pp.skip; } }); };
     card.querySelector('[data-a=bed]').onclick = function () { upd(function (pp) { pp.bed.on = !pp.bed.on; delete pp.skip; }); };
     ['from', 'to'].forEach(function (k) { card.querySelector('[data-a=' + k + ']').onchange = function (e) { var val = e.target.value; if (/^\d\d:\d\d$/.test(val)) upd(function (pp) { pp.bed[k] = val; delete pp.skip; }); }; });
+    card.querySelector('[data-a=rst]').onclick = function () { resetScreen(fromMath); };
     card.querySelector('[data-a=pin]').onclick = function () { pinPad('create'); };
     card.querySelector('[data-a=done]').onclick = closePanel;
   }
