@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="retro"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3b2a8f">
+<title>פינת הרטרו</title><script src="safe.js"></script>
+<style>
+:root{--ink:#fff;--neon:#ffe14d;--pink:#ff6fb5;--cy:#5ff0ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#1a1240;color:var(--ink);font-family:"Rubik","Varela Round",Arial,sans-serif}
+body{min-height:100dvh;background:radial-gradient(circle at 50% -10%,#5b3fd1,#2a1a6e 45%,#120a33);padding:12px 14px 40px}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 3px,#0003 3px 4px);z-index:5}
+.wrap{max-width:900px;margin:0 auto}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.home{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#fff2;border:3px solid var(--cy);font-size:24px;text-decoration:none;color:#fff}
+h1{flex:1;margin:0;font-size:clamp(24px,6vw,38px);color:var(--neon);text-shadow:0 0 12px #ff9d00,3px 3px 0 #b3002d;letter-spacing:1px}
+.langs button{font:inherit;font-size:14px;margin-inline-start:4px;padding:6px 10px;border-radius:10px;border:2px solid #fff6;background:#0004;color:#fff;cursor:pointer;min-height:36px}
+.langs button.sel{background:var(--neon);color:#222}
+.story{margin:10px 0 14px;padding:12px 14px;border:3px solid var(--pink);border-radius:18px;background:#ffffff14;font-size:clamp(15px,3.6vw,18px);line-height:1.5}
+.story b{color:var(--neon)}
+.zoo{margin:0 0 16px;padding:12px;border:3px dashed var(--cy);border-radius:18px;background:#0003}
+.zoo h2{margin:0 0 6px;font-size:18px;color:var(--cy)}
+.zoo .row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:46px}
+.an{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff2}
+.an.no{filter:grayscale(1) brightness(.35);opacity:.6}
+.bar{height:14px;border-radius:8px;background:#0006;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--neon));width:0;transition:width .6s}
+.cnt{text-align:center;font-weight:800;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+a.card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;text-decoration:none;color:#fff;border:3px solid #fff8;box-shadow:0 6px 0 #0006;min-height:96px;position:relative}
+a.card:active{transform:translateY(3px);box-shadow:0 3px 0 #0006}
+a.card .e{font-size:46px;flex:none}
+a.card b{display:block;font-size:20px}
+a.card small{display:block;font-size:13px;opacity:.9;margin-top:2px}
+a.card .st{margin-top:5px;font-size:15px;letter-spacing:1px}
+.c-invaders{background:linear-gradient(135deg,#5b4bd6,#2a1a8a)}.c-tetris{background:linear-gradient(135deg,#ff9a3d,#e0561f)}.c-breakout{background:linear-gradient(135deg,#3fc98a,#1f8f5a)}.c-snake{background:linear-gradient(135deg,#ffb938,#e07a10)}.c-crossing{background:linear-gradient(135deg,#4aa3ff,#2a5fd0)}
+.foot{margin-top:16px;text-align:center;font-size:14px;opacity:.8}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><a class="home" href="index.html" id="home" aria-label="home">🏠</a><h1 id="ttl"></h1><div class="langs" id="langs"></div></div>
+ <div class="story" id="story"></div>
+ <div class="zoo"><h2 id="zT"></h2><div class="row" id="zoo"></div><div class="bar"><i id="zb"></i></div><div class="cnt" id="zc"></div></div>
+ <div class="grid" id="games"></div>
+ <div class="foot" id="foot"></div>
+</div>
+<script>
+(function(){
+var LS=function(k){try{return localStorage.getItem(k)}catch(e){return null}};
+var TX={he:{ttl:"🕹️ פינת הרטרו",story:"<b>מקלט החיות של אנאבל</b> 🐾 חיות קטנות הלכו לאיבוד, והחתולים מימי, טיגי וליאו יחד עם גור הנמר הקטן יוצאים להציל אותן! בכל משחק מצילים חיות, והן עוברות לגור במקלט. מי תציל את כולן?",zT:"🏡 המקלט שלנו",zc:"{n} מתוך {m} חיות הצלנו",foot:"המשחקים הישנים והטובים, עם חתולים ונמרים וחיות להציל 💛",games:{invaders:["פולשי החלל","חילוץ חיות מהחלל"],tetris:["טטריס חתולים","משחררים חיות מהערימה"],breakout:["שוברת הכלובים","פותחים כלובים עם כדור צמר"],snake:["זנב הנמר","אוספים אוכל והצלה"],crossing:["מעבר החיות","מובילות גורים בבטחה לקליניקה"]},best:"שיא",stars:"כוכבים"},
+fr:{ttl:"🕹️ Coin rétro",story:"<b>Le refuge d'Annabelle</b> 🐾 De petits animaux se sont perdus ! Les chats Mimi, Tiggy et Leo et le bébé tigre partent les sauver. Dans chaque jeu, tu sauves des animaux qui s'installent au refuge. Pourras-tu les sauver tous ?",zT:"🏡 Notre refuge",zc:"{n} animaux sauvés sur {m}",foot:"Les bons vieux jeux, avec des chats, des tigres et des animaux à sauver 💛",games:{invaders:["Envahisseurs","Sauvetage dans l'espace"],tetris:["Tetris des chats","Libère les animaux de la pile"],breakout:["Casse-cages","Ouvre les cages avec une pelote"],snake:["Queue de tigre","Collecte et sauvetage"],crossing:["Passage des animaux","Guide les bébés à la clinique"]},best:"Record",stars:"Étoiles"},
+en:{ttl:"🕹️ Retro Corner",story:"<b>Annabelle's Animal Sanctuary</b> 🐾 Little animals are lost! The cats Mimi, Tiggy and Leo and the baby tiger set out to rescue them. In every game you rescue animals and they move into the sanctuary. Can you rescue them all?",zT:"🏡 Our sanctuary",zc:"{n} of {m} animals rescued",foot:"Good old games, with cats, tigers and animals to rescue 💛",games:{invaders:["Space Invaders","Space rescue mission"],tetris:["Kitty Blocks","Free the animals from the stack"],breakout:["Cage Breaker","Open cages with a yarn ball"],snake:["Tiger Tail","Collect food and rescue"],crossing:["Animal Crossing","Lead cubs safely to the clinic"]},best:"Best",stars:"Stars"}};
+var ORDER=["invaders","tetris","breakout","snake","crossing"],EMO={invaders:"🚀",tetris:"🧱",breakout:"🐾",snake:"🐯",crossing:"🐥"};
+var ZOO=[["tiger","🐯"],["lion","🦁"],["leopard","🐆"],["cheetah","🐈"],["puma","😺"],["panda","🐼"],["koala","🐨"],["monkey","🐵"],["elephant","🐘"],["giraffe","🦒"],["zebra","🦓"],["rabbit","🐰"],["fox","🦊"],["owl","🦉"],["parrot","🦜"],["turtle","🐢"],["dolphin","🐬"],["penguin","🐧"],["hedgehog","🦔"],["deer","🦌"]];
+function lang(){var l=LS("annabelle-lang")||"he";return l==="fr"||l==="en"?l:"he"}
+function J(k){try{return JSON.parse(LS(k)||"null")}catch(e){return null}}
+function starsOf(o){if(!o||typeof o!=="object")return 0;var n=0;(function w(x,d){if(d>3||!x)return;if(typeof x==="number"){return}Object.keys(x).forEach(function(k){var v=x[k];if(/star/i.test(k)){if(typeof v==="number")n+=v;else if(v&&typeof v==="object")Object.keys(v).forEach(function(z){if(typeof v[z]==="number")n+=v[z]})}else if(v&&typeof v==="object")w(v,d+1)})})(o,0);return n}
+function draw(){
+ var l=lang(),t=TX[l];document.documentElement.lang=l;document.documentElement.dir=l==="he"?"rtl":"ltr";
+ document.getElementById("ttl").textContent=t.ttl;document.title=t.ttl.replace("🕹️ ","");document.getElementById("story").innerHTML=t.story;document.getElementById("zT").textContent=t.zT;document.getElementById("foot").textContent=t.foot;
+ var got=J("annabelle-retro-zoo");got=Array.isArray(got)?got:[];var n=0;
+ document.getElementById("zoo").innerHTML=ZOO.map(function(a){var h=got.indexOf(a[0])>=0;if(h)n++;return '<div class="an'+(h?'':' no')+'" title="'+(h?a[0]:'?')+'">'+a[1]+'</div>'}).join("");
+ document.getElementById("zb").style.width=Math.round(n/ZOO.length*100)+"%";document.getElementById("zc").textContent=t.zc.replace("{n}",n).replace("{m}",ZOO.length);
+ document.getElementById("games").innerHTML=ORDER.map(function(id){var g=t.games[id],p=J("annabelle-retro-"+id),s=starsOf(p),b=p&&typeof p==="object"&&typeof p.best==="number"?p.best:0;
+  return '<a class="card c-'+id+'" href="'+id+'.html"><span class="e">'+EMO[id]+'</span><span><b>'+g[0]+'</b><small>'+g[1]+'</small><span class="st">'+(s?"⭐ "+s+"  ":"")+(b?"🏅 "+b:"")+'</span></span></a>'}).join("");
+ document.getElementById("langs").innerHTML=[["he","עברית"],["fr","FR"],["en","EN"]].map(function(x){return '<button data-l="'+x[0]+'" class="'+(x[0]===l?"sel":"")+'">'+x[1]+'</button>'}).join("");
+}
+document.getElementById("langs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;try{localStorage.setItem("annabelle-lang",b.dataset.l)}catch(x){}draw()});
+draw();addEventListener("pageshow",draw);addEventListener("storage",draw);
+})();
+</script>
+<!--pwa--><link rel="manifest" href="manifests/retro.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/retro-192.png"><meta name="apple-mobile-web-app-title" content="פינת הרטרו"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/retro-apple-180.png"><script src="pwa.js" data-app="retro" data-slots='[]' defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
+</body>
+</html>
