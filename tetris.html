@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="tetris"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="tetris"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -111,6 +111,20 @@ body.play #app{display:flex}
  .cb[data-a=rot]{grid-column:4;grid-row:2}.cb[data-a=hold]{grid-column:5;grid-row:2}.cb[data-a=hard]{grid-column:4/6;grid-row:3}
 }
 @media (max-height:620px){.card{gap:6px;padding:10px}.btn{min-height:44px}.big{font-size:36px}.rvE{height:110px}.rvE span{font-size:72px}}
+/* online 1-vs-1 */
+.btn.n{background:#7c5cff;border-bottom-color:#4a35b0}
+#emo{display:none;gap:4px;flex:0 1 auto;min-width:0}
+#emo .ib{width:40px;flex:0 1 40px;min-width:30px;font-size:20px;padding:0}
+#emo.cool .ib{opacity:.45}
+body.ol #emo{display:flex}
+body.ol #pauseBtn,body.ol #pawBtn,body.ol #musBtn{display:none}
+.scl{font-weight:900;font-size:clamp(22px,6.5vw,30px)!important;color:#fff}
+#reCard button:disabled{opacity:.55}
+@media (max-height:830px){#mHi li:nth-child(n+4){display:none}}
+@media (max-width:739px) and (max-height:780px){#menu .sub{display:none}#masc{width:191px;height:80px}#menu .card{gap:8px}#menu .mgrid,#menu .mcol{gap:6px}}
+@media (max-width:739px) and (max-height:712px){#mHi li:nth-child(n+2){display:none}#masc{width:153px;height:64px}}
+@media (min-width:740px) and (max-height:450px){#masc{width:134px;height:56px}#mHi li:nth-child(n+2){display:none}}
+@media (max-width:739px) and (max-height:660px){#menu .btn{min-height:44px}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/tetris.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/tetris-192.png"><meta name="apple-mobile-web-app-title" content="טטריס חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/tetris-apple-180.png"><script src="pwa.js" data-app="tetris" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -126,6 +140,7 @@ body.play #app{display:flex}
   <button class="ib" id="muteBtn" aria-label="mute">🔊</button>
   <button class="ib" id="pawBtn" aria-label="helper paw">🐾<span class="bd" id="pawBd">2</span></button>
   <span class="grow"></span>
+  <span id="emo"><button class="ib" data-e="0" aria-label="emote">😄</button><button class="ib" data-e="1" aria-label="emote">😮</button><button class="ib" data-e="2" aria-label="emote">😭</button><button class="ib" data-e="3" aria-label="emote">👏</button></span>
   <span class="pill" id="pillR"></span>
  </div>
  <div id="stage"><canvas id="cv"></canvas><div id="ban"><small id="banS"></small><b id="banT"></b></div></div>
@@ -148,6 +163,7 @@ body.play #app{display:flex}
    <p class="sub" data-t="tag"></p>
    <button class="btn g" id="bPlay"></button>
    <div class="row"><button class="btn o" id="bArcade"></button><button class="btn b" id="bSprint"></button></div>
+   <button class="btn n" id="bOnline"></button>
   </div>
   <div class="mcol">
    <div class="row r3"><button class="btn s" id="bLevels"></button><button class="btn s" id="bSanct"></button><button class="btn s" id="bStory"></button></div>
@@ -171,7 +187,9 @@ body.play #app{display:flex}
 <div class="ov" id="reveal"><div class="card" id="rvCard"></div></div>
 <div class="ov" id="result"><div class="card" id="reCard"></div></div>
 <div class="ov" id="pause"><div class="card"><h2 data-t="paused"></h2><button class="btn g primary" id="resBtn"></button><button class="btn s" id="pMenu"></button></div></div>
+<div class="ov" id="olq"><div class="card"><h2 data-t="olQuitQ"></h2><button class="btn g primary" id="olqStay"></button><button class="btn s" id="olqGo"></button></div></div>
 
+<script src="net1v1.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -200,6 +218,9 @@ sanctT:"המקלט שלנו",sanctS:"{n} מתוך {m} חיות הצלנו",rescu
 warn:"🤖 כלוב בדרך!",cage:"🤖 נוסף כלוב",saved:"🐾 כפה עזרה!",sweep:"כפה ענקית ניקתה למעלה!",sprintEnd:"הזמן נגמר!",sprintT:"ספרינט",arcadeT:"ארקייד",arcadeS:"משחק בלי סוף · כמה נקודות תצברי?",newAni:"חיה חדשה במקלט!",revealS:"ברוכים הבאים למקלט! 🏡",
 finaleT:"המקלט פתוח!",finaleS:"שחררתם את הטיגריס הקטן וכל החיות! מימי, טיגי וליאו גאים בך.",noPaw:"אין כפות עזרה",
 hiT:"🏆 טבלת השיאים",newRec:"★ שיא חדש! ★",gameOverA:"איזה משחק!",lvUp:"שלב {n}!",pops:["יפה!","וואו!","מדהים!!"],combo:"קומבו ×{n}!",bonk:"בונק!",
+online:"🌐 אונליין עם חברה",shareT:"בואי לשחק איתי טטריס חתולים! 🧱🐱",you:"את",friend:"החברה",olRound:"סיבוב {n}",olFirst:"הראשונה ל-2 ניצחונות מנצחת",olGo:"יאללה!",olTip:["נקי 2 שורות ביחד","ושלחי כלובים לחברה! 📦"],
+olWinR:"⭐ ניצחת בסיבוב!",olLoseR:"החברה ניצחה בסיבוב",olWin:"ניצחת! 🏆",olLose:"החברה ניצחה הפעם",olWin2:"איזה משחק! כל הכבוד 👏",olLose2:"שיחקת יפה! בפעם הבאה תנצחי 💪",olWarn:"📦 כלובים בדרך מהחברה!",olHurry:"⏰ מהר! כלובים עולים!",olFast:"מהר יותר!",olSpeed:"מהירות",olTop:"אוי! הערימה הגיעה למעלה",
+olQuitQ:"לצאת מהמשחק?",olStay:"▶ להמשיך לשחק",olQuit:"🏠 לצאת",olRe:"🔁 שוב",olReWant:"החברה רוצה לשחק שוב! 🔁",olNew:"🌐 חדר חדש",olWins:"ניצחונות אונליין",
 ch:[["שער הגן","ארנבונים נתקעו בין הקוביות! נקו שורות כדי לשחרר אותם."],["חברים קוצניים","קיפודים התגלגלו לתוך הערימה. יש כלובים למטה, נקו גם אותם!"],["רובוט הכלובים","הרובוט השובב מוסיף כלובים מדי פעם. שחררו את הצבים לפני שיגמר לו הכוח!"],["חוף הקרח","פינגווינים החליקו לתוך הקוביות. שחררו אותם אל החוף."],["יער הבמבוק","הפנדות מחכות בין הקוביות. בלי לחץ, קחו את הזמן."],["בלון הכלובים","בלון ענק מוסיף כלובים! הקופים צוחקים וקוראים לעזרה."],["שביל הפילים","פילים גדולים עם לב גדול. כל שורה משחררת אחד!"],["עמק הג'ירפות","ג'ירפות גבוהות תקועות בערימה הגבוהה."],["גרמלין הזבל","הגרמלין זורק כלובים מהר! השועלים מחכים להצלה."],["מלך הכלובים","הטיגריס הקטן שלנו כלוא! שחררו אותו ופתחו את המקלט."]]},
 fr:{title:"Tetris des chats",tag:"Des animaux sont coincés dans les blocs ! Efface des lignes pour les libérer.",play:"▶ Continuer l'aventure",levels:"🗺 Niveaux",sprint:"⏱ Sprint 2:00",arcade:"🕹 Arcade ∞",sanct:"🏡 Refuge",story:"📖 Histoire",easy:"🌱 Facile",normal:"🌿 Normal",hard:"🔥 Difficile",
 hold:"Garde",next:"Suite",score:"Score",level:"Niveau",paused:"Pause",resume:"▶ Reprendre",menu:"☰ Menu",again:"🔁 Encore",nextLv:"▶ Niveau suivant",tryAgain:"🔁 Réessayer",almost:"Presque !",almostT:"Les animaux croient en toi. On réessaie le même niveau !",great:"Bravo !",
@@ -209,6 +230,9 @@ sanctT:"Notre refuge",sanctS:"{n} animaux sauvés sur {m}",rescued:"Libérés",b
 warn:"🤖 Une cage arrive !",cage:"🤖 Une cage !",saved:"🐾 Patte d'aide !",sweep:"Une grosse patte a nettoyé le haut !",sprintEnd:"Temps écoulé !",sprintT:"Sprint",arcadeT:"Arcade",arcadeS:"Partie sans fin · combien de points ?",newAni:"Nouvel animal au refuge !",revealS:"Bienvenue au refuge ! 🏡",
 finaleT:"Le refuge est ouvert !",finaleS:"Tu as libéré le bébé tigre et tous les animaux ! Mimi, Tiggy et Leo sont fiers de toi.",noPaw:"Plus de pattes d'aide",
 hiT:"🏆 MEILLEURS SCORES",newRec:"★ NOUVEAU RECORD ! ★",gameOverA:"Quelle partie !",lvUp:"Niveau {n} !",pops:["Joli !","Waouh !","Incroyable !!"],combo:"Combo ×{n} !",bonk:"Boum !",
+online:"🌐 En ligne avec une amie",shareT:"Viens jouer au Tetris des chats avec moi ! 🧱🐱",you:"Toi",friend:"Ton amie",olRound:"Manche {n}",olFirst:"La première à 2 victoires gagne",olGo:"Partez !",olTip:["Efface 2 lignes d'un coup","pour envoyer des cages ! 📦"],
+olWinR:"⭐ Tu gagnes la manche !",olLoseR:"Ton amie gagne la manche",olWin:"Tu as gagné ! 🏆",olLose:"Ton amie a gagné cette fois",olWin2:"Quel match ! Bravo 👏",olLose2:"Bien joué ! La prochaine sera pour toi 💪",olWarn:"📦 Des cages arrivent !",olHurry:"⏰ Vite ! Les cages montent !",olFast:"Plus vite !",olSpeed:"Vitesse",olTop:"Oups ! La pile est arrivée en haut",
+olQuitQ:"Quitter la partie ?",olStay:"▶ Continuer à jouer",olQuit:"🏠 Quitter",olRe:"🔁 Revanche",olReWant:"Ton amie veut rejouer ! 🔁",olNew:"🌐 Nouvelle salle",olWins:"Victoires en ligne",
 ch:[["Le portail du jardin","Des lapins sont coincés dans les blocs ! Efface des lignes pour les libérer."],["Amis piquants","Des hérissons ont roulé dans la pile. Il y a des cages en bas, efface-les aussi !"],["Le robot des cages","Le robot farceur ajoute des cages. Libère les tortues avant qu'il recharge !"],["La plage de glace","Des pingouins ont glissé dans les blocs. Ramène-les à la plage."],["La forêt de bambou","Les pandas attendent dans les blocs. Pas de stress, prends ton temps."],["Le ballon-cage","Un ballon géant ajoute des cages ! Les singes rient et appellent à l'aide."],["Le chemin des éléphants","De grands éléphants au grand cœur. Chaque ligne en libère un !"],["La vallée des girafes","De hautes girafes sont coincées dans la haute pile."],["Le gremlin des déchets","Le gremlin lance des cages vite ! Les renards attendent."],["Le roi des cages","Notre bébé tigre est en cage ! Libère-le et ouvre le refuge."]]},
 en:{title:"Kitty Blocks",tag:"Animals are trapped in the blocks! Clear lines to free them to the sanctuary.",play:"▶ Continue journey",levels:"🗺 Levels",sprint:"⏱ Sprint 2:00",arcade:"🕹 Arcade ∞",sanct:"🏡 Sanctuary",story:"📖 Story",easy:"🌱 Easy",normal:"🌿 Normal",hard:"🔥 Hard",
 hold:"Hold",next:"Next",score:"Score",level:"Level",paused:"Paused",resume:"▶ Resume",menu:"☰ Menu",again:"🔁 Again",nextLv:"▶ Next level",tryAgain:"🔁 Try again",almost:"Almost!",almostT:"The animals believe in you. Let's try the same level again!",great:"Well done!",
@@ -218,13 +242,16 @@ sanctT:"Our sanctuary",sanctS:"{n} of {m} animals rescued",rescued:"Freed",best:
 warn:"🤖 Cage incoming!",cage:"🤖 A new cage!",saved:"🐾 Helper paw!",sweep:"A big paw cleared the top!",sprintEnd:"Time's up!",sprintT:"Sprint",arcadeT:"Arcade",arcadeS:"Endless game · how high can you score?",newAni:"New animal in the sanctuary!",revealS:"Welcome to the sanctuary! 🏡",
 finaleT:"The sanctuary is open!",finaleS:"You freed the baby tiger and all the animals! Mimi, Tiggy and Leo are proud of you.",noPaw:"No helper paws left",
 hiT:"🏆 HIGH SCORES",newRec:"★ NEW RECORD! ★",gameOverA:"What a game!",lvUp:"Level {n}!",pops:["Nice!","Wow!","Amazing!!"],combo:"Combo ×{n}!",bonk:"Bonk!",
+online:"🌐 Online with a friend",shareT:"Come play Kitty Blocks with me! 🧱🐱",you:"You",friend:"Friend",olRound:"Round {n}",olFirst:"First to 2 wins takes the match",olGo:"GO!",olTip:["Clear 2 lines at once","to send cages to your friend! 📦"],
+olWinR:"⭐ You won the round!",olLoseR:"Your friend won the round",olWin:"You won! 🏆",olLose:"Your friend won this time",olWin2:"What a match! Well done 👏",olLose2:"Well played! Next time it's yours 💪",olWarn:"📦 Cages incoming!",olHurry:"⏰ Hurry! Cages are rising!",olFast:"Faster!",olSpeed:"Speed",olTop:"Oops! The stack reached the top",
+olQuitQ:"Leave the match?",olStay:"▶ Keep playing",olQuit:"🏠 Leave",olRe:"🔁 Again",olReWant:"Your friend wants a rematch! 🔁",olNew:"🌐 New room",olWins:"Online wins",
 ch:[["Garden gate","Bunnies are stuck in the blocks! Clear lines to free them."],["Prickly friends","Hedgehogs rolled into the stack. There are cages at the bottom, clear them too!"],["The cage robot","The naughty robot adds cages. Free the turtles before it recharges!"],["Ice beach","Penguins slid into the blocks. Send them back to the beach."],["Bamboo forest","The pandas wait inside the blocks. No rush, take your time."],["The cage balloon","A giant balloon adds cages! The monkeys giggle and call for help."],["Elephant trail","Big elephants with big hearts. Every line frees one!"],["Giraffe valley","Tall giraffes are stuck in the tall stack."],["The litter gremlin","The gremlin tosses cages fast! The foxes are waiting."],["The cage king","Our baby tiger is caged! Free him and open the sanctuary."]]}};
 
 let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
 const T=k=>(TX[lang][k]!==undefined?TX[lang][k]:TX.en[k]);
 
 /* ---------- save (migrates older saves, never wipes) ---------- */
-let S={unlocked:1,stars:{},best:0,hi:[],rescued:[],diff:"easy",music:true,seen:false,sprintBest:0};
+let S={unlocked:1,stars:{},best:0,hi:[],rescued:[],diff:"easy",music:true,seen:false,sprintBest:0,wn:[0,0]};
 let hadSave=false,hadHi=false;
 try{const o=JSON.parse(ls.get(SAVEK)||"null");if(o&&typeof o==="object"&&!Array.isArray(o)){hadSave=true;hadHi=Array.isArray(o.hi);S=Object.assign(S,o)}}catch(e){}
 function today(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
@@ -235,6 +262,7 @@ function save(){ls.set(SAVEK,JSON.stringify(S))}
  if(!Array.isArray(S.rescued))S.rescued=[];
  S.unlocked=Math.max(1,Math.min(10,(S.unlocked|0)||1));
  if(!DIFF[S.diff])S.diff="easy";
+ S.wn=Array.isArray(S.wn)&&S.wn.length===2?S.wn.map(v=>Math.max(0,Math.round(+v||0))):[0,0]; // online wins / losses
  const had=hadHi&&Array.isArray(S.hi);
  S.hi=(had?S.hi:[]).filter(e=>e&&typeof e==="object"&&+e.s>0).map(e=>({s:Math.round(+e.s),d:String(e.d||today()),m:e.m==="arcade"?"arcade":"story"}));
  if(!had&&S.best>0)S.hi.push({s:S.best,d:today(),m:"story"});
@@ -311,14 +339,15 @@ function rotCells(cells,n,d){return cells.map(([x,y])=>d>0?[n-1-y,x]:[y,n-1-x])}
 function mkPiece(t){const s=SH[t];return{t:TYPES.indexOf(t),k:t,n:s.n,cells:s.c.map(a=>a.slice()),x:Math.floor((W-s.n)/2),y:0}}
 
 /* ---------- game state ---------- */
-let G=null,screen="menu",paused=false;
+let G=null,screen="menu",paused=false,OL={on:false}; // OL: the online match (see "online 1-vs-1 battle")
 const KICKS=[[0,0],[-1,0],[1,0],[-2,0],[2,0],[0,-1],[-1,-1],[1,-1]];
 function emptyBoard(){return Array.from({length:H},()=>Array(W).fill(null))}
-function bag(){const a=TYPES.split("");for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function bag(){const a=TYPES.split(""),r=G&&G.rng||Math.random;for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a} // online: both friends get the same pieces (shared seed)
 function drawNext(){if(G.q.length<8)G.q.push(...bag());return G.q.shift()}
 function collide(cells,px,py){for(const [cx,cy] of cells){const x=px+cx,y=py+cy;if(x<0||x>=W||y>=H)return true;if(y>=0&&G.board[y][x])return true}return false}
 function gravMs(){
  const D=DIFF[G.diff];
+ if(G.mode==="versus")return Math.max(.1,.8*Math.pow(.86,G.level-1)); // online: gently faster every 20 s
  if(G.mode==="arcade")return Math.max(.12,.95*Math.pow(.94,G.level-1)*D.g);
  const lv=G.mode==="sprint"?3:G.level;
  return Math.max(.1,(0.95-(lv-1)*0.065)*D.g);
@@ -339,13 +368,15 @@ function newGame(mode,level,diff){
   boss:null,bossDefeat:null,bossSeen:false,freed:[],over:false,piece:null,lines:0,winPending:false,cages:0};
  if(L&&L.boss)G.boss={e:L.boss,crown:!!L.final,period:D.boss*(level>=9?.8:1),t:0,warned:false,hit:0,jump:0};
  if(G.boss)G.boss.t=G.boss.period;
+ if(mode==="versus"){G.rng=rng32(olSeed());G.saves=0;G.paws=0;G.lockDelay=.5;G.introT=0} // online round: seeded pieces, no hearts, no helper paw
  G.grav=gravMs();
  if(L){const n=Math.round(L.rows*D.rows);for(let i=0;i<n;i++)addCageRow(true)}
  spawn();
  paused=false;screen="play";document.body.classList.add("play");
  hideAll();resize();hudStr="";updateHud();
- award({event:"play",level:L?level:undefined});
  musStart(170);
+ if(mode==="versus")return; // online: the match (not each round) counts as one play, and has its own countdown
+ award({event:"play",level:L?level:undefined});
  if(L){const c=T("ch")[level-1];showBan(T("chap")+" "+level+(L.boss?" · "+T("bossB"):""),(L.boss?L.boss+(L.final?"👑":"")+" ":ANI[L.a]+" ")+c[0],!!L.boss);if(L.boss)SFX.bossIn();else SFX.levelup()}
  else if(mode==="arcade"){showBan(T("arcadeS"),"🕹 "+T("arcadeT")+" ∞",false);SFX.levelup()}
  else{showBan("2:00","⏱ "+T("sprintT"),false);SFX.levelup()}
@@ -365,6 +396,7 @@ function spawn(){
  if(collide(G.piece.cells,G.piece.x,G.piece.y)){G.piece.y=-1;if(collide(G.piece.cells,G.piece.x,G.piece.y)){G.piece.y=0;overflow()}}
 }
 function overflow(){
+ if(G.mode==="versus"){olTopOut();return} // online: topping out loses the round (no hearts)
  if(G.mode==="sprint"||G.saves>0){
   if(G.mode!=="sprint"){G.saves--;G.savesUsed++}
   sweepTop();banner(T("sweep"));SFX.paw();juice(.08,.22);
@@ -403,7 +435,7 @@ function flyAnimal(e,bx,by,n,delay){
 }
 
 /* ---------- actions ---------- */
-function playing(){return G&&screen==="play"&&!paused&&!G.over&&!G.clearing&&!G.bossDefeat&&G.piece}
+function playing(){return G&&screen==="play"&&!paused&&!G.over&&!G.clearing&&!G.bossDefeat&&G.piece&&!(OL.on&&(OL.ph!==1||OL.netp))}
 function touchLock(){if(G.piece&&collide(G.piece.cells,G.piece.x,G.piece.y+1)&&G.lockMoves<14){G.lockT=0;G.lockMoves++}}
 function tryMove(dx,dy){const p=G.piece;if(!p||collide(p.cells,p.x+dx,p.y+dy))return false;p.x+=dx;p.y+=dy;return true}
 function move(dx){if(!playing())return;G.lookX=dx;G.lookT=.4;if(tryMove(dx,0)){SFX.move();touchLock()}}
@@ -427,7 +459,7 @@ function holdPiece(){
  if(collide(G.piece.cells,G.piece.x,G.piece.y))overflow();
 }
 function usePaw(){
- if(!G||screen!=="play"||paused||G.over||G.bossDefeat)return;
+ if(!G||screen!=="play"||paused||G.over||G.bossDefeat||G.mode==="versus")return;
  if(G.paws<=0||G.clearing){SFX.no();if(G.paws<=0)banner(T("noPaw"));return}
  let row=-1;
  for(let y=H-1;y>=0;y--){if(G.board[y].some(c=>c&&c.k==="cage")){row=y;break}}
@@ -445,9 +477,11 @@ function lockPiece(){
  for(let i=0;i<4;i++){const [cx,cy]=p.cells[i],x=p.x+cx,y=p.y+cy;if(y>=0)G.board[y][x]={k:"cat",t:p.t,i}}
  G.piece=null;
  const full=[];for(let y=0;y<H;y++)if(G.board[y].every(Boolean))full.push(y);
- const n=full.length;
- if(!n){G.combo=0;spawn();return}
+ const n=full.length,vs=G.mode==="versus";
+ if(vs)OL.dirty=true;
+ if(!n){G.combo=0;if(vs&&!olAfterLock())return;spawn();return}
  G.combo++;G.lines+=n;
+ if(vs)olAttack(n);
  const gain=clearRowsEffects(full);
  const lv=G.mode==="sprint"?3:G.level;
  G.score+=[0,100,300,500,800][n]*lv+50*(G.combo-1);
@@ -489,6 +523,7 @@ function finishClear(){
  }
  updateHud();
  if(checkQuota())return;
+ if(G.mode==="versus"){OL.dirty=true;if(!olAfterLock())return}
  spawn();
 }
 function checkQuota(){
@@ -516,6 +551,7 @@ function fxUpdate(dt){
 }
 function update(dt){
  G.t+=dt;
+ if(G.mode==="versus")olUpdate(dt);
  if(G.introT>0)G.introT-=dt;
  if(G.lookT>0)G.lookT-=dt;
  if(G.downT>0)G.downT-=dt;
@@ -553,7 +589,7 @@ let hudStr="";
 function updateHud(){
  if(!G)return;
  const n=G.rescShown;
- const s=G.mode==="marathon"?(ANI[G.animal]+" "+Math.min(n,G.quota)+"/"+G.quota):G.mode==="sprint"?("⏱ "+fmt(G.timeLeft)+"  🐾 "+n):("🐾 "+n);
+ const s=G.mode==="versus"?("🏆 "+OL.w[OL.me]+" : "+OL.w[1-OL.me]):G.mode==="marathon"?(ANI[G.animal]+" "+Math.min(n,G.quota)+"/"+G.quota):G.mode==="sprint"?("⏱ "+fmt(G.timeLeft)+"  🐾 "+n):("🐾 "+n);
  if(s!==hudStr){hudStr=s;$("pillR").textContent=s}
  const p=String(G.paws),bd=$("pawBd");
  if(bd.textContent!==p){bd.textContent=p;$("pawBtn").classList.toggle("off",G.paws<=0)}
@@ -662,7 +698,9 @@ function showResult(kind,o){
 /* ---------- screens ---------- */
 function hideAll(){document.querySelectorAll(".ov").forEach(o=>o.classList.remove("show"))}
 function show(id){hideAll();$(id).classList.add("show")}
-function toMenu(){G=null;paused=false;screen="menu";document.body.classList.remove("play");document.querySelectorAll(".fly").forEach(e=>e.remove());renderMenu();show("menu")}
+function toMenu(){
+ if(OL.on||screen==="lobby"){OL={on:false};document.body.classList.remove("ol");if(NT)NT.leaveToMenu()} // leaving an online match tells the friend ("bye")
+ G=null;paused=false;screen="menu";document.body.classList.remove("play");document.querySelectorAll(".fly").forEach(e=>e.remove());renderMenu();show("menu")}
 window.toMenu=toMenu;
 function startLevel(n){n=Math.max(1,Math.min(10,n|0));newGame("marathon",n,S.diff)}
 function startSprint(){newGame("sprint",0,S.diff)}
@@ -697,6 +735,7 @@ function renderMenu(){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=T("title");
  document.querySelectorAll("[data-t]").forEach(e=>e.textContent=T(e.dataset.t));
  const nxt=Math.min(10,S.unlocked);
+ $("bOnline").textContent=T("online");$("bOnline").style.display=NT?"":"none";$("olqStay").textContent=T("olStay");$("olqGo").textContent=T("olQuit");if(NT)NT.drawLang();
  $("bPlay").textContent=T("play")+" ("+nxt+")";$("bLevels").textContent=T("levels");$("bSprint").textContent=T("sprint");$("bArcade").textContent=T("arcade");$("bSanct").textContent=T("sanct");$("bStory").textContent=T("story");
  $("mTag").textContent="🏡 "+S.rescued.filter(a=>ANI[a]).length+"/"+ZOO.length;
  $("mHi").innerHTML=hiHtml(-1);
@@ -708,13 +747,14 @@ function renderMenu(){
  setMuteUI();
 }
 function doPause(p){
- if(!G||screen!=="play"||G.over)return;
+ if(!G||screen!=="play"||G.over||OL.on)return; // an online match never pauses (the friend keeps playing)
  paused=p;if(p)show("pause");else $("pause").classList.remove("show");
 }
 $("bPlay").onclick=()=>{ac();SFX.click();if(!S.seen){S.seen=true;save();showStory();return}showChapter(Math.min(10,S.unlocked))};
 $("bLevels").onclick=()=>{ac();SFX.click();renderLevels();screen="levels";show("levels")};
 $("bSprint").onclick=()=>{ac();SFX.click();startSprint()};
 $("bArcade").onclick=()=>{ac();SFX.click();startArcade()};
+$("bOnline").onclick=()=>{ac();SFX.click();if(NT)NT.showLobby()};
 $("bSanct").onclick=()=>{ac();SFX.click();renderSanct();screen="sanct";show("sanct")};
 $("bStory").onclick=()=>{ac();SFX.click();showStory()};
 $("stGo").onclick=()=>{SFX.click();S.seen=true;save();showChapter(Math.min(10,S.unlocked))};
@@ -732,6 +772,11 @@ document.addEventListener("keydown",e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  if(c==="KeyM"){toggleMute();return}
  if(screen==="play"&&G){
+  if(OL.on){ // online: Esc asks before leaving, 1-4 send an emote, no pause
+   if(c==="Escape"){e.preventDefault();olAskQuit();return}
+   if(c==="KeyP")return;
+   if(/^Digit[1-4]$/.test(c)){if(!e.repeat)sendEmo(+c[5]-1);return}
+  }
   if(c==="KeyP"||c==="Escape"){e.preventDefault();doPause(!paused);return}
   if(paused){if(c==="Enter"||c==="Space"){e.preventDefault();doPause(false)}return}
   if(G.over)return;
@@ -784,10 +829,11 @@ function resize(){
  const cw=Math.round(w*dpr),chh=Math.round(h*dpr);
  if(cv.width!==cw||cv.height!==chh){cv.width=cw;cv.height=chh}
  // wide: board + roomy side panel. slim (phones): board as big as possible + a slim info column.
- const cW=Math.floor(Math.min(w/14.9,(h-6)/20)),cS=Math.floor(Math.min((w-70)/10,(h-6)/20));
+ // online: room for the friend's mini board (slim: a wider info column; wide: a second panel next to mine)
+ const on=OL.on,cW=Math.floor(Math.min(w/(on?21.2:14.9),(h-6)/20)),cS=Math.floor(Math.min(on?(w-10)/13.3:(w-70)/10,(h-6)/20));
  const slim=cS>cW*1.06,c=Math.max(8,slim?cS:cW);
- const gap=slim?6:Math.round(c*.5),pw=slim?Math.min(w-c*10-gap-4,c*3):c*4.4,tot=c*10+gap+pw;
- L_={c,slim,pw,gap,ox:Math.max(2,Math.floor((w-tot)/2)),oy:Math.max(2,Math.floor((h-c*20)/2)),w,h,dpr};
+ const gap=slim?6:Math.round(c*.5),pw=slim?Math.min(w-c*10-gap-4,c*(on?4.4:3)):c*4.4,fw=on&&!slim?c*5.6:0,tot=c*10+gap+pw+(fw?gap+fw:0);
+ L_={c,slim,pw,gap,fw,ox:Math.max(2,Math.floor((w-tot)/2)),oy:Math.max(2,Math.floor((h-c*20)/2)),w,h,dpr};
  if(!scanPat){try{const p=document.createElement("canvas");p.width=2;p.height=3;const pg=p.getContext("2d");pg.fillStyle="rgba(0,0,0,.11)";pg.fillRect(0,0,2,1);scanPat=ctx.createPattern(p,"repeat")}catch(e){}}
 }
 addEventListener("resize",resize);addEventListener("orientationchange",()=>setTimeout(resize,200));
@@ -887,8 +933,10 @@ function drawBoard(g){
   g.save();g.translate(c*W/2,c*(6-q*1.3));g.rotate(Math.sin(p.t*17)*.05);g.scale(sc,sc);g.globalAlpha=Math.max(0,a);bigText(g,p.txt,c*1.55,p.col,c*W-18);g.restore();
  }
  if(G.flashT>0){g.fillStyle="rgba(255,255,255,"+Math.min(.75,G.flashT*3.2)+")";g.fillRect(0,0,c*W,c*H)}
+ if(G.mode==="versus")drawOL(g);
 }
 function drawPanel(g,sx,sy){
+ if(G.mode==="versus"){drawPanelOL(g,sx,sy);return}
  const c=L_.c,pw=L_.pw,slim=L_.slim,px=L_.ox+c*W+L_.gap+sx,py=L_.oy+sy,cx=px+pw/2,k=slim?c/30:c/30,M=G.mode==="marathon";
  const box=(y,h)=>{g.fillStyle="#2d1d52";g.fillRect(px,py+y,pw,h);g.strokeStyle="#6a4fb0";g.lineWidth=2;g.strokeRect(px+1,py+y+1,pw-2,h-2)};
  const bar=(x,y,w,h,q,col)=>{g.fillStyle="#0009";g.fillRect(x,y,w,h);g.fillStyle=col;g.fillRect(x,y,w*Math.max(0,Math.min(1,q)),h)};
@@ -940,6 +988,7 @@ function draw(){
  let sx=0,sy=0;if(G.shake>0){sx=(Math.random()-.5)*G.shake*c*.5;sy=(Math.random()-.5)*G.shake*c*.5}
  g.save();g.translate(L_.ox+sx,L_.oy+sy);drawBoard(g);g.restore();
  drawPanel(g,sx,sy);
+ if(G.mode==="versus")drawEmo(g);
  if(scanPat){g.fillStyle=scanPat;g.fillRect(0,0,L_.w,L_.h)}
 }
 // menu mascot: bobbing cat block that blinks and looks around, with rescued friends hopping
@@ -958,9 +1007,12 @@ function frame(t){
  requestAnimationFrame(frame);
  const dt=Math.min(.05,Math.max(0,(t-lastT)/1000));lastT=t;
  if(G){
-  if(G.flashT>0)G.flashT-=dt;
-  if(screen==="play"&&!paused&&!G.over){if(G.hitstop>0)G.hitstop-=dt;else update(dt)}
-  else if(G.over)fxUpdate(dt);
+  if(OL.on)olPump(); // online: runs on real time (see olPump), never on the clamped frame time
+  else{
+   if(G.flashT>0)G.flashT-=dt;
+   if(screen==="play"&&!paused&&!G.over){if(G.hitstop>0)G.hitstop-=dt;else update(dt)}
+   else if(G.over)fxUpdate(dt);
+  }
   if(document.body.classList.contains("play"))draw();
  }
  if(screen==="menu")drawMascot(t/1000);
@@ -968,15 +1020,312 @@ function frame(t){
 // drifting background friends
 (function(){const b=$("bg"),E=["🧱","🐾","⭐","🐱","🐰","💖","🧶","🐟"];for(let i=0;i<10;i++){const s=document.createElement("span");s.textContent=E[i%E.length];s.style.left=(4+i*9.6)+"%";s.style.animationDuration=(11+((i*7)%9))+"s";s.style.animationDelay=(-(i*3.7)%14)+"s";s.style.fontSize=(22+((i*5)%16))+"px";b.appendChild(s)}})();
 
+/* ---------- online 1-vs-1 battle (shared module net1v1.js) ----------
+   Each girl plays her OWN board on her own phone; the pieces come from a shared seed, so both get the same sequence.
+   The host decides the match (round, score, who won a round); a guest may only report her own board and her own top-out.
+   Messages (every field is checked, anything else is ignored):
+     start {g:"tetris",v:1,sd}       host -> guest, sent by net1v1: sd = seed of the match
+     rk    {r}                       guest -> host: "round r is on my screen" (the host uses the round trip to line up the 3-2-1)
+     st    {r,ph,a,b,w,cd}           host -> guest: round, phase (0 countdown, 1 play, 2 round over, 3 match over), wins host:guest, round winner, countdown ms
+     ko    {r}                       guest -> host: my board topped out in round r (re-sent until the host answers)
+     g     {r,n,c}                   cage rows for the friend: n = 1..4 now, c = all rows sent this round (a lost message heals itself)
+     b     {r,s,sc,ln,gs,pq,k}       my board for the friend's mini view (200 digits) + score, lines, rows sent, rows waiting, topped out
+     em    {i}                       emote 0..3 */
+const int=(v,lo,hi)=>Number.isInteger(v)&&v>=lo&&v<=hi;
+const OLC={CD:3,WARN:2.5,BETW:3.2,SNAP:.4,HURRY:150},EMO=["😄","😮","😭","👏"];
+function rng32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function olSeed(){return(OL.sd^Math.imul(OL.round,0x9E3779B1))>>>0}
+function olPend(){let n=0;for(const b of OL.q)n+=b.n;return n}
+function olMatch(sd){ // both sides: a fresh best-of-3
+ OL={on:true,sd,me:NT.host?0:1,round:0,ph:0,cd:0,cdN:0,goT:0,w:[0,0],lastW:-1,dead:false,netp:!!NT.paused,acked:false,t0:0,nextT:0,stAt:0,koT:0,
+  q:[],rcvG:0,sentG:0,tok:8,gAt:0,hurryT:0,hurried:false,fb:null,snapT:0,snapMin:0,dirty:false,
+  emo:[],emT:0,emRx:0,tot:0,lines:0,startAt:performance.now(),paid:false,reSeen:false,left:false,mx:0,my:0};
+ olLast=performance.now();document.body.classList.add("ol");
+ award({event:"play"});
+ olRound(1,OLC.CD+(NT.host?.25:0));
+}
+function olRound(r,cd){ // a new round: empty board, the same pieces for both, 3-2-1
+ OL.round=r;OL.ph=cd>0?0:1;OL.cd=cd;OL.cdN=0;OL.goT=0;OL.dead=false;OL.acked=false;OL.t0=performance.now();
+ OL.q=[];OL.rcvG=0;OL.sentG=0;OL.tok=8;OL.hurryT=0;OL.hurried=false;OL.koT=0;OL.fb=null;OL.snapT=0;OL.dirty=true;
+ newGame("versus",0,"normal");
+}
+function olGo(){if(OL.ph!==0)return;OL.ph=1;OL.cd=0;OL.goT=.9;OL.dirty=true;SFX.levelup()}
+// the online clock: real time (not the clamped frame time), also fed by a timer while the tab is hidden, so nobody gains by looking away
+let olLast=0;
+function olPump(){
+ const now=performance.now();let el=(now-olLast)/1000;olLast=now;
+ if(!OL.on||!G)return;
+ el=Math.max(0,Math.min(1.5,el));
+ while(el>1e-4){const dt=Math.min(1/30,el);el-=dt;olTick(dt)}
+}
+function olTick(dt){
+ for(const e of OL.emo)e.t+=dt;
+ if(OL.emo.length&&OL.emo[0].t>2.4)OL.emo.shift();
+ if(OL.netp)return; // the connection is lost: the match is frozen on both sides until net1v1 resumes
+ if(G.flashT>0)G.flashT-=dt;
+ if(OL.goT>0)OL.goT-=dt;
+ if(OL.left||OL.ph===3){
+  fxUpdate(dt);
+  if(!OL.left&&!OL.reSeen&&NT.NET.oppRe&&!NT.myRe){OL.reSeen=true;const m=$("olMsg");if(m){m.textContent=T("olReWant");SFX.levelup()}}
+  return;
+ }
+ if(OL.ph===0){
+  fxUpdate(dt);OL.cd-=dt;
+  const n=Math.ceil(OL.cd);if(n!==OL.cdN){OL.cdN=n;if(n>=1&&n<=3)SFX.tick()}
+  if(OL.cd<=0)olGo();
+ }else if(OL.ph===1&&!G.over){
+  if(G.hitstop>0)G.hitstop-=dt;else update(dt);
+ }else{
+  fxUpdate(dt);
+  if(OL.ph===1&&OL.dead&&!NT.host){OL.koT-=dt;if(OL.koT<=0){OL.koT=1.2;NT.send({t:"ko",r:OL.round})}}
+  else if(OL.ph===2&&NT.host){OL.nextT-=dt;if(OL.nextT<=0)olNext()}
+ }
+ OL.snapT-=dt;OL.snapMin-=dt;
+ if(OL.snapT<=0||(OL.dirty&&OL.snapMin<=0))olSnap();
+}
+function olUpdate(dt){ // every simulation step of an online round: speed, cage rows on their way, hurry-up
+ const nl=1+Math.min(11,Math.floor(G.t/20));
+ if(nl>G.level){G.level=nl;G.grav=gravMs();G.floaters.push({x:W/2,y:3,vy:-1,t:1.3,txt:T("olFast"),sz:.9,col:"#6ee7b7"});SFX.levelup();musStart(Math.max(120,170-(nl-1)*4))}
+ OL.tok=Math.min(8,OL.tok+dt);
+ for(const b of OL.q)if(b.t>0)b.t-=dt;
+ if(G.t>=OLC.HURRY){ // after 2:30 cage rows rise by themselves, faster and faster, so a round always ends
+  if(!OL.hurried){OL.hurried=true;OL.hurryT=0;banner(T("olHurry"));SFX.warn()}
+  OL.hurryT-=dt;
+  if(OL.hurryT<=0){OL.hurryT=Math.max(2,6-(G.t-OLC.HURRY)/20);if(olPend()<20){OL.q.push({n:1,t:0,h:Math.floor(Math.random()*W),own:1});OL.dirty=true}}
+ }
+}
+function olAttack(n){ // I cleared n lines at once: 2/3/4 lines = 1/2/4 cage rows; they first cancel rows that are on their way to me
+ let atk=[0,0,1,2,4][n]||0,blocked=0;if(!atk)return;
+ for(const b of OL.q){if(b.own||!atk)continue;const k=Math.min(b.n,atk);b.n-=k;atk-=k;blocked+=k}
+ OL.q=OL.q.filter(b=>b.n>0);
+ if(blocked)G.floaters.push({x:W/2,y:10,vy:-1.2,t:1.3,txt:"🛡 -"+blocked,sz:1,col:"#9fe0ff"});
+ if(atk>0){OL.sentG+=atk;NT.send({t:"g",r:OL.round,n:atk,c:OL.sentG});G.floaters.push({x:W/2,y:7.6,vy:-1.5,t:1.4,txt:"📦 ×"+atk+" ➡",sz:1.05,col:"#ff9ec9"})}
+}
+function olAfterLock(){ // a piece has landed: cage rows whose warning ran out rise now, before the next piece (false = topped out)
+ const due=OL.q.filter(b=>b.t<=0);if(!due.length)return true;
+ OL.q=OL.q.filter(b=>b.t>0);
+ for(const b of due)for(let i=0;i<b.n;i++){
+  if(G.board[0].some(Boolean)){olTopOut();return false}
+  const row=Array(W).fill(null),ai=(b.h+1+Math.floor(Math.random()*(W-1)))%W,e=aniEmoji();
+  for(let x=0;x<W;x++)if(x!==b.h)row[x]={k:"cage",a:x===ai?e:null};
+  G.board.shift();G.board.push(row);G.cages++;
+ }
+ G.shake=Math.max(G.shake,.3);SFX.no();OL.dirty=true;
+ return true;
+}
+function olTopOut(){ // my stack reached the top: the round is lost (the host says so; a guest reports it and waits a blink)
+ if(!OL.on||OL.dead||G.over)return;
+ OL.dead=true;G.over=true;G.piece=null;G.clearing=null;G.shake=.5;SFX.lose();olSnap();
+ if(NT.host)olDecide(1);else{OL.koT=1.2;NT.send({t:"ko",r:OL.round})}
+}
+function olSendState(){NT.send({t:"st",r:OL.round,ph:OL.ph,a:OL.w[0],b:OL.w[1],w:OL.lastW,cd:OL.ph===0?Math.max(0,Math.min(6000,Math.round(OL.cd*1000))):0})}
+function olDecide(w){ // host: w won this round (0 = host, 1 = guest)
+ if(!NT.host||OL.ph!==1)return;
+ OL.w[w]++;OL.lastW=w;const fin=OL.w[w]>=2;OL.ph=fin?3:2;OL.nextT=OLC.BETW;
+ olSendState();olRoundEnd(fin);
+}
+function olNext(){if(!NT.host||OL.ph!==2)return;olRound(OL.round+1,OLC.CD+.25);olSendState()}
+function olRoundEnd(fin){ // both sides: the round is decided (OL.w and OL.lastW are already set)
+ const won=OL.lastW===OL.me,o=OL;
+ G.over=true;G.piece=null;G.clearing=null;OL.q=[];OL.tot+=G.score;OL.lines+=G.lines;OL.dirty=true;
+ hudStr="";updateHud();
+ if(won){SFX.win();burst(W/2,H/2,"#ffd24a",28,"🎉");G.shake=.4}else if(!OL.dead)SFX.lose();
+ showBan(T("you")+" "+OL.w[OL.me]+" : "+OL.w[1-OL.me]+" "+T("friend"),won?T("olWinR"):T("olLoseR"),!won);
+ if(fin){NT.setOver(true);setTimeout(()=>{if(OL===o&&OL.on&&!OL.left)olFinish()},1800)}
+}
+function olState(d){ // guest: the host's word on the match
+ if(!int(d.r,1,3)||!int(d.ph,0,3)||!int(d.a,0,2)||!int(d.b,0,2)||!int(d.w,-1,1)||!int(d.cd,0,6000))return;
+ const fin=d.a===2||d.b===2;
+ if(d.a+d.b!==(d.ph>=2?d.r:d.r-1)||(d.a===2&&d.b===2)||fin!==(d.ph===3))return; // the numbers must tell one possible story
+ if(d.ph>=2&&(d.w<0||(d.ph===3&&(d.w===0?d.a:d.b)!==2)))return;
+ if(OL.ph===3||d.r<OL.round||d.a<OL.w[0]||d.b<OL.w[1])return; // never backwards
+ const nw=d.r>OL.round;
+ if(d.ph<=1){
+  if(nw){OL.w=[d.a,d.b];olRound(d.r,d.ph===0?Math.max(.05,d.cd/1000):0);NT.send({t:"rk",r:d.r})}
+  else if(OL.ph===0){if(d.ph===1)olGo();else OL.cd=Math.min(OLC.CD+.5,d.cd/1000)}
+  return;
+ }
+ if(!nw&&OL.ph>=2)return; // already on my screen
+ if(nw)OL.round=d.r;
+ OL.w=[d.a,d.b];OL.lastW=d.w;OL.ph=d.ph;olRoundEnd(d.ph===3);
+}
+function olGarbageIn(c){ // c = all the cage rows the friend sent this round: take what is new, at most 4 at a time and at a human pace
+ const now=performance.now(),need=c-OL.rcvG;
+ if(need<=0||now-OL.gAt<250)return;
+ const n=Math.min(need,4,Math.floor(OL.tok),Math.max(0,14-olPend()));
+ OL.gAt=now;OL.rcvG=c;
+ if(n<=0)return;
+ OL.tok-=n;
+ if(!OL.q.length){banner(T("olWarn"));SFX.warn()}
+ OL.q.push({n,t:OLC.WARN,h:Math.floor(Math.random()*W),own:0});OL.dirty=true;
+}
+function olBoardStr(){ // my board as 200 digits: 0 empty, 1-7 cat colours, 8 cage (the falling piece included)
+ const a=new Array(W*H);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=G.board[y][x];a[y*W+x]=c?(c.k==="cage"?8:((c.t|0)%7)+1):0}
+ const p=G.piece;if(p)for(const [cx,cy] of p.cells){const x=p.x+cx,y=p.y+cy;if(y>=0&&y<H&&x>=0&&x<W)a[y*W+x]=p.t+1}
+ return a.join("");
+}
+function olSnap(){ // about twice a second, and right after something changed (never more than ~7 a second)
+ if(!OL.on||!G||OL.left||OL.ph===3)return;
+ OL.snapT=OLC.SNAP;OL.snapMin=.15;OL.dirty=false;
+ NT.send({t:"b",r:OL.round,s:olBoardStr(),sc:Math.max(0,Math.min(9999999,G.score|0)),ln:Math.max(0,Math.min(9999,G.lines|0)),gs:Math.min(9999,OL.sentG),pq:Math.min(40,olPend()),k:OL.dead?1:0});
+}
+function olData(d){ // a message from the friend: authenticated by net1v1, still treated as hostile
+ if(!OL.on||!G||OL.left)return;
+ const ty=d.t,now=performance.now();
+ if(ty==="em"){if(int(d.i,0,3)&&now-OL.emRx>700){OL.emRx=now;olEmo(d.i,1)}return}
+ if(ty==="b"){
+  if(!int(d.r,1,3)||typeof d.s!=="string"||d.s.length!==200||!/^[0-8]{200}$/.test(d.s)||!int(d.sc,0,9999999)||!int(d.ln,0,9999)||!int(d.gs,0,9999)||!int(d.pq,0,40)||!(d.k===0||d.k===1)||d.r!==OL.round)return;
+  OL.fb={s:d.s,sc:d.sc,ln:d.ln,pq:d.pq,k:d.k};
+  if(OL.ph===1&&!OL.dead)olGarbageIn(d.gs);
+  return;
+ }
+ if(ty==="g"){if(int(d.r,1,3)&&int(d.n,1,4)&&int(d.c,1,9999)&&d.r===OL.round&&OL.ph===1&&!OL.dead)olGarbageIn(d.c);return}
+ if(NT.host){
+  if(ty==="rk"){if(int(d.r,1,3)&&d.r===OL.round&&OL.ph===0&&!OL.acked){OL.acked=true;const L=(now-OL.t0)/2000;if(L>=0&&L<.6)OL.cd=OLC.CD-L}} // both screens reach GO at the same moment
+  else if(ty==="ko"){
+   if(!int(d.r,1,3))return;
+   if(d.r===OL.round&&OL.ph===1)olDecide(0);
+   else if(d.r<=OL.round&&now-OL.stAt>900){OL.stAt=now;olSendState()} // she missed my answer: say it again
+  }
+ }else if(ty==="st")olState(d);
+}
+function olEmo(i,side){OL.emo.push({i,side,t:0});if(OL.emo.length>4)OL.emo.shift();if(side)tone(880,.1,"triangle",.09,440)}
+function sendEmo(i){
+ const now=performance.now();if(!NT||!OL.on||OL.left||!int(i,0,3)||now-OL.emT<1000)return;
+ OL.emT=now;NT.send({t:"em",i});olEmo(i,0);SFX.click();
+ const b=$("emo");b.classList.add("cool");setTimeout(()=>b.classList.remove("cool"),1000);
+}
+function olFinish(){ // the match is over: each side sees her own result
+ if(!OL.on||OL.ph!==3||OL.left)return;
+ const won=OL.lastW===OL.me,mine=OL.w[OL.me],hers=OL.w[1-OL.me];
+ if(!OL.paid){ // rewards for the local player only, through the normal guarded calls
+  OL.paid=true;
+  if(won&&performance.now()-OL.startAt>20000&&OL.lines>0)award({event:"win"});
+  award({event:"score",score:OL.tot});flush();
+  S.wn[won?0:1]++;save();
+ }
+ screen="result";
+ $("reCard").innerHTML=`<div class="big">${won?"🏆😺":"😿🧶"}</div><h2>${won?T("olWin"):T("olLose")}</h2><p class="scl"><bdi>${T("you")}</bdi> ${mine} : ${hers} <bdi>${T("friend")}</bdi></p><p id="olMsg">${won?T("olWin2"):T("olLose2")}</p><p>${T("score")}: <b class="cnt" data-n="${OL.tot}">0</b></p><div class="row"><button class="btn g primary" id="rA">${T("olRe")}</button><button class="btn s" id="rM">${T("menu")}</button></div>${S.wn[0]>0?`<p class="sub">🏆 ${T("olWins")}: ${S.wn[0]}</p>`:""}`;
+ show("result");countUp($("reCard"));if(won)SFX.fanfare();
+ $("rA").onclick=()=>{if(!OL.on||OL.left||NT.myRe)return;SFX.click();NT.rematch();$("rA").disabled=true;OL.reSeen=true;const m=$("olMsg");if(m)m.textContent=NT.t("waitRe")};
+ $("rM").onclick=()=>{SFX.click();toMenu()};
+}
+function olLeft(){ // the friend left (or the connection is gone for good): a kind card, never a frozen screen
+ if(!OL.on)return;
+ OL.left=true;OL.netp=false;if(G){G.over=true;G.piece=null}
+ screen="result";
+ $("reCard").innerHTML=`<div class="big">🐾</div><h2 id="olLeftT"></h2><p class="scl"><bdi>${T("you")}</bdi> ${OL.w[OL.me]} : ${OL.w[1-OL.me]} <bdi>${T("friend")}</bdi></p><div class="row"><button class="btn n primary" id="rA">${T("olNew")}</button><button class="btn s" id="rM">${T("menu")}</button></div>`;
+ $("olLeftT").textContent=NT.t("left");show("result");
+ $("rA").onclick=()=>{SFX.click();toMenu();NT.showLobby()};
+ $("rM").onclick=()=>{SFX.click();toMenu()};
+}
+function olAskQuit(){if(!OL.on||screen!=="play")return;SFX.click();$("olq").classList.toggle("show")} // the match goes on behind the question
+$("olqStay").onclick=()=>{SFX.click();$("olq").classList.remove("show")};
+$("olqGo").onclick=()=>{SFX.click();toMenu()};
+$("homeBtn").addEventListener("click",e=>{if(OL.on){e.preventDefault();olAskQuit()}});
+document.querySelectorAll("#emo .ib").forEach(b=>b.addEventListener("pointerdown",e=>{e.preventDefault();ac();sendEmo(+b.dataset.e)}));
+const NT=window.Net1v1?Net1v1({pid:"annabelle-tetris-",shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
+ sfx:{join:()=>SFX.levelup(),click:()=>SFX.click(),drop:()=>SFX.no(),back:()=>SFX.hold(),huh:()=>SFX.warn()},
+ hideMenu(){hideAll();screen="lobby"},showMenu(){toMenu()},onLink(){},
+ makeStart(){return{g:"tetris",v:1,sd:OL.sd}},
+ cleanStart(d){return d&&typeof d==="object"&&d.g==="tetris"&&d.v===1&&int(d.sd,1,2147483646)?{sd:d.sd}:null},
+ onHostStart(){olMatch(1+crypto.getRandomValues(new Uint32Array(1))[0]%2147483646)},
+ onGuestStart(c){if(OL.on&&!OL.left&&OL.sd===c.sd)return;olMatch(c.sd);NT.send({t:"rk",r:1})},
+ onResume(){if(!OL.on||OL.left)return;OL.snapT=0;if(NT.host)olSendState();else if(OL.dead)OL.koT=0}, // the link is back: the host repeats the state of the match, both show their boards again
+ onData:olData,onLeft:olLeft,onPause(on){if(OL.on)OL.netp=!!on}}):null;
+setInterval(()=>{if(OL.on&&document.hidden)olPump()},250);
+addEventListener("pagehide",()=>{if(NT&&OL.on&&!OL.left)try{NT.send({t:"bye"})}catch(e){}});
+addEventListener("pageshow",e=>{if(e.persisted&&OL.on)toMenu()});
+// drawing: the friend's mini board, the info column(s), what happens on my own board, emote bubbles
+function drawMiniBoard(g,x,y,m){
+ const fb=OL.fb,w=m*W,h=m*H,in1=m>4?1:0;
+ g.fillStyle="#0e0820";g.fillRect(x-3,y-3,w+6,h+6);g.fillStyle="#150c2e";g.fillRect(x,y,w,h);
+ if(fb){
+  const s=fb.s;
+  for(let i=0;i<200;i++){const v=s.charCodeAt(i)-48;if(v<1||v>8)continue;g.fillStyle=v===8?"#8f93b8":COL[v-1][0];g.fillRect(x+(i%W)*m,y+Math.floor(i/W)*m,m-in1,m-in1)}
+  if(fb.pq>0){const ph=Math.min(H,fb.pq)*m;g.fillStyle="#ff3b5c";g.fillRect(x,y+h-ph,Math.max(2,m*.3),ph)}
+  if(fb.k){g.fillStyle="rgba(14,8,32,.6)";g.fillRect(x,y,w,h);emojiAt(g,"😿",x+w/2,y+h/2,m*5)}
+ }
+ g.strokeStyle="#ff7eb6";g.lineWidth=2;g.strokeRect(x-2,y-2,w+4,h+4);
+}
+function drawPanelOL(g,sx,sy){
+ const c=L_.c,pw=L_.pw,slim=L_.slim,px=L_.ox+c*W+L_.gap+sx,py=L_.oy+sy,cx=px+pw/2,k=c/30,me=OL.me,fb=OL.fb;
+ const box=(y,h)=>{g.fillStyle="#2d1d52";g.fillRect(px,py+y,pw,h);g.strokeStyle="#6a4fb0";g.lineWidth=2;g.strokeRect(px+1,py+y+1,pw-2,h-2)};
+ const st=n=>"⭐".repeat(n)+"☆".repeat(2-n);
+ let mx,my,m;
+ if(slim){
+  const ms=Math.min((pw-8)/4,c*.52);
+  textAt(g,T("hold"),cx,py+9*k,13*k,"#ffd24a","center",pw);box(18*k,44*k);
+  if(G.hold)drawMini(g,G.hold,cx,py+40*k,ms,G.holdUsed);
+  textAt(g,T("next"),cx,py+73*k,13*k,"#ffd24a","center",pw);box(82*k,118*k);
+  G.next.forEach((n,i)=>drawMini(g,n,cx,py+(105+i*38)*k,i?ms*.8:ms));
+  textAt(g,T("you")+" "+st(OL.w[me]),cx,py+217*k,13.5*k,"#ffd24a","center",pw);
+  textAt(g,String(G.score),cx,py+237*k,17*k,"#fff4e8","center",pw-4);
+  textAt(g,T("olSpeed")+" "+G.level,cx,py+257*k,11.5*k,"#cfc3ff","center",pw);
+  textAt(g,T("friend")+" "+st(OL.w[1-me]),cx,py+284*k,13.5*k,"#ff9ec9","center",pw);
+  my=py+297*k;m=Math.max(3,Math.floor(Math.min((pw-6)/W,(c*H-322*k)/H)));mx=px+(pw-m*W)/2;
+  textAt(g,String(fb?fb.sc:0),cx,my+m*H+14*k,14*k,"#fff4e8","center",pw-4);
+ }else{
+  textAt(g,T("hold"),cx,py+.5*c,c*.7,"#ffd24a");box(c,3*c);
+  if(G.hold)drawMini(g,G.hold,cx,py+2.5*c,c*.62,G.holdUsed);
+  textAt(g,T("next"),cx,py+4.5*c,c*.7,"#ffd24a");box(5*c,7.4*c);
+  G.next.forEach((n,i)=>drawMini(g,n,cx,py+(6.3+i*2.45)*c,c*(i?.5:.62)));
+  textAt(g,T("you")+" "+st(OL.w[me]),cx,py+13.5*c,c*.78,"#ffd24a","center",pw);
+  textAt(g,T("score"),cx,py+14.9*c,c*.6,"#ffd24a");textAt(g,String(G.score),cx,py+15.75*c,c*.9,"#fff4e8","center",pw);
+  textAt(g,T("olSpeed")+" "+G.level,cx,py+17*c,c*.65,"#cfc3ff","center",pw);
+  const fw=L_.fw,fx=px+pw+L_.gap,fc=fx+fw/2;
+  textAt(g,T("friend")+" "+st(OL.w[1-me]),fc,py+.6*c,c*.8,"#ff9ec9","center",fw);
+  m=Math.max(3,Math.floor(Math.min((fw-8)/W,c*16.4/H)));mx=fx+(fw-m*W)/2;my=py+1.5*c;
+  textAt(g,T("score"),fc,my+m*H+c*.8,c*.6,"#ff9ec9");textAt(g,String(fb?fb.sc:0),fc,my+m*H+c*1.65,c*.9,"#fff4e8","center",fw);
+ }
+ drawMiniBoard(g,mx,my,m);
+ OL.mx=mx-sx+m*W/2;OL.my=my-sy+m*H/2;
+}
+function drawOL(g){ // on my own board: cage rows on their way, the 3-2-1, the end of a round
+ const c=L_.c,now=performance.now(),bw=Math.max(5,c*.2),hot=Math.floor(now/160)%2;
+ let yy=H;
+ for(const b of OL.q)for(let i=0;i<b.n&&yy>0;i++){yy--;g.fillStyle=b.t>0?(b.own?"#ff9a3d":"#ffd24a"):(hot?"#ff3b5c":"#ffc2cc");g.fillRect(1,yy*c+2,bw,c-4);g.strokeStyle="#2a1a33";g.lineWidth=1;g.strokeRect(1.5,yy*c+2.5,bw-1,c-5)}
+ if(OL.ph===0){
+  g.fillStyle="rgba(14,8,32,.55)";g.fillRect(0,0,c*W,c*H);
+  textAt(g,T("olRound").replace("{n}",OL.round),c*W/2,c*4.3,c*1.15,"#ffd24a","center",c*W-12);
+  textAt(g,T("olFirst"),c*W/2,c*5.6,c*.62,"#cfc3ff","center",c*W-12);
+  const n=Math.max(1,Math.min(3,Math.ceil(OL.cd))),f=Math.max(0,Math.min(1,(n-OL.cd)*3.5)),sc=1.6-.6*f;
+  g.save();g.translate(c*W/2,c*8.8);g.scale(sc,sc);bigText(g,String(n),c*3.4,"#fff4e8",0);g.restore();
+  if(OL.round===1){const tip=T("olTip");g.fillStyle="#000a";g.fillRect(0,c*12.2,c*W,c*2.5);textAt(g,tip[0],c*W/2,c*13,c*.72,"#ffd24a","center",c*W-12);textAt(g,tip[1],c*W/2,c*14,c*.72,"#ffd24a","center",c*W-12)}
+ }else if(OL.goT>0&&OL.ph===1){g.save();g.translate(c*W/2,c*8.8);g.globalAlpha=Math.max(0,Math.min(1,OL.goT*3));bigText(g,T("olGo"),c*2.2,"#6ee7b7",c*W-18);g.restore()}
+ if(G.over){
+  g.fillStyle="rgba(14,8,32,.55)";g.fillRect(0,0,c*W,c*H);
+  if(OL.ph>=2&&!OL.left)emojiAt(g,OL.lastW===OL.me?"🏆":"😿",c*W/2,c*12.6+Math.sin(now/300)*c*.2,c*3.2);
+  else if(!OL.left)textAt(g,T("olTop"),c*W/2,c*9,c*.85,"#ffd24a","center",c*W-12);
+ }
+}
+function drawEmo(g){ // floating emote bubbles: the friend's rise from her mini board, mine from the corner of my board
+ const c=L_.c;
+ for(const e of OL.emo){
+  const q=e.t/2.4,a=Math.max(0,q>.7?(1-q)/.3:1),sc=e.t<.25?back(e.t/.25):1,sz=e.side?Math.max(36,c*1.9):Math.max(26,c*1.3);
+  const x=Math.max(sz*.8,Math.min(L_.w-sz*.8,e.side?OL.mx:L_.ox+c*(W-1.5))),y=(e.side?OL.my:L_.oy+c*(H-2.5))-q*c*2.2;
+  g.save();g.translate(x,y);g.scale(sc,sc);g.globalAlpha=a;
+  g.fillStyle="#fff";g.strokeStyle=e.side?"#ff7eb6":"#8a6ee0";g.lineWidth=3;g.beginPath();g.arc(0,0,sz*.72,0,6.3);g.fill();g.stroke();
+  emojiAt(g,EMO[e.i],0,sz*.04,sz,a);g.restore();
+ }
+}
+
 /* ---------- test hook ---------- */
 function snap(){
  if(!G)return{screen,paused};
  return{screen,paused,mode:G.mode,level:G.level,diff:G.diff,score:G.score,rescued:G.resc,shown:G.rescShown,quota:G.quota,saves:G.saves,paws:G.paws,over:G.over,clearing:!!G.clearing,hold:G.hold,next:G.next.slice(),
   piece:G.piece?{k:G.piece.k,x:G.piece.x,y:G.piece.y,cells:G.piece.cells.map(a=>a.slice())}:null,timeLeft:G.timeLeft,lines:G.lines,cages:G.cages,
   boss:G.boss?{e:G.boss.e,t:G.boss.t,hp:Math.max(0,G.quota-G.resc)}:null,bossDefeat:!!G.bossDefeat,bossSeen:G.bossSeen,pop:G.pop?G.pop.txt:null,layout:{c:L_.c,slim:L_.slim},
-  board:G.board.map(r=>r.map(c=>c?(c.k==="cage"?(c.a?"A":"C"):"#"):".").join(""))};
+  board:G.board.map(r=>r.map(c=>c?(c.k==="cage"?(c.a?"A":"C"):"#"):".").join("")),ol:olSnapState()};
+}
+function olSnapState(){
+ if(!OL.on)return null;
+ return{host:NT.host,me:OL.me,sd:OL.sd,round:OL.round,ph:OL.ph,cd:OL.cd,w:OL.w.slice(),mine:OL.w[OL.me],hers:OL.w[1-OL.me],lastW:OL.lastW,dead:OL.dead,netp:OL.netp,left:OL.left,pend:olPend(),q:OL.q.map(b=>({n:b.n,t:b.t,own:b.own})),
+  sentG:OL.sentG,rcvG:OL.rcvG,tok:OL.tok,fb:OL.fb?{s:OL.fb.s,sc:OL.fb.sc,ln:OL.fb.ln,pq:OL.fb.pq,k:OL.fb.k}:null,emo:OL.emo.map(e=>({i:e.i,side:e.side})),tot:OL.tot,str:G?olBoardStr():null};
 }
 window.__tetris={
+ NT,get OL(){return OL},ol:olSnapState,emote:sendEmo,
  state:snap,get G(){return G},get save(){return S},
  start(n,d){if(d&&DIFF[d]){S.diff=d}newGame("marathon",n||1,S.diff)},sprint(d){if(d&&DIFF[d])S.diff=d;startSprint()},arcade(d){if(d&&DIFF[d])S.diff=d;startArcade()},
  win(){if(G&&G.mode==="marathon")levelWin()},lose(){if(G){G.saves=0;G.piece=null;if(G.mode==="arcade")endArcade();else levelFail()}},endSprint(){if(G&&G.mode==="sprint")endSprint()},endArcade(){if(G&&G.mode==="arcade")endArcade()},
