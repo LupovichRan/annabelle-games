@@ -136,7 +136,7 @@ const W=12,C=40,MAPH=14,KEY='annabelle-retro-snake',ZOO='annabelle-retro-zoo';
 let H=14,OFFY=0;
 const ANIMALS=['tiger','lion','leopard','cheetah','puma','panda','koala','monkey','elephant','giraffe','zebra','rabbit','fox','owl','parrot','turtle','dolphin','penguin','hedgehog','deer'];
 const EM={tiger:'🐯',lion:'🦁',leopard:'🐆',cheetah:'🐈',puma:'🐱',panda:'🐼',koala:'🐨',monkey:'🐵',elephant:'🐘',giraffe:'🦒',zebra:'🦓',rabbit:'🐰',fox:'🦊',owl:'🦉',parrot:'🦜',turtle:'🐢',dolphin:'🐬',penguin:'🐧',hedgehog:'🦔',deer:'🦌'};
-const NM={tiger:['נמר','Tigre','Tiger'],lion:['אריה','Lion','Lion'],leopard:['נמר מנומר','Léopard','Leopard'],cheetah:['צ\'יטה','Guépard','Cheetah'],puma:['פומה','Puma','Puma'],panda:['פנדה','Panda','Panda'],koala:['קואלה','Koala','Koala'],monkey:['קוף','Singe','Monkey'],elephant:['פיל','Éléphant','Elephant'],giraffe:['ג\'ירפה','Girafe','Giraffe'],zebra:['זברה','Zèbre','Zebra'],rabbit:['ארנב','Lapin','Rabbit'],fox:['שועל','Renard','Fox'],owl:['ינשוף','Hibou','Owl'],parrot:['תוכי','Perroquet','Parrot'],turtle:['צב','Tortue','Turtle'],dolphin:['דולפין','Dauphin','Dolphin'],penguin:['פינגווין','Pingouin','Penguin'],hedgehog:['קיפוד','Hérisson','Hedgehog'],deer:['צבי','Cerf','Deer']};
+const NM={tiger:['טיגריס','Tigre','Tiger'],lion:['אריה','Lion','Lion'],leopard:['נמר','Léopard','Leopard'],cheetah:['ברדלס','Guépard','Cheetah'],puma:['פומה','Puma','Puma'],panda:['פנדה','Panda','Panda'],koala:['קואלה','Koala','Koala'],monkey:['קוף','Singe','Monkey'],elephant:['פיל','Éléphant','Elephant'],giraffe:['ג\'ירפה','Girafe','Giraffe'],zebra:['זברה','Zèbre','Zebra'],rabbit:['ארנב','Lapin','Rabbit'],fox:['שועל','Renard','Fox'],owl:['ינשוף','Hibou','Owl'],parrot:['תוכי','Perroquet','Parrot'],turtle:['צב','Tortue','Turtle'],dolphin:['דולפין','Dauphin','Dolphin'],penguin:['פינגווין','Pingouin','Penguin'],hedgehog:['קיפוד','Hérisson','Hedgehog'],deer:['אייל','Cerf','Deer']};
 /* ---------------- levels (12 x 14, padded with free rows on tall phone screens) ---------------- */
 const LV=[
 {f:'🐟',need:4,gr:0,bab:['rabbit'],boss:0,map:["...........G","............","..##........","............",".......~~...",".......~~...","............","..#.........","............","....##......","............","............","...S........","............"]},
@@ -656,7 +656,7 @@ function pause(){
   G.modeBefore=G.mode;G.mode='paused';
   $('cPause').innerHTML='<h2>⏸ '+t('pause')+'</h2><button class="btn" id="bRes">▶ '+t('resume')+'</button><button class="btn alt" id="bRst">🔄 '+t('restart')+'</button><button class="btn alt" id="bMenu">🏠 '+t('menu')+'</button>';
   $('ovPause').classList.add('on');
-  $('bRes').onclick=resume;$('bRst').onclick=()=>{G.arc?startArcade():startLevel(G.lvl)};
+  $('bRes').onclick=resume;$('bRst').onclick=()=>{if(G.arc&&G.score>0)addHi(G.score,'arcade');G.arc?startArcade():startLevel(G.lvl)};
   $('bMenu').onclick=showMenu;
 }
 function resume(){if(G.mode!=='paused')return;G.mode=G.modeBefore||'play';$('ovPause').classList.remove('on');G.acc=0}
@@ -674,7 +674,7 @@ function countUp(el,to,ms){
 function hiTable(hl){
   let h='<div class="hi"><div class="hih">★ '+t('hi')+' ★</div>';
   if(!SV.hi.length)h+='<div class="hir none">- - - - -</div>';
-  SV.hi.forEach((e,i)=>{h+='<div class="hir'+(i===hl?' me':'')+'"><span>'+(i+1)+'.</span><span>'+String(e.s).padStart(6,'0')+'</span><span>'+(e.m==='arcade'?'🕹️':'📖')+'</span><span>'+(e.d||'')+'</span></div>'});
+  SV.hi.forEach((e,i)=>{h+='<div class="hir'+(i===hl?' me':'')+'"><span>'+(i+1)+'.</span><span>'+String(e.s).padStart(6,'0')+'</span><span>'+(e.m==='arcade'?'🕹️':'📖')+'</span><span>'+String(e.d||'').replace(/[^\d-]/g,'').slice(0,10)+'</span></div>'});
   return h+'</div>';
 }
 function softLose(){
