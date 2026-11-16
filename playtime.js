@@ -346,7 +346,7 @@
     ['bowling','🎳','באולינג',/^annabelle-bowling-/],['invaders','🚀','פולשי החלל',/^annabelle-retro-invaders/],['tetris','🧱','טטריס חתולים',/^annabelle-retro-tetris/],['breakout','🐾','שוברת הכלובים',/^annabelle-retro-breakout/],
     ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/],
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
-    ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/]];
+    ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/]];
   var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
