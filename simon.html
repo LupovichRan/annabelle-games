@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="simon"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="simon"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -158,10 +158,60 @@ body:not(.playing) #pauseBtn{visibility:hidden}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes blink{50%{opacity:.25}}@keyframes me{50%{background:#ffe14d;color:#120a2e}}@keyframes rec{50%{color:#ff9d00;transform:scale(1.08)}}
 @keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes bubr{0%,100%{opacity:0}10%,85%{opacity:1}}
 .pop{animation:pop .4s}
+/* ---- online 1-vs-1 ---- */
+.bt.c5{background:#cdb8ff}
+.bt.osel{background:#fff;text-align:start;padding:8px 12px}.bt.osel.sel{background:#7fd35a;box-shadow:0 5px 0 #000,inset 0 0 0 3px #fff}
+.bt.osel small{font-size:14px;line-height:1.3;white-space:normal}
+#scene{position:relative}
+#vs{display:none;flex:1;min-width:0;align-items:center;gap:6px}
+body.onl #vs{display:flex}body.onl #bed,body.onl #mid,body.onl #side,body.onl #pauseBtn{display:none}
+#vs .pl{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px}
+#vs .pl.fr{justify-content:flex-end}
+#vs .av{font-size:30px;line-height:1;flex:none}
+#vs .pl.act .av{animation:wig .5s ease-in-out infinite alternate}
+#vs .pi{min-width:0;display:flex;flex-direction:column;gap:3px}
+#vs .pl.fr .pi{align-items:flex-end}
+#vs .pi b{font-size:clamp(14px,4vw,18px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#vs .pp{display:flex;gap:3px;align-items:center;font-size:12px;font-weight:900;white-space:nowrap}
+#vs .pp i{width:14px;height:14px;border:2px solid #000;border-radius:50%;background:#ffffff2e;flex:none}
+#vs .pp i.f{background:#ffe14d;box-shadow:0 0 6px #ffe14d}
+#vs .pp small{font-size:12px;margin-inline-start:3px;direction:ltr}
+#vs .vm{flex:none;text-align:center;font-weight:900;line-height:1.15;padding:0 2px}
+#vs .vm b{display:block;font-size:clamp(13px,3.8vw,17px);white-space:nowrap}#vs .vm small{font-size:12px;opacity:.85;white-space:nowrap}
+.bub{position:absolute;top:-10px;z-index:7;font-size:30px;line-height:42px;padding:0 8px;background:#fff;border:3px solid #000;border-radius:16px;box-shadow:0 4px 0 #000;opacity:0;pointer-events:none}
+#emoM{inset-inline-start:30px}#emoF{inset-inline-end:30px}
+.bub.on{animation:bub 1.7s both}
+@keyframes bub{0%{opacity:0;transform:scale(.2) translateY(10px)}12%{opacity:1;transform:scale(1.25)}22%{transform:scale(1)}75%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-22px)}}
+#fdots{display:none;flex:0 0 100%;justify-content:center;align-items:center;gap:4px;direction:ltr;min-height:14px}
+body.onl.race #fdots{display:flex}
+#fdots i{width:12px;height:12px;border:2px solid #000;border-radius:50%;background:#ffffff3a}
+#fdots i.d{background:#ffb347}
+#fdots small{font-size:13px;font-weight:900;margin-right:4px}
+#fdots b{min-width:16px;font-size:13px;line-height:1}
+#tm{display:none;flex:0 0 100%;justify-content:center;visibility:hidden}
+body.onl #tm{display:flex}#tm.on{visibility:visible}
+#tm span{display:block;width:min(240px,70%);height:9px;border:2px solid #000;border-radius:6px;background:#ffffff2e;overflow:hidden;direction:ltr}
+#tm i{display:block;height:100%;width:100%;background:#7dff9a}
+#tm.low i{background:#ff8f6b}#tm.fr i{background:#9fb4ff}
+.emo{display:flex;gap:8px;direction:ltr}
+.eb{width:48px;height:48px;font-size:25px;line-height:1;background:#fff;border:3px solid #000;border-radius:50%;box-shadow:0 4px 0 #000;display:flex;align-items:center;justify-content:center;flex:none}
+.eb:active{transform:translateY(3px) scale(.95);box-shadow:0 1px 0 #000}
+.emo.cool .eb{opacity:.45}
+#bar .bt.hb{min-width:84px;padding:6px 10px}
+.ovs{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0}
+.ovs>div{display:flex;flex-direction:column;align-items:center;font-weight:900;font-size:16px;min-width:64px}
+.ovs .av{font-size:40px;line-height:1.15}
+.ovs .sn{font:900 clamp(44px,14vw,64px)/1 "Courier New",monospace;color:#6a3fd0;text-shadow:3px 3px 0 #ffd36b}
+.remsg{min-height:1.4em;font-weight:900;color:#6a3fd0}
+body #n1Weak{top:calc(max(6px,env(safe-area-inset-top)) + 9px)} /* the weak-connection pill sits on the title, not on the score row */
+#oRe.pulse{animation:pulse .5s ease-in-out infinite alternate}
 #crt{position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,#0000 0 3px,#00000014 3px 4px)}
 @media (max-height:700px){#scene{min-height:50px}#bed{height:42px;font-size:32px;line-height:42px}#bar{min-height:50px}#bar .bt{min-height:46px}.msc{width:44px;height:44px}.modes .bt{min-height:58px}.card{padding:10px 14px}.chip{min-height:42px}}
-@media (prefers-reduced-motion:reduce){.sky,.msc,#bot,.rays:before{animation:none}#banner.on{animation:none;transform:translate(-50%,-50%)}#ann{display:none}}
+@media (max-height:700px){.eb{width:44px;height:44px;font-size:23px}#vs .av{font-size:26px}#mOnl{min-height:44px;margin:6px 0 4px;padding:4px 12px}#mOnl small{display:none}#cMenu .hst{margin:5px 0}#cMenu .row3{margin:5px 0 2px}}
+@media (max-width:350px){.eb{width:42px;height:42px;font-size:22px}.emo{gap:6px}#bar .bt.hb{min-width:70px;padding:6px}}
+@media (prefers-reduced-motion:reduce){.sky,.msc,#bot,.rays:before,#vs .pl.act .av,#oRe.pulse{animation:none}.bub.on{animation:bubr 1.7s both}#banner.on{animation:none;transform:translate(-50%,-50%)}#ann{display:none}}
 </style>
 </head>
 <body>
@@ -178,8 +228,10 @@ body:not(.playing) #pauseBtn{visibility:hidden}
     <div id="bed"><span id="anim"></span><span id="mood"></span></div>
     <div id="mid"><div id="sub"></div><div id="meter"></div></div>
     <div id="side"><span id="bot">🤖</span><div id="hearts"></div></div>
+    <div id="vs"><div class="pl" id="plM"><span class="av" id="avM"></span><div class="pi"><b id="nmM"></b><span class="pp" id="ppM"></span></div></div><div class="vm"><b id="vsR"></b><small id="vsS"></small></div><div class="pl fr" id="plF"><div class="pi"><b id="nmF"></b><span class="pp" id="ppF"></span></div><span class="av" id="avF"></span></div></div>
+    <span class="bub" id="emoM"></span><span class="bub" id="emoF"></span>
   </div>
-  <div id="turnRow"><div id="turn"></div><div id="dots"></div></div>
+  <div id="turnRow"><div id="turn"></div><div id="dots"></div><div id="fdots"></div><div id="tm"><span><i></i></span></div></div>
   <div id="stage"><div id="grid"></div><div id="banner"></div><div id="ann"></div><div id="toast"></div></div>
   <div id="strip"></div>
   <div id="bar"></div>
@@ -193,10 +245,12 @@ body:not(.playing) #pauseBtn{visibility:hidden}
 <div class="ov" id="ovPause"><div class="card" id="cPause"></div></div>
 <div class="ov" id="ovReveal"><div class="card" id="cReveal"></div></div>
 <div class="ov" id="ovRes"><div class="card" id="cRes"></div></div>
+<div class="ov" id="ovOnl"><div class="card" id="cOnl"></div></div>
 <div id="crt"></div>
 <!--pwa--><link rel="manifest" href="manifests/simon.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/simon-192.png"><meta name="apple-mobile-web-app-title" content="מקהלת החיות"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/simon-apple-180.png"><script src="pwa.js" data-app="simon" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="rewards.js" defer></script>
+<script src="net1v1.js"></script>
 <script>
 (function(){
 'use strict';
@@ -285,7 +339,14 @@ he:{title:'מקהלת החיות',sub:'שיר ערש לחיות המקלט',mSto
  hs:'טבלת השיאים',newRec:'שיא חדש!',noRec:'עוד אין שיא',arc1:'שיר בלי סוף',arc2:'כמה תווים תצליחי לזכור?',arcEnd:'השיר הגיע ל-{n} תווים!',round:'סיבוב',nextA:'{a} ב-{n} תווים',asleep:'{a} נרדם לצלילי השיר!',
  duo1:'משחק בשניים',duo2:'כל אחד בתורו: חוזרים על השיר ומוסיפים תו אחד!',duoFirst:'{p} בוחרים תו ראשון!',duoRep:'{p} חוזרים על השיר',duoAdd:'{p} מוסיפים תו אחד!',duoPass:'מעבירים ל-{p}',
  duoEndT:'איזה שיר! {n} תווים',duoEnd2:'הפעם הנקודה ל-{w}. {l}, בסיבוב הבא!',duoBest:'השיר הכי ארוך שלכם: {n}',another:'עוד סיבוב',
- pianoT:'נגני מה שבא לך!',playRec:'השמיעי',stop:'עצרי',clear:'מחקי',song:'שיר',locked:'נעול',of:'מתוך',best:'שיא',keys:'מקשים: 1-6 או Q W E / A S D · רווח: לשמוע שוב · P: הפסקה'},
+ pianoT:'נגני מה שבא לך!',playRec:'השמיעי',stop:'עצרי',clear:'מחקי',song:'שיר',locked:'נעול',of:'מתוך',best:'שיא',keys:'מקשים: 1-6 או Q W E / A S D · רווח: לשמוע שוב · P: הפסקה',
+ mOnl:'אונליין עם חברה',mOnl2:'כל אחת בטלפון שלה',oPick:'איזה משחק נשחק? מי שפותחת את החדר בוחרת',oRace:'אותו השיר',oRace2:'שתיכן שומעות אותו שיר וחוזרות עליו באותו זמן. הראשונה ל-3 נקודות מנצחת!',oAdd:'מוסיפות תו',oAdd2:'כל אחת בתורה חוזרת על השיר ומוסיפה תו אחד. מי שמתבלבלת מפסידה סיבוב. הטוב מ-3!',oSize:'כמה חיות במקהלה?',oCont:'קדימה, לחדר!',oNote:'במסך הבא: צרי חדר ושלחי קישור לחברה, או הקלידי את הקוד שלה',
+ oYou:'את',oFriend:'החברה',oGo:'קדימה!',oReady:'מתכוננות...',oTap:'געי במסך כדי לשמוע את הצלילים',oWaitTap:'מחכות לחברה...',oWaitOk:'יפה! מחכות לחברה...',oSlip:'אופס! מחכות לחברה...',oTime:'הזמן נגמר',
+ oPtMe:'נקודה לך!',oPtMe2:'החברה התבלבלה הפעם',oPtFr:'נקודה לחברה',oPtFr2:'לא נורא, השיר הבא שלך!',oBoth:'שתיכן הצלחתן!',oLonger:'השיר מתארך בתו אחד',oFastMe:'היית מהירה יותר: כוכב מהירות!',oFastFr:'החברה הייתה קצת יותר מהירה',oFastTie:'אותה מהירות בדיוק: כוכב לשתיכן!',oNone:'שתיכן התבלבלתן',oNone2:'אין נקודה. מתחילות שיר חדש!',
+ oRep:'תורך: חזרי על השיר',oFirst:'תורך: בחרי תו ראשון!',oAddOne:'מצוין! עכשיו הוסיפי תו',oFrRep:'החברה חוזרת על השיר...',oFrFirst:'החברה בוחרת תו ראשון...',oFrAdd:'החברה מוסיפה תו...',oFrHear:'החברה מקשיבה שוב...',oPassMe:'עכשיו תורך!',oPassFr:'עכשיו תור החברה',oWarn:'עוד {n} שניות, בלי לחץ',
+ oSlipMe:'אופס, התבלבלת',oSlipMe2:'הנקודה לחברה. בסיבוב הבא את מתחילה!',oTimeFr2:'הזמן של החברה נגמר',oSong:'השיר הגיע ל-{n} תווים',oGiant:'שיר ענק!',oGiant2:'{n} תווים! תיקו בסיבוב הזה',
+ oWin:'ניצחת!',oWin2:'איזה זיכרון מוזיקלי!',oLose:'הפעם החברה ניצחה',oLose2:'היה משחק יפה. רוצה עוד אחד?',oDraw:'תיקו!',oDraw2:'שתיכן אלופות',oStars:'כוכבי מהירות',oLongest:'השיר הכי ארוך שלך: {n} תווים',oAgain:'שוב',oWants:'החברה רוצה לשחק שוב!',oLeft2:'היה כיף לשיר יחד. אפשר לפתוח חדר חדש מתי שרוצים!',oNew:'חדר חדש',oBack:'חזרנו! ממשיכות...',
+ oLeaveQ:'לצאת מהמשחק עם החברה?',oStay:'להמשיך לשחק',oLeaveY:'לצאת',oWins:'ניצחונות',shareT:'בואי לשיר איתי במקהלת החיות! 🎶🐱'},
 fr:{title:'La chorale des animaux',sub:'Une berceuse pour le refuge',mStory:'Histoire',mArc:'Arcade',mDuo:'À deux',mPiano:'Piano des animaux',mStory2:'Niveau {n}',mArc2:'Chanson sans fin',mDuo2:'Sur un seul téléphone',mPiano2:'Musique libre',
  levels:'Niveaux',zoo:'Mon refuge',story:'L\'histoire',easy:'Facile',normal:'Normal',hard:'Difficile',
  i1:'La nuit tombe sur le refuge. Les petits animaux tout juste sauvés ont encore peur et n\'arrivent pas à dormir.',i2:'Et dehors, le coquin Robot Boucan tape sur son tambour : boum ! bang ! Impossible de dormir !',i3:'Mimi, le bébé tigre, le panda et le perroquet forment une chorale ! Écoute leur chanson, répète-la et chante une berceuse à chaque animal.',
@@ -299,7 +360,14 @@ fr:{title:'La chorale des animaux',sub:'Une berceuse pour le refuge',mStory:'His
  hs:'RECORDS',newRec:'NOUVEAU RECORD !',noRec:'pas encore de record',arc1:'Chanson sans fin',arc2:'Combien de notes peux-tu retenir ?',arcEnd:'La chanson a atteint {n} notes !',round:'Tour',nextA:'{a} à {n} notes',asleep:'{a} s\'endort en musique !',
  duo1:'Jeu à deux',duo2:'Chacun son tour : on répète la chanson et on ajoute une note !',duoFirst:'{p} choisit la première note !',duoRep:'{p} répète la chanson',duoAdd:'{p} ajoute une note !',duoPass:'On passe à {p}',
  duoEndT:'Quelle chanson ! {n} notes',duoEnd2:'Cette fois le point est pour {w}. {l}, à la prochaine manche !',duoBest:'Votre plus longue chanson : {n}',another:'Encore une manche',
- pianoT:'Joue ce que tu veux !',playRec:'Écouter',stop:'Stop',clear:'Effacer',song:'Chanson',locked:'Verrouillé',of:'sur',best:'Record',keys:'Touches : 1-6 ou Q W E / A S D · Espace : réécouter · P : pause'},
+ pianoT:'Joue ce que tu veux !',playRec:'Écouter',stop:'Stop',clear:'Effacer',song:'Chanson',locked:'Verrouillé',of:'sur',best:'Record',keys:'Touches : 1-6 ou Q W E / A S D · Espace : réécouter · P : pause',
+ mOnl:'En ligne avec une amie',mOnl2:'Chacune sur son téléphone',oPick:'À quoi on joue ? Celle qui crée la salle choisit',oRace:'La même chanson',oRace2:'Vous écoutez la même chanson et vous la répétez en même temps. La première à 3 points gagne !',oAdd:'Une note de plus',oAdd2:'Chacune son tour : on répète la chanson et on ajoute une note. Celle qui se trompe perd la manche. En 3 manches !',oSize:'Combien d\'animaux dans la chorale ?',oCont:'Allez, à la salle !',oNote:'Ensuite : crée une salle et envoie le lien à ton amie, ou tape son code',
+ oYou:'Toi',oFriend:'Ton amie',oGo:'C\'est parti !',oReady:'On se prépare...',oTap:'Touche l\'écran pour entendre les sons',oWaitTap:'On attend ton amie...',oWaitOk:'Bravo ! On attend ton amie...',oSlip:'Oups ! On attend ton amie...',oTime:'Temps écoulé',
+ oPtMe:'Un point pour toi !',oPtMe2:'Ton amie s\'est trompée cette fois',oPtFr:'Un point pour ton amie',oPtFr2:'Pas grave, la prochaine chanson est pour toi !',oBoth:'Bravo à toutes les deux !',oLonger:'La chanson gagne une note',oFastMe:'Tu as été la plus rapide : étoile de vitesse !',oFastFr:'Ton amie a été un peu plus rapide',oFastTie:'Exactement la même vitesse : une étoile chacune !',oNone:'Vous vous êtes trompées toutes les deux',oNone2:'Pas de point. Nouvelle chanson !',
+ oRep:'À toi : répète la chanson',oFirst:'À toi : choisis une note !',oAddOne:'Super ! Ajoute une note',oFrRep:'Ton amie répète la chanson...',oFrFirst:'Ton amie choisit une note...',oFrAdd:'Ton amie ajoute une note...',oFrHear:'Ton amie réécoute...',oPassMe:'À toi maintenant !',oPassFr:'Au tour de ton amie',oWarn:'Encore {n} secondes, tranquille',
+ oSlipMe:'Oups, tu t\'es trompée',oSlipMe2:'Le point est pour ton amie. Tu commences la prochaine manche !',oTimeFr2:'Le temps de ton amie est écoulé',oSong:'La chanson a atteint {n} notes',oGiant:'Chanson géante !',oGiant2:'{n} notes ! Égalité pour cette manche',
+ oWin:'Tu as gagné !',oWin2:'Quelle mémoire musicale !',oLose:'Cette fois ton amie a gagné',oLose2:'C\'était une belle partie. On rejoue ?',oDraw:'Égalité !',oDraw2:'Vous êtes deux championnes',oStars:'Étoiles de vitesse',oLongest:'Ta plus longue chanson : {n} notes',oAgain:'Rejouer',oWants:'Ton amie veut rejouer !',oLeft2:'C\'était chouette de chanter ensemble. Tu peux créer une nouvelle salle quand tu veux !',oNew:'Nouvelle salle',oBack:'De retour ! On continue...',
+ oLeaveQ:'Quitter la partie avec ton amie ?',oStay:'Continuer à jouer',oLeaveY:'Quitter',oWins:'victoires',shareT:'Viens chanter avec moi dans La chorale des animaux ! 🎶🐱'},
 en:{title:'Animal Choir',sub:'A lullaby for the sanctuary',mStory:'Story',mArc:'Arcade',mDuo:'2 players',mPiano:'Animal piano',mStory2:'Level {n}',mArc2:'Endless song',mDuo2:'On one phone',mPiano2:'Free play',
  levels:'Levels',zoo:'My sanctuary',story:'The story',easy:'Easy',normal:'Normal',hard:'Hard',
  i1:'Night falls on the animal sanctuary. The little animals that were just rescued are still scared and cannot fall asleep.',i2:'And outside, the naughty Racket-Bot is drumming: boom! bang! Nobody can sleep like this!',i3:'Mimi, the tiger cub, the panda and the parrot start a choir! Listen to their song, repeat it, and sing every animal a lullaby.',
@@ -313,7 +381,14 @@ en:{title:'Animal Choir',sub:'A lullaby for the sanctuary',mStory:'Story',mArc:'
  hs:'HIGH SCORES',newRec:'NEW RECORD!',noRec:'no record yet',arc1:'Endless song',arc2:'How many notes can you remember?',arcEnd:'The song reached {n} notes!',round:'Round',nextA:'{a} at {n} notes',asleep:'{a} fell asleep to the song!',
  duo1:'2 players',duo2:'Take turns: repeat the song and add one note!',duoFirst:'{p} pick the first note!',duoRep:'{p} repeat the song',duoAdd:'{p} add one note!',duoPass:'Pass to {p}',
  duoEndT:'What a song! {n} notes',duoEnd2:'This time the point goes to {w}. {l}, next round!',duoBest:'Your longest song: {n}',another:'Another round',
- pianoT:'Play anything you like!',playRec:'Play back',stop:'Stop',clear:'Clear',song:'Song',locked:'Locked',of:'of',best:'Best',keys:'Keys: 1-6 or Q W E / A S D · Space: hear again · P: pause'}
+ pianoT:'Play anything you like!',playRec:'Play back',stop:'Stop',clear:'Clear',song:'Song',locked:'Locked',of:'of',best:'Best',keys:'Keys: 1-6 or Q W E / A S D · Space: hear again · P: pause',
+ mOnl:'Online with a friend',mOnl2:'Each on her own phone',oPick:'Which game shall we play? Whoever opens the room chooses',oRace:'Same song',oRace2:'You both hear the same song and repeat it at the same time. First to 3 points wins!',oAdd:'Add one',oAdd2:'Take turns: repeat the song and add one note. Whoever slips loses the round. Best of 3!',oSize:'How many animals in the choir?',oCont:'Let\'s go to the room!',oNote:'Next: create a room and send the link to your friend, or type her code',
+ oYou:'You',oFriend:'Friend',oGo:'GO!',oReady:'Get ready...',oTap:'Tap the screen to hear the sounds',oWaitTap:'Waiting for your friend...',oWaitOk:'Nice! Waiting for your friend...',oSlip:'Oops! Waiting for your friend...',oTime:'Time is up',
+ oPtMe:'A point for you!',oPtMe2:'Your friend slipped this time',oPtFr:'A point for your friend',oPtFr2:'No worries, the next song is yours!',oBoth:'You both got it!',oLonger:'The song grows by one note',oFastMe:'You were faster: speed star!',oFastFr:'Your friend was a little faster',oFastTie:'Exactly the same speed: a star each!',oNone:'You both slipped',oNone2:'No point. A new song starts!',
+ oRep:'Your turn: repeat the song',oFirst:'Your turn: pick the first note!',oAddOne:'Great! Now add one note',oFrRep:'Your friend is singing...',oFrFirst:'Your friend picks a note...',oFrAdd:'Your friend is adding a note...',oFrHear:'Your friend listens again...',oPassMe:'Your turn now!',oPassFr:'Now your friend\'s turn',oWarn:'{n} seconds left, no rush',
+ oSlipMe:'Oops, you slipped',oSlipMe2:'The point goes to your friend. You start the next round!',oTimeFr2:'Your friend ran out of time',oSong:'The song reached {n} notes',oGiant:'Giant song!',oGiant2:'{n} notes! This round is a tie',
+ oWin:'You won!',oWin2:'What a musical memory!',oLose:'This time your friend won',oLose2:'That was a lovely game. Want another one?',oDraw:'It\'s a tie!',oDraw2:'You are both champions',oStars:'Speed stars',oLongest:'Your longest song: {n} notes',oAgain:'Again',oWants:'Your friend wants to play again!',oLeft2:'It was fun singing together. You can open a new room any time!',oNew:'New room',oBack:'We are back! Carrying on...',
+ oLeaveQ:'Leave the game with your friend?',oStay:'Keep playing',oLeaveY:'Leave',oWins:'wins',shareT:'Come sing with me in Animal Choir! 🎶🐱'}
 };
 let lang=ls.get('annabelle-lang')||'he';if(!TX[lang])lang='he';
 const li=()=>lang==='he'?0:lang==='fr'?1:2;
@@ -325,7 +400,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=n=>Math.random()*n|0;
 const PL=['🐱','🐯'];
 /* ---------------- save ---------------- */
-let SV={v:1,unlocked:1,stars:{},best:0,hi:[],diff:'easy',seen:false,zoo:[],duo:0,rec:[]};
+let SV={v:1,unlocked:1,stars:{},best:0,hi:[],diff:'easy',seen:false,zoo:[],duo:0,rec:[],ow:0};
 try{const o=JSON.parse(ls.get(KEY)||'null');if(o&&typeof o==='object'&&!Array.isArray(o)){
   SV=Object.assign({},o,SV);
   SV.unlocked=clamp(o.unlocked|0||1,1,LV.length);
@@ -334,7 +409,7 @@ try{const o=JSON.parse(ls.get(KEY)||'null');if(o&&typeof o==='object'&&!Array.is
   SV.best=typeof o.best==='number'&&isFinite(o.best)?o.best:0;SV.hi.forEach(h=>{if(h.s>SV.best)SV.best=h.s});
   if(DIFF[o.diff])SV.diff=o.diff;SV.seen=!!o.seen;
   SV.zoo=Array.isArray(o.zoo)?o.zoo.filter(a=>ANIMALS.includes(a)):[];
-  SV.duo=Math.max(0,o.duo|0);
+  SV.duo=Math.max(0,o.duo|0);SV.ow=clamp(o.ow|0,0,99999);
   SV.rec=Array.isArray(o.rec)?o.rec.filter(r=>Array.isArray(r)&&r[0]>=0&&r[0]<6).slice(-20).map(r=>[r[0]|0,clamp(+r[1]||0,0,1.5)]):[];
 }}catch(e){}
 function save(){ls.set(KEY,JSON.stringify(SV))}
@@ -349,10 +424,11 @@ function addHi(s,m){if(!(s>0))return -1;const e={s:s,d:today(),m:m};SV.hi.push(e
 function award(o){try{const R=window.AnnabelleRewards;if(R){o.game=GID;R.award(o)}}catch(e){}}
 function flushR(){try{const R=window.AnnabelleRewards;R&&R.flush&&R.flush()}catch(e){}}
 /* ---------------- audio ---------------- */
-let AC=null,MG=null,muted=ls.get('annabelle-muted')==='1',music=ls.get(KEY+'-music')!=='0';
-function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=.9;try{const cp=AC.createDynamicsCompressor();MG.connect(cp);cp.connect(AC.destination)}catch(e){MG.connect(AC.destination)}}catch(e){AC=null}}if(AC&&AC.state==='suspended'){try{AC.resume()}catch(e){}}return AC}
+let AC=null,MG=null,muted=ls.get('annabelle-muted')==='1',music=ls.get(KEY+'-music')!=='0',gest=false; // gest: the page has been touched / clicked at least once
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=.9;try{const cp=AC.createDynamicsCompressor();MG.connect(cp);cp.connect(AC.destination)}catch(e){MG.connect(AC.destination)}}catch(e){AC=null}}if(AC&&AC.state==='suspended'){try{const r=AC.resume();if(r&&r.catch)r.catch(()=>{})}catch(e){}}return AC}
 function voice(type,pts,dur,vol,o){ // pts: [[t,freq],...]
   if(muted)return;const a=AC;if(!a)return;o=o||{};
+  if(O.on&&!gest&&a.state!=='running')return; // online, joined through the link and not touched yet: stay silent instead of piling up notes that would all burst out at the first touch
   try{const t0=a.currentTime+(o.delay||0),os=a.createOscillator(),g=a.createGain();os.type=type;
     os.frequency.setValueAtTime(pts[0][1],t0);for(let i=1;i<pts.length;i++)os.frequency.exponentialRampToValueAtTime(Math.max(20,pts[i][1]),t0+pts[i][0]);
     if(o.vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=o.vib[0];lg.gain.value=o.vib[1];l.connect(lg);lg.connect(os.frequency);l.start(t0);l.stop(t0+dur+.06)}
@@ -468,6 +544,7 @@ function ui(){
   const k=G.kind,an=$('anim'),mood=$('mood'),sub=$('sub'),lv=$('lvName'),bot=$('bot');
   $('hearts').textContent=(k==='story'||k==='arcade')?'❤️'.repeat(Math.max(0,G.hearts))+'🖤'.repeat(Math.max(0,G.maxHearts-G.hearts)):'';
   an.className='';mood.className='';bot.style.display='none';
+  if(k==='online'){olHud();lv.dir=lang==='he'?'rtl':'ltr';updBar();return}
   if(k==='story'){
     const L=LV[G.lvl],fr=G.ri/G.plan.length;
     an.textContent=L.a.map(a=>EM[a]).join('');if(L.a.length>1)an.classList.add('two');
@@ -492,10 +569,14 @@ function ui(){
   updBar();
 }
 function updBar(){
-  const b=$('bar'),k=G.kind,key=(k==='piano'?'p':'h')+lang;$('strip').style.display=k==='piano'?'flex':'none';
+  const b=$('bar'),k=G.kind,key=(k==='piano'?'p':k==='online'?'o'+O.mode:'h')+lang;$('strip').style.display=k==='piano'?'flex':'none';
   if(b.dataset.k!==key){
     b.dataset.k=key;
-    if(k==='piano'){
+    if(k==='online'){
+      b.innerHTML=(O.mode==='add'?'<button class="bt c2 hb" id="hearBtn" aria-label="hear">👂 <small id="hearN" style="display:inline"></small></button>':'')+'<div class="emo" id="emoBar">'+EMO.map((e,i)=>'<button class="eb" data-e="'+i+'" aria-label="emote '+(i+1)+'">'+e+'</button>').join('')+'</div>';
+      if($('hearBtn'))$('hearBtn').onclick=()=>{ac();hear()};
+      b.querySelectorAll('.eb').forEach(x=>x.onclick=()=>{ac();olEmote(+x.dataset.e)});
+    }else if(k==='piano'){
       b.innerHTML='<button class="bt" id="pPlay"></button><button class="bt alt sq" id="pSong" aria-label="song">🎼 '+t('song')+'</button><button class="bt alt sq" id="pClr" aria-label="clear">🗑️</button>';
       $('pPlay').onclick=()=>{ac();pianoPlay()};$('pSong').onclick=()=>{ac();pianoSong()};$('pClr').onclick=()=>{ac();pianoClear()};
     }else{
@@ -507,11 +588,13 @@ function updBar(){
     const playing=G.ph==='pplay',e=$('pPlay'),tx=playing?'⏹ '+t('stop'):'▶ '+t('playRec');
     if(e.textContent!==tx)e.textContent=tx;e.disabled=!playing&&!G.rec.length;drawStrip();return;
   }
+  if(k==='online'){const hb=$('hearBtn');if(hb){$('hearN').textContent='('+O.hear[O.me]+')';hb.disabled=!(G.mode==='play'&&G.ph==='oRep'&&O.hear[O.me]>0&&O.seq.length>0)}return}
   const left=k==='duo'?G.duo.hear[G.duo.turn]:G.rep,can=(k==='duo'?G.ph==='duoRep'&&G.duo.seq.length>0:G.ph==='turn')&&left>0&&G.mode==='play';
   $('hearN').textContent=left===Infinity?'':'('+left+')';$('hearBtn').disabled=!can;
 }
 function drawDots(){
   const el=$('dots'),k=G.kind;let h='';
+  if(k==='online'&&G.mode!=='menu'){olDots();return}
   if(k==='piano'||G.mode==='menu'){el.innerHTML='';return}
   const show=G.ph==='show',seq=k==='duo'?G.duo.seq:G.cur,n=seq.length;
   for(let i=0;i<n;i++){
@@ -530,9 +613,10 @@ function drawStrip(){
 }
 /* ---------------- phases ---------------- */
 function setPhase(p){G.ph=p;G.pt=0;bodyCls();if(p!=='turn')G.hint=-1}
-function bodyCls(){const p=G.ph,pl=G.mode==='play',c=document.body.classList;c.toggle('playing',pl||G.mode==='paused');c.toggle('turn',pl&&(p==='turn'||p==='duoRep'||p==='duoAdd'||p==='free'));c.toggle('dim',pl&&(p==='show'||p==='intro'||p==='oops'||p==='duoPass'||p==='duoEnd'||p==='pplay'))}
+function bodyCls(){const p=G.ph,pl=G.mode==='play',c=document.body.classList;c.toggle('playing',pl||G.mode==='paused');c.toggle('turn',pl&&(p==='turn'||p==='duoRep'||p==='duoAdd'||p==='free'||p==='oTurn'||p==='oRep'||p==='oAdd'));c.toggle('dim',pl&&(p==='show'||p==='intro'||p==='oops'||p==='duoPass'||p==='duoEnd'||p==='pplay'||p==='oPrep'||p==='oCount'||p==='oListen'||p==='oWait'||p==='oRes'||p==='oPass'||p==='oSync'||p==='oIdle'))}
 function closeAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'));mascots=[]}
 function resetCommon(kind,n){
+  if(kind!=='online'&&O.on)olOff();
   if(!boot){ac();startMusic()}
   closeAll();G.mode='play';G.kind=kind;
   G.pos=0;G.k=0;G.mist=0;G.streak=0;G.notes=0;G.score=0;G.hint=-1;G.idle=0;G.hitstop=0;G.shake=0;G.newZoo=[];G.comboSent=false;G.rev=false;G.echo=false;G.boss=null;G.won=false;G.cursor=-1;G.first=true;G.want=-1;G.introNext=null;G.dur=null;G.curDur=null;G.speed=1;G.cur=[];G.expect=[];G.lastPad=-1;G.lastAt=-9;
@@ -566,7 +650,8 @@ function startLevel(i,diff,opt){
   setPhase('intro');setTurn('wait','👀 '+t('listen'));
   if(!boot){SFX.banner(!!L.boss);award({event:'play',level:G.lvl+1})}
 }
-function noteOn(k){return Math.max(.13,DIFF[G.diff].on*G.speed*(G.curDur?G.curDur[k]:1))}
+const OD={on:.42,gap:.12},DF=()=>G.kind==='online'?OD:DIFF[G.diff]; // online playback has one fixed tempo so both phones play the song identically
+function noteOn(k){return Math.max(.13,DF().on*G.speed*(G.curDur?G.curDur[k]:1))}
 function startShow(after){
   G.after=after||'turn';setPhase('show');G.k=0;G.pos=0;G.nextAt=G.first?.3:.6;G.first=false;hideBanner();
   setTurn('wait','👀 '+t('listen'));drawDots();updBar();
@@ -576,6 +661,7 @@ function hintT(){if(G.kind==='story')return DIFF[G.diff].hint;if(G.kind==='arcad
 function nudge(){const e=$('turn');e.classList.remove('nudge');void e.offsetWidth;e.classList.add('nudge')}
 function press(i){
   i|=0;if(i<0||i>=G.n||G.mode!=='play')return false;
+  if(G.kind==='online')return olPress(i);
   switch(G.ph){
   case 'turn':return pressTurn(i);
   case 'duoAdd':if(G.pt<G.lock)return false;return duoAdd(i);
@@ -785,6 +871,7 @@ function pianoSong(){
 function pianoClear(){if(G.ph==='pplay')endPianoPlay();G.rec=[];SV.rec=[];save();SFX.click();updBar()}
 function hear(){
   if(G.mode!=='play')return false;
+  if(G.kind==='online')return olHear();
   if(G.kind==='duo'){const d=G.duo;if(G.ph!=='duoRep'||!d.seq.length||d.hear[d.turn]<=0)return false;d.hear[d.turn]--;G.cur=d.seq;G.curDur=null;startShow('duoRep');return true}
   if(G.kind==='piano')return false;
   if(G.ph!=='turn'||G.rep<=0)return false;
@@ -792,13 +879,14 @@ function hear(){
 }
 /* ---------------- update ---------------- */
 function update(dt){
-  G.clock+=dt;G.pt+=dt;
+  if(G.kind==='online'){if(O.netp)return;G.clock+=dt;G.pt+=dt;olTick();olUpdate();if(G.ph!=='show')return}
+  else{G.clock+=dt;G.pt+=dt}
   switch(G.ph){
   case 'intro':if(G.pt>=G.introDur){const f=G.introNext;G.introNext=null;hideBanner();if(f)f();else startShow('turn')}break;
   case 'show':
     while(G.ph==='show'&&G.pt>=G.nextAt){
-      if(G.k<G.cur.length){const on=noteOn(G.k);lightPad(G.cur[G.k],on,true);notesFx(G.cur[G.k],1);G.k++;G.nextAt+=on+(G.k<G.cur.length?DIFF[G.diff].gap*G.speed:.05);drawDots()}
-      else if(G.after==='duoRep')beginDuoRep();else beginTurn();
+      if(G.k<G.cur.length){const on=noteOn(G.k);lightPad(G.cur[G.k],on,true);notesFx(G.cur[G.k],1);G.k++;G.nextAt+=on+(G.k<G.cur.length?DF().gap*G.speed:.05);drawDots()}
+      else if(G.kind==='online')olAfterShow();else if(G.after==='duoRep')beginDuoRep();else beginTurn();
     }break;
   case 'turn':{G.idle+=dt;const H=hintT();if(H>0&&G.idle>=H&&G.hint<0)G.hint=G.expect[G.pos]}break;
   case 'good':if(G.pt>=DIFF[G.diff].good)nextRound();break;
@@ -822,6 +910,7 @@ function update(dt){
 }
 function frame(dt){
   G.rt+=dt;
+  if(O.on&&G.mode==='result')olResultTick();
   if(G.mode==='play'){
     if(G.hitstop>0)G.hitstop-=dt;else update(dt);
     for(let i=0;i<P.length;i++){const p=P[i];if(p.lit>0)p.lit-=dt;p.bt+=dt;if(p.joy>0)p.joy-=dt;if(p.bad>0)p.bad-=dt}
@@ -833,7 +922,7 @@ function frame(dt){
 const fx=$('fx'),fc=fx.getContext('2d');let fxW=0,fxH=0,fxDirty=false,dpr=1;
 const EF='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 function render(){
-  const T=G.rt,play=G.mode==='play',bob=G.ph==='turn'||G.ph==='duoRep'||G.ph==='duoAdd'||G.ph==='free';
+  const T=G.rt,play=G.mode==='play',bob=G.ph==='turn'||G.ph==='duoRep'||G.ph==='duoAdd'||G.ph==='free'||G.ph==='oTurn'||G.ph==='oRep'||G.ph==='oAdd';
   for(let i=0;i<G.n;i++){
     const p=P[i],lit=play&&p.lit>0,hint=play&&G.hint===i,cur=play&&G.cursor===i;
     if(lit!==p.wl){p.wl=lit;p.el.classList.toggle('lit',lit)}
@@ -869,7 +958,7 @@ function render(){
 function focusBtn(id){if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const e=$(id);if(e)setTimeout(()=>{try{e.focus({preventScroll:true})}catch(x){}},30)}}
 function restart(){if(G.kind==='story')startLevel(G.lvl);else if(G.kind==='arcade')startArcade();else if(G.kind==='duo')start2p();else startPiano()}
 function pause(){
-  if(G.mode!=='play')return;
+  if(G.mode!=='play'||G.kind==='online')return; // an online match never pauses: the friend keeps playing
   G.mode='paused';P.forEach(p=>{p.lit=0});bodyCls();
   $('cPause').innerHTML='<h2>⏸ '+t('pause')+'</h2><button class="bt" id="bRes">▶ '+t('resume')+'</button><button class="bt alt" id="bRst">🔄 '+t('restart')+'</button><button class="bt alt" id="bMenu">🏠 '+t('menu')+'</button><p class="keys">'+t('keys')+'</p>';
   $('ovPause').classList.add('on');
@@ -901,6 +990,7 @@ addEventListener('keydown',e=>{
   if(e.repeat){if(G.mode==='play'&&/^(Arrow|Space|Digit|Numpad[1-6]|Key[QWEASDR])/.test(c))e.preventDefault();return}
   ac();
   if(c==='KeyM'){toggleMute();return}
+  if(G.kind==='online'&&O.on&&(c==='KeyP'||c==='Escape')){if(c==='Escape'&&G.mode==='play'){e.preventDefault();olAskLeave()}return}
   if(c==='KeyP'||c==='Escape'){if(G.mode==='play'){e.preventDefault();pause()}else if(G.mode==='paused'){e.preventDefault();resume()}return}
   if(G.mode!=='play')return;
   const ae=document.activeElement;if((c==='Space'||c==='Enter')&&ae&&ae.tagName&&/^(BUTTON|A)$/.test(ae.tagName))return; // a focused button keeps its normal behaviour
@@ -914,6 +1004,7 @@ addEventListener('keydown',e=>{
 function setLang(l){lang=l;ls.set('annabelle-lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';document.title=t('title');['banner','ann','toast','turn','bar'].forEach(id=>{$(id).dir=l==='he'?'rtl':'ltr'})}
 function langRow(){return '<div class="row">'+['he','fr','en'].map(l=>'<button class="chip'+(l===lang?' sel':'')+'" data-l="'+l+'">'+({he:'עברית',fr:'Français',en:'English'})[l]+'</button>').join('')+'</div>'}
 function showMenu(){
+  olOff();
   G.mode='menu';closeAll();setPhase('idle');hideBanner();toastOff();P.forEach(p=>{p.lit=0;p.joy=0});G.hint=-1;
   if(!boot)startMusic();
   const cur=clamp(SV.unlocked,1,LV.length),stt=Object.keys(SV.stars).reduce((a,k)=>a+(SV.stars[k]|0),0);
@@ -923,6 +1014,7 @@ function showMenu(){
    '<button class="bt c2" id="mArc">🕹️ '+t('mArc')+'<small>'+t('mArc2')+'</small></button>'+
    '<button class="bt c3" id="mDuo">👥 '+t('mDuo')+'<small>'+t('mDuo2')+'</small></button>'+
    '<button class="bt c4" id="mPiano">🎹 '+t('mPiano')+'<small>'+t('mPiano2')+'</small></button></div>'+
+   (NT?'<button class="bt c5" id="mOnl">🌐 '+t('mOnl')+'<small>'+t('mOnl2')+(SV.ow?' · 🏆 '+SV.ow:'')+'</small></button>':'')+
    '<div class="row">'+['easy','normal','hard'].map(d=>'<button class="chip'+(SV.diff===d?' sel':'')+'" data-d="'+d+'">'+t(d)+'</button>').join('')+'</div>'+
    '<div class="row3"><button class="bt sm alt" id="mLv">🗺️ '+t('levels')+'</button><button class="bt sm alt" id="mZoo">🐾 '+t('zoo')+'</button><button class="bt sm alt" id="mSt">📖 '+t('story')+'</button></div>'+
    hsTable(-1,innerHeight<700?3:5)+langRow()+'<p class="keys">'+t('keys')+'</p>';
@@ -931,9 +1023,10 @@ function showMenu(){
   const go=f=>()=>{ac();startMusic();SFX.click();f()};
   $('mStory').onclick=go(()=>{if(!SV.seen)showIntro(()=>startLevel(cur-1,SV.diff));else startLevel(cur-1,SV.diff)});
   $('mArc').onclick=go(()=>startArcade(SV.diff));$('mDuo').onclick=go(()=>start2p(SV.diff));$('mPiano').onclick=go(startPiano);
+  if($('mOnl'))$('mOnl').onclick=go(showOnline);
   document.querySelectorAll('#cMenu [data-d]').forEach(b=>b.onclick=()=>{ac();SV.diff=b.dataset.d;G.diff=SV.diff;save();SFX.click();showMenu()});
   $('mLv').onclick=go(showLevels);$('mZoo').onclick=go(showZoo);$('mSt').onclick=go(()=>showIntro(showMenu));
-  document.querySelectorAll('#cMenu [data-l]').forEach(b=>b.onclick=()=>{setLang(b.dataset.l);showMenu()});
+  document.querySelectorAll('#cMenu [data-l]').forEach(b=>b.onclick=()=>{setLang(b.dataset.l);if(NT)NT.drawLang();showMenu()});
   G.kind='story';G.lvl=cur-1;G.plan=[{a:0,b:1}];G.ri=0;G.won=false;G.hearts=G.maxHearts=DIFF[SV.diff].hearts;G.rep=DIFF[SV.diff].rep;ui();$('lvName').textContent='🎶 '+t('title');setTurn('wait','🎶');$('dots').innerHTML='';
 }
 function showIntro(done){
@@ -981,11 +1074,387 @@ function loop(ts){
   try{frame(dt);render()}catch(e){console.error(e)}
   requestAnimationFrame(loop);
 }
+/* ---------------- online 1-vs-1 (net1v1.js): a host-authoritative duel ----------------
+   Two modes, chosen by the host in the lobby settings and sent in the start message:
+   'race' the same song: the host makes the song; both phones play it at the same moment and both girls repeat it at once.
+          Each side reports only her own result {t:'r',round,ok,ms}; the host arbitrates and answers {t:'rs'}. First to 3 points.
+   'add'  add one: turns. Repeat the shared song (live presses {t:'k'}), then add one note {t:'n',pad}. A slip loses the round. Best of 3.
+   Every message from the network is checked (type, integer ranges, round / turn numbers, phase) and silently ignored otherwise.
+   Nothing from the network ever reaches innerHTML, storage keys or the rewards. */
+const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
+const olWinOk=(race,ov,a,b,sa,sc,win)=>win===(!ov?-1:a!==b?(a>b?0:1):race&&sa!==sc?(sa>sc?0:1):-1); // the announced winner must follow from the score (race: speed stars break a tie)
+const OMODES=['race','add'],OR={target:3,minLen:2,maxLen:16,maxRd:40,grace:3.5},OA={target:2,maxSong:30,maxGames:5,turn:20,warn:5,grace:3.5},OPREP=2.1,EMO=['😄','😮','😭','👏'];
+const OC={mode:'race',n:4}; // the host's lobby settings
+const O={on:false,mode:'race',n:4,me:0,netp:false,over:false,left:false,started:false,stage:'prep',matches:0,rd:0,resRd:0,pts:[0,0],stars:[0,0],seq:[],best:0,played:0,win:-1,
+ res:[null,null],myOk:null,fp:0,ff:0,t0:0,limit:1,len:2,fresh:true,pOut:null,pAt:0,reveal:-1,revAt:0,
+ turn:0,tn:0,starter:0,hear:[1,1],fpos:0,warned:false,tick:0,resDur:2.3,cdN:-1,
+ lag:0,rtt:-1,tqI:0,tqT:0,tqNext:0,taAt:-9,q0:-99,goAt:0,rdy:false,frRdy:false,hint:false,defer:null,emAt:-9,emIn:-9,reShown:false,showAt:0,tmW:-1,tmC:''};
+const olSpeed=n=>Math.max(.6,1-.03*(n-1)),olShowDur=n=>.6+n*(OD.on+OD.gap)*olSpeed(n);
+const NT=window.Net1v1?Net1v1({pid:'annabelle-simon-',shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
+ sfx:{join:()=>SFX.join(),click:()=>SFX.click(),drop:()=>tone(330,.22,'triangle',.1,196),back:()=>SFX.good(),huh:()=>SFX.pass()},
+ hideMenu(){closeAll()},showMenu(){showMenu()},onLink(){},
+ cleanStart(d){return d&&d.g==='simon'&&OMODES.includes(d.m)&&int(d.n,4,6)?{m:d.m,n:d.n}:null},
+ makeStart(){return {g:'simon',m:O.mode,n:O.n}},
+ onHostStart(){olBegin(0,OC.mode,OC.n)},onGuestStart(c){olBegin(1,c.m,c.n)},
+ onResume(){olResume()},onData:olData,onLeft:olLeft,onPause(on){O.netp=!!on}}):null;
+function linkOk(){return !!NT&&NT.connected&&Date.now()-NT.NET.last<3000}
+function olOff(){ // leave any online match / room (also called by every way back to the menu)
+  if(O.on){O.on=false;O.left=false;O.netp=false;O.defer=null;O.matches=0;O.rtt=-1;O.lag=0;O.tqI=0;document.body.classList.remove('onl','race','add');olTimer(-1,1,false);$('fdots').innerHTML='';$('emoM').classList.remove('on');$('emoF').classList.remove('on')}
+  if(NT)NT.leaveToMenu();
+}
+function showOnline(){ // lobby settings: the girl who opens the room picks the game
+  if(!NT)return;closeAll();G.mode='menu';
+  const mb=(m,ic,k)=>'<button class="bt osel'+(OC.mode===m?' sel':'')+'" data-m="'+m+'">'+ic+' '+t(k)+'<small>'+t(k+'2')+'</small></button>';
+  $('cOnl').innerHTML='<h2>🌐 '+t('mOnl')+'</h2><p class="subt">'+t('oPick')+'</p>'+mb('race','🎶','oRace')+mb('add','➕','oAdd')+
+   '<p class="subt" style="margin:10px 0 0">'+t('oSize')+'</p><div class="row">'+[4,5,6].map(n=>'<button class="chip'+(OC.n===n?' sel':'')+'" data-n="'+n+'">'+n+' 🐾</button>').join('')+'</div>'+
+   '<button class="bt" id="oGo" style="margin-top:14px">▶ '+t('oCont')+'</button><button class="bt alt" id="oBk">◀ '+t('back')+'</button><p class="subt" style="font-size:13px;margin:4px 0 0">'+t('oNote')+'</p>';
+  $('ovOnl').classList.add('on');
+  document.querySelectorAll('#cOnl [data-m]').forEach(b=>b.onclick=()=>{ac();OC.mode=b.dataset.m==='add'?'add':'race';SFX.click();showOnline()});
+  document.querySelectorAll('#cOnl [data-n]').forEach(b=>b.onclick=()=>{ac();OC.n=clamp(+b.dataset.n|0,4,6);SFX.click();showOnline()});
+  $('oGo').onclick=()=>{ac();SFX.click();NT.showLobby()};$('oBk').onclick=()=>{SFX.click();showMenu()};focusBtn('oGo');
+}
+function olBegin(me,mode,n){ // the match starts (both sides; also a rematch)
+  resetCommon('online',n);G.first=false;
+  Object.assign(O,{on:true,mode:mode,n:n,me:me,netp:false,over:false,left:false,started:false,stage:'prep',rd:0,resRd:0,pts:[0,0],stars:[0,0],seq:[],best:0,played:0,win:-1,res:[null,null],myOk:null,fp:0,ff:0,len:OR.minLen,fresh:true,pOut:null,reveal:-1,turn:0,tn:0,hear:[1,1],fpos:0,warned:false,defer:null,reShown:false,cdN:-1,tqNext:0,tqT:0,rdy:false,frRdy:false,hint:false});
+  if(!me)O.starter=O.matches%2;O.matches++;
+  G.cur=O.seq;const c=document.body.classList;c.add('onl');c.toggle('race',mode==='race');c.toggle('add',mode==='add');
+  ui();drawDots();olPrep();award({event:'play'});
+  if(!muted&&AC&&AC.state!=='running'){O.hint=true;toast('👆 '+t('oTap'),9000)} // joined through the link: no touch yet, so no sound yet
+}
+function olPrep(){
+  const race=O.mode==='race';
+  showBanner('<small>🌐 '+t('mOnl')+'</small><span class="be">'+PL[O.me]+' 🎶 '+PL[O.me^1]+'</span><b>'+(race?'🎶 ':'➕ ')+t(race?'oRace':'oAdd')+'</b><em>'+t(race?'oRace2':'oAdd2')+'</em>',OPREP+.6,'');
+  setPhase('oPrep');setTurn('wait','🌐 '+t('oReady'));
+}
+function olCount(){hideBanner();O.cdN=-1;setPhase('oCount')}
+function olDefer(sec,fn){setPhase('oIdle');O.defer={at:G.clock+Math.max(0,sec),fn:fn}} // the host waits one network delay so both phones start together
+function olHud(){
+  const me=O.me,fr=me^1,race=O.mode==='race',tg=race?OR.target:OA.target,act=G.mode==='play'&&O.started&&!race;
+  const pips=p=>{let h='';for(let i=0;i<tg;i++)h+='<i'+(i<O.pts[p]?' class="f"':'')+'></i>';return h+(race&&O.stars[p]?'<small>⚡'+O.stars[p]+'</small>':'')};
+  $('avM').textContent=PL[me];$('avF').textContent=PL[fr];$('nmM').textContent=t('oYou');$('nmF').textContent=t('oFriend');
+  $('ppM').innerHTML=pips(me);$('ppF').innerHTML=pips(fr);
+  $('plM').classList.toggle('act',act&&O.turn===me);$('plF').classList.toggle('act',act&&O.turn===fr);
+  $('vsR').textContent=O.started?t('round')+' '+(race?O.played+(O.stage==='res'?0:1):O.rd):'VS';
+  $('vsS').textContent=O.started?'♪ '+O.seq.length:race?'🎶':'➕';
+  $('lvName').textContent='🌐 '+t(race?'oRace':'oAdd');
+}
+function olDots(){
+  const el=$('dots'),fe=$('fdots'),seq=O.seq,n=seq.length,ph=G.ph,show=ph==='show',race=O.mode==='race';let h='';
+  if(!O.started||G.mode!=='play'){el.innerHTML='';fe.innerHTML='';return}
+  const mine=race||O.turn===O.me,pos=!race&&ph==='oPass'?n:mine?G.pos:O.fpos;
+  for(let i=0;i<n;i++){
+    let c='',st='';
+    if(show){if(i<G.k-1)c='h';else if(i===G.k-1){c='s';st=PADS[seq[i]].c}}
+    else if(i<pos){if(mine&&ph!=='oPass'){c='d';st=PADS[seq[i]].c}else c='h'} // the friend's progress stays colourless: no free hints
+    h+='<i class="'+c+'"'+(st?' style="background:'+st+'"':'')+'></i>';
+  }
+  if(!race&&!show&&(ph==='oRep'||ph==='oAdd'||ph==='oListen')){const pl=ph==='oAdd'||(ph==='oListen'&&O.fpos>=n);h+='<i class="'+(pl?'plus':'')+'">'+(pl?'+':'')+'</i>'}
+  el.innerHTML=h;
+  if(race&&n){let f='<small>'+esc(t('oFriend'))+'</small>';for(let i=0;i<n;i++)f+='<i'+(i<O.fp?' class="d"':'')+'></i>';fe.innerHTML=f+'<b>'+(O.ff===1?'✔':O.ff===2?'✖':'')+'</b>'}else fe.innerHTML='';
+}
+function olTimer(left,lim,fr){ // the little time bar under the turn pill
+  const e=$('tm'),on=left>=0,w=on?Math.round(clamp(left/lim,0,1)*50)*2:-1,c=!on?'':'on'+(fr?' fr':left<=(O.mode==='race'?3:OA.warn)?' low':'');
+  if(c!==O.tmC){O.tmC=c;e.className=c}
+  if(w!==O.tmW){O.tmW=w;if(w>=0)e.firstChild.firstChild.style.width=w+'%'}
+}
+function olBubble(who,i){const e=$(who?'emoF':'emoM');e.textContent=EMO[i];e.classList.remove('on');void e.offsetWidth;e.classList.add('on');if(who){tone(880,.07,'sine',.06);tone(1175,.1,'sine',.06,null,.07)}else tone(988,.06,'sine',.05)}
+function olEmote(i){ // quick reaction: at most one per second
+  if(!O.on||O.left||G.mode!=='play'||!int(i,0,3)||G.rt-O.emAt<1)return false;
+  O.emAt=G.rt;NT.send({t:'em',i:i});olBubble(0,i);
+  const b=$('emoBar');if(b){b.classList.add('cool');setTimeout(()=>b.classList.remove('cool'),1000)}return true;
+}
+function olProg(n,f,now){O.pOut={t:'p',rd:O.rd,n:n,f:f};if(now||G.rt>=O.pAt){NT.send(O.pOut);O.pOut=null;O.pAt=G.rt+.09}} // live progress, rate-limited
+function olSlipFx(i,want){if(i>=0)P[i].bad=.4;SFX.wrong();G.shake=.25;if(want>=0){O.reveal=want;O.revAt=G.clock+.45}}
+function olPress(i){
+  if(!O.on||O.netp)return false;
+  switch(G.ph){
+  case 'oTurn':return olPressA(i);
+  case 'oRep':return olPressRep(i);
+  case 'oAdd':if(G.pt<G.lock||O.seq.length>=OA.maxSong)return false;NT.send({t:'n',tn:O.tn,pad:i});olAdded(i);return true;
+  default:nudge();return false;
+  }
+}
+/* --- mode 'race': the same song --- */
+function olNote(s){let p;do{p=rnd(O.n)}while(s.length>=2&&s[s.length-1]===p&&s[s.length-2]===p);s.push(p)}
+function hostNext(){if(O.mode==='race')hostGo(false);else hostGoB()}
+function hostGo(replay){ // host: open a round. A replay (after a reconnection) repeats the same song under a new round number
+  if(!replay){if(O.fresh)O.seq=[];while(O.seq.length<O.len)olNote(O.seq);O.fresh=false}
+  O.rd++;O.res=[null,null];O.started=true;O.stage='round';
+  O.goAt=G.clock;NT.send({t:'go',rd:O.rd,q:O.seq.slice(),a:O.pts[0],b:O.pts[1]});olDefer(O.lag,olRound);
+}
+function olRound(){ // both: play the song (the guest on arrival of 'go', the host one network delay after sending it)
+  O.fp=0;O.ff=0;O.myOk=null;O.reveal=-1;O.pOut=null;O.showAt=Date.now();G.cur=O.seq;G.curDur=null;G.speed=olSpeed(O.seq.length);G.pos=0;
+  ui();startShow('oTurn');
+}
+function olAfterShow(){ // my turn starts when my phone has finished playing the song
+  G.pos=0;O.t0=G.clock;O.warned=false;O.tick=0;
+  if(O.mode==='race'){O.limit=Math.min(30,4+1.4*O.seq.length);setPhase('oTurn');setTurn('go p'+O.me,'🎤 '+t('turn'))}
+  else{setPhase('oRep');setTurn('go p'+O.me,'🎤 '+t('oRep'))}
+  SFX.cue();drawDots();updBar();
+}
+function olPressA(i){
+  const want=O.seq[G.pos];
+  if(i!==want&&i===G.lastPad&&G.clock-G.lastAt<.18)return false; // accidental double-tap: forgive
+  G.lastPad=i;G.lastAt=G.clock;
+  if(i===want){lightPad(i,.3,true);notesFx(i,2);G.pos++;drawDots();if(G.pos>=O.seq.length)olDoneA(true,false,-1);else olProg(G.pos,0)}
+  else{olSlipFx(i,want);olDoneA(false,false,want)}
+  return true;
+}
+function olDoneA(ok,timeout){ // my own result for this round: I report it, the host arbitrates
+  const ms=Math.round(clamp((G.clock-O.t0)*1000,0,60000));O.myOk=ok;
+  if(ok){O.best=Math.max(O.best,O.seq.length);SFX.good();P.forEach((p,i)=>{if(i<G.n)p.joy=.5+i*.04})}
+  olProg(G.pos,ok?1:2,true);
+  setPhase('oWait');setTurn(ok?'ok':'bad',ok?'✔ '+t('oWaitOk'):timeout?'⏰ '+t('oTime'):t('oSlip'));updBar();
+  if(O.me)NT.send({t:'r',round:O.rd,ok:ok,ms:ms});else{O.res[0]={ok:ok,ms:ms};hostCheck()}
+}
+function hostCheck(){if(O.res[0]&&O.res[1]&&O.resRd!==O.rd)hostResolveA()}
+function hostResolveA(){ // both right: the song grows (+ a cosmetic speed star). One wrong: a point for the other. Both wrong: nothing
+  const h=O.res[0],g=O.res[1],pts=O.pts.slice(),st=O.stars.slice(),played=O.played+1;let w=-1,sb=-1;
+  if(h.ok&&g.ok){const d=h.ms-g.ms;sb=Math.abs(d)<=150?2:d<0?0:1;if(sb!==1)st[0]=Math.min(99,st[0]+1);if(sb!==0)st[1]=Math.min(99,st[1]+1);if(O.len<OR.maxLen)O.len++;else O.fresh=true}
+  else{if(h.ok!==g.ok){w=h.ok?0:1;pts[w]++}O.len=Math.max(OR.minLen,O.seq.length-2);O.fresh=true}
+  let ov=0,win=-1;
+  if(pts[0]>=OR.target||pts[1]>=OR.target){ov=1;win=pts[0]>pts[1]?0:1}
+  else if(played>=OR.maxRd||O.rd>=990){ov=1;win=pts[0]!==pts[1]?(pts[0]>pts[1]?0:1):st[0]!==st[1]?(st[0]>st[1]?0:1):-1}
+  const m={t:'rs',rd:O.rd,ho:h.ok?1:0,go:g.ok?1:0,w:w,sb:sb,a:pts[0],b:pts[1],sa:st[0],sc:st[1],ov:ov,win:win};
+  NT.send(m);olResA(m);
+}
+function olResA(m){ // both: show the round result from my own point of view
+  const me=O.me,fr=me^1,ok=[m.ho===1,m.go===1],c=fxCenter();let b,e;
+  O.pts=[m.a,m.b];O.stars=[m.sa,m.sc];O.resRd=O.rd;O.played++;O.stage='res';O.defer=null;O.ff=ok[fr]?1:2;if(ok[fr])O.fp=O.seq.length;
+  if(m.ov)olSetOver(m.win);
+  if(m.w===me){b='⭐ '+t('oPtMe');e=t('oPtMe2');SFX.fanfare();confetti(c.x,c.y-40,34,260)}
+  else if(m.w===fr){b=t('oPtFr');e=t('oPtFr2');SFX.pass()}
+  else if(ok[0]&&ok[1]){b='🎶 '+t('oBoth');e=(m.sb===2?'⚡ '+t('oFastTie'):m.sb===me?'⚡ '+t('oFastMe'):t('oFastFr'))+'<br>'+t('oLonger');SFX.chord();if(m.sb===me||m.sb===2)emoFx(c.x,c.y-30,'⭐',3,true)}
+  else{b='🙈 '+t('oNone');e=t('oNone2');SFX.pass()}
+  O.resDur=m.ov?2.6:2.3;showBanner('<b>'+b+'</b><em>'+e+'</em>',O.resDur,'');
+  setPhase('oRes');setTurn(m.w===me?'ok':'wait','🎶');ui();drawDots();
+}
+function olSetOver(win){ // the match is decided. A rematch can only be asked from now on; the host closes the match in net1v1 once the guest has confirmed the final result
+  O.over=true;O.win=win;NT.NET.oppRe=false;if(O.me){NT.setOver(true);NT.send({t:'ov'})}
+}
+/* --- mode 'add': add one, in turns --- */
+function hostGoB(){
+  O.rd++;O.started=true;O.stage='round';O.seq=[];O.turn=O.starter;O.tn+=2;O.hear=[1,1];
+  NT.send({t:'go',rd:O.rd,w:O.turn,tn:O.tn,a:O.pts[0],b:O.pts[1]});olRoundB();
+}
+function olRoundB(){G.cur=O.seq;G.curDur=null;G.speed=1;O.reveal=-1;toast('🎵 '+t('round')+' '+O.rd,1300);olTurnB()}
+function olTurnB(){ // both: a turn begins (mine: repeat + add, hers: listen)
+  const mine=O.turn===O.me,n=O.seq.length;G.pos=0;O.fpos=0;O.t0=G.clock;O.warned=false;O.tick=0;G.cur=O.seq;
+  if(mine){if(n){setPhase('oRep');setTurn('go p'+O.me,'🎤 '+t('oRep'))}else{G.lock=0;setPhase('oAdd');setTurn('go p'+O.me,'➕ '+t('oFirst'))}SFX.cue()}
+  else{setPhase('oListen');setTurn('wait','👂 '+t(n?'oFrRep':'oFrFirst'))}
+  ui();drawDots();updBar();
+}
+function olPressRep(i){
+  const want=O.seq[G.pos];
+  if(i!==want&&i===G.lastPad&&G.clock-G.lastAt<.18)return false;
+  G.lastPad=i;G.lastAt=G.clock;NT.send({t:'k',tn:O.tn,i:G.pos,pad:i}); // the friend hears every press live
+  if(i===want){lightPad(i,.3,true);notesFx(i,1);G.pos++;
+    if(G.pos>=O.seq.length){G.lock=.3;setPhase('oAdd');setTurn('go p'+O.me,'➕ '+t('oAddOne'));SFX.good();updBar()}
+    drawDots()}
+  else{olSlipFx(i,want);if(O.me){setPhase('oWait');setTurn('bad','...');updBar()}else hostSlip(0,want,0)}
+  return true;
+}
+function olAdded(i){ // the girl on turn (me or the friend) added pad i: the song grows and the turn passes
+  if(O.turn===O.me)O.best=Math.max(O.best,O.seq.length+1);
+  lightPad(i,.3,true);notesFx(i,2);O.seq.push(i);
+  if(O.seq.length>=OA.maxSong){if(O.me){setPhase('oIdle');setTurn('wait','🎼')}else hostSlip(-1,-1,2);return}
+  O.turn^=1;O.tn++;O.fpos=0;G.pos=0;setPhase('oPass');setTurn('wait',t(O.turn===O.me?'oPassMe':'oPassFr'));SFX.pass();ui();drawDots();updBar();
+}
+function olHear(){ // add mode: listen to the song once more (once per round); my turn timer restarts afterwards
+  if(!O.on||O.netp||O.mode!=='add'||G.ph!=='oRep'||O.hear[O.me]<=0||!O.seq.length)return false;
+  O.hear[O.me]--;NT.send({t:'h',tn:O.tn});G.cur=O.seq;G.curDur=null;G.speed=olSpeed(O.seq.length);startShow('oRep');return true;
+}
+function olTimeout(){ // my 20 seconds are over
+  const want=G.ph==='oRep'?O.seq[G.pos]:-1;olSlipFx(-1,want);
+  if(O.me){NT.send({t:'to',tn:O.tn});setPhase('oWait');setTurn('bad','⏰ '+t('oTime'));updBar()}else hostSlip(0,want,1);
+}
+function hostSlip(l,want,why){ // host: the round ends. l = who slipped (0 host, 1 guest, -1 nobody: giant song); why 0 wrong pad, 1 time, 2 giant song
+  const pts=O.pts.slice(),played=O.played+1;if(l>=0){pts[l^1]++;O.starter=l}
+  let ov=0,win=-1;
+  if(pts[0]>=OA.target||pts[1]>=OA.target){ov=1;win=pts[0]>pts[1]?0:1}else if(played>=OA.maxGames){ov=1;win=pts[0]===pts[1]?-1:pts[0]>pts[1]?0:1}
+  const m={t:'rs',rd:O.rd,l:l,y:why,wp:int(want,0,O.n-1)?want:-1,n:O.seq.length,a:pts[0],b:pts[1],ov:ov,win:win};
+  NT.send(m);olResB(m);
+}
+function olResB(m){
+  const me=O.me,fr=me^1,c=fxCenter(),song=fmt(t('oSong'),{n:m.n});let b,e;
+  O.pts=[m.a,m.b];O.resRd=O.rd;O.played++;O.stage='res';O.defer=null;toastOff();
+  if(m.ov)olSetOver(m.win);
+  if(m.l===me){b=m.y===1?'⏰ '+t('oTime'):t('oSlipMe');e=t('oSlipMe2');SFX.pass();if(m.wp>=0&&O.reveal<0&&G.ph!=='oWait'){O.reveal=m.wp;O.revAt=G.clock+.3}}
+  else if(m.l===fr){b='⭐ '+t('oPtMe');e=t(m.y===1?'oTimeFr2':'oPtMe2')+'<br>'+song;SFX.fanfare();confetti(c.x,c.y-40,34,260)}
+  else{b='🎼 '+t('oGiant');e=fmt(t('oGiant2'),{n:m.n});SFX.chord()}
+  O.resDur=m.ov?2.6:2.8;showBanner('<b>'+b+'</b><em>'+e+'</em>',O.resDur,'');
+  setPhase('oRes');setTurn(m.l===fr?'ok':'wait','🎶');ui();drawDots();updBar();
+}
+function olTurnMsg(d){ // add mode: the friend's live input during HER turn (both directions; 'to' only guest -> host)
+  const ty=d.t,fr=O.me^1;
+  if(O.mode!=='add'||O.turn!==fr||!int(d.tn,0,99999)||d.tn!==O.tn||O.resRd===O.rd)return;
+  if(G.ph==='oPass')olTurnB();
+  if(G.ph!=='oListen')return;
+  const n=O.seq.length;
+  if(ty==='k'){
+    if(!int(d.i,0,OA.maxSong)||!int(d.pad,0,O.n-1)||d.i!==O.fpos||O.fpos>=n)return;
+    if(d.pad===O.seq[O.fpos]){lightPad(d.pad,.3,true);notesFx(d.pad,1);O.fpos++;if(O.fpos>=n)setTurn('wait','➕ '+t('oFrAdd'));drawDots()}
+    else{const want=O.seq[O.fpos];P[d.pad].bad=.4;SFX.wrong();if(O.me){setPhase('oIdle');setTurn('wait','...')}else hostSlip(1,want,0)}
+  }else if(ty==='n'){if(!int(d.pad,0,O.n-1)||O.fpos!==n||n>=OA.maxSong)return;olAdded(d.pad)}
+  else if(ty==='h'){if(!n||O.hear[fr]<=0||O.fpos>=n)return;O.hear[fr]--;O.fpos=0;O.t0=G.clock+olShowDur(n);setTurn('wait','👂 '+t('oFrHear'));drawDots()}
+  else if(ty==='to'){if(!O.me)hostSlip(1,O.fpos<n?O.seq[O.fpos]:-1,1)}
+}
+/* --- timers, messages, pause / resume, end --- */
+function olTick(){ // every frame of an online match (frozen while the connection is paused)
+  const host=!O.me,ph=G.ph;
+  if(O.defer&&G.clock>=O.defer.at){const f=O.defer.fn;O.defer=null;f();return}
+  if(O.pOut&&G.rt>=O.pAt){NT.send(O.pOut);O.pOut=null;O.pAt=G.rt+.09}
+  if(!host&&!O.rdy&&!O.started&&(muted||!AC||AC.state==='running')){O.rdy=true;NT.send({t:'rdy'});if(O.hint){O.hint=false;toastOff()}} // my sound works: the host may start the countdown
+  if(O.reveal>=0&&G.clock>=O.revAt){const r=O.reveal;O.reveal=-1;if(r<G.n)lightPad(r,.5,true,.7)} // after a slip: show which animal it was
+  if(host&&Date.now()-NT.NET.last>2500)O.q0=G.clock; // the link was quiet just now: the friend may be late through no fault of hers
+  if(host&&G.rt>=O.tqNext){O.tqNext=G.rt+(O.rtt<0&&O.tqI<8?.35:4);O.tqI=(O.tqI+1)%10000;O.tqT=performance.now();NT.send({t:'tq',i:O.tqI})} // measure the network delay
+  let left=-1,lim=1,fr=false;
+  if(O.mode==='race'){
+    if(ph==='oTurn'||ph==='oWait'){
+      lim=O.limit;left=lim-(G.clock-O.t0);fr=ph==='oWait';
+      if(ph==='oTurn'&&left<=0){olSlipFx(-1,O.seq[G.pos]);olDoneA(false,true)}
+      else if(host&&!O.res[1]&&linkOk()&&G.clock-Math.max(O.t0,O.q0>=O.goAt?O.q0+olShowDur(O.seq.length):0)>lim+OR.grace){O.res[1]={ok:false,ms:60000};O.ff=2;drawDots();hostCheck()} // the friend never answered: generous grace, counted again from the end of any network gap
+      left=Math.max(0,left);
+    }
+  }else if(ph==='oRep'||ph==='oAdd'||ph==='oListen'){
+    lim=OA.turn;left=lim-(G.clock-O.t0);fr=ph==='oListen';
+    if(!fr){
+      if(left<=OA.warn&&left>0){if(!O.warned){O.warned=true;toast('⏳ '+fmt(t('oWarn'),{n:OA.warn}),1800)}const s=Math.ceil(left);if(s!==O.tick){O.tick=s;tone(880,.05,'sine',.04)}} // gentle warning
+      if(left<=0)olTimeout();
+    }else if(host&&linkOk()&&G.clock-Math.max(O.t0,O.q0)>lim+OA.grace)hostSlip(1,O.fpos<O.seq.length?O.seq[O.fpos]:-1,1); // backstop only: normally the friend's own phone reports her time-out
+    left=Math.max(0,left);
+  }
+  if(G.mode==='play')olTimer(left,lim,fr);
+}
+function olUpdate(){
+  switch(G.ph){
+  case 'oPrep':if(!O.me&&G.pt>=OPREP){ // host: 3-2-1 starts at the same moment on both phones, once the friend's sound is unlocked (or after 6 s at most)
+    if(O.frRdy||G.pt>=OPREP+6){NT.send({t:'cd'});olDefer(O.lag,olCount)}else if(!O.hint){O.hint=true;setTurn('wait','👆 '+t('oWaitTap'))}}break;
+  case 'oCount':{
+    const k=Math.min(3,Math.floor(G.pt/.72));
+    if(k!==O.cdN){O.cdN=k;if(k<3){announce(String(3-k),'#8fe3ff');setTurn('wait','⏱ '+(3-k));tone(660,.09,'square',.05)}else{announce(t('oGo'),'#b8f08a');setTurn('go p'+O.me,t('oGo'));SFX.cue()}}
+    if(G.pt>=3*.72+.55){if(O.me)setPhase('oIdle');else hostNext()}
+  }break;
+  case 'oRes':if(G.pt>=O.resDur){hideBanner();if(O.over)olOver();else if(O.me)setPhase('oIdle');else hostNext()}break;
+  case 'oPass':if(G.pt>=.9)olTurnB();break;
+  case 'oSync':if(!O.me&&G.pt>=1.5)hostGo(true);break;
+  }
+}
+function olFrProg(d){if(O.mode!=='race'||!int(d.rd,1,999)||d.rd!==O.rd||O.resRd===O.rd||!int(d.n,0,O.seq.length)||!int(d.f,0,2)||!['show','oTurn','oWait'].includes(G.ph))return;O.fp=d.n;O.ff=d.f;olDots()}
+function olData(d){ // every game message from the friend lands here (already authenticated by net1v1): validate everything
+  if(!O.on||O.left||!d||typeof d!=='object')return;
+  const ty=d.t,host=!O.me,race=O.mode==='race',ph=G.ph;
+  if(ty==='em'){if(int(d.i,0,3)&&G.rt-O.emIn>=.9){O.emIn=G.rt;olBubble(1,d.i)}return}
+  if(ty==='tq'){if(!host&&int(d.i,0,9999)&&G.rt-O.taAt>=.12){O.taAt=G.rt;NT.send({t:'ta',i:d.i})}return}
+  if(ty==='ta'){if(host&&int(d.i,0,9999)&&d.i===O.tqI&&O.tqT>0){const r=performance.now()-O.tqT;O.tqT=0;if(r>=0&&r<4000){O.rtt=O.rtt<0?r:O.rtt*.7+r*.3;O.lag=clamp(O.rtt/2000,0,.35)}}return}
+  if(ty==='ov'){if(host&&O.over)NT.setOver(true);return}
+  if(ty==='rdy'){if(host&&!O.started)O.frRdy=true;return}
+  if(host){ // from the guest: only her own input and her own result
+    if(O.over||G.mode!=='play')return;
+    if(ty==='r'){
+      if(!race||!int(d.round,1,999)||d.round!==O.rd||O.resRd===O.rd||O.res[1]||typeof d.ok!=='boolean'||typeof d.ms!=='number'||!isFinite(d.ms)||!['show','oTurn','oWait'].includes(ph))return;
+      let ms=clamp(Math.round(d.ms),0,60000);if(d.ok)ms=Math.max(ms,O.seq.length*70); // nobody sings faster than that
+      O.res[1]={ok:d.ok,ms:ms};O.ff=d.ok?1:2;if(d.ok)O.fp=O.seq.length;drawDots();hostCheck();
+    }else if(ty==='p')olFrProg(d);
+    else if(ty==='k'||ty==='n'||ty==='h'||ty==='to')olTurnMsg(d);
+    return;
+  }
+  // from the host (authoritative for the shared state): still check every field and that it fits what I know
+  if(ty==='sy'){olApplySnap(d);return}
+  if(O.over||G.mode!=='play')return;
+  const tg=race?OR.target:OA.target;
+  if(ty==='cd'){if(!O.started&&(ph==='oPrep'||ph==='oIdle'||ph==='oCount'))olCount()}
+  else if(ty==='go'){
+    if(!int(d.rd,O.rd+1,999)||!int(d.a,O.pts[0],tg-1)||!int(d.b,O.pts[1],tg-1))return;
+    if(race){
+      if(!Array.isArray(d.q)||d.q.length<1||d.q.length>OR.maxLen||!d.q.every(v=>int(v,0,O.n-1)))return;
+      O.rd=d.rd;O.seq=d.q.slice();O.pts=[d.a,d.b];O.started=true;O.stage='round';O.defer=null;hideBanner();olRound();
+    }else{
+      if(!int(d.w,0,1)||!int(d.tn,0,99999))return;
+      O.rd=d.rd;O.seq=[];O.turn=d.w;O.tn=d.tn;O.hear=[1,1];O.pts=[d.a,d.b];O.started=true;O.stage='round';O.defer=null;hideBanner();olRoundB();
+    }
+  }else if(ty==='rs'){
+    if(!O.started||d.rd!==O.rd||O.resRd===O.rd||!int(d.a,0,tg)||!int(d.b,0,tg)||!int(d.ov,0,1)||!int(d.win,-1,1))return;
+    const da=d.a-O.pts[0],db=d.b-O.pts[1],end=d.a>=tg||d.b>=tg;
+    if(da<0||db<0||da+db>1||(!d.ov&&end)||(d.ov&&!end&&O.played+1<(race?OR.maxRd:OA.maxGames)&&d.rd<990))return; // scores only grow, one point at a time; the match ends only when it really can
+    if(race){
+      if(!['show','oTurn','oWait'].includes(ph)||!int(d.ho,0,1)||!int(d.go,0,1)||!int(d.w,-1,1)||!int(d.sb,-1,2)||!int(d.sa,O.stars[0],Math.min(99,O.stars[0]+1))||!int(d.sc,O.stars[1],Math.min(99,O.stars[1]+1)))return;
+      if((d.w===0)!==(da===1)||(d.w===1)!==(db===1)||(d.w===1&&O.myOk!==true))return; // I can only score a round I really sang right
+      if(!olWinOk(true,d.ov,d.a,d.b,d.sa,d.sc,d.win))return;
+      olResA(d);
+    }else{
+      if(ph==='oPrep'||ph==='oCount'||!int(d.l,-1,1)||!int(d.y,0,2)||!int(d.wp,-1,O.n-1)||!int(d.n,0,OA.maxSong)||(d.l===1)!==(da===1)||(d.l===0)!==(db===1)||!olWinOk(false,d.ov,d.a,d.b,0,0,d.win))return;
+      olResB(d);
+    }
+  }else if(ty==='p')olFrProg(d);
+  else if(ty==='k'||ty==='n'||ty==='h')olTurnMsg(d);
+}
+function olSnap(st){NT.send({t:'sy',m:O.mode,rd:O.rd,a:O.pts[0],b:O.pts[1],sa:O.stars[0],sc:O.stars[1],pl:O.played,ov:O.over?1:0,win:O.win,st:st,q:O.mode==='add'&&st?O.seq.slice():[],tu:O.turn,tn:O.tn,h0:O.hear[0],h1:O.hear[1]})}
+function olResume(){ // host: the connection is back -> send a complete snapshot, then replay the open round / turn
+  if(!O.on||O.me||O.left)return;
+  if(O.over||G.mode!=='play'){olSnap(0);return}
+  O.defer=null;
+  if(O.stage==='prep'){olSnap(0);olPrep();G.pt=OPREP-1}
+  else if(O.stage==='res')olSnap(0);
+  else if(O.mode==='race'){olSnap(0);O.res=[null,null];hideBanner();setPhase('oSync');setTurn('wait','🔌 '+t('oBack'));drawDots()}
+  else{O.tn+=2;olSnap(1);hideBanner();olTurnB();toast('🔌 '+t('oBack'),1600)}
+}
+function olApplySnap(d){ // guest: the host's snapshot after a reconnection
+  if(O.over||G.mode!=='play')return;
+  const race=O.mode==='race',tg=race?OR.target:OA.target,end=d.a>=tg||d.b>=tg;
+  if(d.m!==O.mode||!int(d.rd,O.rd,999)||!int(d.a,O.pts[0],tg)||!int(d.b,O.pts[1],tg)||!int(d.sa,0,99)||!int(d.sc,0,99)||!int(d.pl,0,999)||!int(d.ov,0,1)||!int(d.win,-1,1)||!int(d.st,0,1)||!int(d.tu,0,1)||!int(d.tn,0,99999)||!int(d.h0,0,1)||!int(d.h1,0,1)||!Array.isArray(d.q)||d.q.length>OA.maxSong||!d.q.every(v=>int(v,0,O.n-1)))return;
+  if((!d.ov&&end)||(d.ov&&!end&&d.pl<(race?OR.maxRd:OA.maxGames)&&d.rd<990)||!olWinOk(race,d.ov,d.a,d.b,d.sa,d.sc,d.win))return;
+  if(d.b-O.pts[1]>1||(race&&d.b>O.pts[1]&&O.myOk!==true))return; // a snapshot can hand me at most the one point of a result I missed
+  O.defer=null;O.reveal=-1;O.myOk=null;O.rd=d.rd;O.pts=[d.a,d.b];O.stars=[d.sa,d.sc];O.played=d.pl;
+  if(d.ov){O.resRd=O.rd;olSetOver(d.win);hideBanner();olOver();return}
+  if(!race&&d.st===1){O.started=true;O.stage='round';O.seq=d.q.slice();O.turn=d.tu;O.tn=d.tn;O.hear=[d.h0,d.h1];hideBanner();olTurnB();toast('🔌 '+t('oBack'),1600);return}
+  if(['show','oTurn','oWait','oRep','oAdd','oListen','oPass','oPrep','oCount'].includes(G.ph)){hideBanner();setPhase('oIdle');setTurn('wait','🔌 '+t('oBack'))}
+  ui();drawDots();
+}
+function olOver(){ // the match is decided: each girl sees her own result card
+  if(G.mode==='result')return;
+  G.mode='result';setPhase('idle');hideBanner();toastOff();olTimer(-1,1,false);$('ovPause').classList.remove('on');
+  const me=O.me,fr=me^1,r=O.win<0?'draw':O.win===me?'win':'lose',K=r==='win'?'oWin':r==='draw'?'oDraw':'oLose';
+  if(r==='win'){SV.ow=Math.min(99999,(SV.ow|0)+1);save();award({event:'win'})}
+  if(O.best>0)award({event:'score',score:O.best});flushR();
+  let h='<div class="bige pop">'+(r==='win'?'🏆':r==='draw'?'🤝':'💜')+'</div><h2>'+t(K)+'</h2><p>'+t(K+'2')+'</p>'+
+   '<div class="ovs"><div><span class="av">'+PL[me]+'</span>'+t('oYou')+'</div><b class="sn">'+O.pts[me]+'</b><b class="sn">:</b><b class="sn">'+O.pts[fr]+'</b><div><span class="av">'+PL[fr]+'</span>'+t('oFriend')+'</div></div>';
+  if(O.mode==='race')h+='<p>⚡ '+t('oStars')+(lang==='fr'?' : ':': ')+t('oYou')+' '+O.stars[me]+' · '+t('oFriend')+' '+O.stars[fr]+'</p>';
+  if(O.best>0)h+='<p>🎵 '+fmt(t('oLongest'),{n:O.best})+'</p>';
+  h+='<p class="remsg" id="oReMsg"></p><button class="bt" id="oRe">🔁 '+t('oAgain')+'</button><button class="bt alt" id="oHome">🏠 '+t('menu')+'</button>';
+  $('cRes').innerHTML=h;$('ovRes').classList.add('on');ui();
+  if(r==='win'){SFX.record();flash();const f=$('fx').getBoundingClientRect();confetti(f.width/2,f.height*.3,70,380)}else SFX.chord();
+  $('oRe').onclick=()=>{SFX.click();if(!NT||NT.myRe||O.left)return;NT.rematch();const b=$('oRe');if(b){b.disabled=true;b.classList.remove('pulse')}const m=$('oReMsg');if(m)m.textContent=NT.t('waitRe')};
+  $('oHome').onclick=showMenu;focusBtn('oRe');
+}
+function olResultTick(){ // on the result card: tell me when the friend already asked for a rematch
+  if(O.reShown||O.left||!NT||!NT.NET.oppRe)return;O.reShown=true;
+  const m=$('oReMsg'),b=$('oRe');if(m&&b&&!NT.myRe){m.textContent='🔁 '+t('oWants');b.classList.add('pulse')}
+}
+function olLeft(){ // the friend left (or the link is lost for good): a kind card, never a frozen screen
+  if(!O.on||O.left)return;O.left=true;O.defer=null;O.netp=false;
+  if(O.over){if(G.mode==='play')olOver();const b=$('oRe'),m=$('oReMsg');if(b)b.style.display='none';if(m)m.textContent=NT.t('left');return}
+  G.mode='result';setPhase('idle');hideBanner();toastOff();olTimer(-1,1,false);closeAll();
+  $('cRes').innerHTML='<div class="bige pop">'+PL[O.me^1]+'👋</div><h2>'+esc(NT.t('left'))+'</h2><p>'+t('oLeft2')+'</p><button class="bt" id="oNew">🌐 '+t('oNew')+'</button><button class="bt alt" id="oHome">🏠 '+t('menu')+'</button>';
+  $('ovRes').classList.add('on');SFX.pass();ui();
+  $('oNew').onclick=()=>{SFX.click();showMenu();showOnline()};$('oHome').onclick=showMenu;focusBtn('oHome');
+}
+function olAskLeave(){ // 🏠 / Esc during a match: ask first (the match keeps running underneath)
+  if(!O.on||G.mode!=='play')return;
+  if($('ovPause').classList.contains('on')){$('ovPause').classList.remove('on');return}
+  $('cPause').innerHTML='<h2>🌐 '+t('oLeaveQ')+'</h2><button class="bt" id="bStay">▶ '+t('oStay')+'</button><button class="bt alt" id="bGo">🏠 '+t('oLeaveY')+'</button>';
+  $('ovPause').classList.add('on');
+  $('bStay').onclick=()=>{SFX.click();$('ovPause').classList.remove('on')};$('bGo').onclick=()=>{SFX.click();showMenu()};focusBtn('bStay');
+}
+$('home').addEventListener('click',e=>{if(!O.on)return;if(G.mode==='play'&&!O.left){e.preventDefault();ac();olAskLeave()}else olOff()});
+['pointerdown','touchend','click','keydown'].forEach(ev=>addEventListener(ev,()=>{const locked=!gest&&O.on&&!O.started&&!!AC&&AC.state!=='running';gest=true;if(O.on){ac();if(locked)SFX.join()}},true)); // a friend who joined through the link has not touched the page yet: her first touch unlocks the sound (with a little jingle)
+let wdAt=0; // a hidden tab gets no animation frames: keep an online match (timers, the host's arbitration) running anyway
+setInterval(()=>{const now=performance.now();if(O.on&&G.mode==='play'&&document.hidden&&wdAt){let d=Math.min(3,(now-wdAt)/1000)*TS;while(d>.001){const s=Math.min(.1,d);try{frame(s)}catch(e){}d-=s}}wdAt=now},250);
 /* ---------------- test hook ---------------- */
 window.__simon={
   state(){const d=G.duo;return {mode:G.mode,kind:G.kind,phase:G.ph,pt:G.pt,lvl:G.lvl+1,diff:G.diff,pads:G.n,hearts:G.hearts,maxHearts:G.maxHearts,replays:G.rep===Infinity?-1:G.rep,
     seq:(G.kind==='duo'?d.seq:G.cur).slice(),full:G.seq.slice(),expect:(G.kind==='duo'?d.seq:G.expect).slice(),pos:G.pos,round:G.kind==='story'?G.ri+1:G.seq.length,rounds:G.kind==='story'?G.plan.length:0,
-    canPress:G.mode==='play'&&(G.ph==='turn'||G.ph==='duoRep'||G.ph==='free'||(G.ph==='duoAdd'&&G.pt>=G.lock)),locked:!(G.mode==='play'&&(G.ph==='turn'||G.ph==='duoRep'||G.ph==='duoAdd'||G.ph==='free')),
+    canPress:G.mode==='play'&&(G.ph==='turn'||G.ph==='duoRep'||G.ph==='free'||(G.ph==='duoAdd'&&G.pt>=G.lock)||(O.on&&!O.netp&&(G.ph==='oTurn'||G.ph==='oRep'||(G.ph==='oAdd'&&G.pt>=G.lock)))),locked:!(G.mode==='play'&&(G.ph==='turn'||G.ph==='duoRep'||G.ph==='duoAdd'||G.ph==='free'||G.ph==='oTurn'||G.ph==='oRep'||G.ph==='oAdd')),
     rev:G.rev,boss:G.boss,speed:G.speed,score:G.score,mist:G.mist,streak:G.streak,notes:G.notes,hint:G.hint,won:G.won,
     duo:{seq:d.seq.slice(),turn:d.turn,pts:d.pts.slice(),hear:d.hear.slice()},rec:G.rec.map(r=>r.slice()),lit:P.map(p=>p.lit>0),parts:parts.length}},
   start(l,d){startLevel((l||1)-1,d||SV.diff)},
@@ -1002,6 +1471,9 @@ window.__simon={
   setScore(n){if(G.kind==='arcade'){while(G.seq.length<n+1)addArcNote(-1);G.score=n;ui()}},
   playRec(){return pianoPlay()},song(){return pianoSong()},clearRec(){pianoClear()},
   pause,resume,menu:showMenu,levels:showLevels,zoo:showZoo,intro(){showIntro(showMenu)},
+  NT,tx:k=>t(k),online:showOnline,olCfg(m,n){if(OMODES.includes(m))OC.mode=m;if(int(n,4,6))OC.n=n},emote:i=>olEmote(i),olSnap,
+  ol(){return {on:O.on,mode:O.mode,n:O.n,me:O.me,rd:O.rd,stage:O.stage,started:O.started,pts:O.pts.slice(),stars:O.stars.slice(),seq:O.seq.slice(),pos:G.pos,turn:O.turn,tn:O.tn,fp:O.fp,ff:O.ff,fpos:O.fpos,hear:O.hear.slice(),myOk:O.myOk,played:O.played,best:O.best,
+    over:O.over,win:O.win,left:O.left,netp:O.netp,lag:O.lag,rtt:O.rtt,showAt:O.showAt,limit:O.limit,timeLeft:(O.mode==='race'?O.limit:OA.turn)-(G.clock-O.t0),phase:G.ph,gmode:G.mode,cfg:{mode:OC.mode,n:OC.n}}},
   LV:LV.map(l=>({seq:l.seq.slice(),n:l.n,boss:l.boss||null})),save:()=>JSON.parse(JSON.stringify(SV))
 };
 /* ---------------- init ---------------- */
