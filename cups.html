@@ -270,7 +270,7 @@ function updateGame(dt){
   const end=rv.ok?(f?1.8:3.2):(f?2.6:4.2);if(rv.t>end){endRound()}}
  else if(ph==="ohid"){pt+=dt;const bc=cups[ballCup];
   if(bc){if(pt>.15&&pt<1.6){if(bc.tl===0){bc.tl=1;SFX.lift()}}else if(pt>=1.6&&pt<2.3){if(bc.tl===1){bc.tl=0;SFX.lower()}}}
-  if(pt>=2.3){ph="shuffle";stepI=0;stepT=0;gapT=.1;OLN.open=true;olUi()}}
+  if(pt>=2.3){ph="shuffle";stepI=0;stepT=0;gapT=.1;OLN.open=!!OLN.imHider;olUi()}}
  else if(ph==="result"){resultT-=dt;if(resultT<.35&&(!OLN.on||NT.host))cups.forEach(c=>{if(c.tl===1){c.tl=0;SFX.lower()}});if(resultT<=0){if(OLN.on){resultT=1e9;olAdvance()}else if(hearts<=0||(daily&&level>6))gameOver();else startRound()}}
  // ball follows its cup
  const bc=cups[ballCup];const vis=!!bc&&(ph==="intro"||ph==="reveal"||ph==="ohid"||ph==="result")&&bc.lift>.55;ball.visible=vis;blobB.visible=vis;if(bc){ball.position.set(bc.x,.52+Math.abs(Math.sin(idleT*6))*(ph==="reveal"&&rv&&rv.ok?.25:0),bc.z);blobB.position.set(bc.x,.06,bc.z)}
@@ -383,7 +383,7 @@ function olUi(){const bar=$("obar"),pk=$("picks");const hiderBusy=OLN.on&&OLN.im
  else if(ph==="shuffle")say(OLN.imHider&&OLN.open?t("o_swap").replace("{n}",MAXSW-OLN.sw):OLN.imHider?"":t("o_swapWait"));
  else if(ph==="choose")say(OLN.imHider?t("o_chooseWait"):t("o_choose"))}
 function olTap(slot){if(!OLN.on||!OLN.imHider||paused||netp||!(slot>=0&&slot<cups.length))return;
- if(ph==="ohide"){ballCup=cupAt[slot];ph="ohid";pt=0;OLN.hid=true;SFX.click();NT.send({t:"hd"});olUi();return}
+ if(ph==="ohide"){ballCup=cupAt[slot];ph="ohid";pt=0;OLN.hid=true;SFX.click();NT.send({t:"hd",c:ballCup});olUi();return}
  if(ph==="shuffle"&&OLN.open){if(OLN.sw>=MAXSW)return;if(OLN.sel<0){OLN.sel=slot;SFX.click()}else if(OLN.sel===slot){OLN.sel=-1}else{olSwap(OLN.sel,slot);OLN.sel=-1}}}
 function olSwap(a,b){steps.push({p:[[a,b]],d:Math.max(.3,.55-OLN.round*.03)});OLN.sw++;OLN.swl.push([a,b]);NT.send({t:"sw",a,b});olUi()}
 function olAuto(){if(!(OLN.on&&OLN.imHider&&ph==="shuffle"&&OLN.open))return;SFX.click();const n=cups.length;for(let k=0;k<6&&OLN.sw<MAXSW;k++){let a=Math.random()*n|0,b=Math.random()*n|0;if(a===b)b=(a+1+(Math.random()*(n-1)|0))%n;olSwap(a,b)}}
@@ -409,7 +409,7 @@ function olResync(){if(!OLN.on)return;
  if(OLN.imHider&&OLN.round>0){NT.send({t:"sl",l:OLN.swl,h:OLN.hid?1:0,d:OLN.done?1:0});if(OLN.lastRv&&(ph==="reveal"||ph==="result"))NT.send({t:"rv",c:OLN.lastRv.c,b:OLN.lastRv.b})}
  if(!OLN.imHider&&ph==="owaitrv"&&OLN.myPick>=0)NT.send({t:"pk",c:OLN.myPick})}
 function olData(d){const ty=d.t,n=cups.length;
- if(ty==="hd"&&!OLN.imHider){if(ph==="owait"){ph="shuffle";stepI=0;stepT=0;gapT=.2;OLN.hid=true;olUi()}}
+ if(ty==="hd"&&!OLN.imHider){if(ph==="owait"){OLN.hid=true;if(int(d.c,0,cups.length-1)){ballCup=d.c;ph="ohid";pt=0}else{ph="shuffle";stepI=0;stepT=0;gapT=.2}olUi()}}
  else if(ty==="sw"&&!OLN.imHider){if(ph==="shuffle"&&!OLN.done&&int(d.a,0,n-1)&&int(d.b,0,n-1)&&d.a!==d.b&&OLN.sw<MAXSW){steps.push({p:[[d.a,d.b]],d:Math.max(.3,.55-OLN.round*.03)});OLN.sw++;OLN.swl.push([d.a,d.b])}}
  else if(ty==="dn"&&!OLN.imHider){if(ph==="shuffle"&&OLN.sw>=1)OLN.done=true}
  else if(ty==="pk"&&OLN.imHider){if(ph==="choose"&&int(d.c,0,n-1)){NT.send({t:"rv",c:d.c,b:ballCup});olReveal(d.c,ballCup)}}

@@ -78,6 +78,8 @@
   #goalBar.on{display:flex}
   #goalBar i{font-style:normal;background:#fffc;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:900;box-shadow:0 2px 0 #0002;direction:ltr;white-space:nowrap}
   #goalBar i.ok{background:#bff0d4;color:#17683f}#goalBar i.daily{box-shadow:0 0 0 2px #ffc61a,0 2px 0 #0002}
+  .top5{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;direction:ltr;font-weight:900;font-size:clamp(13px,3.6vw,16px)}
+  .top5 i{font-style:normal;background:#fff;border-radius:999px;padding:2px 9px;box-shadow:0 2px 0 #0002}.top5 i.me{background:#ffe27a;box-shadow:0 0 0 2px #ffc61a,0 2px 0 #0002}.top5 b{color:#e8487f}
   .rec{font-size:clamp(20px,5.5vw,30px);font-weight:900;color:#e8487f;animation:pulse .6s infinite alternate}
   .unl{font-size:clamp(17px,4.6vw,24px);font-weight:900;color:#2fb36a}
   @keyframes pulse{to{transform:scale(1.08)}}
@@ -124,6 +126,7 @@
   <a class="big orange" id="go3d" href="runner3d.html"></a>
   <div class="bestline" id="bestLine"></div>
   <div class="goalcard" id="dailyCard"></div>
+  <div class="top5" id="topMenu"></div>
   <button class="lang" id="musBtn"></button>
   <div class="how" id="tHow"></div>
   <div class="ctrl" id="tCtrl"></div>
@@ -149,6 +152,7 @@
     <div class="stars" id="overStars"></div>
     <div class="sub" id="overSub"></div>
     <div class="goals" id="overGoals"></div>
+    <div class="top5" id="topOver"></div>
     <div class="rec" id="overRec"></div>
     <div class="unl" id="overUnlock"></div>
     <div class="row"><button class="big go" id="againBtn"></button><button class="big home" id="oMenuBtn"></button></div>
@@ -410,11 +414,11 @@ const fmt=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
 const pick=a=>a[Math.random()*a.length|0];
 
 Object.assign(T.he,{diff_hard:"🔥 מאתגר",music:"מוזיקה",daily:"אתגר יומי",stageN:"שלב {n}:",stageNames:["שקיעה בסוואנה","לילה מלא כוכבים","אחו כחול","מדבר הזהב"],
-  goal:{dist:"רוצי {n} מטר",collect:"אספי {n} פריטים",dj:"{n} קפיצות כפולות",power:"תפסי {n} כוחות-על",stage:"הגיעי לשלב {n}"},goalDone:"משימה הושלמה! ✅",dailyDone:"אתגר יומי הושלם! 🎉",stagesT:"שלבים:"});
+  goal:{dist:"רוצי {n} מטר",collect:"אספי {n} פריטים",dj:"{n} קפיצות כפולות",power:"תפסי {n} כוחות-על",stage:"הגיעי לשלב {n}"},goalDone:"משימה הושלמה! ✅",dailyDone:"אתגר יומי הושלם! 🎉",stagesT:"שלבים:",top:"טופ 5",topRank:"מקום {n} בטבלה!",topNone:"עוד אין תוצאות"});
 Object.assign(T.fr,{diff_hard:"🔥 Défi",music:"Musique",daily:"Défi du jour",stageN:"Étape {n} :",stageNames:["Coucher de soleil","Nuit étoilée","Prairie bleue","Désert doré"],
-  goal:{dist:"Cours {n} m",collect:"Ramasse {n} objets",dj:"{n} doubles sauts",power:"Attrape {n} pouvoirs",stage:"Atteins l'étape {n}"},goalDone:"Mission réussie ! ✅",dailyDone:"Défi du jour réussi ! 🎉",stagesT:"Étapes :"});
+  goal:{dist:"Cours {n} m",collect:"Ramasse {n} objets",dj:"{n} doubles sauts",power:"Attrape {n} pouvoirs",stage:"Atteins l'étape {n}"},goalDone:"Mission réussie ! ✅",dailyDone:"Défi du jour réussi ! 🎉",stagesT:"Étapes :",top:"Top 5",topRank:"Place n°{n} au classement !",topNone:"Pas encore de score"});
 Object.assign(T.en,{diff_hard:"🔥 Challenge",music:"Music",daily:"Daily challenge",stageN:"Stage {n}:",stageNames:["Savanna sunset","Starry night","Blue meadow","Golden desert"],
-  goal:{dist:"Run {n} m",collect:"Collect {n} items",dj:"{n} double jumps",power:"Grab {n} power-ups",stage:"Reach stage {n}"},goalDone:"Goal complete! ✅",dailyDone:"Daily challenge done! 🎉",stagesT:"Stages:"});
+  goal:{dist:"Run {n} m",collect:"Collect {n} items",dj:"{n} double jumps",power:"Grab {n} power-ups",stage:"Reach stage {n}"},goalDone:"Goal complete! ✅",dailyDone:"Daily challenge done! 🎉",stagesT:"Stages:",top:"Top 5",topRank:"Rank #{n} on the board!",topNone:"No scores yet"});
 const GICON={dist:"🏁",collect:"⭐",dj:"🦘",power:"🧲",stage:"🌙"};
 const GDEF={dist:[200,300,450],collect:[15,25,40],dj:[4,8,12],power:[1,2,3],stage:[2,3,4]};
 const STG=[
@@ -451,8 +455,13 @@ const cv=$("cv"); let g=cv.getContext("2d");
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!T[lang]) lang="he";
 const LS={best:()=>parseInt(localStorage.getItem("annabelle-runner-best"))||0,
   char:()=>{const c=localStorage.getItem("annabelle-runner-char"); return CHAR_KEYS.includes(c)&&LS.best()>=CHAR_NEED[c]?c:"lion";}};
+const TOPK="annabelle-runner-top5";
+function topAll(){ try{ const o=JSON.parse(localStorage.getItem(TOPK)); return o&&typeof o==="object"?o:{}; }catch(e){ return {}; } }
+function topList(d){ const a=topAll()[d]; return Array.isArray(a)?a.filter(n=>typeof n==="number").slice(0,5):[]; }
+function topAdd(d,sc){ const all=topAll(), a=topList(d); a.push(sc); a.sort((x,y)=>y-x); const keep=a.slice(0,5), rank=keep.indexOf(sc)+(sc>0?1:0); all[d]=keep; try{ localStorage.setItem(TOPK,JSON.stringify(all)); }catch(e){} return sc>0&&keep.includes(sc)?keep.indexOf(sc)+1:0; }
+function topHtml(d,mark){ const a=topList(d); return a.length?`<b>🏅 ${T[lang].top}</b>`+a.map((v,i)=>`<i class="${i+1===mark?"me":""}">${i+1}. ${v}</i>`).join(""):""; }
 let hero=LS.char();
-let state="menu", prevState=null, stateT=0, gtime=0, bgOff=0;
+let overAt=0, state="menu", prevState=null, stateT=0, gtime=0, bgOff=0;
 let W=0,H=0,DPR=1,U=40,GY=300,PX=1.6;
 let pl=null, objs=[], parts=[], floats=[], hearts=4, dist=0, pts=0, score=0, speed=SPD0, slowF=1, nextSpawn=8, lastPower=0, nextMile=250, streak=0, shakeT=0, lastWarn=0, goT=0;
 const stats={jumps:0,doubleJumps:0,slides:0,hits:0,collected:0,powers:0,shieldBlocks:0,frames:0};
@@ -554,7 +563,7 @@ function update(dt){
   stateT+=dt; if(goT>0) goT-=dt;
   slowF=Math.min(1,slowF+dt*.6);
   const target=SPD0+(SPDMAX-SPD0)*(1-Math.exp(-dist/D.ramp));
-  speed=target*slowF*(state==="fall"?Math.max(0,1-stateT*1.2):1);
+  speed=target*slowF*(state==="fall"?Math.max(0,1-stateT*1.9):1);
   const dx=speed*dt; dist+=dx; bgOff+=dx;
   // player
   pl.ph+=dx*2.1; pl.roar=Math.max(0,pl.roar-dt); pl.inv=Math.max(0,pl.inv-dt); pl.magnet=Math.max(0,pl.magnet-dt); if(pl.shield>0) pl.shield=Math.max(0,pl.shield-dt);
@@ -593,7 +602,7 @@ function update(dt){
   if(state==="play"&&Math.floor(dist/STAGE_LEN)>stageNo) enterStage(stageNo+1);
   if(state==="play"){ checkGoals(); if((stats.frames&15)===0) updateGoalBar(); }
   if(state==="play"&&dist>=nextMile){ toast(fmt(T[lang].mile,{d:nextMile}),"#34c47c"); SFX.mile(); nextMile+=250; }
-  if(state==="fall"&&stateT>1.7) gameOver();
+  if(state==="fall"&&stateT>1.0) gameOver();
   updateHUDnum();
 }
 
@@ -602,18 +611,20 @@ const KEYHINT={he:"רווח / ↑ / W – קפיצה (פעמיים באוויר)
 const PRIMARY={menu:"playBtn",pause:"resumeBtn",over:"againBtn"};
 function show(id){ ["menu","pause","over"].forEach(o=>$(o).classList.toggle("show",o===id));
   if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
-function startGame(){ resetRun(); stopConfetti(); try{ RW()&&RW().award({game:"runner",event:"play"}); }catch(e){} state="play"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
+function startGame(){ ptr=null; resetRun(); stopConfetti(); try{ RW()&&RW().award({game:"runner",event:"play"}); }catch(e){} state="play"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
 function toMenu(){ MUS.stop(); $("goalBar").classList.remove("on"); PAL={...STG[0]}; palK=1; state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); renderMenu(); show("menu"); }
-function pause(){ if(state==="play"||state==="fall"){ prevState=state; state="paused"; show("pause"); } }
+function pause(){ if(state==="play"||state==="fall"){ ptr=null; prevState=state; state="paused"; show("pause"); } }
 function resume(){ if(state==="paused"){ state=prevState; show(null); } }
 function gameOver(){
   state="over"; const t=T[lang], prev=LS.best(), rec=score>prev;
-  if(rec) localStorage.setItem("annabelle-runner-best",score);
+  ptr=null; clearTimeout(toastT); $("toast").classList.remove("show"); overAt=performance.now();
+  if(rec){ try{ localStorage.setItem("annabelle-runner-best",score); }catch(e){} }
   const newly=CHAR_KEYS.filter(k=>prev<CHAR_NEED[k]&&score>=CHAR_NEED[k]);
   $("overHero").className=rec?"jumpers":"tired"; $("overHero").innerHTML=face(HERO[hero].face);
   $("overTitle").textContent=rec?t.win:t.overT; $("overTitle").className=rec?"winT":"";
   $("overSub").textContent=fmt(t.overS,{d:Math.floor(dist),s:score});
-  $("overRec").textContent=rec?t.rec:""; $("overUnlock").textContent=newly.length?fmt(t.unlock,{c:newly.map(k=>t.chars[k]).join(", ")}):"";
+  const rank=topAdd(diff,score); $("topOver").innerHTML=topHtml(diff,rank);
+  $("overRec").textContent=rec?t.rec:(rank?fmt(t.topRank,{n:rank}):""); $("overUnlock").textContent=newly.length?fmt(t.unlock,{c:newly.map(k=>t.chars[k]).join(", ")}):"";
   $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu;
   const at=STAR_AT[diff], stars=score>=at[2]?3:score>=at[1]?2:score>=at[0]?1:0, sv=(()=>{ try{ return JSON.parse(localStorage.getItem("annabelle-runner-stars"))||{}; }catch(e){ return {}; } })();
   if(stars>(sv[diff]||0)){ sv[diff]=stars; try{ localStorage.setItem("annabelle-runner-stars",JSON.stringify(sv)); }catch(e){} }
@@ -864,6 +875,7 @@ function renderMenu(){ const t=T[lang], best=LS.best();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
   $("chars").innerHTML=CHAR_KEYS.map(k=>{ const lock=best<CHAR_NEED[k]; return `<button class="ch ${k===hero?"sel":""} ${lock?"locked":""}" data-ch="${k}">${face(HERO[k].face)}<span>${t.chars[k]}</span>${lock?`<small>${fmt(t.lock,{n:CHAR_NEED[k]})}</small>`:""}</button>`; }).join("");
   $("tDiffT").textContent=t.diffT; $("diffs").innerHTML=["easy","normal","hard"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
+  $("topMenu").innerHTML=topHtml(diff,0);
   $("bestLine").textContent=best?`🏆 ${t.best}: ${best}`:"";
   const dg=getDaily(); $("dailyCard").textContent=`🎯 ${t.daily}: ${GICON[dg.id]} ${goalText(dg)} ${dg.done?"✅":""}`;
   $("musBtn").textContent=$("musBtn2").textContent=`🎵 ${t.music} ${MUS.on?"✅":"⬜"}`;
@@ -894,12 +906,14 @@ addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e))) return;
   const c=e.code, onBtn=e.target&&e.target.closest&&e.target.closest("button");
   if(c==="KeyM"){ if(!e.repeat){ muted=!muted; localStorage.setItem("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); } return; }
+  if(c==="KeyR"&&!e.repeat&&(state==="over"||state==="paused"||state==="fall")&&!onBtn){ if(state==="over"&&performance.now()-overAt<450) return; e.preventDefault(); ac(); startGame(); return; }
   if(c==="KeyP"||c==="Escape"){ e.preventDefault(); if(e.repeat) return;
     if(state==="paused") resume(); else if(state==="over") toMenu(); else pause(); return; }
   if(c==="Space"||c==="Enter"){
     if(onBtn) return; // let the focused button handle it natively
     e.preventDefault(); ac();
-    if(state==="menu"||state==="over"){ if(!e.repeat) startGame(); return; }
+    if(state==="fall"){ if(!e.repeat&&stateT>.45) gameOver(); return; }
+    if(state==="menu"||state==="over"){ if(!e.repeat&&(state==="menu"||performance.now()-overAt>450)) startGame(); return; }
     if(state==="paused"){ if(!e.repeat) resume(); return; }
     if(c==="Space"&&!e.repeat) jump(); return; }
   if(c==="ArrowUp"||c==="KeyW"){ e.preventDefault(); ac(); if(state==="menu"||state==="over"||state==="paused") return; if(!e.repeat) jump(); return; }
@@ -912,7 +926,7 @@ addEventListener("keyup",e=>{ if((e.code==="ArrowDown"||e.code==="KeyS")&&pl) pl
 addEventListener("blur",()=>{ clearKeys(); if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) pause(); });
 let rmb=false;
 let ptr=null;
-cv.addEventListener("pointerdown",e=>{ ac(); if(state!=="play") return; e.preventDefault(); if(e.button===2){ rmb=true; slide(true); return; } if(ptr&&!ptr.done){ ptr.done=true; jump(); } ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
+cv.addEventListener("pointerdown",e=>{ ac(); if(state==="fall"&&stateT>.45){ gameOver(); return; } if(state!=="play") return; e.preventDefault(); if(e.button===2){ rmb=true; slide(true); return; } if(ptr&&!ptr.done){ ptr.done=true; jump(); } ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
 addEventListener("pointermove",e=>{ if(!ptr||e.pointerId!==ptr.id) return; const dy=e.clientY-ptr.y, dx=e.clientX-ptr.x;
   if(dy>22&&dy>Math.abs(dx)&&!ptr.slid){ ptr.slid=true; ptr.done=true; slide(); }
   else if(dy<-22&&!ptr.done){ ptr.done=true; jump(); } });
