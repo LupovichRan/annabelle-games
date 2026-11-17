@@ -59,7 +59,9 @@ body.hasobar #cap{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 142px)}.pi
 #oStars span.off{filter:grayscale(1) opacity(.4)}
 .pill.pop{animation:pillPop .45s}@keyframes pillPop{40%{transform:scale(1.3) rotate(-4deg)}}
 body.shake #cv{animation:shk .35s}@keyframes shk{20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,3px)}}
-.sub.goal{background:#0004;border-radius:14px;padding:4px 10px;font-size:15px}
+.sub.goal{background:#0004;border-radius:14px;padding:4px 10px;font-size:15px}.sub.goal:empty{display:none}
+.r{background:linear-gradient(#ff7a7a,#d6264a)}.row.g2{display:grid;grid-template-columns:1fr 1fr}.row.g2 .big{min-height:52px;line-height:1.1}#playRow .big{font-size:23px}#cpBtn{display:none}#cpBtn.show{display:block}body.onl #pauseBtn{display:none}
+@media (orientation:landscape) and (max-height:700px){#picks button{min-height:50px}#picks{bottom:max(52px,calc(env(safe-area-inset-bottom) + 52px))}}
 
 /* big laptop / desktop windows: scale the menu & result screens up so they do not look tiny */
 @media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){.ov{zoom:1.2}}
@@ -78,9 +80,9 @@ body.shake #cv{animation:shk .35s}@keyframes shk{20%{transform:translate(-6px,3p
 
 <div class="ov show" id="menu"><div class="top"><h1 id="mT"></h1><div class="sub" id="mS"></div></div>
  <div class="bot"><div class="sub" id="mBest"></div>
-  <div class="row row3"><button class="big g" id="mEasy"></button><button class="big p" id="mNorm"></button><button class="big o" id="mHard"></button></div>
+  <div class="row row3 g2"><button class="big g" id="mEasy"></button><button class="big p" id="mNorm"></button><button class="big o" id="mHard"></button><button class="big r" id="mPro"></button></div>
   <div class="row row3"><button class="big s" id="mDaily"></button><button class="big b2" id="mOnline"></button></div>
-  <button class="big g" id="playBtn"></button>
+  <div class="row" id="playRow"><button class="big g" id="playBtn"></button><button class="big b2" id="cpBtn"></button></div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
 <div class="ov" id="over"><div class="card"><h2 id="oT"></h2><div id="oStars"></div><div class="sub" id="oS" style="font-size:22px"></div><div class="sub" id="oB"></div><div class="sub goal" id="oG"></div><button class="big g" id="againBtn"></button><button class="big s" id="oMenu"></button></div></div>
 <div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
@@ -115,15 +117,15 @@ en:{title:"Cup Shuffle",sub:"Follow the ball – the magician cat is tricky! �
  again:"🔁 Again",menu:"☰ Menu",paused:"Paused",resume:"▶ Resume",noGL:"This game needs 3D (WebGL) and your browser doesn't support it. Try another one 🐱",home:"🏠 All games",cup:"Cup"}};
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 const TXY={
-he:{hard:"🦁 קשה",daily:"📅 יומי",dailyDone:"📅 יומי ✅",online:"🌐 אונליין",
+he:{hard:"🦁 קשה",pro:"🔥 מומחית",cp:"▶ שלב {l}",daily:"📅 יומי",dailyDone:"📅 יומי ✅",online:"🌐 אונליין",
  wn:["גן הקסמים 🌿","מי הים 🌊","החלל 🚀","ארץ הממתקים 🍭"],boss:"⚡ סיבוב אתגר! הקוסם מערבב מהר!",bossWin:"ניצחת את האתגר! ❤️ לב נוסף!",world:"עולם חדש: ",
  dailyCap:"📅 האתגר היומי – אותו ערבוב לכל מי שמשחק היום!",dailyOver:"האתגר היומי הושלם! 🎁",nextStar:"עוד {n} שלבים לכוכב הבא ⭐",allStars:"כל הכוכבים! 🌟",
  o_hide:"בחרי כוס שתסתיר מתחתיה את הכדור 🙈",o_hideWait:"החברה מסתירה את הכדור… 🙈",o_swap:"עכשיו ערבבי! לחצי על שתי כוסות כדי להחליף (נשארו {n})",o_swapWait:"החברה מערבבת… עקבי אחרי הכדור! 👀",o_choose:"איפה הכדור? בחרי כוס!",o_chooseWait:"החברה מנחשת… 🤞",o_auto:"🌀 ערבוב לבד",o_done:"✅ סיימתי",o_round:"סיבוב {r}/{n}",o_got:"מצאת! 🎉",o_missed:"לא מצאת 😸",o_theyGot:"החברה מצאה! 😮",o_theyMissed:"החברה לא מצאה! 😎",o_win:"ניצחת! 🏆",o_lose:"החברה ניצחה הפעם 😸",o_tie:"תיקו! 🤝",o_you:"את",o_fr:"חברה",left:"החברה יצאה מהמשחק 👋",waitRe:"מחכה לחברה… 🕐",shareT:"בואי לשחק איתי איפה הכדור? 🥤🐱"},
-fr:{hard:"🦁 Difficile",daily:"📅 Du jour",dailyDone:"📅 Du jour ✅",online:"🌐 En ligne",
+fr:{hard:"🦁 Difficile",pro:"🔥 Experte",cp:"▶ Niv. {l}",daily:"📅 Du jour",dailyDone:"📅 Du jour ✅",online:"🌐 En ligne",
  wn:["Jardin magique 🌿","Mer 🌊","Espace 🚀","Pays des bonbons 🍭"],boss:"⚡ Manche défi ! Le magicien mélange vite !",bossWin:"Défi réussi ! ❤️ Un cœur en plus !",world:"Nouveau monde : ",
  dailyCap:"📅 Défi du jour – le même mélange pour tout le monde !",dailyOver:"Défi du jour réussi ! 🎁",nextStar:"Encore {n} niveaux pour la prochaine étoile ⭐",allStars:"Toutes les étoiles ! 🌟",
  o_hide:"Choisis le gobelet qui cachera la balle 🙈",o_hideWait:"Ton ami cache la balle… 🙈",o_swap:"Mélange ! Touche deux gobelets pour les échanger ({n} restants)",o_swapWait:"Ton ami mélange… suis la balle ! 👀",o_choose:"Où est la balle ? Choisis !",o_chooseWait:"Ton ami devine… 🤞",o_auto:"🌀 Mélange auto",o_done:"✅ J'ai fini",o_round:"Manche {r}/{n}",o_got:"Trouvé ! 🎉",o_missed:"Raté 😸",o_theyGot:"Ton ami a trouvé ! 😮",o_theyMissed:"Ton ami s'est trompé ! 😎",o_win:"Tu as gagné ! 🏆",o_lose:"Ton ami gagne cette fois 😸",o_tie:"Égalité ! 🤝",o_you:"Toi",o_fr:"Ami",left:"Ton ami a quitté la partie 👋",waitRe:"J'attends ton ami… 🕐",shareT:"Viens jouer à Où est la balle ? avec moi ! 🥤🐱"},
-en:{hard:"🦁 Hard",daily:"📅 Daily",dailyDone:"📅 Daily ✅",online:"🌐 Online",
+en:{hard:"🦁 Hard",pro:"🔥 Expert",cp:"▶ Lv. {l}",daily:"📅 Daily",dailyDone:"📅 Daily ✅",online:"🌐 Online",
  wn:["Magic Garden 🌿","Sea 🌊","Space 🚀","Candy Land 🍭"],boss:"⚡ Challenge round! The magician shuffles fast!",bossWin:"Challenge beaten! ❤️ Extra heart!",world:"New world: ",
  dailyCap:"📅 Daily challenge – the same shuffle for everyone today!",dailyOver:"Daily challenge done! 🎁",nextStar:"{n} more levels for the next star ⭐",allStars:"All the stars! 🌟",
  o_hide:"Pick the cup that will hide the ball 🙈",o_hideWait:"Your friend is hiding the ball… 🙈",o_swap:"Now shuffle! Tap two cups to swap them ({n} left)",o_swapWait:"Your friend is shuffling… follow the ball! 👀",o_choose:"Where is the ball? Pick a cup!",o_chooseWait:"Your friend is guessing… 🤞",o_auto:"🌀 Auto shuffle",o_done:"✅ I'm done",o_round:"Round {r}/{n}",o_got:"Found it! 🎉",o_missed:"Missed 😸",o_theyGot:"Your friend found it! 😮",o_theyMissed:"Your friend missed! 😎",o_win:"You win! 🏆",o_lose:"Your friend wins this time 😸",o_tie:"A tie! 🤝",o_you:"You",o_fr:"Friend",left:"Your friend left the game 👋",waitRe:"Waiting for your friend… 🕐",shareT:"Come play Cup Shuffle with me! 🥤🐱"}};
@@ -137,7 +139,7 @@ function tone(f,d,type="sine",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!
 function noise(d,f,type="bandpass",v=.2,f2,delay=0){if(muted)return;const a=ac();if(!a)return;const n=a.currentTime+delay,len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),dat=buf.getChannelData(0);for(let i=0;i<len;i++)dat[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=buf;const fl=a.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,n);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,n+d);const g=a.createGain();g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);s.connect(fl);fl.connect(g);g.connect(a.destination);s.start(n);s.stop(n+d+.05)}
 const SFX={click(){tone(560,.08,"triangle",.16)},lift(){tone(520,.12,"triangle",.2,900)},lower(){tone(300,.14,"triangle",.18,170);noise(.08,300,"lowpass",.12)},
  swap(i=0){noise(.18,700+i*60,"bandpass",.13,1700);tone(300+i*40,.12,"sine",.07,420+i*40)},
- drum(){for(let i=0;i<18;i++)noise(.07,180,"lowpass",.22+i*.012,120,i*.055)},
+ drum(k=18){for(let i=0;i<k;i++)noise(.07,180,"lowpass",.22+i*.012,120,i*.055)},
  yes(){[523,659,784,1046,1318].forEach((f,i)=>tone(f,.22,"triangle",.22,null,i*.08));[392,523,659].forEach((f,i)=>tone(f,.7,"sine",.1,null,.45+i*.02));noise(.6,3500,"highpass",.08,7000,.3);[1568,2093,1760,2349].forEach((f,i)=>tone(f,.12,"sine",.07,null,.55+i*.07))},
  star(i=0){tone(784+i*220,.2,"triangle",.16);tone(1568+i*440,.3,"sine",.09,null,.06)},boss(){[196,196,262,330].forEach((f,i)=>tone(f,.18,"sawtooth",.1,null,i*.12))},world(){[392,523,659,784,1046].forEach((f,i)=>tone(f,.25,"triangle",.14,null,i*.09));noise(.5,2500,"highpass",.06,6000,.3)},heart(){tone(660,.12,"sine",.2,990);tone(990,.2,"sine",.15,1320,.1)},join(){[523,659,784].forEach((f,i)=>tone(f,.14,"triangle",.15,null,i*.07))},whoosh(){noise(.22,500,"bandpass",.08,2600)},
  no(){tone(330,.25,"sawtooth",.15,160);tone(220,.4,"sine",.25,500,.22)},tick(){tone(880,.05,"square",.06)},over(){[392,330,262,196].forEach((f,i)=>tone(f,.3,"triangle",.2,null,i*.16))}};
@@ -209,13 +211,16 @@ function mkCup(i){const g=new THREE.Group();const c=new THREE.Mesh(cupGeo,M(CCOL
 const ball=new THREE.Group();scene.add(ball);ball.add(sph(.5,0xffd23f,14,10));ball.add(put(sph(.09,0x222222,6,5),-.18,.12,.43));ball.add(put(sph(.09,0x222222,6,5),.18,.12,.43));ball.add(put(sph(.06,0xff6f91,6,5),0,-.02,.48));ball.position.y=.52;ball.visible=false;
 const blobB=new THREE.Mesh(blobGeo,blobMat);blobB.rotation.x=-Math.PI/2;blobB.position.y=.06;blobB.scale.setScalar(.6);scene.add(blobB);blobB.visible=false;
 /* ============ game state ============ */
-let ph="menu",pt=0,paused=false,mode=["easy","hard"].includes(ls.get("annabelle-cups-mode"))?ls.get("annabelle-cups-mode"):"norm",daily=false;
+let ph="menu",pt=0,paused=false,mode=["easy","hard","pro"].includes(ls.get("annabelle-cups-mode"))?ls.get("annabelle-cups-mode"):"norm",daily=false;
 const OLN={on:false,me:0,round:0,hider:0,imHider:false,scores:[0,0],sw:0,swl:[],open:false,done:false,hid:false,sel:-1,myPick:-1,lastRv:null,ROUNDS:6};let netp=false;const MAXSW=8;
-let level=1,hearts=3,score=0,streak=0,best=+ls.get("annabelle-cups-best")||0,ballCup=0,cupAt=[],X=[],sel=0,over=false;
+let runStart=1,bestM0=0,dailyMiss=0,runAwarded=true,level=1,hearts=3,score=0,streak=0,best=+ls.get("annabelle-cups-best")||0,ballCup=0,cupAt=[],X=[],sel=0,over=false;
 let steps=[],stepI=0,stepT=0,swapLog=[],gapT=0,rv=null,resultT=0,wasCorrect=false,idleT=0,mood=0,moodK="";
 const rm=()=>daily?"norm":mode,isBoss=l=>l%5===0;
-const cfg=()=>{const e=rm()==="easy",h=rm()==="hard",bo=isBoss(level);const n=level<=2?3:level<=5?4:5;const nn=e?Math.min(n,4):h?Math.max(4,Math.min(5,n+1)):n;
- return{n:nn,swaps:Math.min(e?12:h?24:18,Math.round((3+level*1.6)*(e?.75:h?1.2:1))+(bo?4:0)),dur:Math.max(e?.5:h?.24:.3,(.92-.06*level)*(e?1.4:h?.8:1)*(bo?.85:1)),decoy:level>=4||h,dbl:(level>=6&&!e)||(h&&level>=3)||(bo&&!e&&nn>=4),same:true,boss:bo}};
+const MULT={easy:1,norm:1.5,hard:2,pro:3};
+const fastOn=()=>!OLN.on&&rm()!=="easy"&&level>1; // quicker intro/reveal pacing (never in Easy or online)
+const cfg=()=>{const e=rm()==="easy",h=rm()==="hard",pr=rm()==="pro",bo=isBoss(level);const n=pr?5:level<=2?3:level<=5?4:5;const nn=e?Math.min(n,4):h?Math.max(4,Math.min(5,n+1)):n;const ex=Math.max(0,Math.floor((level-1)/5)-2);
+ if(pr)return{n:5,swaps:Math.min(32,Math.round(8+level*1.8)+(bo?4:0)),dur:Math.max(Math.max(.14,.16-.005*ex),(.5-.03*level)*(bo?.85:1)),decoy:true,dbl:true,same:true,boss:bo};
+ return{n:nn,swaps:Math.min(e?12:h?24+2*ex:18,Math.round((3+level*1.6)*(e?.75:h?1.2:1))+(bo?4:0)),dur:Math.max(e?.5:h?Math.max(.18,.24-.015*ex):.3,(.92-.06*level)*(e?1.4:h?.8:1)*(bo?.85:1)),decoy:level>=4||h,dbl:(level>=6&&!e)||(h&&level>=3)||(bo&&!e&&nn>=4),same:true,boss:bo}};
 function layout(n){X=[];const sp=n===3?2.2:n===4?1.95:1.7;for(let i=0;i<n;i++)X.push((i-(n-1)/2)*sp)}
 function buildCups(n){cups.forEach(c=>{scene.remove(c.g);scene.remove(c.blob)});cups=[];for(let i=0;i<n;i++)cups.push(mkCup(i));layout(n);cupAt=cups.map((c,i)=>i);cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;positionCup(c)});
  cups.forEach(c=>{const num=c.g.children[2];num.visible=false});buildPicks(n)}
@@ -224,13 +229,16 @@ function positionCup(c){c.g.position.set(c.x,c.lift*2.4+(c.jit?Math.sin(performa
 /* ===== round flow ===== */
 function say(s){$("cap").textContent=s||""}
 function hud(){if(OLN.on){$("pHe").textContent=t("o_round").replace("{r}",Math.max(1,OLN.round)).replace("{n}",OLN.ROUNDS);$("pSc").textContent=t("o_you")+" "+OLN.scores[OLN.me]+" : "+OLN.scores[OLN.me^1]+" "+t("o_fr");$("pLv").textContent="";return}
- $("pHe").textContent=t("hearts").repeat(hearts)+"🤍".repeat(Math.max(0,3-hearts));$("pSc").textContent=t("score")+" "+score;$("pLv").textContent=(daily?"📅 ":"")+t("lvl")+" "+level+(isBoss(level)?" ⚡":"")}
+ $("pHe").textContent=t("hearts").repeat(hearts)+"🤍".repeat(Math.max(0,3-hearts));$("pSc").textContent=t("score")+" "+score;$("pLv").textContent=(daily?"📅 ":"")+t("lvl")+" "+(daily?Math.min(level,6):level)+(isBoss(level)?" ⚡":"")}
 const popPill=id=>{const e=$(id);e.classList.remove("pop");void e.offsetWidth;e.classList.add("pop")}
 const RW=()=>window.AnnabelleRewards; // shared rewards (coins, stickers) – see rewards.js
-function startGame(d){ac();OLN.on=false;netp=false;daily=!!d;rnd=Math.random;RW()&&RW().award({game:"cups",event:"play"});over=false;level=1;hearts=3;score=0;streak=0;$("oStars").innerHTML="";setWorld(0,true);document.body.classList.add("play");$("menu").classList.remove("show");$("over").classList.remove("show");startRound();hud()}
+const cpGet=()=>{try{const o=JSON.parse(ls.get("annabelle-cups-cp")||"{}");return o&&typeof o==="object"?o:{}}catch(e){return{}}};
+const bestsGet=()=>{try{const o=JSON.parse(ls.get("annabelle-cups-bests")||"{}");return o&&typeof o==="object"?o:{}}catch(e){return{}}};
+const bKey=()=>daily?"daily":mode;
+function startGame(d,from){ac();document.body.classList.remove("onl");OLN.on=false;netp=false;daily=!!d;rnd=Math.random;RW()&&RW().award({game:"cups",event:"play"});over=false;runAwarded=false;dailyMiss=0;runStart=(!d&&from>1)?from:1;bestM0=+bestsGet()[bKey()]||0;level=runStart;hearts=3;score=0;streak=0;$("oStars").innerHTML="";setWorld(worldOf(level),true);document.body.classList.add("play");$("menu").classList.remove("show");$("over").classList.remove("show");startRound();hud()}
 function startRound(){const c=cfg();if(cups.length!==c.n)buildCups(c.n);else{layout(c.n);cupAt=cups.map((_,i)=>i);cups.forEach((q,i)=>{q.slot=i;q.x=X[i];q.z=0;q.lift=0;q.tl=0;q.jit=0;positionCup(q)})}
  cups.forEach((q,i)=>{const col=c.same?0xe23b6a:CCOL[i%5];q.g.children[0].material=M(col)});
- if(daily)rnd=mulberry(dayHash()+level*7919);
+ if(daily)rnd=mulberry(dayHash()+level*7919+dailyMiss*104729);
  ballCup=rnd()*c.n|0;ph="intro";pt=0;sel=0;steps=[];swapLog=[];rv=null;$("picks").classList.remove("show");
  const nw=worldOf(level);if(nw!==curWorld){setWorld(nw);say(t("world")+t("wn")[nw]);SFX.world();burst(0,0,30);mood=1.6;moodK="yes"}else if(c.boss){say(t("boss"));SFX.boss();shake()}else if(daily&&level===1)say(t("dailyCap"));else say(t("watch"));hud();
  // build the swap plan (slot pairs, simultaneous pairs in one step)
@@ -245,47 +253,56 @@ function updateGame(dt){
  // cups lift easing
  cups.forEach(c=>{const d=c.tl-c.lift;c.lift+=Math.max(-dt*4.5,Math.min(dt*4.5,d))});
  if(ph==="intro"){pt+=dt;const bc=cups[ballCup];
-  if(pt<.4)bc.tl=0;else if(pt<1.9){if(bc.tl===0&&pt>=.4){bc.tl=1;SFX.lift()}}else if(pt<2.5){if(bc.tl===1){bc.tl=0;SFX.lower()}}
+  const f=fastOn(),t1=f?.15:.4,t2=f?.95:1.9,t3=f?1.3:2.5;
+  if(pt<t1)bc.tl=0;else if(pt<t2){if(bc.tl===0&&pt>=t1){bc.tl=1;SFX.lift()}}else if(pt<t3){if(bc.tl===1){bc.tl=0;SFX.lower()}}
   else{ph="shuffle";stepI=0;stepT=0;gapT=.25;say(t("shuf"))}}
  else if(ph==="shuffle"){
   if(gapT>0){gapT-=dt}else{const s=steps[stepI];if(!s){if(OLN.on&&!OLN.done){/* waiting for more swaps */}else{ph="choose";pt=0;sel=0;if(OLN.on){OLN.open=false;OLN.sel=-1;olUi()}else{say(t("pick"));$("picks").classList.add("show")}}}else{
     if(stepT===0){s.p.forEach(([a,b],k)=>{swapLog.push([a,b]);SFX.swap(k+stepI%5)})}
     stepT+=dt;const u=Math.min(1,stepT/s.d),e=sm(u);
     cups.forEach(c=>{c.z=0;c.x=X[c.slot]});
-    s.p.forEach(([a,b])=>{const ca=cupAt[a],cb=cupAt[b];const A=cups[ca],B=cups[cb];A.x=X[a]+(X[b]-X[a])*e;B.x=X[b]+(X[a]-X[b])*e;const arc=1.25*Math.sin(Math.PI*e);A.z=arc;B.z=-arc});
+    s.p.forEach(([a,b],k)=>{const ca=cupAt[a],cb=cupAt[b];const A=cups[ca],B=cups[cb];A.x=X[a]+(X[b]-X[a])*e;B.x=X[b]+(X[a]-X[b])*e;const arc=(s.p.length>1?(k?2.6:1):1.25)*Math.sin(Math.PI*e);A.z=arc;B.z=-arc});
     if(u>=1){s.p.forEach(([a,b])=>{const ca=cupAt[a],cb=cupAt[b];cupAt[a]=cb;cupAt[b]=ca;cups[ca].slot=b;cups[cb].slot=a});cups.forEach(c=>{c.x=X[c.slot];c.z=0});stepI++;stepT=0;gapT=.06}}}}
  else if(ph==="reveal"){rv.t+=dt;const c=cups[rv.cup],bc=cups[ballCup];
-  if(rv.t<1.0){c.jit=1}else{c.jit=0;if(c.tl===0){c.tl=1;SFX.lift();if(rv.ok){SFX.yes();confetti();burst(c.x,0,26);mood=2.6;moodK="yes"}}}
-  if(!rv.ok){if(rv.t>2.0&&bc.tl===0){bc.tl=1;SFX.lift();SFX.no();mood=2.2;moodK="no";if(!OLN.on)shake()}}
-  const end=rv.ok?3.2:4.2;if(rv.t>end){endRound()}}
+  const f=!OLN.on&&fastOn(),wob=f?.5:1.0,mt=f?1.2:2.0;
+  if(rv.t<wob){c.jit=1}else{c.jit=0;if(c.tl===0){c.tl=1;SFX.lift();if(rv.ok){SFX.yes();confetti();burst(c.x,0,26);mood=2.6;moodK="yes"}}}
+  if(!rv.ok){if(rv.t>mt&&bc.tl===0){bc.tl=1;SFX.lift();SFX.no();mood=2.2;moodK="no";if(!OLN.on)shake()}}
+  const end=rv.ok?(f?1.8:3.2):(f?2.6:4.2);if(rv.t>end){endRound()}}
  else if(ph==="ohid"){pt+=dt;const bc=cups[ballCup];
   if(bc){if(pt>.15&&pt<1.6){if(bc.tl===0){bc.tl=1;SFX.lift()}}else if(pt>=1.6&&pt<2.3){if(bc.tl===1){bc.tl=0;SFX.lower()}}}
   if(pt>=2.3){ph="shuffle";stepI=0;stepT=0;gapT=.1;OLN.open=true;olUi()}}
- else if(ph==="result"){resultT-=dt;if(resultT<=0){if(OLN.on){resultT=1e9;olAdvance()}else if(hearts<=0||(daily&&level>6))gameOver();else startRound()}}
+ else if(ph==="result"){resultT-=dt;if(resultT<.35&&(!OLN.on||NT.host))cups.forEach(c=>{if(c.tl===1){c.tl=0;SFX.lower()}});if(resultT<=0){if(OLN.on){resultT=1e9;olAdvance()}else if(hearts<=0||(daily&&level>6))gameOver();else startRound()}}
  // ball follows its cup
- const bc=cups[ballCup];const vis=!!bc&&(ph==="intro"||ph==="reveal"||ph==="ohid")&&bc.lift>.55;ball.visible=vis;blobB.visible=vis;if(bc){ball.position.set(bc.x,.52+Math.abs(Math.sin(idleT*6))*(ph==="reveal"&&rv&&rv.ok?.25:0),bc.z);blobB.position.set(bc.x,.06,bc.z)}
+ const bc=cups[ballCup];const vis=!!bc&&(ph==="intro"||ph==="reveal"||ph==="ohid"||ph==="result")&&bc.lift>.55;ball.visible=vis;blobB.visible=vis;if(bc){ball.position.set(bc.x,.52+Math.abs(Math.sin(idleT*6))*(ph==="reveal"&&rv&&rv.ok?.25:0),bc.z);blobB.position.set(bc.x,.06,bc.z)}
  // selection highlight (hover / keyboard)
  cups.forEach(c=>{const hi=(ph==="choose"&&cupAt[sel]===c.id&&!(OLN.on&&OLN.imHider))||(OLN.sel>=0&&cupAt[OLN.sel]===c.id);c.g.scale.setScalar(hi?1.09:1)});
  spk.forEach(q=>{if(q.life<=0)return;q.life-=dt;q.vy-=11*dt;q.m.position.x+=q.vx*dt;q.m.position.y+=q.vy*dt;q.m.position.z+=q.vz*dt;q.m.rotation.y+=dt*6;q.m.rotation.x+=dt*4;if(q.life<=0)q.m.visible=false});
  feltM.color.lerp(wc.felt,Math.min(1,dt*2.5));wallM.color.lerp(wc.wall,Math.min(1,dt*2.5));scene.background.lerp(wc.bg,Math.min(1,dt*2.5));scene.fog.color.copy(scene.background);
  cups.forEach(positionCup);
 }
-function pickCupId(id){if(ph!=="choose")return;const ok=id===ballCup;ph="reveal";rv={cup:id,ok,t:0};$("picks").classList.remove("show");say("");SFX.drum();wasCorrect=ok;
- setTimeout(()=>{},0)}
-function endRound(){if(OLN.on)return olEndRound();const ok=rv.ok;say(pick(ok?t("yes"):t("no")));
- if(ok){const bo=isBoss(level);streak++;score+=10+level*2+Math.min(streak,6)*2+(bo?15:0);RW()&&(RW().award({game:"cups",event:"levelClear",level:level,score:score}),streak>=3&&RW().award({game:"cups",event:"combo",score:streak}));
+function pickCupId(id){if(ph!=="choose")return;const ok=id===ballCup;ph="reveal";rv={cup:id,ok,t:0};$("picks").classList.remove("show");say("");SFX.drum(fastOn()?9:18);wasCorrect=ok}
+function skipRound(){if(OLN.on||paused||rm()==="easy")return false;
+ if(ph==="result"){if(resultT>.35){resultT=.35;return true}return false}
+ if(ph==="reveal"&&rv&&rv.t>.85){rv.t=99;return true}return false}
+function endRound(){if(OLN.on)return olEndRound();const ok=rv.ok,f=fastOn();say(pick(ok?t("yes"):t("no")));
+ if(ok){const bo=isBoss(level);streak++;score+=Math.round((10+level*2+Math.min(streak,6)*2+(bo?15:0))*MULT[rm()]);RW()&&(RW().award({game:"cups",event:"levelClear",level:level,score:score}),streak>=3&&RW().award({game:"cups",event:"combo",score:streak}));
   if(bo){hearts=Math.min(5,hearts+1);say(t("bossWin"));SFX.heart();popPill("pHe");RW()&&RW().award({game:"cups",event:"win"})}
-  popPill("pSc");level++;if(score>best){best=score;ls.set("annabelle-cups-best",String(best))}}else{streak=0;hearts--;popPill("pHe")}hud();ph="result";resultT=1.6}
+  popPill("pSc");level++;saveBest();if(!daily&&rm()!=="easy"&&level>=6&&level%5===1){const cp=cpGet();if(!(cp[mode]>=level)){cp[mode]=level;ls.set("annabelle-cups-cp",JSON.stringify(cp))}}}else{streak=0;hearts--;if(daily)dailyMiss++;popPill("pHe")}hud();ph="result";resultT=f?.8:1.6}
+function saveBest(){if(score>best){best=score;ls.set("annabelle-cups-best",String(best))}const k=bKey(),bs=bestsGet();if(score>(+bs[k]||0)){bs[k]=score;ls.set("annabelle-cups-bests",JSON.stringify(bs))}}
 const starsFor=d=>d>=12?3:d>=8?2:d>=5?1:0;
-function gameOver(){over=true;ph="over";say("");$("picks").classList.remove("show");SFX.over();
- const done=level-1,stars=starsFor(done),dailyDone=daily&&level>6,first=dailyDone&&ls.get("annabelle-cups-daily")!==dayKey();
+function runRes(){const dailyDone=daily&&level>6,done=(daily?Math.min(level,7):level)-runStart;return{done,dailyDone,stars:dailyDone?(hearts>=3?3:hearts===2?2:1):starsFor(done)}}
+function awardRun(r,quit){if(runAwarded)return;runAwarded=true;const first=!quit&&r.dailyDone&&ls.get("annabelle-cups-daily")!==dayKey();
  if(first)ls.set("annabelle-cups-daily",dayKey());
- if(RW()){RW().award({game:"cups",event:"score",score:score});if(stars)RW().award({game:"cups",event:"star",stars});if(done>=6)RW().award({game:"cups",event:"win"});if(first)RW().award({game:"cups",event:"win",coins:12});setTimeout(()=>RW()&&RW().flush(),600)}
- const nb=score>best-0&&score>0&&score>=best;$("oT").textContent=dailyDone?t("dailyOver"):t("oT");$("oS").textContent=t("oS").replace("{l}",level).replace("{s}",score);$("oB").textContent=nb&&score>0?t("best"):t("bestIs").replace("{b}",best);
+ if(RW()){RW().award({game:"cups",event:"score",score:score});if(r.stars)RW().award({game:"cups",event:"star",stars:r.stars});if(!quit){if(r.done>=6)RW().award({game:"cups",event:"win"});if(first)RW().award({game:"cups",event:"win",coins:12})}setTimeout(()=>RW()&&RW().flush(),600)}}
+function gameOver(){over=true;ph="over";say("");$("picks").classList.remove("show");SFX.over();
+ const r=runRes(),stars=r.stars,done=r.done,dailyDone=r.dailyDone;awardRun(r,false);
+ const nb=score>0&&score>bestM0;if(nb){setTimeout(()=>{SFX.yes();confetti()},350)}
+ $("oT").textContent=dailyDone?t("dailyOver"):t("oT");$("oS").textContent=t("oS").replace("{l}",daily?Math.min(level,6):level).replace("{s}",score);$("oB").textContent=nb?t("best"):t("bestIs").replace("{b}",Math.max(bestM0,0)||best);
  $("oStars").innerHTML=[0,1,2].map(i=>`<span class="${i<stars?"":"off"}" style="animation-delay:${i*.28}s">${i<stars?"⭐":"☆"}</span>`).join("");for(let i=0;i<stars;i++)setTimeout(()=>SFX.star(i),150+i*280);
- const nxt=stars>=3?0:[5,8,12][stars]-done;$("oG").textContent=stars>=3?t("allStars"):t("nextStar").replace("{n}",Math.max(1,nxt));
+ const nxt=stars>=3?0:[5,8,12][stars]-done;$("oG").textContent=dailyDone?"":stars>=3?t("allStars"):t("nextStar").replace("{n}",Math.max(1,nxt));
  $("againBtn").textContent=t("again");$("againBtn").style.display="";$("againBtn").disabled=false;$("over").classList.add("show")}
-function toMenu(){if(NT)NT.leaveToMenu();OLN.on=false;netp=false;daily=false;rnd=Math.random;document.body.classList.remove("hasobar");$("obar").classList.remove("show");$("oStars").innerHTML="";$("oG").textContent="";OLN.sel=-1;setWorld(0);paused=false;ph="menu";over=false;$("pause").classList.remove("show");$("over").classList.remove("show");$("picks").classList.remove("show");document.body.classList.remove("play");$("menu").classList.add("show");say("");ball.visible=false;blobB.visible=false;if(cups.length!==3)buildCups(3);else{layout(3);cupAt=[0,1,2];cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;c.lift=0;c.tl=0;c.jit=0})}drawTexts()}
+function toMenu(){const inRun=!OLN.on&&!over&&!runAwarded&&ph!=="menu"&&ph!=="over"&&score>0;if(inRun)awardRun(runRes(),true);
+ if(NT)NT.leaveToMenu();document.body.classList.remove("onl");OLN.on=false;netp=false;daily=false;rnd=Math.random;document.body.classList.remove("hasobar");$("obar").classList.remove("show");$("oStars").innerHTML="";$("oG").textContent="";OLN.sel=-1;setWorld(0);paused=false;ph="menu";over=false;$("pause").classList.remove("show");$("over").classList.remove("show");$("picks").classList.remove("show");document.body.classList.remove("play");$("menu").classList.add("show");say("");ball.visible=false;blobB.visible=false;if(cups.length!==3)buildCups(3);else{layout(3);cupAt=[0,1,2];cups.forEach((c,i)=>{c.slot=i;c.x=X[i];c.z=0;c.lift=0;c.tl=0;c.jit=0})}drawTexts()}
 window.toMenu=toMenu;
 function doPause(on){if(ph==="menu"||ph==="over"||OLN.on)return;paused=on;$("pause").classList.toggle("show",on)}
 /* ============ confetti (2D overlay) ============ */
@@ -297,7 +314,7 @@ let camD=14,vw=1,vh=1,lookY=3.3;
 function resize(){vw=innerWidth;vh=innerHeight;if(glOK)R.setSize(vw,vh,false);cam.aspect=vw/vh;cam.updateProjectionMatrix()}
 addEventListener("resize",resize);resize();
 function frameCam(dt){const n=cups.length||3,spread=(n-1)*(n===3?2.2:n===4?1.95:1.7)+3.4,tn=Math.tan(cam.fov*Math.PI/360)*cam.aspect;const want=Math.max(15,spread/2/tn*1.05);camD+=(want-camD)*Math.min(1,dt*3);
- cam.position.set(0,camD*.46,camD*.89);const ly=ph==="menu"?4.6:3.0;lookY+=(ly-lookY)*Math.min(1,dt*3);cam.lookAt(0,lookY,-1.2)}
+ cam.position.set(0,camD*.46,camD*.89);const ly=ph==="menu"?4.6:vw>vh*1.15?2.4:3.0;lookY+=(ly-lookY)*Math.min(1,dt*3);cam.lookAt(0,lookY,-1.2)}
 function animMascot(dt){const tt=idleT;mas.position.y=MY+Math.abs(Math.sin(tt*2))*.04;head.rotation.z=Math.sin(tt*1.6)*.06;armL.rotation.z=.15+Math.sin(tt*1.7)*.05;armR.rotation.z=-.15;armR.rotation.x=Math.sin(tt*3)*.15;
  if(mood>0){mood-=dt;if(moodK==="yes"){mas.position.y=MY+Math.abs(Math.sin(tt*14))*.9;armL.rotation.z=2.4+Math.sin(tt*18)*.3;armR.rotation.z=-2.4-Math.sin(tt*18)*.3;head.rotation.z=Math.sin(tt*10)*.15}
   else{head.rotation.z=.3;armL.rotation.z=2.2;armL.rotation.x=0;head.rotation.x=.12}}else{head.rotation.x=0}
@@ -308,31 +325,34 @@ function tick(dt){updateGame(dt);animMascot(dt);frameCam(dt)
  if(ph==="menu"){const q=cups;q.forEach((c,i)=>{c.x=X[c.slot]+Math.sin(idleT*1.1+i)*.15;c.z=Math.cos(idleT*1.3+i)*.2;c.tl=Math.sin(idleT*1.8+i*2)>.85?.5:0})}}
 if(glOK)requestAnimationFrame(frame);
 /* ============ UI ============ */
-function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("mEasy").textContent=t("easy");$("mNorm").textContent=t("norm");$("mHard").textContent=t("hard");$("mDaily").textContent=ls.get("annabelle-cups-daily")===dayKey()?t("dailyDone"):t("daily");$("mOnline").textContent=t("online");
- for(const [id,m] of [["mEasy","easy"],["mNorm","norm"],["mHard","hard"]]){$(id).classList.toggle("sel",mode===m);$(id).classList.toggle("off",mode!==m)}
- $("rules").textContent=t("rules");$("mBest").textContent=best?t("bestIs").replace("{b}",best):"";$("againBtn").textContent=t("again");$("oMenu").textContent=t("menu");$("oAuto").textContent=t("o_auto");$("oDone").textContent=t("o_done");if(NT)NT.drawLang();$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");
+function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");$("mEasy").textContent=t("easy");$("mNorm").textContent=t("norm");$("mHard").textContent=t("hard");$("mPro").textContent=t("pro");$("mDaily").textContent=ls.get("annabelle-cups-daily")===dayKey()?t("dailyDone"):t("daily");$("mOnline").textContent=t("online");
+ for(const [id,m] of [["mEasy","easy"],["mNorm","norm"],["mHard","hard"],["mPro","pro"]]){$(id).classList.toggle("sel",mode===m);$(id).classList.toggle("off",mode!==m)}
+ $("rules").textContent=t("rules");{const mb=+bestsGet()[mode]||0,ic={easy:"🐣",norm:"🐯",hard:"🦁",pro:"🔥"}[mode];$("mBest").textContent=best?t("bestIs").replace("{b}",best)+(mb&&mb!==best?"  ·  "+ic+" "+mb:""):"";
+ const cl=mode==="easy"?0:+cpGet()[mode]||0;$("cpBtn").classList.toggle("show",cl>=6);$("cpBtn").textContent=t("cp").replace("{l}",cl)}$("againBtn").textContent=t("again");$("oMenu").textContent=t("menu");$("oAuto").textContent=t("o_auto");$("oDone").textContent=t("o_done");if(NT)NT.drawLang();$("pT").textContent=t("paused");$("resBtn").textContent=t("resume");$("pMenu").textContent=t("menu");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");hud();buildPicks(cups.length||3)}
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 $("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()};
 document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts()}});
-const setMode=m=>{mode=m;ls.set("annabelle-cups-mode",m);SFX.click();drawTexts()};$("mEasy").onclick=()=>setMode("easy");$("mNorm").onclick=()=>setMode("norm");$("mHard").onclick=()=>setMode("hard");
+const setMode=m=>{mode=m;ls.set("annabelle-cups-mode",m);SFX.click();drawTexts()};$("mEasy").onclick=()=>setMode("easy");$("mNorm").onclick=()=>setMode("norm");$("mHard").onclick=()=>setMode("hard");$("mPro").onclick=()=>setMode("pro");$("cpBtn").onclick=()=>{SFX.click();const l=+cpGet()[mode]||1;startGame(false,l)};
 $("mDaily").onclick=()=>{SFX.click();startGame(true)};$("mOnline").onclick=()=>{SFX.click();if(NT)NT.showLobby()};
 if(MUS)MUS.onChange(on=>{$("musBtn").style.opacity=on?1:.55});$("musBtn").onclick=()=>{ac();if(MUS)MUS.toggle();SFX.click()};
-$("playBtn").onclick=()=>{SFX.click();startGame()};$("againBtn").onclick=()=>{SFX.click();if(OLN.on){if(NT.myRe)return;NT.rematch();$("againBtn").disabled=true;$("oB").textContent=t("waitRe");return}startGame(daily)};
+$("playBtn").onclick=()=>{SFX.click();startGame()};$("againBtn").onclick=()=>{SFX.click();if(OLN.on){if(NT.myRe)return;NT.rematch();$("againBtn").disabled=true;$("oB").textContent=t("waitRe");return}startGame(daily,runStart)};
 $("oMenu").onclick=()=>{SFX.click();toMenu()};$("pMenu").onclick=()=>{SFX.click();toMenu()};$("homeBtn").onclick=()=>{SFX.click();toMenu()};
 $("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};
 $("picks").addEventListener("pointerdown",e=>{const b=e.target.closest("button");if(!b)return;e.preventDefault();ac();pickSlot(+b.dataset.slot)});
 function pickSlot(s){if(OLN.on){if(OLN.imHider)olTap(s);else olGuess(s);return}if(ph!=="choose"||s<0||s>=cups.length)return;sel=s;SFX.click();pickCupId(cupAt[s])}
 /* tap/click a cup in 3D */
 const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();
-cvEl.addEventListener("pointerdown",e=>{ac();const onl=OLN.on&&(ph==="choose"||ph==="ohide"||(ph==="shuffle"&&OLN.open));if((ph!=="choose"&&!onl)||paused||netp)return;ptr.set(e.clientX/vw*2-1,-(e.clientY/vh)*2+1);ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(cups.map(c=>c.g),true)[0];if(hit){let o=hit.object;while(o&&!cups.some(c=>c.g===o))o=o.parent;const c=cups.find(c=>c.g===o);if(c){e.preventDefault();SFX.click();if(OLN.on)pickSlot(c.slot);else pickCupId(c.id)}}});
+cvEl.addEventListener("pointerdown",e=>{ac();if(!OLN.on&&(ph==="reveal"||ph==="result")){skipRound();return}const onl=OLN.on&&(ph==="choose"||ph==="ohide"||(ph==="shuffle"&&OLN.open));if((ph!=="choose"&&!onl)||paused||netp)return;ptr.set(e.clientX/vw*2-1,-(e.clientY/vh)*2+1);ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(cups.map(c=>c.g),true)[0];if(hit){let o=hit.object;while(o&&!cups.some(c=>c.g===o))o=o.parent;const c=cups.find(c=>c.g===o);if(c){e.preventDefault();SFX.click();if(OLN.on)pickSlot(c.slot);else pickCupId(c.id)}}});
 cvEl.addEventListener("pointermove",e=>{if(ph!=="choose"||paused||(OLN.on&&OLN.imHider))return;ptr.set(e.clientX/vw*2-1,-(e.clientY/vh)*2+1);ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(cups.map(c=>c.g),true)[0];if(hit){let o=hit.object;while(o&&!cups.some(c=>c.g===o))o=o.parent;const c=cups.find(c=>c.g===o);if(c)sel=c.slot}});
 addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
  if(e.code==="KeyM"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();return}
+ if(e.code==="KeyP"&&OLN.on)return;
  if(e.code==="Escape"||e.code==="KeyP"){e.preventDefault();if(ph==="menu")return;if(ph==="over"||OLN.on){toMenu();return}doPause(!paused);return}
  const btn=e.target&&e.target.closest&&e.target.closest("button");
  if(ph==="menu"){if((e.key==="Enter"||e.key===" ")&&!btn&&!$("n1Lob").classList.contains("show")){e.preventDefault();startGame()}return}
  if(ph==="over"){if((e.key==="Enter"||e.key===" ")&&!btn){e.preventDefault();$("againBtn").click()}return}
+ if((e.key==="Enter"||e.key===" ")&&!btn&&(ph==="reveal"||ph==="result")){e.preventDefault();skipRound();return}
  const onlH=OLN.on&&OLN.imHider&&(ph==="ohide"||(ph==="shuffle"&&OLN.open));
  if(onlH&&!paused&&/^[1-5]$/.test(e.key)&&+e.key<=cups.length){e.preventDefault();pickSlot(+e.key-1);return}
  if(ph==="choose"&&!paused&&!(OLN.on&&OLN.imHider)){const n=cups.length;
@@ -349,7 +369,7 @@ const NT=window.Net1v1?Net1v1({pid:"annabelle-cups-",shareTxt:{he:TX.he.shareT,f
  cleanStart(d){return d&&d.g==="cups"?{g:"cups"}:null},makeStart(){return{g:"cups"}},
  onHostStart(){olBegin(0)},onGuestStart(){olBegin(1)},onResume(){olResync()},
  onData:olData,onLeft:olLeft,onPause(on){netp=on;if(on){OLN.sel=-1}}}):null;
-function olBegin(me){daily=false;rnd=Math.random;OLN.on=true;OLN.me=me;OLN.scores=[0,0];OLN.round=0;OLN.lastRv=null;netp=false;paused=false;over=false;ac();RW()&&RW().award({game:"cups",event:"play"});
+function olBegin(me){document.body.classList.add("onl");daily=false;rnd=Math.random;OLN.on=true;OLN.me=me;OLN.scores=[0,0];OLN.round=0;OLN.lastRv=null;netp=false;paused=false;over=false;ac();RW()&&RW().award({game:"cups",event:"play"});
  $("pause").classList.remove("show");$("over").classList.remove("show");$("menu").classList.remove("show");$("oStars").innerHTML="";$("oG").textContent="";$("againBtn").style.display="";$("againBtn").disabled=false;document.body.classList.add("play");setWorld(0,true);olRound(1)}
 function olRound(r){OLN.round=r;OLN.hider=(r-1)%2;OLN.imHider=OLN.hider===OLN.me;OLN.sw=0;OLN.swl=[];OLN.open=false;OLN.done=false;OLN.hid=false;OLN.sel=-1;OLN.myPick=-1;OLN.lastRv=null;
  buildCups(cupsFor(r));ballCup=-1;steps=[];stepI=0;stepT=0;swapLog=[];rv=null;pt=0;resultT=1e9;mood=0;cups.forEach(c=>{c.lift=0;c.tl=0;c.jit=0});
