@@ -38,6 +38,20 @@ body.ol #olBar{display:flex}
 body #n1Weak{top:calc(var(--top) + 96px)}
 #endCd{position:absolute;top:calc(var(--top) + 130px);left:50%;transform:translateX(-50%);background:#e63946;border-radius:999px;padding:3px 12px;font-weight:900;font-size:15px;white-space:nowrap;display:none}
 #endCd.on{display:block}
+/* phones: the place number sits on the left and the mini-map on the right.  The score bar lives in the gap between them; the weak-connection pill
+   (long sentences, 2-3 lines) takes that same slot while it shows (body.wk hides the score for those seconds); the red pill goes under the place number, left of the map.
+   Online the place number "bumps" around its own centre and a little less, so that it never jumps onto these pills. */
+@keyframes bumpS{40%{transform:scale(1.2) rotate(-6deg)}}
+@media (max-width:699px){
+#olBar{left:82px;right:116px;transform:none;margin:0 auto;width:fit-content;max-width:calc(100% - 198px);font-size:clamp(12px,3.8vw,15px)}
+#olFr{min-width:0;overflow:hidden;text-overflow:ellipsis}
+body.wk #olBar{display:none}
+body #n1Weak{top:calc(var(--top) + 54px);left:82px;right:116px;transform:none;margin:0 auto;width:fit-content;font-size:clamp(12px,3.7vw,14px);line-height:1.25}
+#endCd{top:calc(var(--top) + 132px);left:8px;right:120px;transform:none;margin:0 auto;width:fit-content;font-size:clamp(12px,3.4vw,15px);white-space:normal;text-align:center}
+body.ol #posBox{transform-origin:center}body.ol #posBox.bump{animation-name:bumpS}
+.desk #olBar,.desk body #n1Weak{right:182px}.desk #olBar{max-width:calc(100% - 264px)}.desk #endCd{right:186px}
+}
+@media (max-width:340px){#olBar{padding:3px 6px;gap:3px}#olBar b{font-size:16px}}
 #ctl{position:absolute;left:0;right:0;bottom:var(--bot);display:flex;align-items:flex-end;justify-content:space-between;padding:0 10px}
 .steer{width:92px;height:92px;border-radius:28px;background:#fff3;border:3px solid #fffa;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;transition:transform .05s,background .05s;text-shadow:0 2px 0 #0006}
 .steer.on{background:#ffe14de6;transform:scale(.92);color:var(--ink);text-shadow:none}
@@ -77,12 +91,15 @@ html[lang=he] #banner,html[lang=he] #tip,html[lang=he] #pop,html[lang=he] #cd,ht
 body.ol #tip{bottom:calc(var(--bot) + 160px)}
 .desk #tip,.desk body.ol #tip{left:16px;right:auto;bottom:16px;margin:0;max-width:430px}
 #tip.on{display:block}
+@media (max-height:789px) and (orientation:portrait){html:not(.desk) body.ol #tip{bottom:calc(var(--bot) + 104px)}html:not(.desk) body.ol #tip.on~#ctl #emo{display:none}html:not(.desk) body.ol #tip.on~#ctl #itemWrap{min-width:196px}}
 #bub{position:absolute;left:0;top:0;font-size:44px;pointer-events:none;opacity:0;will-change:transform}
 #bub.go{animation:bubA 1.7s ease-out}
 @keyframes bubA{0%{opacity:0;margin-top:0;scale:.3}15%{opacity:1;scale:1.25}30%{scale:1}80%{opacity:1}100%{opacity:0;margin-top:-50px}}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:safe center;gap:9px;padding:var(--top) 10px var(--bot);z-index:40;overflow-y:auto;touch-action:pan-y;background:#1a1035a8;text-align:center}
 .ov.show{display:flex}
+#pause{z-index:41}
+body.ol #pause .an-navrow{display:none}
 #menu{background:linear-gradient(#1a103566,#1a1035c4)}
 h1{margin:0;font-size:clamp(30px,9.2vw,50px);line-height:1.05;color:var(--y);-webkit-text-stroke:2.5px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 #0007;font-weight:900;animation:bob 2.4s ease-in-out infinite alternate}
 @keyframes bob{to{transform:translateY(-5px) rotate(-1.2deg)}}
@@ -414,7 +431,7 @@ function trackAdv(o,x,y,ahead,back,T){const S=T.S,N=T.N;let bi=o.idx,bd=1e18;for
 
 /* ---------------- game state ---------------- */
 const G={mode:'menu',phase:'idle',T:null,ti:0,cc:0,vmax:VMAX[0],seed:1,time:0,cdT:0,cdN:4,laps:LAPS,karts:[],me:null,camK:null,haz:[],boxes:[],parts:[],paused:false,netPaused:false,finT:0,cup:null,ghost:null,ghT0:0,rec:null,idN:0,frame:0,hidAuto:false,cfg:null,bumpT:0,ttBest:0};
-const OL={on:false,r:0,tr:[0,2,4],seed:1,cc:1,w:[0,0],ph:'',look:[[0,0],[1,0]],fr:null,claims:[],obs:[],obsGap:[],fl:[],gapMax:0,lastSt:0,sendT:0,itT:[0,0,0,0],itB:[2,2,2,2],hzT:0,hzN:0,emT:0,emR:0,t0:0,pT:0,pAcc:0,bud:18,gap:0,pgX:0,pgT:null,goSent:false,cdSent:false,endT:0,allT:0,nextT:0,rdT:0,res:null,done:false};
+const OL={on:false,r:0,tr:[0,2,4],seed:1,cc:1,w:[0,0],ph:'',look:[[0,0],[1,0]],fr:null,claims:[],obs:[],obsGap:[],fl:[],gapMax:0,lastSt:0,sendT:0,itT:[0,0,0,0],itB:[2,2,2,2],hzT:0,hzN:0,emT:0,emR:0,t0:0,pT:0,pAcc:0,bud:18,gap:0,bGap:0,bT:0,lapT:0,snT:0,bye:false,pgX:0,pgT:null,goSent:false,cdSent:false,endT:0,allT:0,nextT:0,rdT:0,res:null,done:false};
 let NT=null;
 let shake=0,hitStop=0,flash=0,inkScr=0,inkSeed=1,popT=0;
 function mkKart(i,d,kt,o){return{i,di:d,ki:kt,drv:DRIVERS[d],krt:KARTS[kt],st:o.st||NEUTRAL,bot:!!o.bot,remote:!!o.remote,auto:false,autoIt:false,
@@ -697,7 +714,8 @@ addEventListener('keydown',e=>{if(window.AnnabelleDesk&&AnnabelleDesk.typing(e))
  else if(k==='Space'||k==='ArrowUp'||k==='KeyW'){e.preventDefault();if(!e.repeat&&racing()&&G.me)useItem(G.me)}
  else if(k==='KeyP'||k==='Escape'){if(e.repeat)return;if($('pause').classList.contains('show'))resumeGame();else pauseGame()}
  else if(k==='KeyM'){if(!e.repeat)toggleMute()}
- else if(k==='Enter'){const b=document.querySelector('.ov.show .btn:not([disabled])');if(b&&!e.repeat&&!document.querySelector('.n1ov.show')){e.preventDefault();b.click()}}});
+ else if(k==='Enter'){const b=document.querySelector('.ov.show .btn:not([disabled]):not([data-act=leave])');   // Enter = the main button of the card, never "leave the online match"
+  if(b&&!e.repeat&&!document.querySelector('.n1ov.show')){e.preventDefault();b.click()}}});
 addEventListener('keyup',e=>{const k=e.code;if(k==='ArrowLeft'||k==='KeyA')KEYS.l=false;else if(k==='ArrowRight'||k==='KeyD')KEYS.r=false;else if(k==='ShiftLeft'||k==='ShiftRight'||k==='ArrowDown'||k==='KeyS')KEYS.b=false});
 
 /* ---------------- HUD helpers ---------------- */
@@ -709,8 +727,11 @@ function pop(txt){const e=$('pop');e.textContent=txt;e.classList.remove('go');vo
 function posBump(){const e=$('posBox');e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}
 let banT=null;
 function banner(txt,sub,ms){const e=$('banner');clearTimeout(banT);e.textContent=txt;if(sub){const s=document.createElement('small');s.textContent=sub;e.appendChild(s)}e.className='';void e.offsetWidth;e.className='on';banT=setTimeout(()=>{e.className='out'},ms||2200)}
-function tipShow(){const e=$('tip');if(S.tut>=3||G.mode==='demo'){e.classList.remove('on');return}e.textContent='';[desk()?'tip1d':'tip1','tip2',desk()?'tip3d':'tip3'].forEach(k=>{const d=document.createElement('div');d.textContent=t(k);e.appendChild(d)});e.classList.add('on')}
-function tipHide(){setTimeout(()=>$('tip').classList.remove('on'),4500)}
+let tipT=null;
+function tipHit(){const r=$('tip').getBoundingClientRect(),kx=W/2,ky=H*camYf,kr=30*Math.min(W/480,H/700)+4;return r.width>0&&r.left<kx+kr&&r.right>kx-kr&&r.top<ky+kr&&r.bottom>ky-kr}   // is the tip box on top of the player's own kart?
+function tipShow(){const e=$('tip');clearTimeout(tipT);e.style.fontSize='';if(S.tut>=3||G.mode==='demo'){e.classList.remove('on');return}e.textContent='';[desk()?'tip1d':'tip1','tip2',desk()?'tip3d':'tip3'].forEach(k=>{const d=document.createElement('div');d.textContent=t(k);e.appendChild(d)});e.classList.add('on');
+ for(let f=parseFloat(getComputedStyle(e).fontSize)||14;f>11&&tipHit();){f-=.5;e.style.fontSize=f+'px'}}   // long lines on a small screen: smaller letters rather than a tip on top of the kart
+function tipHide(){clearTimeout(tipT);tipT=setTimeout(()=>$('tip').classList.remove('on'),tipHit()?0:4500)}   // GO: the tip stays 4.5 s more, unless it still sits on the player's own kart (tiny screen)
 function itemBtnUpd(){const me=G.me,b=$('itemBtn');if(!me)return;const has=me.item>0&&me.rollT<=0;b.classList.toggle('has',has);b.classList.toggle('empty',!has&&me.rollT<=0);if(me.rollT<=0)setTxt('itemI',has?ITEMS[me.item].em:'❓')}
 function hideAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'))}
 function showOv(id){hideAll();const o=$(id);o.classList.add('show');o.scrollTop=0}
@@ -740,7 +761,7 @@ function drawMenu(){document.documentElement.lang=lang;document.documentElement.
  $('pT').textContent=t('pause');$('pResume').textContent=t('resume');$('pRestart').textContent=t('restart');$('pMenu').textContent=t('menu');applyMute()}
 function setLang(l){if(!TX[l])return;lang=l;ls.set('annabelle-lang',l);drawMenu();if(NT&&NT.drawLang)NT.drawLang()}
 function startDemo(){startRace({mode:'demo',ti:(Math.random()*TRACKS.length)|0,cc:1,seed:(Math.random()*1e9)|0})}
-function toMenu(){if(OL.on||(NT&&NT.gameOn)){OL.on=false;try{NT.leaveToMenu()}catch(e){}}OL.on=false;G.cup=null;G.paused=false;G.netPaused=false;document.body.classList.remove('play','ol','tt');showOv('menu');drawMenu();startDemo();MUS.bpm=108;if(AC)musStart(108);engSet(0,false);flushRw()}
+function toMenu(){if(OL.on||(NT&&NT.gameOn)){OL.on=false;try{NT.leaveToMenu()}catch(e){}}OL.on=false;G.cup=null;G.paused=false;G.netPaused=false;document.body.classList.remove('play','ol','tt','wk');showOv('menu');drawMenu();startDemo();MUS.bpm=108;if(AC)musStart(108);engSet(0,false);flushRw()}
 window.toMenu=toMenu;
 let selScr='';
 function thumbs(c){c.querySelectorAll('canvas[data-th]').forEach(x=>drawThumb(x,+x.dataset.th))}
@@ -769,9 +790,10 @@ $('selC').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)
 function startSolo(mode,ti){ac();award([{event:'play',level:ti+1}]);startRace({mode,ti,cc:S.sel.cc,seed:(Math.random()*2147483647)|0})}
 function startCup(ci){G.cup={ci,race:0,pts:[0,0,0,0],score:0};startSolo('cup',CUPS[ci].tr[0])}
 /* ---------------- pause ---------------- */
+function olAsk(){$('pT').textContent=t('leaveQ');$('pResume').textContent=t('stay');$('pRestart').style.display='none';$('pMenu').textContent=t('leave');PT.clear();$('pause').classList.add('show')}   // online: "leave the game?" (nothing pauses; also shown on top of the between-race card)
 function pauseGame(){if(!G.me||!document.body.classList.contains('play')||$('res').classList.contains('show'))return;
- if(OL.on){$('pT').textContent=t('leaveQ');$('pResume').textContent=t('stay');$('pRestart').style.display='none';$('pMenu').textContent=t('leave')}
- else{if(G.phase!=='count'&&G.phase!=='race'&&G.phase!=='fin')return;G.paused=true;$('pT').textContent=t('pause');$('pResume').textContent=t('resume');$('pRestart').style.display='';$('pMenu').textContent=t('menu');musStop();engSet(0,false)}
+ if(OL.on){olAsk();return}
+ if(G.phase!=='count'&&G.phase!=='race'&&G.phase!=='fin')return;G.paused=true;$('pT').textContent=t('pause');$('pResume').textContent=t('resume');$('pRestart').style.display='';$('pMenu').textContent=t('menu');musStop();engSet(0,false);
  PT.clear();$('pause').classList.add('show')}
 function resumeGame(){$('pause').classList.remove('show');if(G.paused){G.paused=false;if(AC)musStart()}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(!OL.on)pauseGame();musStop();engSet(0,false)}else if(AC&&!G.paused&&!$('res').classList.contains('show'))musStart()});
@@ -829,9 +851,10 @@ function cleanStart(d){if(!d||typeof d!=='object')return null;if(!isInt(d.seed,1
  return{seed:d.seed,cc:d.cc,hd:d.hd,hk:d.hk,tr:d.tr.slice()}}
 function olNew(c){OL.on=true;OL.seed=c.seed;OL.cc=c.cc;OL.tr=c.tr.slice();OL.look=[[c.hd,c.hk],NT.host?[OL.look[1][0],OL.look[1][1]]:[selD(),selK()]];OL.w=[0,0];OL.done=false;G.cup=null;
  NT.setOver(false);CF.length=0;ac();award([{event:'play'}]);S.stat.online++;save();olLoad(0)}
-function olLoad(r){OL.r=r;OL.ph='wait';OL.res=null;OL.claims=[];OL.obs=[];OL.obsGap=[];OL.fl=[];OL.endT=0;OL.allT=0;OL.nextT=0;OL.cdSent=false;OL.goSent=false;OL.pgX=0;clearTimeout(OL.pgT);OL.gapMax=0;OL.lastSt=0;OL.pAcc=0;OL.bud=18;OL.itT=[0,0,0,0];OL.itB=[2,2,2,2];OL.rdT=performance.now();OL.t0=performance.now();
+function olLoad(r){OL.r=r;OL.ph='wait';OL.res=null;OL.claims=[];OL.obs=[];OL.obsGap=[];OL.fl=[];OL.endT=0;OL.allT=0;OL.nextT=0;OL.cdSent=false;OL.goSent=false;OL.pgX=0;clearTimeout(OL.pgT);OL.gapMax=0;OL.lastSt=0;OL.pAcc=0;OL.bud=18;OL.gap=0;OL.bGap=0;OL.bT=0;OL.lapT=0;OL.itT=[0,0,0,0];OL.itB=[2,2,2,2];OL.rdT=performance.now();OL.t0=performance.now();
  startRace({mode:'online',ti:OL.tr[r],cc:OL.cc,seed:(OL.seed+r*7919)>>>0});
- if(NT.host){if(r>0)NT.send({t:'rd',r})}else NT.send({t:'rdy',r,d:selD(),k:selK()})}
+ if(NT.host){if(r>0)olRd()}else NT.send({t:'rdy',r,d:selD(),k:selK()})}
+function olRd(){NT.send({t:'rd',r:OL.r,w:OL.w.slice()})}   // host: "next race" + the score so far (a guest who missed the last result still shows the right score)
 function olGo(r,lat){clearTimeout(OL.pgT);if(!OL.on||OL.r!==r||OL.ph!=='wait'||OL.goSent)return;OL.goSent=true;NT.send({t:'cd',r});setTimeout(()=>{if(OL.on&&OL.r===r)olCount()},lat)}
 function olCount(){if(OL.ph!=='wait')return;OL.ph='count';G.phase='count';G.cdT=CDT;G.cdN=4}
 function packK(k){return[Math.round(k.x),Math.round(k.y),Math.round(angD(k.a,0)*100)/100,Math.round(k.v),clamp(k.lap,-1,LAPS),k.idx,(k.dr?1:0)|(k.boostT>0?2:0)|(k.spinT>0?4:0)|(k.shieldT>0?8:0)|(k.smallT>0?16:0)|(k.fin?32:0)|(k.airT>0?64:0)|(k.off?128:0)|((k.dL&3)<<8),k.rollT>0?8+k.next:k.item]}
@@ -841,18 +864,23 @@ function cleanK(a){if(!Array.isArray(a)||a.length!==8)return null;for(let i=0;i<
 function olSendState(){const m={t:'s',k:packK(G.me)};if(NT.host)m.b=[packK(G.karts[2]),packK(G.karts[3])];NT.send(m)}
 function olState(d){if(!G.T||G.mode!=='online'||(OL.ph!=='wait'&&OL.ph!=='count'&&OL.ph!=='race'))return;const a=cleanK(d.k);if(!a)return;const now=performance.now(),fr=OL.fr,T=G.T;
  pushBuf(fr,a,now);const gap=OL.lastSt?Math.max(0,(now-OL.lastSt-OL.pAcc)/1000):.07;OL.lastSt=now;OL.pAcc=0;if(gap>OL.gapMax)OL.gapMax=gap;
- if(OL.ph==='race'&&!fr.fin){OL.gap=gap;olFollow(fr,a,gap);const q=T.S[fr.idx];if(Math.hypot(a[0]-q.x,a[1]-q.y)>T.hw+380)fr.ncT=now+400}
+ // After a silence (network stall) the reliable channel delivers its whole backlog in one burst, and net1v1's flood limit may drop the tail of that burst.
+ // So the silence stays credited to the packets that follow it: in full for 1.5 s, then it runs out as fast as it was earned (bk = seconds still credited).
+ let bk=Math.max(0,OL.bGap-Math.max(0,(now-OL.bT)/1000-1.5));if(gap>.4&&gap>=bk){OL.bGap=bk=gap;OL.bT=now}
+ if(OL.ph==='race'&&!fr.fin){OL.gap=Math.max(gap,bk);olFollow(fr,a,gap,bk);const q=T.S[fr.idx];if(Math.hypot(a[0]-q.x,a[1]-q.y)>T.hw+380)fr.ncT=now+400}
+ if(!NT.host&&OL.ph==='race'&&(a[6]&32)&&!fr.fin){fr.fin=true;fr.ft=G.time}   // guest: the referee says she has finished - take her word for it (starts the 25 s countdown even if my own tracker of her kart lags)
  if(!NT.host&&Array.isArray(d.b)&&d.b.length===2)for(let q=0;q<2;q++){const b=cleanK(d.b[q]);if(!b)continue;const k=G.karts[2+q];pushBuf(k,b,now);k.lap=b[4];k.idx=b[5];k.tot=k.lap*T.N+k.idx;if((b[6]&32)&&!k.fin){k.fin=true;k.ft=G.time}}}
 /* Referee's view of the friend's progress.  Her own (lap, sample index) is accepted only when (1) that sample really is where her kart is and
    (2) the progress since the last accepted packet fits a time budget that fills at 1.5x top speed (boosts included) - so nobody can skip ahead,
-   yet a long network gap is credited correctly once packets flow again.  Her kart is solid (can bump mine) only near that accepted position. */
-function olFollow(fr,a,gap){const T=G.T,N=T.N,rate=G.vmax*1.5/T.sp;OL.bud+=gap*rate;   // time since the last ACCEPTED packet keeps counting, so the tracker always finds its way back after a gap or a refused packet
+   yet a long network gap is credited correctly once packets flow again: the budget earned by a silence belongs to the WHOLE backlog that
+   follows it (bk seconds still credited), not just to its first, oldest packet.  Her kart is solid (can bump mine) only near that accepted position. */
+function olFollow(fr,a,gap,bk){const T=G.T,N=T.N,rate=G.vmax*1.5/T.sp;OL.bud+=gap*rate;   // time since the last ACCEPTED packet keeps counting, so the tracker always finds its way back after a gap or a refused packet
  const s=T.S[a[5]],d=Math.hypot(a[0]-s.x,a[1]-s.y);if(d>T.hw+330)return;
  let best=d;for(let j=-8;j<=8;j+=2){const q=T.S[((a[5]+j)%N+N)%N],e=Math.hypot(a[0]-q.x,a[1]-q.y);if(e<best)best=e}if(d>best+40)return;
- const target=a[4]*N+a[5],adv=target-(fr.lap*N+fr.idx);if(adv>OL.bud+6||adv<-14)return;if(adv>0)OL.bud-=adv;OL.bud=Math.min(OL.bud,rate*1.2);   // accepted: only a small reserve is kept
+ const target=a[4]*N+a[5],adv=target-(fr.lap*N+fr.idx);if(adv>OL.bud+6||adv<-14)return;if(adv>0)OL.bud-=adv;OL.bud=Math.min(OL.bud,rate*(1.2+bk));   // accepted: only a small reserve is kept (plus what a recent silence still covers)
  if(adv===0)return;
  fr.lap=a[4];fr.idx=a[5];fr.tot=target;while(fr.maxLap<fr.lap){fr.maxLap++;if(fr.maxLap>=1)olObsLap(fr.maxLap)}}
-const olAgree=(c,o,g)=>c>=o-g*1000-700&&c<=o+350;   // the claim must fit the packet that showed the crossing (network delay + the gap before it)
+const olAgree=(c,o,g)=>c>=o-g*1000-700&&c<=o+350;   // the claim must fit the packet that showed the crossing (network delay + the gap / the stall before it)
 function olObsLap(n){const fr=OL.fr,ms=Math.round(G.time*1000),c=OL.claims[n-1];OL.obs[n-1]=ms;OL.obsGap[n-1]=OL.gap||0;
  OL.fl[n-1]=c!==undefined&&olAgree(c,ms,OL.obsGap[n-1])?c:ms;if(n>=LAPS){fr.fin=true;fr.ft=OL.fl[n-1]/1000}}
 function olSendLaps(){const l=[];let s=0;for(const x of G.me.laps){s+=x;l.push(Math.round(s*1000))}NT.send({t:'lap',r:OL.r,l})}
@@ -880,19 +908,20 @@ function cleanRes(d){if(!isInt(d.r,0,2)||!Array.isArray(d.o)||d.o.length!==4||!A
 function olRes(m){OL.res=m;OL.w=m.w.slice();OL.ph=m.f?'over':'res';G.phase='res';G.me.auto=true;const me=G.me,mi=me.i,fi=1-mi,K=m.o.map(i=>G.karts[i]);K.forEach((k,i)=>{k.place=i+1;if(m.tm[k.i]&&!k.fin){k.fin=true;k.ft=m.tm[k.i]/1000}});
  const pl=m.o.indexOf(mi)+1,won=m.o.indexOf(mi)<m.o.indexOf(fi),mw=OL.w[mi],fw=OL.w[fi];$('endCd').classList.remove('on');$('pause').classList.remove('show');
  const aw=[{event:'levelClear',level:OL.r+1}];let top,btns;
- if(m.f){OL.done=true;NT.setOver(true);const mwon=mw>fw;top='<div class="big">'+(mwon?'🏆':'💜')+'</div><h2>'+t(mwon?'olWin':'olLose')+'</h2>';if(mwon){aw.push({event:'win'});S.stat.owins++;SFX.win();confetti(160)}else SFX.lose();
+ if(m.f){OL.done=true;NT.setOver(true);olWeakOff();const mwon=mw>fw;top='<div class="big">'+(mwon?'🏆':'💜')+'</div><h2>'+t(mwon?'olWin':'olLose')+'</h2>';if(mwon){aw.push({event:'win'});S.stat.owins++;SFX.win();confetti(160)}else SFX.lose();
   aw.push({event:'score',score:mw*100+(5-pl)*10});
   btns='<div class="rowb"><button class="btn g" data-act="again">'+t('again')+'</button><button class="btn s" data-act="leave">'+t('leave')+'</button></div><p id="olWaitRe"></p>'}
  else{top='<div class="big">'+['🥇','🥈','🥉','🏁'][pl-1]+'</div><h2>'+t(won?'olWinR':'olLoseR')+'</h2>';won?(SFX.win(),confetti(70)):SFX.lap();btns='<p id="olNextT"></p><button class="btn s sm" data-act="leave">'+t('leave')+'</button>';if(NT.host)OL.nextT=performance.now()+7000;OL.nextShow=performance.now()+7000}
  S.tut++;save();award(aw);
  showRes(top+'<div class="wins"><span>'+t('you')+'</span><b>'+mw+' : '+fw+'</b><span>'+t('friend')+'</span></div><p>'+t('olRace')+' '+(m.r+1)+'/3 · '+esc(L(TRACKS[G.ti].nm))+'</p>'+rowsHTML(K,k=>m.tm[k.i]?fmt(m.tm[k.i]/1000):'—')+btns,
-  (act,b)=>{if(act==='again'){b.disabled=true;const w=$('olWaitRe');if(w)w.textContent=t('waitRe');NT.rematch()}else olLeave()})}
+  (act,b)=>{if(act==='again'){b.disabled=true;const w=$('olWaitRe');if(w)w.textContent=t('waitRe');NT.rematch()}else if(m.f)olLeave();else olAsk()})}   // between two races the match is still on: ask before leaving
 function olLeave(){OL.on=false;try{NT.leave()}catch(e){}toMenu()}
+function olWeakOff(){try{NT.NET.weak=false;clearInterval(NT.NET.wt);NT.NET.wt=null}catch(e){}$('n1Weak').classList.remove('on')}   // net1v1 stops watching the line once the match is over: its "weak connection" pill must not stay on the final card
 function olSnapshot(){const m={t:'sy',r:OL.r,ph:PH_N.indexOf(OL.ph),w:OL.w.slice(),el:Math.round(G.time*1000),hz:G.haz.slice(0,24).map(h=>[h.id,h.ty,Math.round(h.x),Math.round(h.y),Math.round((h.p||0)*100)/100,Math.round(h.l||0),Math.round(h.age*10)/10])};
- if(OL.res){m.o=OL.res.o;m.tm=OL.res.tm;m.f=OL.res.f}NT.send(m)}
+ if(OL.res){m.o=OL.res.o;m.tm=OL.res.tm;m.f=OL.res.f;if(OL.nextT)m.nx=clamp(Math.round(OL.nextT-performance.now()),0,7000)}NT.send(m)}
 function olSync(d){if(NT.host||!isInt(d.r,0,2)||!isInt(d.ph,0,4)||!Array.isArray(d.w)||d.w.length!==2||!isInt(d.w[0],0,2)||!isInt(d.w[1],0,2)||!isInt(d.el,0,600000))return;
  const ph=PH_N[d.ph];
- if(ph==='res'||ph==='over'){const m=cleanRes({r:d.r,o:d.o,tm:d.tm,w:d.w,f:d.f});if(!m)return;if(OL.r!==d.r||!OL.res){if(OL.r!==d.r)olLoad(d.r);olRes(m)}return}
+ if(ph==='res'||ph==='over'){const m=cleanRes({r:d.r,o:d.o,tm:d.tm,w:d.w,f:d.f});if(!m)return;if(OL.r!==d.r||!OL.res){if(OL.r!==d.r)olLoad(d.r);olRes(m);if(!m.f&&isInt(d.nx,0,7000))OL.nextShow=performance.now()+d.nx}return}
  if(d.w[0]+d.w[1]!==d.r)return;OL.w=d.w.slice();
  if(OL.r!==d.r||OL.ph==='res'||OL.ph==='over'){olLoad(d.r)}
  if(ph==='count'&&OL.ph==='wait')olCount();
@@ -903,7 +932,7 @@ function olSync(d){if(NT.host||!isInt(d.r,0,2)||!isInt(d.ph,0,4)||!Array.isArray
  olSendLaps()}
 function olLaps(d){if(!NT.host||!isInt(d.r,0,2)||d.r!==OL.r||!Array.isArray(d.l)||d.l.length>LAPS)return;for(let i=OL.claims.length;i<d.l.length;i++)olLapMsg({n:i+1,ms:d.l[i]})}
 function olData(d){const ty=d.t;
- if(ty==='s'){olState(d);return}
+ if(ty==='s'){if(NT.host&&OL.on&&OL.res&&(OL.ph==='res'||OL.ph==='over')){const n=performance.now();if(n-OL.snT>1500){OL.snT=n;olSnapshot()}}else olState(d);return}   // the result is sent once and can be lost in the burst after a stall: a guest who still streams her kart has not got it, so she gets the whole snapshot again (at most every 1.5 s)
  if(!OL.on)return;
  if(ty==='rdy'){if(!NT.host||!isInt(d.r,0,2)||d.r!==OL.r||!isInt(d.d,0,DRIVERS.length-1)||!isInt(d.k,0,KARTS.length-1))return;
   if(OL.ph==='wait'&&!OL.cdSent){OL.cdSent=true;OL.look[1]=[d.d,d.k];olLooks();   // measure the one-way delay with a ping, then start both countdowns at the same moment
@@ -912,7 +941,8 @@ function olData(d){const ty=d.t;
  if(ty==='pg'){if(!NT.host&&isInt(d.x,1,1e9)&&OL.ph==='wait')NT.send({t:'pq',x:d.x});return}
  if(ty==='pq'){if(NT.host&&OL.ph==='wait'&&OL.cdSent&&d.x===OL.pgX){OL.pgX=0;olGo(OL.r,clamp((performance.now()-OL.t0)/2,0,350))}return}
  if(ty==='cd'){if(!NT.host&&isInt(d.r,0,2)&&d.r===OL.r)olCount();return}
- if(ty==='rd'){if(NT.host||!isInt(d.r,1,2))return;if(d.r===OL.r+1&&!OL.done)olLoad(d.r);else if(d.r===OL.r&&OL.ph==='wait')NT.send({t:'rdy',r:OL.r,d:selD(),k:selK()});return}
+ if(ty==='rd'){if(NT.host||!isInt(d.r,1,2))return;const w=Array.isArray(d.w)&&d.w.length===2&&isInt(d.w[0],0,2)&&isInt(d.w[1],0,2)&&d.w[0]+d.w[1]===d.r?d.w:null;
+  if(d.r===OL.r+1&&!OL.done){if(w)OL.w=w.slice();olLoad(d.r)}else if(d.r===OL.r&&OL.ph==='wait'){if(w)OL.w=w.slice();NT.send({t:'rdy',r:OL.r,d:selD(),k:selK()})}return}
  if(ty==='lap'){olLaps(d);return}
  if(ty==='it'){olItem(d);return}
  if(ty==='hz'){olHz(d);return}
@@ -921,21 +951,22 @@ function olData(d){const ty=d.t;
  if(ty==='sy'){olSync(d)}}
 function olTick(dt){const me=G.me,fr=OL.fr;if(!OL.on||!fr)return;
  if(OL.ph==='race'){if(!OL.endT&&(me.fin||fr.fin))OL.endT=G.time+25;if(me.fin&&fr.fin&&!OL.allT)OL.allT=G.time+1;
-  if(NT.host&&((OL.allT&&G.time>=OL.allT)||(OL.endT&&G.time>=OL.endT)||G.time>330))olFinalize()}}
+  if(NT.host&&((OL.allT&&G.time>=OL.allT+(OL.claims.length<LAPS?2:0))||(OL.endT&&G.time>=OL.endT)||G.time>330))olFinalize()}}   // her finish was seen but her own time for it is still on its way (lost in a burst, re-sent every second): give it 2 more seconds
 function olNet(now){if(!OL.on||!NT||G.netPaused)return;
  if((OL.ph==='wait'||OL.ph==='count'||OL.ph==='race')&&now-OL.sendT>=66&&G.me){OL.sendT=now;olSendState()}
- if(OL.ph==='wait'&&now-OL.rdT>2500){OL.rdT=now;if(!NT.host)NT.send({t:'rdy',r:OL.r,d:selD(),k:selK()});else if(OL.r>0&&!OL.cdSent)NT.send({t:'rd',r:OL.r})}
+ if(OL.ph==='race'&&!NT.host&&G.me&&G.me.laps.length&&now-OL.lapT>1000){OL.lapT=now;olSendLaps()}   // lap times again and again (cumulative, the referee takes each lap once): a claim lost in a burst after a stall heals within a second
+ if(OL.ph==='wait'&&now-OL.rdT>2500){OL.rdT=now;if(!NT.host)NT.send({t:'rdy',r:OL.r,d:selD(),k:selK()});else if(OL.r>0&&!OL.cdSent)olRd()}
  if(NT.host&&OL.ph==='res'&&OL.nextT&&now>=OL.nextT){OL.nextT=0;olLoad(OL.r+1)}}
 function olHud(){setTxt('olMe',t('you'));setTxt('olFr',t('friend'));const mi=G.me.i;setTxt('olW',OL.w[mi]+' : '+OL.w[1-mi]);
  const e=$('endCd'),me=G.me;if(OL.ph==='race'&&OL.endT){e.classList.add('on');setTxt('endCd',me.fin?t('finW'):t('olEnd')+' '+Math.max(0,Math.ceil(OL.endT-G.time)))}else if(OL.ph==='wait'){e.classList.add('on');setTxt('endCd',t('olWait'))}else e.classList.remove('on');
  const n=$('olNextT');if(n&&OL.ph==='res')n.textContent=t('olNext')+' '+Math.max(0,Math.ceil((OL.nextShow-performance.now())/1000))+'…';
- $('emo').classList.toggle('cool',performance.now()-OL.emT<1000)}
+ $('emo').classList.toggle('cool',performance.now()-OL.emT<1000);document.body.classList.toggle('wk',$('n1Weak').classList.contains('on'))}
 NT=window.Net1v1?Net1v1({pid:'annabelle-carrace-',shareTxt:{he:'בואי למרוץ מכוניות החתולים איתי! 🏎️🐱',fr:'Viens faire la course de karts des chats avec moi ! 🏎️🐱',en:'Come race Kitty Karts with me! 🏎️🐱'},
  hideMenu(){hideAll()},showMenu(){toMenu()},onLink(){hideAll()},
  makeStart(){return{seed:OL.seed,cc:OL.cc,tr:OL.tr.slice(),hd:OL.look[0][0],hk:OL.look[0][1]}},cleanStart,
  onHostStart(){const seed=1+((Math.random()*2147483646)|0);OL.look[1]=[OL.look[1][0],OL.look[1][1]];olNew({seed,cc:S.sel.cc,tr:olPick3(seed),hd:selD(),hk:selK()})},
  onGuestStart(c){olNew(c)},
- onResume(){if(NT.host&&OL.on){olSnapshot();if(OL.ph==='wait'&&OL.r>0)NT.send({t:'rd',r:OL.r})}},
+ onResume(){if(NT.host&&OL.on){olSnapshot();if(OL.ph==='wait'&&OL.r>0)olRd()}},
  onData(d){try{olData(d)}catch(e){}},
  onLeft(){if(!OL.on)return;OL.on=false;G.phase='res';$('pause').classList.remove('show');$('endCd').classList.remove('on');SFX.drop();showRes('<div class="big">👋</div><h2>'+t('olLeft')+'</h2><p>'+t('olLeftS')+'</p><button class="btn g" data-act="menu">'+t('menu')+'</button>',()=>toMenu())},
  onPause(on){G.netPaused=!!on;const now=performance.now();if(on){OL.pT=now;PT.clear();engSet(0,false)}else if(OL.pT){OL.pAcc+=now-OL.pT;OL.pT=0}},
@@ -955,6 +986,9 @@ $('itemBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropaga
 $('emo').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!OL.on||!NT)return;const now=performance.now();if(now-OL.emT<1000)return;OL.emT=now;const i=clamp(+b.dataset.e|0,0,3);NT.send({t:'em',i});olEmote(i,true)});
 addEventListener('pointerdown',()=>{if(!AC){ac();if(AC&&$('menu').classList.contains('show'))musStart(108)}},{capture:true});
 addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));
+// closing the tab or navigating away (home button, reload) is leaving: tell the friend at once instead of letting her race a frozen kart for 20 s
+addEventListener('pagehide',()=>{if(NT&&OL.on){OL.bye=true;try{NT.send({t:'bye'})}catch(e){}}});
+addEventListener('pageshow',e=>{if(e.persisted&&OL.bye){OL.bye=false;toMenu()}});
 /* ---------------- main loop ---------------- */
 let lastTs=0,acc=0,hidLast=0,lastRaf=0;
 function frame(ts){requestAnimationFrame(frame);lastRaf=performance.now();G.hidAuto=false;let dt=(ts-lastTs)/1000;lastTs=ts;if(!(dt>0))dt=0;if(dt>.25)dt=.25;acc+=dt;let n=0;while(acc>=STEP&&n<8){tick(STEP);acc-=STEP;n++}if(acc>STEP)acc=0;
@@ -981,7 +1015,7 @@ window.__carrace={NT,OL,G,TRACKS,CUPS,DRIVERS,KARTS,trackInfo,cleanStart,cleanK,
   const i=T.N-5,s=T.S[i];me.x=s.x;me.y=s.y;me.a=me.va=s.th;me.idx=me.prevIdx=i;me.lap=me.maxLap=LAPS-1;me.v=G.vmax;while(me.laps.length<LAPS-1)me.laps.push(G.time/(LAPS-1));me.lapT0=G.time-T.par[G.cc];me.auto=true;return true},
  warp(lap,frac){const T=G.T,me=G.me,i=clamp(Math.round(frac*T.N),0,T.N-1),s=T.S[i];me.x=s.x;me.y=s.y;me.a=me.va=s.th;me.idx=me.prevIdx=i;me.lap=lap;if(lap>me.maxLap)me.maxLap=lap},
  music:()=>MUS.on,
- toMenu,showCups,showTracks,showGarage,pauseGame,resumeGame,setLang,olSnapshot,olSendState,packK};
+ toMenu,showCups,showTracks,showGarage,pauseGame,resumeGame,setLang,olSnapshot,olSendState,packK,tipShow,tipHit};
 /* ---------------- boot ---------------- */
 resize();drawMenu();toMenu();requestAnimationFrame(frame);
 })();
