@@ -121,6 +121,8 @@ body.ol #pauseBtn,body.ol #pawBtn,body.ol #musBtn{display:none}
 .scl{font-weight:900;font-size:clamp(22px,6.5vw,30px)!important;color:#fff}
 #reCard button:disabled{opacity:.55}
 body.ol #n1Weak{top:calc(max(6px,env(safe-area-inset-top)) + 43px);left:8px;right:8px;transform:none;margin:0 auto;width:fit-content;font-size:13px;line-height:1.2;padding:2px 10px;opacity:.93} /* weak-connection pill: one line under the HUD, not over the pieces */
+@media (orientation:portrait) and (max-height:700px){body.ol #n1Weak{top:calc(max(6px,env(safe-area-inset-top)) + 41px);font-size:12px;line-height:1.15;padding:0 10px}}
+@media (max-width:340px){#emo{gap:2px}#emo .ib{min-width:26px;flex-basis:30px}#hud .pill{padding:0 6px}}
 @media (min-width:620px){.desk body.ol #n1Weak{top:calc(max(6px,env(safe-area-inset-top)) + 3px);left:max(106px,calc(50% - 244px));right:max(285px,calc(50% - 65px))}} /* laptop / landscape: in the free middle of the HUD row */
 @media (orientation:landscape) and (max-height:520px){body.ol #n1Weak{top:calc(max(6px,env(safe-area-inset-top)) + 3px);left:106px;right:285px;font-size:12px}}
 @media (max-width:739px) and (max-height:830px){#mHi li:nth-child(n+4){display:none}}
@@ -1137,7 +1139,7 @@ function olRoundEnd(fin){ // both sides: the round is decided (OL.w and OL.lastW
  hudStr="";updateHud();
  if(won){SFX.win();burst(W/2,H/2,"#ffd24a",28,"🎉");G.shake=.4}else if(!OL.dead)SFX.lose();
  showBan(T("you")+" "+OL.w[OL.me]+" : "+OL.w[1-OL.me]+" "+T("friend"),won?T("olWinR"):T("olLoseR"),!won);
- if(fin){NT.setOver(true);setTimeout(()=>{if(OL===o&&OL.on&&!OL.left)olFinish()},1800)}
+ if(fin){NT.setOver(true);olPay();setTimeout(()=>{if(OL===o&&OL.on&&!OL.left)olFinish()},1800)}
 }
 function olState(d){ // guest: the host's word on the match
  if(!int(d.r,1,3)||!int(d.ph,0,3)||!int(d.a,0,2)||!int(d.b,0,2)||!int(d.w,-1,1)||!int(d.cd,0,6000))return;
@@ -1202,15 +1204,17 @@ function sendEmo(i){
  OL.emT=now;NT.send({t:"em",i});olEmo(i,0);SFX.click();
  const b=$("emo");b.classList.add("cool");setTimeout(()=>b.classList.remove("cool"),1000);
 }
+function olPay(){ // rewards for the local player only, through the normal guarded calls; once, at the moment the match is decided
+ if(OL.paid||OL.ph!==3)return;OL.paid=true;
+ const won=OL.lastW===OL.me;
+ if(won&&performance.now()-OL.startAt>20000&&OL.lines>0)award({event:"win"});
+ award({event:"score",score:OL.tot});
+ S.wn[won?0:1]++;save();
+}
 function olFinish(){ // the match is over: each side sees her own result
  if(!OL.on||OL.ph!==3||OL.left)return;
  const won=OL.lastW===OL.me,mine=OL.w[OL.me],hers=OL.w[1-OL.me];
- if(!OL.paid){ // rewards for the local player only, through the normal guarded calls
-  OL.paid=true;
-  if(won&&performance.now()-OL.startAt>20000&&OL.lines>0)award({event:"win"});
-  award({event:"score",score:OL.tot});flush();
-  S.wn[won?0:1]++;save();
- }
+ olPay();flush();
  screen="result";
  $("reCard").innerHTML=`<div class="big">${won?"🏆😺":"😿🧶"}</div><h2>${won?T("olWin"):T("olLose")}</h2><p class="scl"><bdi>${T("you")}</bdi> ${mine} : ${hers} <bdi>${T("friend")}</bdi></p><p id="olMsg">${won?T("olWin2"):T("olLose2")}</p><p>${T("score")}: <b class="cnt" data-n="${OL.tot}">0</b></p><div class="row"><button class="btn g primary" id="rA">${T("olRe")}</button><button class="btn s" id="rM">${T("olQuit")}</button></div>${S.wn[0]>0?`<p class="sub">🏆 ${T("olWins")}: ${S.wn[0]}</p>`:""}`;
  show("result");countUp($("reCard"));if(won)SFX.fanfare();
@@ -1221,7 +1225,9 @@ function olLeft(){ // the friend left (or the connection is gone for good): a ki
  if(!OL.on)return;
  OL.left=true;OL.netp=false;if(G){G.over=true;G.piece=null}
  screen="result";
- $("reCard").innerHTML=`<div class="big">🐾</div><h2 id="olLeftT"></h2><p class="scl"><bdi>${T("you")}</bdi> ${OL.w[OL.me]} : ${OL.w[1-OL.me]} <bdi>${T("friend")}</bdi></p><div class="row"><button class="btn n primary" id="rA">${T("olNew")}</button><button class="btn s" id="rM">${T("menu")}</button></div>`;
+ const dec=OL.ph===3,wonM=OL.lastW===OL.me; // the friend left after the match was decided: the result still counts and is shown
+ if(dec){olPay();flush()}
+ $("reCard").innerHTML=`<div class="big">${dec?(wonM?"🏆😺":"😿🧶"):"🐾"}</div>${dec?`<h2>${wonM?T("olWin"):T("olLose")}</h2><p id="olLeftT"></p>`:`<h2 id="olLeftT"></h2>`}<p class="scl"><bdi>${T("you")}</bdi> ${OL.w[OL.me]} : ${OL.w[1-OL.me]} <bdi>${T("friend")}</bdi></p><div class="row"><button class="btn n primary" id="rA">${T("olNew")}</button><button class="btn s" id="rM">${T("menu")}</button></div>`;
  $("olLeftT").textContent=NT.t("left");show("result");
  $("rA").onclick=()=>{SFX.click();toMenu();NT.showLobby()};
  $("rM").onclick=()=>{SFX.click();toMenu()};
