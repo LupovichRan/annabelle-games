@@ -137,8 +137,9 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
   <div class="chars" id="chars"></div>
   <div class="label" id="tDiff"></div>
   <div class="langs" id="diffRow"></div>
-  <button class="big go" id="playBtn"></button>
+  <div class="row"><button class="big go" id="playBtn"></button><button class="big orange" id="endBtn"></button></div>
   <div class="bestline" id="bestLine"></div>
+  <div class="bestline" id="topLine" style="font-size:15px;color:#7c5cff"></div>
   <div class="label" id="tLvSel"></div>
   <div class="lvsel" id="lvSel"></div>
   <button class="lang padtog" id="padBtn"></button>
@@ -177,6 +178,7 @@ html.desk .title{font-size:clamp(26px,min(8vw,7vh),60px)}
     <h2 id="overTitle"></h2>
     <div class="sub" id="overSub"></div>
     <div class="rec" id="overRec"></div>
+    <div class="sub" id="overTop" style="font-size:16px;line-height:1.35;text-align:center"></div>
     <div class="row"><button class="big go" id="againBtn"></button><button class="big home" id="oMenuBtn"></button></div>
   </div>
 </section>
@@ -543,9 +545,9 @@ const LANGS=[["he","🇮🇱 עברית"],["fr","🇫🇷 Français"],["en","�
 const fmt=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
 const pick=a=>a[Math.random()*a.length|0];
 
-Object.assign(T.he,{diff_hard:"🔥 מאתגר",lvSel:"להתחיל משלב:",music:"מוזיקה",stars:"כוכבים",mapNames:["בית ורוד","גן ירוק","ארמון סגול","שדה שמש","אגם תכלת","מטבח אדום"]});
-Object.assign(T.fr,{diff_hard:"🔥 Défi",lvSel:"Commencer au niveau :",music:"Musique",stars:"Étoiles",mapNames:["Maison rose","Jardin vert","Palais violet","Champ de soleil","Lac bleu","Cuisine rouge"]});
-Object.assign(T.en,{diff_hard:"🔥 Challenge",lvSel:"Start at level:",music:"Music",stars:"Stars",mapNames:["Pink house","Green garden","Purple palace","Sunny field","Blue lake","Red kitchen"]});
+Object.assign(T.he,{endBtn:"♾️ אינסופי",endS:"הגעת לשלב {n} · ניקוד: {s}",topT:"🏆 טבלת שיאים",rank:"מקום {r} בטבלה! 🏆",retryLv:"🔁 שלב {n} שוב",lvBonus:"בונוס שלב! +{b}",rKey:"R – מחדש",diff_hard:"🔥 מאתגר",lvSel:"להתחיל משלב:",music:"מוזיקה",stars:"כוכבים",mapNames:["בית ורוד","גן ירוק","ארמון סגול","שדה שמש","אגם תכלת","מטבח אדום"]});
+Object.assign(T.fr,{endBtn:"♾️ Sans fin",endS:"Tu as atteint le niveau {n} · Score : {s}",topT:"🏆 Meilleurs scores",rank:"Place n°{r} au classement ! 🏆",retryLv:"🔁 Niveau {n} encore",lvBonus:"Bonus de niveau ! +{b}",rKey:"R – rejouer",diff_hard:"🔥 Défi",lvSel:"Commencer au niveau :",music:"Musique",stars:"Étoiles",mapNames:["Maison rose","Jardin vert","Palais violet","Champ de soleil","Lac bleu","Cuisine rouge"]});
+Object.assign(T.en,{endBtn:"♾️ Endless",endS:"You reached level {n} · Score: {s}",topT:"🏆 Top scores",rank:"Rank #{r} on the board! 🏆",retryLv:"🔁 Level {n} again",lvBonus:"Level bonus! +{b}",rKey:"R – retry",diff_hard:"🔥 Challenge",lvSel:"Start at level:",music:"Music",stars:"Stars",mapNames:["Pink house","Green garden","Purple palace","Sunny field","Blue lake","Red kitchen"]});
 /* ============ CONFIG ============ */
 const COLS=15, ROWS=19;
 const THEME=[{wall:"#ffa8cb",edge:"#e8679a",light:"#ffd3e4",floor:"#fff8ef"},{wall:"#86dcbb",edge:"#2fa57d",light:"#c9f3e2",floor:"#f3fff9"},{wall:"#bba6ff",edge:"#7356f0",light:"#e0d7ff",floor:"#fbf8ff"},
@@ -568,12 +570,21 @@ const CHAR_KEYS=["tiger","lion","cat"], CHAR_NEED={tiger:0,lion:1,cat:2};
 const FOES=["vac","bath","dog","spray"];
 const SCATTER=[[COLS-2,-2],[1,-2],[1,ROWS+1],[COLS-2,ROWS+1]];
 const MAXL=5, LIFE_EVERY=1500;
+/* endless: first levels = the chosen difficulty's own levels, then ghosts keep getting faster and power-ups shorter */
+function endLevel(n){ const b=LEVELS[Math.min(n,LEVELS.length-1)], x=Math.max(0,n-LEVELS.length+1), th=LEVELS[n%LEVELS.length];
+  return {...b,maze:th.maze,wall:th.wall,edge:th.edge,light:th.light,floor:th.floor,gSpeed:Math.min(7.2,b.gSpeed+x*.14),fright:Math.max(2.5,b.fright-x*.25),
+    release:b.release.map(v=>v*Math.max(.4,1-x*.08)),duck:b.duck+n*40}; }
+const TOP={key:"annabelle-pacman-top5",
+  get(){ try{ const o=JSON.parse(localStorage.getItem(TOP.key)); return o&&typeof o==="object"?o:{}; }catch(e){ return {}; } },
+  list(d){ const a=TOP.get()[d]; return Array.isArray(a)?a.filter(e=>e&&e.s>0).slice(0,5):[]; },
+  add(d,s,lv){ if(!(s>0)) return 0; const o=TOP.get(), a=TOP.list(d); a.push({s,lv}); a.sort((x,y)=>y.s-x.s); const r=a.findIndex(e=>e.s===s&&e.lv===lv)+1; o[d]=a.slice(0,5); try{ localStorage.setItem(TOP.key,JSON.stringify(o)); }catch(e){} return r<=5?r:0; } };
+let lastRank=0;
 const D4=[{x:0,y:-1},{x:-1,y:0},{x:0,y:1},{x:1,y:0}], Z={x:0,y:0};
 const DK={U:D4[0],L:D4[1],D:D4[2],R:D4[3]};
 
 /* ============ STATE ============ */
 const $=id=>document.getElementById(id);
-const KEYHINT={he:"←↑↓→ / WASD – תנועה · Enter/רווח – אישור · Esc/P – הפסקה · M – שקט",fr:"←↑↓→ / WASD – bouger · Entrée/Espace – valider · Échap/P – pause · M – son",en:"←↑↓→ / WASD – move · Enter/Space – confirm · Esc/P – pause · M – mute"};
+const KEYHINT={he:"←↑↓→ / WASD – תנועה · Enter/רווח – אישור · Esc/P – הפסקה · R – מחדש · M – שקט",fr:"←↑↓→ / WASD – bouger · Entrée/Espace – valider · Échap/P – pause · R – rejouer · M – son",en:"←↑↓→ / WASD – move · Enter/Space – confirm · Esc/P – pause · R – retry · M – mute"};
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!T[lang]) lang="he";
 const LS={best:()=>parseInt(localStorage.getItem("annabelle-pacman-best"))||0,
   done:()=>parseInt(localStorage.getItem("annabelle-pacman-done"))||0,
@@ -582,6 +593,7 @@ const coarse=matchMedia("(pointer:coarse)").matches;
 let padOn=localStorage.getItem("annabelle-pacman-pad")!==null?localStorage.getItem("annabelle-pacman-pad")==="1":coarse;
 let hero=LS.char();
 let state="menu", prevState=null, lvI=0, L=LEVELS[0], score=0, lives=4, nextLife=LIFE_EVERY, sillyT=7, grid=[], pel=[], pelLeft=0, eatenCount=0, door=null, start=null, duckTile=null;
+let endless=false, runLive=false, readyLen=1.9;
 let pl=null, foes=[], duck=null, parts=[], floats=[], lvDeaths=0, startAt=0, bumpShake=0;
 const RW=()=>window.AnnabelleRewards;
 const STARS={get(){ try{ return JSON.parse(localStorage.getItem("annabelle-pacman-stars"))||{}; }catch(e){ return {}; } }, set(o){ try{ localStorage.setItem("annabelle-pacman-stars",JSON.stringify(o)); }catch(e){} },
@@ -700,13 +712,15 @@ const PRIMARY={menu:"playBtn",pause:"resumeBtn",done:"nextBtn",over:"againBtn",w
 function show(id){ ["menu","pause","done","over","win"].forEach(o=>$(o).classList.toggle("show",o===id)); $("pad").style.visibility=id?"hidden":"";
   if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
 let hintTm=0;
-function startGame(){ $("keysPlay").classList.remove("fade"); clearTimeout(hintTm); hintTm=setTimeout(()=>$("keysPlay").classList.add("fade"),9000); window.focus(); score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; if(!(startAt<=LS.done())) startAt=0; try{ RW()&&RW().award({game:"pacman",event:"play"}); }catch(e){} startLevel(startAt); }
-function startLevel(i){ lvI=i; L=LEVELS[i]; lvDeaths=0; loadMaze(); resetActors(); parts=[]; floats=[]; stopConfetti();
+function startGame(from){ runLive=true; lastRank=0; $("keysPlay").classList.remove("fade"); clearTimeout(hintTm); hintTm=setTimeout(()=>$("keysPlay").classList.add("fade"),9000); window.focus(); score=0; lives=PRESETS[diff].lives; nextLife=LIFE_EVERY; sillyT=7; if(!(startAt<=LS.done())) startAt=0; try{ RW()&&RW().award({game:"pacman",event:"play"}); }catch(e){} readyLen=1.9; startLevel(endless?0:(typeof from==="number"&&from<=LS.done()?from:startAt)); }
+function startLevel(i){ lvI=i; L=endless?endLevel(i):LEVELS[i]; lvDeaths=0; loadMaze(); resetActors(); parts=[]; floats=[]; stopConfetti();
   state="ready"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); SFX.ready(); }
 function levelComplete(){ state="dance"; stateT=0; frightT=0; pl.huge=0; SFX.dance(); toast(T[lang].yum,"#34c47c");
   foes.forEach(f=>{ const p=fpos(f); for(let i=0;i<10;i++) parts.push({x:p.x,y:p.y,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:.6,max:.6,col:"#fff",r:.15}); });
-  saveBest(); }
+  if(!endless) saveBest(); }
 function afterDance(){
+  if(endless){ const b=500+lvI*50; score+=b; try{ const R=RW(); if(R){ R.award({game:"pacman",event:"levelClear",level:lvI+1,score}); R.award({game:"pacman",event:"score",score}); } }catch(e){}
+    readyLen=1.2; startLevel(lvI+1); toast(fmt(T[lang].lvBonus,{b}),"#34c47c"); return; }
   const t=T[lang], prevDone=LS.done(); const stars=lvDeaths===0?3:lvDeaths===1?2:1; const newStar=STARS.save(diff,lvI,stars);
   try{ const R=RW(); if(R){ R.award({game:"pacman",event:"levelClear",level:lvI+1,score}); R.award({game:"pacman",event:"star",stars}); R.award({game:"pacman",event:"score",score}); } }catch(e){} if(prevDone<lvI+1) localStorage.setItem("annabelle-pacman-done",lvI+1);
   const newChar=CHAR_KEYS.find(k=>CHAR_NEED[k]===lvI+1&&prevDone<lvI+1);
@@ -721,10 +735,15 @@ let recFlag=false;
 function saveBest(){ if(score>LS.best()){ localStorage.setItem("annabelle-pacman-best",score); recFlag=true; } return recFlag; }
 function die(f){ lvDeaths++; shakeAmt=9; state="dying"; stateT=0; stats.deaths++; wetBy=f.k; frightT=0; pl.huge=0; SFX.splash(); toast(T[lang].wet[f.k],"#3fa9ff"); }
 function afterDeath(){ lives--; updateHUD();
-  if(lives<=0){ state="over"; const t=T[lang], rec=saveBest(); $("overHero").innerHTML=face(HERO[hero].face); $("overTitle").textContent=t.overT; $("overSub").textContent=fmt(t.overS,{s:score});
-    $("overRec").textContent=rec?t.rec:""; $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu; show("over"); SFX.tryagain(); try{ const R=RW(); if(R){ R.award({game:"pacman",event:"score",score}); R.flush(); } }catch(e){} return; }
-  resetActors(); state="ready"; stateT=0; SFX.ready(); }
-function toMenu(){ MUS.stop(); state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("pad").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); recFlag=false; renderMenu(); show("menu"); }
+  if(lives<=0){ state="over"; runLive=false; const t=T[lang]; let rec;
+    if(endless){ lastRank=TOP.add(diff,score,lvI+1); rec=false; } else rec=saveBest();
+    $("overHero").innerHTML=face(HERO[hero].face); $("overTitle").textContent=t.overT; $("overSub").textContent=endless?fmt(t.endS,{s:score,n:lvI+1}):fmt(t.overS,{s:score});
+    $("overRec").textContent=endless?(lastRank?fmt(t.rank,{r:lastRank}):""):(rec?t.rec:""); $("overTop").innerHTML=endless?topHTML(t):"";
+    $("againBtn").textContent=endless?t.again:fmt(t.retryLv,{n:lvI+1}); $("oMenuBtn").textContent=t.menu; show("over"); SFX.tryagain(); try{ const R=RW(); if(R){ R.award({game:"pacman",event:"score",score}); R.flush(); } }catch(e){} return; }
+  resetActors(); readyLen=1.1; state="ready"; stateT=0; SFX.ready(); }
+function topHTML(t){ const a=TOP.list(diff); if(!a.length) return ""; return "<b>"+t.topT+"</b><br>"+a.map((e,i)=>`<span style="${i+1===lastRank?"color:#e8487f;font-weight:900":""}" dir="ltr">${i+1}. ${e.s} · ${t.lv} ${e.lv}</span>`).join("<br>"); }
+function endRun(){ if(endless&&runLive&&score>0){ TOP.add(diff,score,lvI+1); } runLive=false; }
+function toMenu(){ endRun(); MUS.stop(); state="menu"; stopConfetti(); $("hud").classList.add("hidden"); $("pad").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); recFlag=false; renderMenu(); show("menu"); }
 function pause(){ if(["play","ready","dying","dance"].includes(state)){ prevState=state; state="paused"; show("pause"); } }
 function resume(){ if(state==="paused"){ state=prevState; show(null); } }
 
@@ -733,13 +752,13 @@ function update(dt){
   gtime+=dt; if(pl){ pl.squash=Math.max(0,pl.squash-dt*4); pl.roar=Math.max(0,pl.roar-dt); }
   parts.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=(p.g||0)*dt; p.life-=dt; }); parts=parts.filter(p=>p.life>0);
   floats.forEach(f=>{ f.y-=dt*.9; f.life-=dt; }); floats=floats.filter(f=>f.life>0);
-  if(state==="ready"){ stateT+=dt; foes.forEach(f=>{ if(f.st==="home") f.y=door.r+1+Math.sin((f.t+=dt)*5)*.18; }); if(stateT>1.9){ state="play"; } return; }
+  if(state==="ready"){ stateT+=dt; foes.forEach(f=>{ if(f.st==="home") f.y=door.r+1+Math.sin((f.t+=dt)*5)*.18; }); if(stateT>readyLen){ state="play"; } return; }
   if(state==="dying"){ stateT+=dt; const p=ppos(pl);
     if(stateT<.5&&Math.random()<.7) parts.push({x:p.x+(Math.random()-.5)*.8,y:p.y-.9,vx:(Math.random()-.5)*.6,vy:4+Math.random()*2,life:.4,max:.4,col:"#5ab8ff",r:.08,drop:1});
     if(stateT>1.5&&stateT<2.3){ if(Math.random()<.8) parts.push({x:p.x,y:p.y,vx:(Math.random()-.5)*9,vy:-Math.random()*5,g:14,life:.55,max:.55,col:"#5ab8ff",r:.07,drop:1});
       if(!pl.shook){ pl.shook=1; SFX.shake(); addFloat(p.x,p.y-.8,T[lang].shake,"#3fa9ff",1); } }
     if(stateT>2.6){ pl.shook=0; afterDeath(); } return; }
-  if(state==="dance"){ stateT+=dt; const p=ppos(pl); if(Math.random()<dt*6) parts.push({x:p.x+(Math.random()-.5),y:p.y-.5,vx:(Math.random()-.5),vy:-1.5,life:1,max:1,col:"#7c5cff",r:.2,note:1}); if(stateT>2.6) afterDance(); return; }
+  if(state==="dance"){ stateT+=dt; const p=ppos(pl); if(Math.random()<dt*6) parts.push({x:p.x+(Math.random()-.5),y:p.y-.5,vx:(Math.random()-.5),vy:-1.5,life:1,max:1,col:"#7c5cff",r:.2,note:1}); if(stateT>(endless?1.4:2.6)) afterDance(); return; }
   if(state!=="play") return;
   if(freezeT>0){ freezeT-=dt; return; }
   relClock+=dt;
@@ -1015,7 +1034,7 @@ function render(){
 
 /* ============ HUD / UI ============ */
 function updateHUD(){ if(score>=nextLife){ nextLife+=LIFE_EVERY; if(lives<MAXL){ lives++; SFX.dance(); toast(T[lang].extra,"#ff4d8d"); } }
-  $("score").textContent=score; $("lvNum").textContent=(lvI+1)+"/"+LEVELS.length;
+  $("score").textContent=score; $("lvNum").textContent=endless?"♾️ "+(lvI+1):(lvI+1)+"/"+LEVELS.length;
   $("lives").innerHTML=Array.from({length:MAXL},(_,i)=>i<lives?face(HERO[hero].face):`<svg viewBox="0 0 100 100" style="opacity:.25">${face(HERO[hero].face).replace(/^<svg[^>]*>|<\/svg>$/g,"")}</svg>`).join(""); }
 let toastT=null;
 function toast(txt,col){ const el=$("toast"); el.textContent=txt; el.dir="auto"; el.style.boxShadow=`0 0 0 4px ${col},0 6px 0 #0002`; el.style.color=col; el.style.top=(MY+TS*.4)+"px";
@@ -1030,7 +1049,7 @@ function renderMenu(){ const t=T[lang], done=LS.done();
   if(!(startAt<=done)) startAt=0;
   $("tLvSel").textContent=t.lvSel; $("lvSel").innerHTML=LEVELS.map((l,i)=>{ const lock=i>done, st=STARS.of(diff,i); return `<button class="lvb ${i===startAt?"sel":""} ${lock?"locked":""}" data-lv="${i}" title="${t.mapNames[i]}" style="--w:${l.wall};--e:${l.edge}"><b>${lock?"🔒":i+1}</b><small>${lock?"":"★".repeat(st)+"<i>"+"★".repeat(3-st)+"</i>"}</small></button>`; }).join("");
   $("musBtn").textContent=$("musBtn2").textContent=`🎵 ${t.music} ${MUS.on?"✅":"⬜"}`;
-  const b=LS.best(); $("bestLine").textContent=b?`🏆 ${t.best}: ${b}`:"";
+  const b=LS.best(); $("bestLine").textContent=b?`🏆 ${t.best}: ${b}`:""; $("endBtn").textContent=t.endBtn; { const a=TOP.list(diff); $("topLine").textContent=a.length?`♾️ ${a.map(e=>e.s).join(" · ")}`:""; }
   $("foes").innerHTML=FOES.map(k=>`<div class="foe"><canvas data-foe="${k}" width="136" height="136"></canvas><span>${t.foes[k]}</span></div>`).join("");
   document.querySelectorAll("[data-foe]").forEach(c=>{ const x=c.getContext("2d"), og=g; g=x; x.translate(68,72); drawFoe(c.dataset.foe,44,{t:1,face:1}); g=og; }); }
 document.addEventListener("click",e=>{
@@ -1040,13 +1059,14 @@ document.addEventListener("click",e=>{
   if(l){ lang=l.dataset.lang; localStorage.setItem("annabelle-lang",lang); SFX.click(); applyLang(); }
   if(ch){ const k=ch.dataset.ch; if(LS.done()>=CHAR_NEED[k]){ hero=k; localStorage.setItem("annabelle-pacman-char",k); SFX.meow(); renderMenu(); } else SFX.boing(); }
 });
-$("playBtn").onclick=()=>{ ac(); SFX.click(); startGame(); };
+$("playBtn").onclick=()=>{ ac(); SFX.click(); endless=false; startGame(); };
+$("endBtn").onclick=()=>{ ac(); SFX.click(); endless=true; startGame(); };
 $("pauseBtn").onclick=()=>{ SFX.click(); pause(); };
 $("resumeBtn").onclick=()=>{ SFX.click(); resume(); };
-$("restartBtn").onclick=()=>{ SFX.click(); startGame(); };
+$("restartBtn").onclick=()=>{ SFX.click(); endRun(); startGame(); };
 $("pMenuBtn").onclick=$("oMenuBtn").onclick=$("wMenuBtn").onclick=()=>{ SFX.click(); toMenu(); };
 $("nextBtn").onclick=()=>{ SFX.click(); startLevel(lvI+1); };
-$("againBtn").onclick=$("wAgainBtn").onclick=()=>{ SFX.click(); recFlag=false; startGame(); };
+$("againBtn").onclick=$("wAgainBtn").onclick=e=>{ SFX.click(); recFlag=false; startGame(e&&e.currentTarget&&e.currentTarget.id==="againBtn"?lvI:undefined); };
 $("musBtn").onclick=$("musBtn2").onclick=()=>{ ac(); MUS.on=!MUS.on; try{ localStorage.setItem("annabelle-music",MUS.on?"1":"0"); }catch(e){} SFX.click(); if(!MUS.on) MUS.stop(); renderMenu(); };
 $("padBtn").onclick=$("padBtn2").onclick=()=>{ SFX.click(); padOn=!padOn; localStorage.setItem("annabelle-pacman-pad",padOn?"1":"0"); updatePadBtn(); layout(); };
 function updatePadBtn(){ $("padBtn").textContent=$("padBtn2").textContent=`🎮 ${T[lang].pad} ${padOn?"✅":"⬜"}`; }
@@ -1066,13 +1086,14 @@ addEventListener("keydown",e=>{
   if(k&&state!=="menu"){ e.preventDefault(); ac(); if(state!=="paused") setDir(k); return; }
   if(e.code==="KeyM"&&!e.repeat){ muted=!muted; localStorage.setItem("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); return; }
   if(e.repeat) return;
+  if(e.code==="KeyR"&&(state==="paused"||state==="over"||state==="win"||state==="done")){ e.preventDefault(); ac(); SFX.click(); if(state==="paused") endRun(); recFlag=false; startGame(state==="over"?lvI:undefined); return; }
   if(e.code==="KeyP"||e.code==="Escape"){ e.preventDefault();
     if(state==="paused") resume();
     else if(state==="done"||state==="over"||state==="win") toMenu();
     else if(state!=="menu") pause(); return; }
   if((e.code==="Enter"||e.code==="Space")&&!onBtn){ e.preventDefault(); ac();
     if(state==="menu") startGame(); else if(state==="paused") resume(); else if(state==="done") startLevel(lvI+1);
-    else if(state==="over"||state==="win"){ recFlag=false; startGame(); } }
+    else if(state==="over"||state==="win"){ recFlag=false; startGame(state==="over"?lvI:undefined); } }
 });
 addEventListener("blur",()=>{ if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) pause(); });
 cv.addEventListener("contextmenu",e=>e.preventDefault());
