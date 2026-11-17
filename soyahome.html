@@ -659,7 +659,7 @@ function updateFoot(dt){ const f=G.foot; if(f.bit>0){ f.bit-=dt; if(f.bit<=0) fo
 /* ================= Flow ================= */
 let last=performance.now();
 function loop(now){ const dt=Math.min(.05,(now-last)/1000); last=now;
- if(running&&!paused&&!ending){ G.t+=dt; updateSoya(dt); updatePebs(dt); updateFoot(dt); hud(); if(G.t>=ROUND){ ending=true; finish(true); } }
+ if(running&&!paused&&!ending){ G.t+=dt; updateSoya(dt); updatePebs(dt); updateFoot(dt); hud(); if(G.t>=ROUND&&!window.__endless){ ending=true; finish(true); } }
  requestAnimationFrame(loop); }
 function show(id,on){ $(id).classList.toggle('show',on); }
 function start(){ ac(); SFX.click(); show('menu',false); show('end',false); show('pause',false); newGame(); running=true; paused=false; ending=false; pop(L.W/2,L.H*.35,T[lang].ready,true); setTimeout(()=>meow(1),200); }
@@ -1021,6 +1021,103 @@ setInterval(()=>{ if(muted||!musOn||!running||paused||ending||document.hidden) r
 const al4=applyLang; applyLang=function(){ al4(); try{ addHardBtn(); drawDaily(); drawMus(); showMod(); }catch(e){} };
 drawDaily(); drawMus(); applyLang();
 window.__sh2={hard:()=>hardOn,daily:()=>dailyOn,mod:dmod,setDaily:v=>{dailyOn=v;drawDaily();},streak:()=>streak};
+})();
+</script>
+<style>
+/* ===== endless mode + badge collection (added) ===== */
+#menu{overflow-y:auto;justify-content:safe center;-webkit-overflow-scrolling:touch}
+#musPick{gap:6px;flex-wrap:wrap}
+#musPick #endlessBtn,#musPick #shelfBtn{min-height:44px;padding:6px 14px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px;max-width:94vw}
+#endlessBtn.on{background:#fff;box-shadow:0 0 0 3px #7a4fd6}
+#shelf{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:min(94vw,420px);margin:2px auto}
+#shelf,#shelfInfo{display:none}#shelf.open,#shelfInfo.open{display:flex}#shelfInfo.open{display:block}
+#shelfBtn{min-height:44px;padding:6px 14px;border-radius:16px;background:#fff8;font-weight:800;font-size:15px}#shelfBtn.on{background:#fff;box-shadow:0 0 0 3px #7a4fd6}
+#shelf button{width:40px;height:40px;border-radius:12px;background:#fff9;font-size:21px;line-height:1;padding:0}
+#shelf button.lk{filter:grayscale(1) opacity(.4)}
+#shelf button.sel{box-shadow:0 0 0 3px #7a4fd6;background:#fff}
+#shelfInfo{font-size:14px;font-weight:700;min-height:20px;max-width:min(94vw,420px);margin:0 auto 4px}
+#endTop{font-size:15px;font-weight:700;direction:ltr;margin:4px auto;max-width:300px;display:none}
+#endTop div{display:flex;justify-content:space-between;gap:10px;padding:1px 10px;border-radius:10px}
+#endTop div.me{background:#fff3c4;font-weight:900}
+#endTop h4{margin:2px 0;font-size:14px;direction:inherit}
+#endNew{font-weight:900;font-size:15px;display:none}
+#etimer{position:absolute;top:6px;inset-inline-end:8px;z-index:60;background:#fff;border-radius:999px;padding:2px 10px;font-weight:900;font-size:14px;box-shadow:0 2px 0 #0002;display:none}
+html.desk #endlessBtn:hover{transform:translateY(-2px)}
+html.desk #endlessBtn:focus-visible,html.desk #shelf button:focus-visible{outline:4px solid #2a8fd0;outline-offset:3px}
+</style>
+<script>
+(()=>{
+const KT='soyahome-endless-top5', KB='soyahome-badges';
+const aw=o=>{ try{ const r=window.AnnabelleRewards; if(r) r.award(Object.assign({game:'soyahome'},o)); }catch(e){} };
+const lsj=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
+const lss=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+const X={
+ he:{endless:'♾ אינסופי',endlessOn:'♾ אינסופי ✓',endT:'♾ החזקת מעמד {t}!',endS:'סויה לא מפסיק! עוד פעם – אפשר לשבור את השיא!',top:'🏆 5 הטובים ביותר',
+  shelf:'🏅 {n}/{m}',endlessNote:'♾ מצב אינסופי: 3 חיים, בלי סוף – כל דקה סויה מהיר יותר!',got:'🏅 תג חדש: {b}!',locked:'🔒 עוד לא נפתח: ',newB:'תגים חדשים: {l}',
+  B:{streak10:['🔥','רצף 10','להרחיק את סויה 10 פעמים ברצף בלי טעות'],streak25:['🌋','רצף 25','25 פעמים ברצף בלי טעות'],pebs20:['🗿','אוספת אבנים','להחזיר 20 אבנים לעציץ במשחק אחד'],dodge8:['🦶','רגל זריזה','להתחמק מ-8 קפיצות על הרגל במשחק אחד'],clean:['⭐','בית נקי','לנצח בלי אף טעות (3 כוכבים)'],normal:['🐱','אמיצה','לנצח ברמה רגיל'],hard:['🐯','נמרה','לנצח ברמה קשה'],kit:['🍳','שפית','לנצח במטבח'],bed:['🛏️','ישנונית','לנצח בחדר השינה'],e90:['♾','עמידה','להחזיק 90 שניות במצב אינסופי'],e180:['🚀','סופרת-על','להחזיק 3 דקות במצב אינסופי'],s1000:['💯','אלפית','להגיע ל-1000 נקודות במשחק אחד']}},
+ fr:{endless:'♾ Sans fin',endlessOn:'♾ Sans fin ✓',endT:'♾ Tu as tenu {t} !',endS:'Soya ne s’arrête jamais ! Encore une fois : bats ton record !',top:'🏆 Les 5 meilleurs',
+  shelf:'🏅 {n}/{m}',endlessNote:'♾ Mode sans fin : 3 vies, pas de limite – Soya accélère !',got:'🏅 Nouveau badge : {b} !',locked:'🔒 Pas encore débloqué : ',newB:'Nouveaux badges : {l}',
+  B:{streak10:['🔥','Série de 10','Éloigner Soya 10 fois de suite sans erreur'],streak25:['🌋','Série de 25','25 fois de suite sans erreur'],pebs20:['🗿','Collectionneuse','Remettre 20 cailloux dans le pot en une partie'],dodge8:['🦶','Pied agile','Esquiver 8 sauts sur le pied en une partie'],clean:['⭐','Maison nickel','Gagner sans aucune erreur (3 étoiles)'],normal:['🐱','Courage','Gagner en niveau Normal'],hard:['🐯','Tigresse','Gagner en niveau Difficile'],kit:['🍳','Cheffe','Gagner dans la cuisine'],bed:['🛏️','Dormeuse','Gagner dans la chambre'],e90:['♾','Endurance','Tenir 90 secondes en mode sans fin'],e180:['🚀','Super championne','Tenir 3 minutes en mode sans fin'],s1000:['💯','Millième','Atteindre 1000 points en une partie']}},
+ en:{endless:'♾ Endless',endlessOn:'♾ Endless ✓',endT:'♾ You lasted {t}!',endS:'Soya never stops! Go again and beat your best!',top:'🏆 Top 5',
+  shelf:'🏅 {n}/{m}',endlessNote:'♾ Endless: 3 lives, no finish line – Soya gets faster and faster!',got:'🏅 New badge: {b}!',locked:'🔒 Not unlocked yet: ',newB:'New badges: {l}',
+  B:{streak10:['🔥','Streak 10','Shoo Soya 10 times in a row with no mistakes'],streak25:['🌋','Streak 25','25 in a row with no mistakes'],pebs20:['🗿','Pebble collector','Put 20 pebbles back in one game'],dodge8:['🦶','Quick foot','Dodge 8 toe pounces in one game'],clean:['⭐','Spotless','Win with no mistakes (3 stars)'],normal:['🐱','Brave','Win on Normal'],hard:['🐯','Tigress','Win on Hard'],kit:['🍳','Chef','Win in the kitchen'],bed:['🛏️','Sleepyhead','Win in the bedroom'],e90:['♾','Stamina','Last 90 seconds in Endless'],e180:['🚀','Super star','Last 3 minutes in Endless'],s1000:['💯','Thousand','Reach 1000 points in one game']}}};
+const x=()=>X[lang]||X.he;
+const IDS=Object.keys(X.en.B);
+let have=lsj(KB,{}); if(!have||typeof have!=='object') have={};
+let endlessOn=false, runNew=[];
+const mm=(t)=>{ t=Math.floor(t); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
+const diffNow=()=>{ try{ if(window.__sh2&&window.__sh2.hard()) return 'hard'; }catch(e){} try{ return localStorage.getItem('soyahome-diff')==='normal'?'normal':'easy'; }catch(e){ return 'easy'; } };
+// --- menu UI ---
+const mp=document.getElementById('musPick'), eb=document.createElement('button'); eb.id='endlessBtn'; mp.appendChild(eb);
+const shelf=document.createElement('div'); shelf.id='shelf'; const info=document.createElement('div'); info.id='shelfInfo';
+const sb=document.createElement('button'); sb.id='shelfBtn'; mp.appendChild(sb);
+const bestEl=document.getElementById('best'); bestEl.before(shelf); bestEl.before(info);
+let sel=null;
+let opened=false;
+function drawShelf(){ const n=IDS.filter(i=>have[i]).length; sb.textContent=x().shelf.replace('{n}',n).replace('{m}',IDS.length); sb.className=opened?'on':''; shelf.classList.toggle('open',opened); info.classList.toggle('open',opened); shelf.innerHTML=IDS.map(i=>`<button data-b="${i}" class="${have[i]?'':'lk'}${sel===i?' sel':''}" aria-label="${x().B[i][1]}">${x().B[i][0]}</button>`).join('');
+ info.textContent=sel?(have[sel]?'':x().locked)+x().B[sel][1]+' – '+x().B[sel][2]:(endlessOn?x().endlessNote:''); if(endlessOn&&!sel&&opened===false) info.classList.add('open'); }
+sb.onclick=()=>{ opened=!opened; try{ SFX.click(); }catch(err){} drawShelf(); };
+shelf.onclick=e=>{ const b=e.target.closest('[data-b]'); if(!b) return; sel=sel===b.dataset.b?null:b.dataset.b; try{ SFX.click(); }catch(err){} drawShelf(); };
+function drawEndless(){ eb.className=endlessOn?'on':''; eb.textContent=endlessOn?x().endlessOn:x().endless; }
+eb.onclick=()=>{ endlessOn=!endlessOn; drawShelf(); if(endlessOn){ try{ window.__sh2.setDaily(false); }catch(e){} } try{ SFX.click(); }catch(err){} drawEndless(); };
+const dbtn=document.getElementById('dailyBtn'); if(dbtn) dbtn.addEventListener('click',()=>{ if(endlessOn&&window.__sh2&&window.__sh2.daily()){ endlessOn=false; drawEndless(); } });
+const et=document.createElement('div'); et.id='etimer'; document.getElementById('stage').appendChild(et);
+// --- end card UI ---
+const top=document.createElement('div'); top.id='endTop'; const nw=document.createElement('p'); nw.id='endNew';
+document.getElementById('endBest').after(top); top.after(nw);
+// --- badges ---
+function grant(id){ if(have[id]) return; have[id]=1; lss(KB,have); runNew.push(id); drawShelf();
+ try{ pop(L.W/2,L.H*.22,x().got.replace('{b}',x().B[id][0]+' '+x().B[id][1]),true); SFX.good(); }catch(e){} aw({event:'star',stars:1}); }
+// --- endless: no finish line, keeps ramping, 3 lives ---
+const ROUNDX=120;
+const wr=(n,f)=>{ const o=P[n]; P[n]=()=>o()*f(); };
+const ov=()=>(window.__endless&&G&&G.t>ROUNDX)?1+Math.min(.5,(G.t-ROUNDX)/240):1;
+wr('speed',()=>ov()); wr('warn',()=>1/ov()); wr('idle',()=>1/ov()); wr('chew',()=>1/ov()); wr('push',()=>1/ov()); wr('peb',()=>1/Math.sqrt(ov()));
+const D5=D; D=function(){ const d=D5(); return (window.__endless&&G&&G.t>ROUNDX)?Math.min(1,d+(G.t-ROUNDX)/240):d; };
+const ng=newGame; newGame=function(){ ng(); window.__endless=endlessOn; runNew=[]; G.pb=0; G.dg=0;
+ if(endlessOn){ MAXMISS=3; G.miss=0; G.nextLife=1e9; } et.style.display=endlessOn?'block':'none'; hud(); };
+const hu=hud; hud=function(){ hu(); if(window.__endless&&G){ et.textContent='♾ '+mm(G.t); $('timeBar').style.width='100%'; } };
+// --- in-run badge tracking ---
+const sh=shoo; shoo=function(){ sh.apply(this,arguments); try{ const s=window.__sh2.streak(); if(s>=10) grant('streak10'); if(s>=25) grant('streak25'); }catch(e){} };
+const rp=returnPeb; returnPeb=function(p){ const was=p&&p.state==='floor'; rp(p); if(was&&G){ G.pb++; if(G.pb>=20) grant('pebs20'); } };
+const sm=SFX.miss; SFX.miss=function(){ sm.apply(this,arguments); if(G&&running){ G.dg++; if(G.dg>=8) grant('dodge8'); } };
+const ad=addScore; addScore=function(){ ad.apply(this,arguments); if(G&&G.score>=1000) grant('s1000'); };
+// --- end of run ---
+const fn=finish; finish=function(win){ const pb=localStorage.getItem(BEST_KEY), er=!!window.__endless, r0=+window.__room||0; fn(win);
+ const t=x(), tm=G.t, sc=G.score, d=diffNow();
+ if(win&&!er){ if(G.miss===0) grant('clean'); if(d==='normal') grant('normal'); if(d==='hard') grant('hard'); if(r0===1) grant('kit'); if(r0===2) grant('bed'); if(sc>=1000) grant('s1000'); }
+ top.style.display='none'; nw.style.display='none';
+ if(er){ try{ if(pb==null) localStorage.removeItem(BEST_KEY); else localStorage.setItem(BEST_KEY,pb); }catch(e){}
+  if(tm>=90) grant('e90'); if(tm>=180) grant('e180');
+  let tb=lsj(KT,[]); if(!Array.isArray(tb)) tb=[]; const me={s:sc,t:Math.floor(tm),d:d}; tb.push(me); tb.sort((a,b)=>(b.s-a.s)||(b.t-a.t)); const idx=tb.indexOf(me); tb=tb.slice(0,5); lss(KT,tb);
+  $('endEmo').textContent=idx>=0&&idx<5?(idx===0?'🏆':'🎖️'):'😺'; $('endTitle').textContent=t.endT.replace('{t}',mm(tm)); $('endSub').textContent=t.endS; $('endTip').style.display='none';
+  $('endBest').textContent=idx===0?T[lang].newBest:fmt(T[lang].bestL,{n:tb[0].s});
+  const ico={easy:'🐣',normal:'🐱',hard:'🐯'}; top.innerHTML='<h4>'+t.top+'</h4>'+tb.map((r,i)=>`<div class="${i===idx?'me':''}"><span>${i+1}.</span><span>${r.s} ⭐</span><span>${mm(r.t)}</span><span>${ico[r.d]||''}</span></div>`).join(''); top.style.display='block'; }
+ if(runNew.length){ nw.textContent=t.newB.replace('{l}',runNew.map(i=>t.B[i][0]+' '+t.B[i][1]).join(', ')); nw.style.display='block'; }
+ };
+const al=applyLang; applyLang=function(){ al(); drawEndless(); drawShelf(); };
+drawEndless(); drawShelf();
+window.__sh3={endless:()=>endlessOn,setEndless:v=>{endlessOn=v;drawEndless();},badges:()=>have,top:()=>lsj(KT,[])};
 })();
 </script>
 </body>
