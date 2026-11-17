@@ -11,7 +11,7 @@
 html,body{margin:0;height:100%;overflow:hidden;background:#efe3ff;font-family:"Rubik","Varela Round",Arial,sans-serif;color:#3d2766;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
 .screen.active{display:flex}
-#menu{justify-content:center;gap:10px;padding:10px;overflow:auto}
+#menu{justify-content:safe center;gap:10px;padding:10px;overflow:auto}
 h1{margin:0;font-size:clamp(26px,7vw,40px);color:#8a4fd8;text-shadow:0 3px 0 #0001;text-align:center}
 .heads{font-size:38px;line-height:1}
 .langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -135,6 +135,19 @@ button.chip{min-height:44px;cursor:pointer}button.chip.sel{background:#8a4fd8;co
 #num.rolling{filter:blur(1px);color:#8a4fd8}
 .mascot2{font-size:46px;line-height:1;animation:flo 1.2s ease-in-out infinite alternate}
 @media (prefers-reduced-motion:reduce){.hat,.float,.mascot2{animation:none}}
+/* speed challenge */
+.tbar{width:100%;max-width:900px;height:12px;border-radius:8px;background:#e7dcf7;overflow:hidden;margin:6px 0 0;flex:0 0 auto}.tbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#2fb36a,#ffb35c);border-radius:8px}.tbar.low i{background:#e23b3b}
+#aFx{min-height:26px;font-weight:900;font-size:19px;color:#e8862d;text-align:center;margin-top:2px;flex:0 0 auto}#aFx.bad{color:#e23b3b}
+#aTarget{font-size:clamp(84px,24vw,130px);font-weight:900;line-height:1;color:#e8862d;text-shadow:0 5px 0 #0002;direction:ltr;margin:2px 0;flex:0 0 auto}
+#aTarget.pop{animation:np .35s cubic-bezier(.2,1.6,.4,1)}#aTarget.shake{animation:shk .35s}@keyframes shk{20%{transform:translateX(-14px)}40%{transform:translateX(14px)}60%{transform:translateX(-9px)}80%{transform:translateX(9px)}}
+#aSum{background:#fff;border-radius:14px;padding:6px 14px;font-weight:900;font-size:22px;direction:ltr;box-shadow:0 3px 0 #0001;min-width:120px;text-align:center;color:#3d2766;flex:0 0 auto}
+.keys{display:grid;grid-template-columns:repeat(var(--kc,4),1fr);gap:10px;width:min(94vw,480px);padding:12px 4px;flex:0 0 auto}
+.kb{min-height:72px;border-radius:18px;border:4px solid var(--c);background:#fff;font:900 30px Rubik,Arial;color:#3d2766;box-shadow:0 5px 0 #0002;direction:ltr}
+.kb.on{background:var(--c);color:#fff;transform:translateY(3px);box-shadow:0 2px 0 #0002}
+.desk .keys{width:min(94vw,640px)}.desk .kb:hover:not(.on){background:#f4ebff}
+.pov{position:fixed;inset:0;z-index:18;background:#0008;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font-size:28px;font-weight:900}.pov.on{display:flex}
+.top5{background:#fff;border-radius:14px;padding:6px 12px;min-width:210px;font-weight:800;font-size:16px;text-align:start;color:#3d2766}.top5 div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}.top5 .me{color:#e8862d}.top5 h4{margin:0 0 2px;font-size:14px;opacity:.75}
+.atkbest{font-size:14px;font-weight:800;opacity:.85;text-align:center}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/magic.webmanifest"><meta name="theme-color" content="#efe3ff"><link rel="icon" type="image/png" sizes="192x192" href="icons/magic-192.png"><meta name="apple-mobile-web-app-title" content="קסם הקלפים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/magic-apple-180.png"><script src="pwa.js" data-app="magic" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#resNav" data-pausemenu="1" data-menu="toMenu" data-relabel=".homeBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -155,7 +168,9 @@ button.chip{min-height:44px;cursor:pointer}button.chip.sel{background:#8a4fd8;co
   <div class="row">
     <button class="big" id="bComp"></button>
     <button class="big o" id="bSelf"></button>
+    <button class="big y" id="bAtk"></button>
   </div>
+  <div class="atkbest" id="atkBest"></div>
   <div class="chips" id="stamps"></div>
   <div class="chips" id="skins"></div>
 </section>
@@ -177,6 +192,19 @@ button.chip{min-height:44px;cursor:pointer}button.chip.sel{background:#8a4fd8;co
   <div class="dots" id="sDots"></div>
   <div class="pickwrap" id="sWrap"></div>
   <div class="yn" id="sBtns"></div>
+</section>
+
+<!-- SPEED CHALLENGE -->
+<section class="screen play" id="atk">
+  <div class="bar"><button class="iconbtn homeBtn" aria-label="menu">🏠</button><div class="pill" id="aInfo"></div><button class="iconbtn" id="aPause" aria-label="pause">⏸</button></div>
+  <div class="tbar" id="aTbar"><i id="aTime"></i></div>
+  <div class="say" id="aSay"></div>
+  <div id="aTarget">?</div>
+  <div id="aSum"></div>
+  <div id="aFx"></div>
+  <div class="keys" id="aKeys"></div>
+  <div class="yn" id="aBtns"></div>
+  <div class="pov" id="aPov"><div id="aPovT"></div><button class="big" id="aPovB"></button></div>
 </section>
 
 <!-- RESULT -->
@@ -242,7 +270,22 @@ const TX={
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang="he";try{lang=localStorage.getItem("annabelle-lang")||"he"}catch(e){} if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
+const AXT={
+ he:{btn:"⚡ אתגר מהירות",rule:"⚡ אתגר: בני מספרים מהמפתחות – 60 שניות, טעות = −3 שנ׳!",ask:"בני את המספר מהמפתחות",clear:"↺ נקי",
+  time:"⏱",bad:"טעות! −3 שנ׳",combo:"🔥 רצף {n}!",tier:"🔓 עכשיו עד {n}!",paused:"⏸ מושהה",cont:"המשך ▶",over:"הזמן נגמר!",score:"ניקוד",solved:"מספרים",
+  nb:"🏆 שיא חדש!",top:"🏆 חמשת הטובים",best:"שיא",again:"🔁 עוד סיבוב",hint:"💡 קחי את המפתח הכי גדול שנכנס, ואז הבא…",
+  k_atk:"<kbd>1</kbd>–<kbd>7</kbd> מפתחות 1, 2, 4, 8…<br><kbd>Backspace</kbd> ניקוי<br><kbd>P</kbd> השהיה<br><kbd>Esc</kbd> תפריט",k3:"<kbd>3</kbd> אתגר מהירות<br>"},
+ fr:{btn:"⚡ Défi vitesse",rule:"⚡ Défi : construis les nombres avec les clés – 60 s, erreur = −3 s !",ask:"Construis le nombre avec les clés",clear:"↺ Effacer",
+  time:"⏱",bad:"Raté ! −3 s",combo:"🔥 Série {n} !",tier:"🔓 Maintenant jusqu'à {n} !",paused:"⏸ Pause",cont:"Continuer ▶",over:"Temps écoulé !",score:"Score",solved:"nombres",
+  nb:"🏆 Nouveau record !",top:"🏆 Top 5",best:"Record",again:"🔁 Encore une manche",hint:"💡 Prends la plus grande clé qui rentre, puis la suivante…",
+  k_atk:"<kbd>1</kbd>–<kbd>7</kbd> clés 1, 2, 4, 8…<br><kbd>Retour</kbd> effacer<br><kbd>P</kbd> pause<br><kbd>Échap</kbd> menu",k3:"<kbd>3</kbd> Défi vitesse<br>"},
+ en:{btn:"⚡ Speed Challenge",rule:"⚡ Challenge: build numbers from the keys – 60 s, a mistake = −3 s!",ask:"Build the number with the keys",clear:"↺ Clear",
+  time:"⏱",bad:"Oops! −3s",combo:"🔥 Streak {n}!",tier:"🔓 Now up to {n}!",paused:"⏸ Paused",cont:"Resume ▶",over:"Time's up!",score:"Score",solved:"numbers",
+  nb:"🏆 New best!",top:"🏆 Top 5",best:"Best",again:"🔁 Another round",hint:"💡 Take the biggest key that fits, then the next one…",
+  k_atk:"<kbd>1</kbd>–<kbd>7</kbd> keys 1, 2, 4, 8…<br><kbd>Backspace</kbd> clear<br><kbd>P</kbd> pause<br><kbd>Esc</kbd> menu",k3:"<kbd>3</kbd> Speed Challenge<br>"}};
+const at=(k,o)=>{let s=AXT[lang][k];if(o)for(const q in o)s=s.replace("{"+q+"}",o[q]);return s};
 let COLORS=["#8a4fd8","#e8862d","#2fb36a","#e23b3b","#2a8fd0","#d6479a"];
+let runTok=0; // bumped whenever a round is left/restarted, so late timers of the old round do nothing
 let bits=5,cards=[],mode="",order=[],idx=0,ans=[],keep=[];
 
 let AC=null,muted=false;try{muted=localStorage.getItem("annabelle-muted")==="1"}catch(e){}
@@ -272,7 +315,7 @@ function musicSet(on){musicOn=on;try{localStorage.setItem("annabelle-music",on?"
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function show(id){document.body.classList.toggle("inmenu",id==="menu");document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=t("k_"+id)||""}
+function show(id){document.body.classList.toggle("inmenu",id==="menu");document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));$("kh").innerHTML=id==="atk"?at("k_atk"):t("k_"+id)||""}
 function maxN(){return (1<<bits)-1}
 const RW=()=>window.AnnabelleRewards;
 /* ---- progress: tricks -> rank, one stamp per range, unlockable decks ---- */
@@ -345,16 +388,17 @@ function drawMenu(){
  LANGS.forEach(([c,n])=>{const x=document.createElement("button");x.className="lang"+(c===lang?" sel":"");x.textContent=n;
   x.onclick=()=>{lang=c;save("annabelle-lang",c);document.documentElement.lang=c;document.documentElement.dir=c==="he"?"rtl":"ltr";drawMenu()};$("flags").appendChild(x)});
  document.documentElement.dir=lang==="he"?"rtl":"ltr";
- if($("menu").classList.contains("active"))$("kh").innerHTML=t("k_menu");
+ $("bAtk").textContent=at("btn");$("rules").insertAdjacentHTML("beforeend","<p>"+at("rule")+"</p>");atkBestDraw();
+ if($("menu").classList.contains("active"))$("kh").innerHTML=at("k3")+t("k_menu");
 }
-function toMenu(){$("res").classList.remove("on");stopConf();show("menu");drawMenu()}
+function toMenu(){runTok++;atkStop();$("res").classList.remove("on");stopConf();show("menu");drawMenu()}
 window.toMenu=toMenu;
 document.querySelectorAll(".homeBtn").forEach(b=>b.onclick=toMenu);
 
 /* ---------- computer guesses ---------- */
 function startComp(){
  RW()&&RW().award({game:"magic",event:"play"});
- mode="comp";build();order=shuffle(cards.map((_,i)=>i));idx=-1;ans=[];
+ runTok++;mode="comp";build();order=shuffle(cards.map((_,i)=>i));idx=-1;ans=[];
  show("comp");thinkScreen();
 }
 function thinkScreen(){
@@ -383,14 +427,19 @@ function answer(v){
  // all answered → drum roll → reveal
  $("cBtns").innerHTML="";$("cSay").textContent=t("drum");
  $("cWrap").innerHTML='<div class="drum">🥁</div>';SFX.drum();
- setTimeout(()=>{
+ const tok=runTok;let fired=false;
+ const go=()=>{if(fired||tok!==runTok)return;fired=true;drumGo=null;
   const used=order.filter((ci,i)=>ans[i]).map(ci=>cards[ci]).sort((a,b)=>a.key-b.key);
-  reveal(used,"comp");
- },1500);
+  reveal(used,"comp")};
+ drumGo=go;$("cWrap").firstChild.onclick=go;setTimeout(go,1500);
 }
 
 /* ---------- reveal (shared) ---------- */
-function rollNum(el,final,done){let n=0;el.classList.add("rolling");const it=setInterval(()=>{n++;if(n<13){el.textContent=1+Math.floor(Math.random()*maxN());SFX.tick(n%8)}else{clearInterval(it);el.classList.remove("rolling");el.textContent=final;el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");done&&done()}},75)}
+let drumGo=null,rollSkip=null;
+function rollNum(el,final,done){let n=0;const tok=runTok;el.classList.add("rolling");let it=null;
+ const fin=()=>{clearInterval(it);rollSkip=null;if(tok!==runTok)return;el.classList.remove("rolling");el.textContent=final;el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");done&&done()};
+ rollSkip=()=>{if(n<13){n=99;fin()}};el.onclick=()=>rollSkip&&rollSkip();
+ it=setInterval(()=>{if(tok!==runTok){clearInterval(it);return}n++;if(n<13){el.textContent=1+Math.floor(Math.random()*maxN());SFX.tick(n%8)}else fin()},75)}
 function reveal(used,from){
  const sum=used.reduce((s,c)=>s+c.key,0);
  const box=$("resBox");box.innerHTML="";
@@ -423,7 +472,7 @@ function sClear(){["sSay","sSub"].forEach(i=>$(i).textContent="");$("sDots").inn
 function sBtn(txt,cls,fn){const b=document.createElement("button");b.className="big "+(cls||"");b.textContent=txt;b.onclick=fn;$("sBtns").appendChild(b);return b}
 function startSelf(){
  RW()&&RW().award({game:"magic",event:"play"});
- mode="self";build();sOrder=shuffle(cards.map((_,i)=>i));sMarks=cards.map(()=>false);sIdx=0;
+ runTok++;mode="self";build();sOrder=shuffle(cards.map((_,i)=>i));sMarks=cards.map(()=>false);sIdx=0;
  show("self");sThink();
 }
 function sThink(){ // the thinker: pick a number, don't tell, press
@@ -469,7 +518,7 @@ function sFinish(){
  ["pointerup","pointerleave","pointercancel"].forEach(ev=>hb.addEventListener(ev,()=>clearTimeout(tm.t)));
  hb.addEventListener("contextmenu",e=>e.preventDefault());
  SFX.win();confetti();sparks(innerWidth/2,innerHeight*.3,24);
- {const r=trickDone();if(r.msgs.length)$("sWrap").querySelector(".stage").appendChild(badgeEl(r.msgs));if(r.rankUp)SFX.fan()}
+ if(cards.some((c,i)=>sMarks[i])){const r=trickDone();if(r.msgs.length)$("sWrap").querySelector(".stage").appendChild(badgeEl(r.msgs));if(r.rankUp)SFX.fan()}else $("sSub").textContent=t("none")
  sBtn(t("sAgain"),"",()=>{stopConf();SFX.click();startSelf()});
 }
 function peek(){ // secret hint for the magician only: the corner numbers of the cards that were marked
@@ -477,6 +526,85 @@ function peek(){ // secret hint for the magician only: the corner numbers of the
  pk.textContent=t("sPeek")+(ks.length?ks.join(" + "):t("sNone"));pk.style.display="";SFX.keep();
  clearTimeout(peekT);peekT=setTimeout(()=>{if(pk)pk.style.display="none"},3000);
 }
+
+/* ---------- speed challenge: build the number from the keys (1,2,4,8…) before time runs out ---------- */
+const ATK={on:false,paused:false,left:60,score:0,streak:0,solved:0,target:0,sel:[],keys:[],tier:0,last:0,timer:null,sec:0};
+const ATK_BITS=[4,5,6,7],ATK_AT=[0,4,9,15],AKEY="annabelle-magic-atk";
+function atkTop(){try{const a=JSON.parse(load(AKEY)||"[]");return Array.isArray(a)?a.filter(x=>x&&x.s>0).map(x=>({s:x.s|0,n:x.n|0,d:x.d||""})).sort((a,b)=>b.s-a.s).slice(0,5):[]}catch(e){return[]}}
+function atkBestDraw(){const tp=atkTop();$("atkBest").textContent=tp.length?"⚡ "+at("best")+": "+tp[0].s:""}
+function atkStop(){clearInterval(ATK.timer);ATK.timer=null;ATK.on=false;$("aPov").classList.remove("on")}
+function startAtk(){
+ RW()&&RW().award({game:"magic",event:"play"});
+ runTok++;mode="atk";atkStop();Object.assign(ATK,{on:true,paused:false,left:60,score:0,streak:0,solved:0,sel:[],tier:0,sec:60,last:performance.now()});
+ $("res").classList.remove("on");stopConf();show("atk");
+ $("aSay").textContent=at("ask");$("aPovB").textContent=at("cont");$("aPovT").textContent=at("paused");
+ $("aBtns").innerHTML="";const cl=document.createElement("button");cl.className="big g";cl.textContent=at("clear");cl.onclick=()=>{if(!ATK.on||ATK.paused)return;SFX.back();ATK.sel=[];atkPaint()};$("aBtns").appendChild(cl);
+ atkBuildKeys();atkNext(true);
+ ATK.timer=setInterval(atkTick,100);
+}
+function atkBuildKeys(){
+ const nb=ATK_BITS[ATK.tier];let ks=[];for(let b=nb-1;b>=0;b--)ks.push(b);
+ if(ATK.solved>=20)ks=shuffle(ks); // expert: the keys change places
+ ATK.keys=ks;const box=$("aKeys");box.innerHTML="";box.style.setProperty("--kc",nb<=5?nb:nb===6?3:4);
+ ks.forEach(b=>{const k=document.createElement("button");k.className="kb";k.style.setProperty("--c",COLORS[b%COLORS.length]);k.textContent=1<<b;k.dataset.b=b;
+  k.onclick=()=>atkTap(b);box.appendChild(k)});
+}
+function atkSum(){return ATK.sel.reduce((s,b)=>s+(1<<b),0)}
+function atkPaint(){document.querySelectorAll("#aKeys .kb").forEach(k=>k.classList.toggle("on",ATK.sel.includes(+k.dataset.b)));
+ const sm=atkSum();$("aSum").textContent=ATK.sel.length?ATK.sel.slice().sort((a,b)=>b-a).map(b=>1<<b).join(" + ")+" = "+sm:"0"}
+function atkNext(first){
+ const nb=ATK_BITS[ATK.tier],mx=(1<<nb)-1;let n,g=0;
+ do{n=1+Math.floor(Math.random()*mx);g++}while((n===ATK.target||(ATK.solved>=2&&(n&(n-1))===0)||(ATK.tier>0&&n<(1<<(nb-1))&&g<30))&&g<60);
+ ATK.target=n;ATK.sel=[];const el=$("aTarget");el.textContent=n;el.classList.remove("pop","shake");void el.offsetWidth;el.classList.add("pop");atkPaint();atkInfo();
+}
+function atkInfo(){$("aInfo").textContent="⭐ "+ATK.score+"  "+at("time")+" "+Math.ceil(ATK.left)+(ATK.streak>=2?"  🔥"+ATK.streak:"")}
+function atkFx(msg,bad){const f=$("aFx");f.textContent=msg;f.className=bad?"bad":"";clearTimeout(atkFx.t);atkFx.t=setTimeout(()=>{f.textContent=""},1100)}
+function atkTap(b){
+ if(!ATK.on||ATK.paused)return;
+ const i=ATK.sel.indexOf(b);if(i>=0){ATK.sel.splice(i,1);SFX.away()}else{ATK.sel.push(b);SFX.keep()}
+ atkPaint();const sm=atkSum();
+ if(sm===ATK.target){
+  const pts=ATK_BITS[ATK.tier]*10+Math.min(ATK.streak,10)*3;ATK.score+=pts;ATK.streak++;ATK.solved++;ATK.left=Math.min(90,ATK.left+2);
+  SFX.yes();SFX.sparkle();atkFx("+"+pts+(ATK.streak>=3?"  "+at("combo",{n:ATK.streak}):""));
+  const nt=ATK_AT.reduce((r,v,k)=>ATK.solved>=v?k:r,0);
+  if(nt>ATK.tier){ATK.tier=nt;atkFx(at("tier",{n:(1<<ATK_BITS[nt])-1}));SFX.fan()}
+  atkBuildKeys();atkNext();
+ }else if(sm>ATK.target){
+  ATK.streak=0;ATK.left-=3;SFX.no();atkFx(at("bad"),true);ATK.sel=[];atkPaint();
+  const el=$("aTarget");el.classList.remove("pop","shake");void el.offsetWidth;el.classList.add("shake");atkInfo();
+  if(ATK.left<=0)atkEnd();
+ }
+}
+function atkTick(){
+ if(!ATK.on)return;const now=performance.now();
+ if(ATK.paused||document.hidden){ATK.last=now;if(document.hidden&&!ATK.paused)atkPause(true);return}
+ ATK.left-=Math.min(now-ATK.last,250)/1000;ATK.last=now;
+ const c=Math.ceil(Math.max(ATK.left,0));if(c!==ATK.sec){ATK.sec=c;if(c<=5&&c>0)SFX.tick(c)}
+ $("aTime").style.width=Math.max(0,Math.min(100,ATK.left/60*100))+"%";$("aTbar").classList.toggle("low",ATK.left<10);atkInfo();
+ if(ATK.left<=0)atkEnd();
+}
+function atkPause(on){if(!ATK.on)return;ATK.paused=on;ATK.last=performance.now();$("aPov").classList.toggle("on",on);$("aPause").textContent=on?"▶":"⏸"}
+function atkEnd(){
+ if(!ATK.on)return;atkStop();const sc=ATK.score;
+ const tp=atkTop(),isBest=sc>0&&(!tp.length||sc>tp[0].s),d=new Date().toISOString().slice(0,10);
+ let rank=-1;if(sc>0){tp.push({s:sc,n:ATK.solved,d,me:1});tp.sort((a,b)=>b.s-a.s||(b.me?1:0)-(a.me?1:0));rank=tp.findIndex(x=>x.me);const out=tp.slice(0,5).map(x=>({s:x.s,n:x.n,d:x.d}));save(AKEY,JSON.stringify(out))}
+ const R_=RW();if(R_){R_.award({game:"magic",event:"score",score:sc});if(sc>=300)R_.award({game:"magic",event:"star",stars:sc>=1500?3:sc>=800?2:1});if(isBest)R_.award({game:"magic",event:"win"});R_.flush()}
+ const box=$("resBox");box.innerHTML="";
+ const h=document.createElement("h2");h.textContent=at("over");
+ const num=document.createElement("div");num.id="num";num.textContent=sc;
+ const sub=document.createElement("div");sub.className="eq";sub.textContent=at("solved")+": "+ATK.solved;
+ box.append(h,num,sub);
+ if(isBest||(rank>=0&&rank<5)){const bd=document.createElement("div");bd.appendChild(badgeEl([isBest?at("nb"):"🏅 #"+(rank+1)]));box.appendChild(bd)}
+ const t5=document.createElement("div");t5.className="top5";t5.innerHTML="<h4>"+at("top")+"</h4>"+tp.slice(0,5).map((x,i)=>'<div class="'+(x.me&&i===rank?"me":"")+'"><span>'+["🥇","🥈","🥉","4.","5."][i]+" "+x.s+'</span><span>'+x.n+" "+at("solved")+"</span></div>").join("");
+ if(tp.length)box.appendChild(t5);
+ const row=document.createElement("div");row.className="row";const a=document.createElement("button");a.className="big";a.textContent=at("again");a.onclick=()=>{startAtk()};row.appendChild(a);
+ const nv=document.createElement("div");nv.id="resNav";box.append(row,nv);
+ $("res").classList.add("on");if(sc>=300){SFX.win();confetti()}else SFX.no();
+ atkBestDraw();
+}
+$("aPause").onclick=()=>atkPause(!ATK.paused);$("aPovB").onclick=()=>atkPause(false);
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&ATK.on&&!ATK.paused)atkPause(true)});
+window.__magic={ATK,startAtk,atkTap,atkEnd,atkTop};
 
 let cf=null;const PART=[];
 function pLoop(){const cv=$("conf"),x=cv.getContext("2d");x.clearRect(0,0,cv.width,cv.height);
@@ -500,9 +628,16 @@ document.addEventListener("keydown",e=>{
  const k=e.key,kk=k.length===1?k.toLowerCase():k,act=k==="Enter"||k===" ",btn=e.target&&e.target.closest&&e.target.closest("button,a,input"),card=e.target&&e.target.closest&&e.target.closest("#selfList .card");
  const click=el=>{if(el){e.preventDefault();el.click()}};
  if($("res").classList.contains("on")){if(act&&!btn)click($("resBox").querySelector("button.big:not(.g)"));else if(k==="Escape"){e.preventDefault();toMenu()}return}
- if(isOn("menu")){if(kk==="1")click($("bComp"));else if(kk==="2")click($("bSelf"));else if(kk==="r"){e.preventDefault();bits=bits>=6?3:bits+1;save("annabelle-magic-bits",bits);SFX.click();drawMenu()}return}
- if(k==="Escape"&&(isOn("comp")||isOn("self"))){e.preventDefault();toMenu();return}
+ if(isOn("menu")){if(kk==="1")click($("bComp"));else if(kk==="2")click($("bSelf"));else if(kk==="3")click($("bAtk"));else if(kk==="r"){e.preventDefault();bits=bits>=6?3:bits+1;save("annabelle-magic-bits",bits);SFX.click();drawMenu()}return}
+ if(k==="Escape"&&(isOn("comp")||isOn("self")||isOn("atk"))){e.preventDefault();toMenu();return}
+ if(isOn("atk")){
+  if(kk==="p"){e.preventDefault();atkPause(!ATK.paused)}
+  else if(k==="Backspace"){e.preventDefault();click($("aBtns").querySelector("button"))}
+  else if(/^[1-7]$/.test(k)&&!ATK.paused){const b=+k-1;if(b<ATK_BITS[ATK.tier])atkTap(b)}
+  else if(ATK.paused&&act&&!btn)atkPause(false);
+  return}
  if(isOn("comp")){
+  if(drumGo&&act){e.preventDefault();drumGo();return}
   const ye=$("cBtns").querySelector(".big.y"),no=$("cBtns").querySelector(".big.n"),bk=$("cBtns").querySelector(".big.g"),rd=$("cBtns").querySelector(".big:not(.y):not(.n):not(.g)");
   const rtl=document.documentElement.dir==="rtl";
   if(ye){ if(kk==="y"||(act&&!btn))click(ye);else if(kk==="n")click(no);else if(k==="ArrowRight")click(rtl?ye:no);else if(k==="ArrowLeft")click(rtl?no:ye);else if(k==="Backspace")click(bk)}
@@ -519,6 +654,7 @@ document.addEventListener("keydown",e=>{
  }
 });
 document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
+$("bAtk").onclick=()=>{SFX.click();startAtk()};
 $("bComp").onclick=()=>{SFX.click();startComp()};$("bSelf").onclick=()=>{SFX.click();startSelf()};
 $("muteBtn").addEventListener("click",()=>{muted=!muted;save("annabelle-muted",muted?"1":"0");updMute();if(!muted)SFX.click()});updMute();
 $("musBtn").addEventListener("click",()=>{ac();musicSet(!musicOn);SFX.click()});musicSet(musicOn);
