@@ -12,7 +12,8 @@
 html,body{margin:0;height:100%;overflow:hidden;background:#fff6d6;font-family:"Rubik","Varela Round",Arial,sans-serif;color:#5a3b1a;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
 .screen.active{display:flex}
-#menu{justify-content:center;gap:10px;padding:10px;overflow:auto}
+#menu{justify-content:flex-start;gap:8px;padding:10px;overflow:auto}
+#menu::before,#menu::after,#lobby::before,#lobby::after{content:"";flex:1 0 0;margin:-4px 0}
 h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #0001;text-align:center}
 .heads{font-size:38px;line-height:1}
 .langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -23,13 +24,19 @@ h1{margin:0;font-size:clamp(26px,7vw,40px);color:#e8862d;text-shadow:0 3px 0 #00
 .big:active{transform:translateY(3px);box-shadow:0 1px 0 #b65f10}
 .big.g{background:linear-gradient(#b8c1cc,#7d8794);box-shadow:0 4px 0 #555e69}
 .big.p{background:linear-gradient(#c58cf0,#9050c8);box-shadow:0 4px 0 #5e2e8a}
-.rules{max-width:460px;background:#fff;border-radius:16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 3px 0 #0001}
+.big.r{background:linear-gradient(#ff7a6b,#e0402f);box-shadow:0 4px 0 #962516}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px}.modes .big{min-width:0;padding:6px 8px;font-size:17px;line-height:1.15}
+.sm{min-height:36px;padding:2px 14px;border-radius:999px;border:2px solid #e8862d;background:#fff;font:800 15px Rubik,Arial;color:#5a3b1a}
+#rec{font-weight:800;font-size:13px;text-align:center;opacity:.85;min-height:0}#rec:empty{display:none}
+.rules{display:none;max-width:460px;background:#fff;border-radius:16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 3px 0 #0001}
+.rules.open{display:block}
 .rules p{margin:3px 0}
 #game{padding:6px}
 .bar{display:flex;align-items:center;gap:8px;width:100%;max-width:900px;flex:0 0 auto}
+html[dir=ltr] #game .bar{flex-direction:row-reverse}   /* the sound button is fixed at the physical left: keep the spacer (not the menu button) under it in fr/en too */
 .iconbtn{width:48px;height:48px;border-radius:50%;border:2px solid #e8862d;background:#fff;font-size:22px;flex:0 0 auto}
 #netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s}
-.pill{flex:1;text-align:center;background:#fff;border-radius:999px;padding:8px 10px;font-weight:800;font-size:16px;box-shadow:0 3px 0 #0001;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff;border-radius:18px;padding:4px 8px;min-height:48px;font-weight:800;font-size:15px;line-height:1.15;box-shadow:0 3px 0 #0001;overflow:hidden}
 #wrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0;gap:10px}
 #boardBox{position:relative}
 svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
@@ -37,7 +44,7 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 .hl{fill:#7dff9b;opacity:.55;pointer-events:none;animation:pulse 1s infinite alternate}
 @keyframes pulse{to{opacity:.85}}
 .selr{fill:none;stroke:#ffe14d;stroke-width:5;pointer-events:none}
-.pc{transition:transform .32s ease;pointer-events:none}
+.pc{transition:transform var(--mv,.32s) ease;pointer-events:none}
 .eye{animation:blink 5s infinite;transform-box:fill-box;transform-origin:center}
 @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
 .tail{transform-box:fill-box;transform-origin:0% 50%}
@@ -45,7 +52,7 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 @keyframes wag{to{transform:rotate(35deg)}}
 .yarn{animation:spin 3s linear infinite;transform-box:fill-box;transform-origin:center;pointer-events:none}
 @keyframes spin{to{transform:rotate(360deg)}}
-.bub{position:absolute;background:#fff;border:3px solid #e8862d;border-radius:16px;padding:6px 10px;font-weight:800;font-size:16px;white-space:nowrap;transform:translate(-50%,-100%);pointer-events:none;animation:pop .25s;z-index:5}
+.bub{position:absolute;background:#fff;border:3px solid #e8862d;border-radius:16px;padding:6px 10px;font-weight:800;font-size:16px;width:max-content;max-width:92%;text-align:center;transform:translate(-50%,-100%);pointer-events:none;animation:pop .25s;z-index:5}
 @keyframes pop{from{transform:translate(-50%,-100%) scale(.3)}}
 .side{display:flex;flex-direction:column;gap:8px;align-items:center}
 .big.t{background:linear-gradient(#ffe066,#f2b600);color:#5a3d00;box-shadow:0 4px 0 #a87400}
@@ -60,7 +67,7 @@ svg#board{display:block;border-radius:14px;box-shadow:0 6px 0 #8a5a2b}
 #conf{position:fixed;inset:0;pointer-events:none;z-index:21}
 .corner{position:fixed;top:8px;left:8px;z-index:10}
 .dance{display:inline-block;animation:dn .6s infinite alternate}@keyframes dn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
-#lobby{justify-content:center;gap:12px;padding:10px;overflow:auto}
+#lobby{justify-content:flex-start;gap:12px;padding:10px;overflow:auto}
 .lobpane{display:none;flex-direction:column;align-items:center;gap:10px}
 .lobpane.on{display:flex}
 #lobCode{font-size:clamp(40px,13vw,72px);font-weight:900;letter-spacing:.12em;color:#e8862d;direction:ltr;text-shadow:0 4px 0 #0002;line-height:1}
@@ -99,14 +106,17 @@ html.desk .screen{overflow-y:auto}
   <h1 id="tTitle"></h1>
   <div class="heads">🐱 ⚔️ 🐱</div>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div>
+  <button class="sm" id="rulesBtn" aria-expanded="false"></button>
   <div class="rules" id="rules"></div>
-  <div class="row">
+  <div class="modes">
     <button class="big" data-mode="easy" id="bEasy"></button>
     <button class="big" data-mode="normal" id="bNorm"></button>
+    <button class="big r" data-mode="hard" id="bHard"></button>
     <button class="big p" data-mode="two" id="bTwo"></button>
+    <button class="big t" data-mode="cup" id="bCup"></button>
+    <button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button>
   </div>
-  <div class="row"><button class="big t" data-mode="cup" id="bCup"></button><button class="big" style="background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c" id="bOnline"></button></div>
-  <div id="cupBar"></div><div id="cupOpp"></div><div id="skinRow"></div>
+  <div id="cupBar"></div><div id="cupOpp"></div><div id="skinRow"></div><div id="rec"></div>
   <div class="khint" id="kh"></div>
 </section>
 <section class="screen" id="lobby">
@@ -123,7 +133,8 @@ html.desk .screen{overflow-y:auto}
     <button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button>
     <div class="pill" id="turn"></div><i id="netDot" aria-hidden="true"></i>
     <button class="iconbtn" id="undoBtn" aria-label="undo">↩️</button>
-    <div style="width:48px"></div>
+    <button class="iconbtn" id="restartBtn" aria-label="restart">🔄</button>
+    <div style="width:48px;flex:0 0 auto"></div>
   </div>
   <div id="wrap"><div id="boardBox"><svg id="board" viewBox="0 0 800 800"></svg><div class="kc" id="khov"></div><div class="kc" id="kcur"></div></div></div>
   <div class="khint" id="kh2"></div>
@@ -138,19 +149,19 @@ html.desk .screen{overflow-y:auto}
 const $=id=>document.getElementById(id);
 const TX={
  he:{title:"דמקת חתולים",weakMsgs:["📶 החיבור התעטש 🤧 – ממשיכים לשחק!","😴 החתלתול של החברה נרדם על הקו… מחכים רגע","🐟 דג קטן נתקע בכבל – הוא יעבור בקרוב","🧶 הצמר התפתל בחיבור… מסדרים"],reconn:"מתחבר מחדש… 🔌",paused:"החברה התנתקה… ממתינים שתתחבר מחדש ⏳",pausedS:"המשחק נשמר וימשיך בדיוק מאותו מקום",leave:"🏠 יציאה מהמשחק",left:"החברה יצאה מהמשחק 👋",roomLeft:"החדר פתוח עוד",expired:"⏰ הזמן נגמר והקוד כבר לא תקף. צרי חדר חדש",apprT:"מישהי מבקשת להצטרף למשחק 🔐",apprS:"אשרי רק אם גם אצל החברה שלך מופיע בדיוק המספר הזה",apprYes:"✅ אשרי",apprNo:"❌ דחי",pairMsg:"קוד אימות: N 🔐 מחכים שהחברה תאשר…",online:"🌐 משחק עם חברה בטלפון אחר",lobT:"משחק אונליין",create:"🏠 צרי חדר",join:"🔑 הצטרפי עם קוד",codeIs:"קוד החדר:",waitF:"מחכה לחברה… 🕐",share:"💬 שלחי לחברה בוואטסאפ",shareTxt:"בואי לשחק איתי דמקת חתולים! 🐱",enter:"הקלידי את הקוד של החברה:",go:"התחברי ▶",conn:"מתחבר… 🔌",failC:"לא הצלחתי להתחבר 😿 בדקי את הקוד ואת האינטרנט ונסי שוב",back:"◀ חזרה",oppTurn:"התור של החברה ⏳",meO:"את הכתומים 🧡",meG:"את האפורים 🤍",winOn:"ניצחת! 🎉",loseOn:"החברה ניצחה! 🎉",waitRe:"מחכה לחברה למשחק נוסף… 🕐",disc:"החברה התנתקה 😿",easy:"🤖 נגד המחשב · קל",normal:"🤖 נגד המחשב · רגיל",two:"👭 שתי שחקניות",
-  rules:["🐾 לחצי על חתלתול ואז על משבצת ירוקה.","😼 אם אפשר לאכול – חובה לקפוץ! אפשר כמה קפיצות ברצף.","🦁 חתלתול שמגיע לצד השני הופך לאריה עם כתר!","🧶 כדור צמר: חתלתול שנוחת עליו משתעשע – ומקבל תור נוסף!","🤪 במצב קל המחשב מתבלבל ועושה מהלכים מצחיקים!"],
+  rules:["🐾 לחצי על חתלתול ואז על משבצת ירוקה.","😼 אם אפשר לאכול – חובה לקפוץ! אפשר כמה קפיצות ברצף.","🦁 חתלתול שמגיע לצד השני הופך לאריה עם כתר!","🧶 כדור צמר: חתלתול שנוחת עליו משתעשע – ומקבל תור נוסף!","🤪 במצב קל המחשב מתבלבל ועושה מהלכים מצחיקים!","🔥 במצב קשה המחשב באמת חושב כמה מהלכים קדימה!","⏳ 30 מהלכי אריות בלי אכילה – מוכרעים בנקודות."],
   you:"התור שלך 🧡",cpu:"המחשב חושב… 🤔",p1:"תור הכתומים 🧡",p2:"תור האפורים 🤍",bonus:"תור בונוס! 🧶",again:"🔁 עוד משחק",
-  winYou:"ניצחת, אנאבל! 🎉",winCpu:"המחשב ניצח… נסי שוב! 💪",winO:"הכתומים ניצחו! 🧡",winG:"האפורים ניצחו! 🤍",
+  winYou:"ניצחת, {n}! 🎉",hard:"🤖 נגד המחשב · קשה 🔥",rulesB:"❓ חוקים",quietW:"אין אכילות! המשחק יוכרע בנקודות בעוד {n} מהלכים ⏳",drawT:"תיקו! 🤝",byPts:"הוכרע בנקודות (חתלתול 1, אריה 2)",rec:"🏅 ניצחונות: קל {e} · רגיל {n} · קשה {h} · 🔥 רצף שיא {s}",restartQ:"שוב לחיצה = משחק חדש",winCpu:"המחשב ניצח… נסי שוב! 💪",winO:"הכתומים ניצחו! 🧡",winG:"האפורים ניצחו! 🤍",
   meow:"מיאו!",yarn:["איזה כיף, צמר! 🧶 עוד תור!","שיחקתי קצת! 🧶 עוד תור!","ווי! צמר! 🧶"],king:"אני מלך! 👑",jump:"עוד קפיצה!",goofy:["אופס, החלקתי! 🙈","הלכתי לאיבוד… 😵","מה עשיתי?! 🤪","ראיתי פרפר! 🦋","אני מתבלבל 😹"],fun:["מיאו!","אוי! 🙀","גלגלתי! 😹","טסתי! 🪁","הצלחת! 👏"]},
  fr:{title:"Dames des chats",weakMsgs:["📶 La connexion a éternué 🤧 – on continue !","😴 Le chaton de ton amie s'est endormi sur la ligne… une seconde","🐟 Un petit poisson est coincé dans le câble – il va passer","🧶 La laine s'est emmêlée dans la connexion… on arrange ça"],reconn:"Reconnexion… 🔌",paused:"Ton ami s'est déconnecté… on attend sa reconnexion ⏳",pausedS:"La partie est sauvegardée et reprendra au même endroit",leave:"🏠 Quitter la partie",left:"Ton ami a quitté la partie 👋",roomLeft:"Salle ouverte encore",expired:"⏰ Temps écoulé, le code n'est plus valable. Crée une nouvelle salle",apprT:"Quelqu'un veut rejoindre la partie 🔐",apprS:"Accepte seulement si ton amie voit exactement ce même nombre",apprYes:"✅ Accepter",apprNo:"❌ Refuser",pairMsg:"Code de vérification : N 🔐 on attend que ton amie accepte…",online:"🌐 Jouer avec un ami sur un autre téléphone",lobT:"Jeu en ligne",create:"🏠 Créer une salle",join:"🔑 Rejoindre avec un code",codeIs:"Code de la salle :",waitF:"J'attends ton ami… 🕐",share:"💬 Envoyer sur WhatsApp",shareTxt:"Viens jouer aux dames des chats avec moi ! 🐱",enter:"Tape le code de ton ami :",go:"Se connecter ▶",conn:"Connexion… 🔌",failC:"Connexion impossible 😿 Vérifie le code et internet, puis réessaie",back:"◀ Retour",oppTurn:"Tour de ton ami ⏳",meO:"Tu es les oranges 🧡",meG:"Tu es les gris 🤍",winOn:"Tu as gagné ! 🎉",loseOn:"Ton ami a gagné ! 🎉",waitRe:"J'attends ton ami pour rejouer… 🕐",disc:"Ton ami s'est déconnecté 😿",easy:"🤖 Contre l'ordi · facile",normal:"🤖 Contre l'ordi · normal",two:"👭 À deux",
-  rules:["🐾 Touche un chaton puis une case verte.","😼 Si tu peux manger, tu dois sauter ! Plusieurs sauts d'affilée.","🦁 Un chaton qui arrive de l'autre côté devient un lion couronné !","🧶 Pelote : le chaton qui s'y pose joue avec – et gagne un tour en plus !","🤪 En mode facile, l'ordi s'embrouille et fait des coups rigolos !"],
+  rules:["🐾 Touche un chaton puis une case verte.","😼 Si tu peux manger, tu dois sauter ! Plusieurs sauts d'affilée.","🦁 Un chaton qui arrive de l'autre côté devient un lion couronné !","🧶 Pelote : le chaton qui s'y pose joue avec – et gagne un tour en plus !","🤪 En mode facile, l'ordi s'embrouille et fait des coups rigolos !","🔥 En mode difficile, l'ordi réfléchit vraiment plusieurs coups à l'avance !","⏳ 30 coups de lions sans prise : on décide aux points."],
   you:"À toi 🧡",cpu:"L'ordi réfléchit… 🤔",p1:"Tour des oranges 🧡",p2:"Tour des gris 🤍",bonus:"Tour bonus ! 🧶",again:"🔁 Rejouer",
-  winYou:"Tu as gagné, Annabelle ! 🎉",winCpu:"L'ordi a gagné… réessaie ! 💪",winO:"Les oranges gagnent ! 🧡",winG:"Les gris gagnent ! 🤍",
+  winYou:"Tu as gagné, {n} ! 🎉",hard:"🤖 Contre l'ordi · difficile 🔥",rulesB:"❓ Règles",quietW:"Aucune prise ! La partie se décidera aux points dans {n} coups ⏳",drawT:"Égalité ! 🤝",byPts:"Décidé aux points (chaton 1, lion 2)",rec:"🏅 Victoires : facile {e} · normal {n} · difficile {h} · 🔥 meilleure série {s}",restartQ:"Touche encore = nouvelle partie",winCpu:"L'ordi a gagné… réessaie ! 💪",winO:"Les oranges gagnent ! 🧡",winG:"Les gris gagnent ! 🤍",
   meow:"Miaou !",yarn:["Youpi, une pelote ! 🧶 Encore un tour !","Je joue un peu ! 🧶 Encore !","Wiii ! 🧶"],king:"Je suis roi ! 👑",jump:"Encore un saut !",goofy:["Oups, j'ai glissé ! 🙈","Je suis perdu… 😵","Qu'est-ce que j'ai fait ?! 🤪","Un papillon ! 🦋","Je m'embrouille 😹"],fun:["Miaou !","Aïe ! 🙀","Je roule ! 😹","Je vole ! 🪁","Bravo ! 👏"]},
  en:{title:"Cat Checkers",weakMsgs:["📶 The connection sneezed 🤧 – keep playing!","😴 Your friend's kitten fell asleep on the line… one moment","🐟 A little fish is stuck in the cable – it will pass soon","🧶 The yarn got tangled in the connection… fixing it"],reconn:"Reconnecting… 🔌",paused:"Your friend disconnected… waiting for them to reconnect ⏳",pausedS:"The game is saved and will continue exactly where it stopped",leave:"🏠 Leave the game",left:"Your friend left the game 👋",roomLeft:"Room open for",expired:"⏰ Time's up, the code is no longer valid. Create a new room",apprT:"Someone wants to join the game 🔐",apprS:"Accept only if your friend sees exactly this same number",apprYes:"✅ Accept",apprNo:"❌ Decline",pairMsg:"Verification code: N 🔐 waiting for your friend to accept…",online:"🌐 Play with a friend on another phone",lobT:"Online game",create:"🏠 Create a room",join:"🔑 Join with a code",codeIs:"Room code:",waitF:"Waiting for your friend… 🕐",share:"💬 Send on WhatsApp",shareTxt:"Come play Cat Checkers with me! 🐱",enter:"Type your friend's code:",go:"Connect ▶",conn:"Connecting… 🔌",failC:"Couldn't connect 😿 Check the code and internet, then try again",back:"◀ Back",oppTurn:"Friend's turn ⏳",meO:"You are orange 🧡",meG:"You are grey 🤍",winOn:"You won! 🎉",loseOn:"Your friend won! 🎉",waitRe:"Waiting for your friend to rematch… 🕐",disc:"Your friend disconnected 😿",easy:"🤖 Vs computer · easy",normal:"🤖 Vs computer · normal",two:"👭 Two players",
-  rules:["🐾 Tap a kitten, then a green square.","😼 If you can capture, you must jump! Several jumps in a row are OK.","🦁 A kitten reaching the far side becomes a crowned lion!","🧶 Yarn ball: a kitten landing on it plays – and gets an extra turn!","🤪 In easy mode the computer gets confused and makes silly moves!"],
+  rules:["🐾 Tap a kitten, then a green square.","😼 If you can capture, you must jump! Several jumps in a row are OK.","🦁 A kitten reaching the far side becomes a crowned lion!","🧶 Yarn ball: a kitten landing on it plays – and gets an extra turn!","🤪 In easy mode the computer gets confused and makes silly moves!","🔥 In hard mode the computer really thinks several moves ahead!","⏳ 30 lion moves without a capture: decided on points."],
   you:"Your turn 🧡",cpu:"Computer is thinking… 🤔",p1:"Orange's turn 🧡",p2:"Grey's turn 🤍",bonus:"Bonus turn! 🧶",again:"🔁 Play again",
-  winYou:"You won, Annabelle! 🎉",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🤍",
+  winYou:"You won, {n}! 🎉",hard:"🤖 Vs computer · hard 🔥",rulesB:"❓ Rules",quietW:"No captures! The game will be decided on points in {n} moves ⏳",drawT:"It's a draw! 🤝",byPts:"Decided on points (kitten 1, lion 2)",rec:"🏅 Wins: easy {e} · normal {n} · hard {h} · 🔥 best streak {s}",restartQ:"Tap again = new game",winCpu:"The computer won… try again! 💪",winO:"Orange wins! 🧡",winG:"Grey wins! 🤍",
   meow:"Meow!",yarn:["Yay, yarn! 🧶 Extra turn!","Playtime! 🧶 Again!","Wheee! 🧶"],king:"I'm king! 👑",jump:"Jump again!",goofy:["Oops, I slipped! 🙈","I got lost… 😵","What did I do?! 🤪","A butterfly! 🦋","I'm confused 😹"],fun:["Meow!","Ouch! 🙀","I'm rolling! 😹","I'm flying! 🪁","Well done! 👏"]}};
 const CT={
  he:{cup:"🏆 גביע הדמקה",cupN:["גור הכדור","חתול החוף","מלכת הקרח","נסיך הממתקים","אריה הלילה"],board:["לוח העץ","לוח הנענע","לוח הקרח","לוח הסוכריות","לוח הלילה"],rnd:"משחק",skinT:"🎨 צבע החתלתולים (נפתח בגביע)",skinN:["כתום","ורוד","סגול","זהב","קשת"],cupNext:"▶ למשחק הבא",cupRetry:"🔁 ננסה שוב",cupWon:"אלופת הגביע! 🏆",cupLose:"כמעט! עוד ניסיון ואת מנצחת 💪",cupAgain:"🏆 גביע חדש",unl:"🎉 צבע חדש נפתח!",kleft:"חתלתולים נשארו"},
@@ -167,6 +178,12 @@ function cpGet(){let o={};try{o=JSON.parse(localStorage.getItem("annabelle-check
 function cpSave(c){try{localStorage.setItem("annabelle-checkers-cup",JSON.stringify(c))}catch(e){}}
 const skinSel=()=>{let v=0;try{v=+localStorage.getItem("annabelle-checkers-skin")||0}catch(e){}return v<cpGet().skins?v:0};
 let cupR=0;
+/* the player's name comes from the platform profile (same rule as index.html), with the old name as fallback */
+function pname(){try{const m=JSON.parse(localStorage.getItem("annabelle-profiles")||"null");if(m&&Array.isArray(m.list)){const p=m.list.filter(x=>x&&x.id===m.cur)[0];if(p&&typeof p.name==="string"&&p.name.trim())return p.name.trim().slice(0,14)}}catch(e){}return lang==="he"?"אנאבל":"Annabelle"}
+/* records vs the computer (new key, old saves untouched): wins per level + best win streak */
+function recGet(){let o={};try{o=JSON.parse(localStorage.getItem("annabelle-checkers-best")||"{}")||{}}catch(e){}const n=x=>Math.max(0,Math.min(99999,+x||0));return{e:n(o.e),n:n(o.n),h:n(o.h),s:n(o.s),bs:n(o.bs)}}
+function recWin(mode,won){if(mode!=="easy"&&mode!=="normal"&&mode!=="hard")return;const r=recGet();if(won){r[mode[0]]++;r.s++;r.bs=Math.max(r.bs,r.s)}else r.s=0;try{localStorage.setItem("annabelle-checkers-best",JSON.stringify(r))}catch(e){}}
+function recShow(){const r=recGet(),e=$("rec");if(!e)return;e.textContent=r.e+r.n+r.h?t("rec").replace("{e}",r.e).replace("{n}",r.n).replace("{h}",r.h).replace("{s}",r.bs):""}
 const LANGS=[["he","עברית"],["fr","Français"],["en","English"]];
 let lang=localStorage.getItem("annabelle-lang")||"he"; if(!TX[lang])lang="he";
 const t=k=>TX[lang][k];
@@ -179,7 +196,7 @@ function applyLang(){
   $("cupBar").innerHTML=[0,1,2,3,4].map(i=>`<span title="${t("cupN")[i]}" style="opacity:${i<c.done?1:.35}">${i<c.done?(c.stars[i]>=3?"🥇":"🏅"):i===4?"🏆":"🐾"}</span>`).join("")+(c.cups?`<small style="font-size:14px">×${c.cups}</small>`:"");
   $("cupOpp").textContent=t("rnd")+" "+(nx+1)+"/5 · "+t("cupN")[nx];
   $("skinRow").classList.toggle("on",c.skins>1);$("skinRow").innerHTML=c.skins>1?`<span style="font-weight:800;font-size:14px">${t("skinT")}</span>`+SKINS.map((k,i)=>`<button class="skn ${i===skinSel()?"sel":""} ${i>=c.skins?"lock":""}" data-skin="${i}" title="${t("skinN")[i]}" aria-label="${t("skinN")[i]}" style="background:${k?k[0]:"conic-gradient(#ff5d8f,#ffd23f,#7ddc6a,#4dc3ff,#c58cf0,#ff5d8f)"}">${i>=c.skins?"🔒":""}</button>`).join(""):""}
- $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("apprT").textContent=t("apprT");$("apprS").textContent=t("apprS");$("apprYes").textContent=t("apprYes");$("apprNo").textContent=t("apprNo");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
+ $("bEasy").textContent=t("easy");$("bNorm").textContent=t("normal");$("bHard").textContent=t("hard");$("rulesBtn").textContent=t("rulesB");recShow();$("bTwo").textContent=t("two");$("bOnline").textContent=t("online");$("lobT").textContent=t("lobT");$("bCreate").textContent=t("create");$("bJoin").textContent=t("join");$("lobCodeL").textContent=t("codeIs");$("lobInL").textContent=t("enter");$("bGo").textContent=t("go");$("lobBack").textContent=t("back");$("pauseT").textContent=t("paused");$("pauseS").textContent=t("pausedS");$("pauseLeave").textContent=t("leave");$("apprT").textContent=t("apprT");$("apprS").textContent=t("apprS");$("apprYes").textContent=t("apprYes");$("apprNo").textContent=t("apprNo");$("lobWa").textContent=t("share");$("lobWait").textContent=t("waitF");$("againBtn").textContent=t("again");
  if(G)updTurn();
  kbHints();
 }
@@ -207,15 +224,17 @@ function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 // ---- game ----
 const S=100,NS="http://www.w3.org/2000/svg";
 let G=null; // {b,turn,mode,sel,chain,bonus,yarn,hist,over,busy}
-const isCPU=p=>(G.mode==="easy"||G.mode==="normal"||G.mode==="cup")&&p===1;
+const isCPU=p=>(G.mode==="easy"||G.mode==="normal"||G.mode==="hard"||G.mode==="cup")&&p===1;
+const fastG=()=>!!G&&G.mode!=="easy"&&!G.online;   // easy keeps its relaxed pace (the goofy bubbles need reading time)
+const QMAX=30,QWARN=20;   // lion moves without a capture before the game is decided on points
 const V=n=>G&&G.flip?7-n:n; // board view: the guest sees the board turned around so own kittens are at the bottom
 function newGame(mode,yarn){
  const b=[];for(let r=0;r<8;r++){b.push([]);for(let c=0;c<8;c++)b[r].push((r+c)%2&&r<3?{p:1,k:0,id:r*8+c}:(r+c)%2&&r>4?{p:0,k:0,id:r*8+c}:null)}
  G={b,turn:0,mode,sel:null,chain:null,bonus:false,yarn:[],hist:[],over:false,busy:false};
- G.seq=0;G.cr=mode==="cup"?cupR:-1;G.lost=0;
+ G.seq=0;G.cr=mode==="cup"?cupR:-1;G.lost=0;G.quiet=0;G.pendBonus=false;G.winner=-2;$("board").style.setProperty("--mv",fastG()?".2s":".32s");
  if(mode==="online"){G.online=1;G.me=NET.me;G.flip=NET.me===1;NET.myRe=NET.oppRe=false}
  placeYarn();if(yarn)G.yarn=yarn;
- $("win").classList.remove("on");$("againBtn").style.display="";$("undoBtn").style.visibility=mode==="online"?"hidden":"";
+ $("win").classList.remove("on");$("againBtn").style.display="";$("undoBtn").style.visibility=mode==="online"?"hidden":"";$("restartBtn").style.visibility=mode==="online"?"hidden":"";rsArm(false);
  show("game");draw();updTurn();if(G.online)saveSess();
  musicStart();if(RW())RW().award({game:"checkers",event:"play"});
  if(G.cr>=0)bubble(3,3,t("rnd")+" "+(G.cr+1)+"/5 · "+t("cupN")[G.cr],2200);
@@ -244,7 +263,7 @@ function draw(){
 }
 function kitten(pc,r,c){
  const g=document.createElementNS(NS,"g");g.setAttribute("class","pc");g.dataset.id=pc.id;g.style.transform=`translate(${V(c)*S+50}px,${V(r)*S+50}px)`;
- const vsCpu=G&&(G.mode==="easy"||G.mode==="normal"||G.mode==="cup"),sk=vsCpu&&!pc.p?SKINS[skinSel()]:null,rb=vsCpu&&!pc.p&&skinSel()===4,op=G&&G.cr>=0&&pc.p?OPP[G.cr]:null;
+ const vsCpu=G&&(G.mode==="easy"||G.mode==="normal"||G.mode==="hard"||G.mode==="cup"),sk=vsCpu&&!pc.p?SKINS[skinSel()]:null,rb=vsCpu&&!pc.p&&skinSel()===4,op=G&&G.cr>=0&&pc.p?OPP[G.cr]:null;
  const body=pc.p?(op?op[0]:"#9aa3ad"):rb?"hsl("+(performance.now()/8%360|0)+",85%,66%)":sk?sk[0]:"#f5973a",dark=pc.p?(op?op[1]:"#6b737c"):rb?"#7a4aa8":sk?sk[1]:"#c96a14",flip=pc.p?-1:1;
  let h=`<path class="tail" d="M22 20 q26 4 22 -24" stroke="${dark}" stroke-width="8" fill="none" stroke-linecap="round"/>`;
  if(pc.k)h+=`<g>${Array.from({length:12},(_,i)=>`<circle cx="${Math.cos(i*Math.PI/6)*33}" cy="${Math.sin(i*Math.PI/6)*33+4}" r="12" fill="${pc.p?"#5d4e3c":"#b5651d"}"/>`).join("")}</g>`;
@@ -259,56 +278,131 @@ const pickT=k=>{const a=t(k);return a[Math.random()*a.length|0]};
 function bubble(r,c,txt,ms=1400){const box=$("boardBox"),k=box.clientWidth/800,d=document.createElement("div");d.className="bub";d.textContent=txt;
  d.style.left=Math.min(Math.max((V(c)*S+50)*k,70),box.clientWidth-70)+"px";d.style.top=Math.max(V(r)*S*k,30)+"px";box.appendChild(d);setTimeout(()=>d.remove(),ms)}
 function pcEl(id){return $("board").querySelector(`g.pc[data-id="${id}"]`)}
-function updTurn(){if(!G)return;let s;if(G.online)s=G.turn===G.me?t("you"):t("oppTurn");else if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus");if(G.online&&G.over)s=t(G.me?"meG":"meO");$("turn").textContent=s;if(G.online){$("turn").title=t(G.me?"meG":"meO")}}
-function snapshot(){return JSON.stringify({b:G.b,turn:G.turn,yarn:G.yarn,bonus:G.bonus})}
+function updTurn(){if(!G)return;let s;if(G.online)s=G.turn===G.me?t("you"):t("oppTurn");else if(G.mode==="two")s=G.turn?t("p2"):t("p1");else s=G.turn?t("cpu"):t("you");if(G.bonus)s=t("bonus");if(G.online&&G.over)s=t(G.me?"meG":"meO");
+ if(G.over&&!G.online&&G.winner>-2)s=resText(G.winner);
+ else if(!G.online&&!G.over&&G.quiet>=QWARN)s+=" · ⏳\u2060"+(QMAX-G.quiet);$("turn").textContent=s;if(G.online){$("turn").title=t(G.me?"meG":"meO")}}
+function snapshot(){return JSON.stringify({b:G.b,turn:G.turn,yarn:G.yarn,bonus:G.bonus,quiet:G.quiet||0})}
+function resText(w){return w<0?t("drawT"):G.mode==="two"?(w?t("winG"):t("winO")):w?t("winCpu"):winYouT()}
+function winYouT(){return t("winYou").replace("{n}",pname())}
 function doMove(m){
  return new Promise(res=>{
+ const g=G,fast=fastG(),dl=gotYarnDelay(m),mv=fast?200:320;
  G.busy=true;const b=G.b,pc=b[m.fr][m.fc];
  if(!G.chain&&!isCPU(G.turn))G.hist.push(snapshot());
+ if(!G.online)G.quiet=(!m.cap&&pc.k)?(G.quiet||0)+1:0;   // only lion moves without a capture count: men always make progress
  b[m.fr][m.fc]=null;b[m.r][m.c]=pc;
  const el=pcEl(pc.id);if(el){el.parentNode.appendChild(el);requestAnimationFrame(()=>el.style.transform=`translate(${V(m.c)*S+50}px,${V(m.r)*S+50}px)`)}
  SFX.move();
  let victim=null;if(m.cap){victim=b[m.cap[0]][m.cap[1]];b[m.cap[0]][m.cap[1]]=null;}
+ if(victim){const ve=pcEl(victim.id),vr=m.cap[0],vc=m.cap[1];   // the captured kitten flies away as soon as the jumper lands
+  setTimeout(()=>{if(G!==g)return;SFX.meow();bubble(vr,vc,victim.p?pickT("fun"):t("meow"),900);
+   if(ve&&ve.isConnected){const x=V(vc)*S+50,y=V(vr)*S+50,ex=victim.p?900:-100;ve.style.transition="none";
+    ve.animate([{transform:`translate(${x}px,${y}px)`},{transform:`translate(${x}px,${y-90}px) rotate(20deg)`,offset:.35},{transform:`translate(${(x+ex)/2}px,${y-20}px) rotate(-15deg)`,offset:.7},{transform:`translate(${ex}px,${y+30}px)`}],{duration:Math.max(200,dl-mv-30),easing:"ease-in",fill:"forwards"}).onfinish=()=>ve.remove();}},mv)}
  setTimeout(()=>{
-  if(victim){if(!victim.p)G.lost++;const ve=pcEl(victim.id);SFX.meow();bubble(m.cap[0],m.cap[1],victim.p?pickT("fun"):t("meow"),900);
-   if(ve){const x=V(m.cap[1])*S+50,y=V(m.cap[0])*S+50,ex=victim.p?900:-100;ve.style.transition="none";
-    ve.animate([{transform:`translate(${x}px,${y}px)`},{transform:`translate(${x}px,${y-90}px) rotate(20deg)`,offset:.35},{transform:`translate(${(x+ex)/2}px,${y-20}px) rotate(-15deg)`,offset:.7},{transform:`translate(${ex}px,${y+30}px)`}],{duration:900,easing:"ease-in"}).onfinish=()=>ve.remove();}}
-  let crowned=false;if(!pc.k&&((pc.p===0&&m.r===0)||(pc.p===1&&m.r===7))){pc.k=1;crowned=true;SFX.roar();bubble(m.r,m.c,"🦁 "+t("king"));}
-  let yi=G.yarn.findIndex(([yr,yc])=>yr===m.r&&yc===m.c),gotYarn=yi>=0;if(gotYarn)G.yarn.splice(yi,1);
+  if(G!==g){res();return}   // the game was left / restarted while this move was animating
+  if(victim&&!victim.p)G.lost++;
+  let crowned=false;if(!pc.k&&((pc.p===0&&m.r===0)||(pc.p===1&&m.r===7))){pc.k=1;crowned=true;SFX.roar();bubble(m.r,m.c,"🦁 "+t("king"));if(!G.online)G.quiet=0}
+  let yi=G.yarn.findIndex(([yr,yc])=>yr===m.r&&yc===m.c),gotYarn=yi>=0;if(gotYarn){G.yarn.splice(yi,1);SFX.boing();const ys=t("yarn");bubble(m.r,m.c,ys[Math.random()*ys.length|0],1700);G.pendBonus=true;window.__yarnHits=(window.__yarnHits||0)+1}
   if(m.cap&&!crowned&&pieceMoves(b,m.r,m.c,true).some(x=>x.cap)){G.chain=[m.r,m.c];G.sel=[m.r,m.c];G.bonus=false;draw();bubble(m.r,m.c,t("jump"),900);G.busy=false;commit();res();return}
   G.chain=null;G.sel=null;
-  if(gotYarn){SFX.boing();const ys=t("yarn");bubble(m.r,m.c,ys[Math.random()*ys.length|0],1700);G.bonus=true;window.__yarnHits=(window.__yarnHits||0)+1;
+  if(G.pendBonus){G.pendBonus=false;G.bonus=true;   // landing on yarn (also in the middle of a jump chain) = another turn
    if(!legal(b,G.turn,null,true).length){G.bonus=false;endTurn()}}
   else{G.bonus=false;endTurn()}
   draw();const ne=pcEl(pc.id);if(ne&&gotYarn){ne.classList.add("wag")}
   updTurn();G.busy=false;checkEnd();commit();res();
- },gotYarnDelay(m));
+ },dl);
  });
 }
-function gotYarnDelay(m){return m.cap?950:380}
+function gotYarnDelay(m){return fastG()?(m.cap?520:260):(m.cap?950:380)}
 function endTurn(){G.turn^=1;if(G.turn===0){if(!G.online)placeYarn();else if(NET.host){placeYarn();netSend({t:"yarn",y:G.yarn})}}}
+function points(p){let n=0;for(const row of G.b)for(const q of row)if(q&&q.p===p)n+=q.k?2:1;return n}
 function checkEnd(){
- if(G.over)return;const p=G.turn;
+ if(G.over)return;const p=G.turn,g=G;
+ if(!G.online&&!G.chain&&(G.quiet||0)>=QMAX){ // endgame decision: nobody can force a capture any more -> points (kitten 1, lion 2)
+  const a=points(0),c=points(1);G.over=true;G.byPts=[a,c];G.winner=a>c?0:c>a?1:-1;updTurn();setTimeout(()=>{if(G===g)showWin(g.winner)},700);return}
+ if(G.quiet<QWARN)G.qw=0;
+ if(!G.online&&G.quiet===QWARN&&!G.qw){G.qw=1;bubble(3,3,t("quietW").replace("{n}",QMAX-G.quiet),3000)}
  if(!legal(G.b,p,G.chain,G.bonus).length){
   if(G.bonus){G.bonus=false;endTurn();draw();updTurn();return checkEnd()}
-  G.over=true;const winner=p^1;setTimeout(()=>showWin(winner),700);return}
- if(isCPU(G.turn))setTimeout(cpuStep,650);
+  G.over=true;const winner=p^1;G.winner=winner;updTurn();setTimeout(()=>{if(G===g&&G.over)showWin(winner)},700);return}
+ if(isCPU(G.turn))setTimeout(()=>{if(G===g)cpuStep()},fastG()?300:650);
 }
 function evalMove(m){const b=JSON.parse(JSON.stringify(G.b));const pc=b[m.fr][m.fc];b[m.fr][m.fc]=null;b[m.r][m.c]=pc;let s=Math.random();
  if(m.cap){b[m.cap[0]][m.cap[1]]=null;s+=10}
  if(!pc.k&&m.r===7)s+=6;if(G.yarn.some(([r,c])=>r===m.r&&c===m.c))s+=3;
  const opp=legal(b,0,null,false);if(opp.some(x=>x.cap))s-=8;if(opp.some(x=>x.cap&&x.cap[0]===m.r&&x.cap[1]===m.c))s-=3;
  return s}
+/* ===== real search AI (hard mode and the last cup matches): alpha-beta over a compact board, same rules as the game =====
+   board cell: 0 empty, 1/2 orange man/lion (the player, moves up), 3/4 grey man/lion (the computer, moves down).
+   Same side keeps the move after a capture chain, a crowning ends the chain, landing on yarn = another move (yarn is only
+   known for the computer's own current turn). Iterative deepening with a time box, so a move never blocks the phone for long. */
+const AIW=100000,DO=[[-1,1],[-1,-1]],DG=[[1,1],[1,-1]],DK=[[1,1],[1,-1],[-1,1],[-1,-1]];
+let aiN=0,aiStop=false,aiDead=0,aiDeep=1,aiBest=null,aiPrev=null;
+function aiBoard(b){const a=new Int8Array(64);for(let r=0;r<8;r++)for(let c=0;c<8;c++){const q=b[r][c];if(q)a[r*8+c]=q.p?(q.k?4:3):(q.k?2:1)}return a}
+function aiGen(a,side,chain){
+ const caps=[],qs=[],lo=chain>=0?chain:0,hi=chain>=0?chain:63;
+ for(let s=lo;s<=hi;s++){const v=a[s];if(!v||(v>2?1:0)!==side)continue;
+  const r=s>>3,c=s&7,ds=(v===2||v===4)?DK:side?DG:DO;
+  for(let i=0;i<ds.length;i++){const dr=ds[i][0],dc=ds[i][1],r1=r+dr,c1=c+dc;if(r1<0||r1>7||c1<0||c1>7)continue;
+   const s1=r1*8+c1,v1=a[s1];
+   if(v1){if((v1>2?1:0)!==side){const r2=r1+dr,c2=c1+dc;if(r2>=0&&r2<8&&c2>=0&&c2<8&&!a[r2*8+c2])caps.push([s,r2*8+c2,s1])}}
+   else if(chain<0)qs.push([s,s1,-1])}}
+ return caps.length?caps:qs}
+function aiEval(a){ // positive = good for the computer (grey)
+ let s=0;const gk=[],og=[];
+ for(let i=0;i<64;i++){const v=a[i];if(!v)continue;const r=i>>3,c=i&7,mid=c>1&&c<6?2:0;
+  if(v===3)s+=100+4*r+(r===0?10:0)+mid;else if(v===4){s+=180;gk.push(i)}
+  else if(v===1){s-=100+4*(7-r)+(r===7?10:0)+mid;og.push(i)}else{s-=180;og.push(i)}}
+ if(s>=90&&gk.length&&og.length){ // ahead: hunt - bring the lions close to the enemy so the game ends instead of shuffling
+  for(const k of gk){let d=9;for(const o of og){const x=Math.max(Math.abs((k>>3)-(o>>3)),Math.abs((k&7)-(o&7)));if(x<d)d=x}s-=3*d}}
+ return s}
+function aiOrder(ms){
+ if(!aiPrev){for(let i=ms.length-1;i>0;i--){const j=Math.random()*(i+1)|0,x=ms[i];ms[i]=ms[j];ms[j]=x}return ms}
+ const k=ms.findIndex(m=>m[0]===aiPrev[0]&&m[1]===aiPrev[1]);if(k>0){const x=ms[k];ms.splice(k,1);ms.unshift(x)}return ms}
+function ab(a,side,chain,depth,alpha,beta,ys,pb,ext,ply){
+ if((++aiN&255)===0&&aiDeep>1&&performance.now()>aiDead)aiStop=true;
+ if(aiStop)return 0;
+ let ms=aiGen(a,side,chain);
+ if(!ms.length)return side?-AIW+ply:AIW-ply;   // the side to move cannot move: it loses
+ if(depth<=0){if(ms[0][2]<0||ext>=4)return aiEval(a);ext++}   // quiescence: keep resolving pending captures
+ if(ply===0)ms=aiOrder(ms);
+ const max=side===1;let best=max?-1e9:1e9;
+ for(let i=0;i<ms.length;i++){const m=ms[i],nb=a.slice(),v=nb[m[0]];nb[m[0]]=0;nb[m[1]]=v;if(m[2]>=0)nb[m[2]]=0;
+  let crowned=false;if(v===1&&m[1]<8){nb[m[1]]=2;crowned=true}else if(v===3&&m[1]>55){nb[m[1]]=4;crowned=true}
+  let ys2=ys,pb2=pb;if(ys&&ys.length){const k=ys.indexOf(m[1]);if(k>=0){ys2=ys.filter((_,q)=>q!==k);pb2=true}}
+  let sc;
+  if(m[2]>=0&&!crowned&&aiGen(nb,side,m[1]).length)sc=ab(nb,side,m[1],depth,alpha,beta,ys2,pb2,ext,ply+1);
+  else if(pb2&&aiGen(nb,side,-1).length)sc=ab(nb,side,-1,depth-1,alpha,beta,ys2,false,ext,ply+1);
+  else sc=ab(nb,side^1,-1,depth-1,alpha,beta,null,false,ext,ply+1);
+  if(aiStop)return 0;
+  if(max){if(sc>best){best=sc;if(ply===0)aiBest=m}if(sc>alpha)alpha=sc}else{if(sc<best)best=sc;if(sc<beta)beta=sc}
+  if(alpha>=beta)break}
+ return best}
+function aiPick(L,maxD,ms){ // L = the computer's legal moves (game format); returns one of them
+ if(L.length<2)return L[0];
+ const a=aiBoard(G.b),ys=(G.yarn||[]).map(([r,c])=>r*8+c),ch=G.chain?G.chain[0]*8+G.chain[1]:-1;
+ aiDead=performance.now()+ms;aiPrev=null;let best=null,dd=0;
+ for(let d=1;d<=maxD;d++){aiDeep=d;aiStop=false;aiBest=null;aiN=0;
+  const sc=ab(a,1,ch,d,-1e9,1e9,ys,!!G.pendBonus,0,0);
+  if(aiStop||!aiBest)break;best=aiBest;aiPrev=best;dd=d;if(Math.abs(sc)>AIW-100)break}
+ window.__aiDepth=dd;
+ if(!best)return null;
+ return L.find(x=>x.fr*8+x.fc===best[0]&&x.r*8+x.c===best[1])||null}
 async function cpuStep(){
- if(G.over||!isCPU(G.turn)||G.busy)return;
- const L=legal(G.b,1,G.chain,G.bonus);if(!L.length)return checkEnd();
- // easy = goofy: sometimes the silliest move, mostly random, rarely the best; normal = usually smart but sleepy 40% of the time (captures stay mandatory)
- let m,goofy=false;const ranked=()=>L.map(x=>[evalMove(x),x]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]),rp=Math.random();
- if(G.mode==="easy"){if(rp<.35&&L.length>1){m=ranked().pop();goofy=true}else if(rp<.85)m=L[Math.random()*L.length|0];else m=ranked()[0]}
- else if(G.mode==="cup"){const pr=CUPS[G.cr];if(rp<pr&&L.length>1){m=L[Math.random()*L.length|0];goofy=G.cr<2&&Math.random()<.5}else m=ranked()[0]}
+ const g=G;if(!g||g.over||!isCPU(g.turn)||g.busy||g.paused)return;
+ const L=legal(g.b,1,g.chain,g.bonus);if(!L.length)return checkEnd();
+ // easy = goofy: sometimes the silliest move, mostly random, rarely the best; normal = usually smart but sleepy 40% of the time (captures stay mandatory);
+ // hard = real search; cup matches 4 and 5 also search (2 and 3 plies) between their random "sleepy" moves
+ let m=null,goofy=false;const ranked=()=>L.map(x=>[evalMove(x),x]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]),rp=Math.random();
+ if(g.mode==="easy"){if(rp<.35&&L.length>1){m=ranked().pop();goofy=true}else if(rp<.85)m=L[Math.random()*L.length|0];else m=ranked()[0]}
+ else if(g.mode==="hard")m=aiPick(L,5,380);
+ else if(g.mode==="cup"){const pr=CUPS[g.cr];if(rp<pr&&L.length>1){m=L[Math.random()*L.length|0];goofy=g.cr<2&&Math.random()<.5}else if(g.cr>=3)m=aiPick(L,g.cr-1,300);else m=ranked()[0]}
  else m=rp<.4?L[Math.random()*L.length|0]:ranked()[0];
- await doMove(m);if(goofy&&!G.over&&Math.random()<.7)bubble(m.r,m.c,pickT("goofy"),1500);if(G.chain&&isCPU(G.turn))setTimeout(cpuStep,500);
+ if(!m)m=ranked()[0];
+ await doMove(m);if(G!==g)return;
+ if(goofy&&!g.over&&Math.random()<.7)bubble(m.r,m.c,pickT("goofy"),1500);if(g.chain&&isCPU(g.turn))setTimeout(()=>{if(G===g)cpuStep()},fastG()?260:500);
 }
+window.__aiPick=aiPick;
 $("board").addEventListener("click",e=>{
  if(!G||G.over||G.busy||G.paused||isCPU(G.turn)||(G.online&&G.turn!==G.me))return;
  const sv=$("board"),pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(sv.getScreenCTM().inverse());
@@ -321,11 +415,11 @@ function tap(r,c){
  const pc=G.b[r][c];if(pc&&pc.p===G.turn){if(L.some(x=>x.fr===r&&x.fc===c)){G.sel=[r,c];SFX.click()}else{G.sel=null;const el=pcEl(pc.id);if(el){el.classList.remove("wag");void el.getBBox();el.classList.add("wag")}}draw()}
 }
 window.__tap=tap;window.__G=()=>G;window.__legal=()=>legal(G.b,G.turn,G.chain,G.bonus);
-$("undoBtn").addEventListener("click",()=>{if(!G||G.busy||G.chain||!G.hist.length||isCPU(G.turn))return;const s=JSON.parse(G.hist.pop());Object.assign(G,s,{sel:null,chain:null,over:false});SFX.click();draw();updTurn()});
+$("undoBtn").addEventListener("click",()=>{if(!G||G.busy||G.over||G.chain||!G.hist.length||isCPU(G.turn))return;const s=JSON.parse(G.hist.pop());Object.assign(G,s,{sel:null,chain:null,over:false,pendBonus:false});SFX.click();draw();updTurn()});
 // ---- laptop: keyboard cursor, hover feedback, shortcuts (UI only) ----
-const KT={he:{m:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> שני שחקנים · <kbd>4</kbd> אונליין · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> בחירה · <kbd>U</kbd> ביטול מהלך · <kbd>Esc</kbd> ביטול בחירה / תפריט",g:"<kbd>←↑↓→</kbd> תזוזה<br><kbd>רווח</kbd> / <kbd>Enter</kbd> בחירה<br><kbd>U</kbd> ביטול מהלך<br><kbd>Esc</kbd> ביטול בחירה / תפריט"},
- fr:{m:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Deux joueurs · <kbd>4</kbd> En ligne · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> choisir · <kbd>U</kbd> annuler · <kbd>Échap</kbd> désélectionner / menu",g:"<kbd>←↑↓→</kbd> bouger<br><kbd>Espace</kbd> / <kbd>Entrée</kbd> choisir<br><kbd>U</kbd> annuler<br><kbd>Échap</kbd> désélectionner / menu"},
- en:{m:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Two players · <kbd>4</kbd> Online · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> select · <kbd>U</kbd> undo · <kbd>Esc</kbd> deselect / menu",g:"<kbd>←↑↓→</kbd> move<br><kbd>Space</kbd> / <kbd>Enter</kbd> select<br><kbd>U</kbd> undo<br><kbd>Esc</kbd> deselect / menu"}};
+const KT={he:{m:"<kbd>1</kbd> קל · <kbd>2</kbd> רגיל · <kbd>3</kbd> שני שחקנים · <kbd>4</kbd> אונליין · <kbd>5</kbd> קשה · במשחק: <kbd>←↑↓→</kbd> תזוזה · <kbd>רווח</kbd> בחירה · <kbd>U</kbd> ביטול מהלך · <kbd>Esc</kbd> ביטול בחירה / תפריט",g:"<kbd>←↑↓→</kbd> תזוזה<br><kbd>רווח</kbd> / <kbd>Enter</kbd> בחירה<br><kbd>U</kbd> ביטול מהלך<br><kbd>Esc</kbd> ביטול בחירה / תפריט"},
+ fr:{m:"<kbd>1</kbd> Facile · <kbd>2</kbd> Normal · <kbd>3</kbd> Deux joueurs · <kbd>4</kbd> En ligne · <kbd>5</kbd> Difficile · En jeu : <kbd>←↑↓→</kbd> bouger · <kbd>Espace</kbd> choisir · <kbd>U</kbd> annuler · <kbd>Échap</kbd> désélectionner / menu",g:"<kbd>←↑↓→</kbd> bouger<br><kbd>Espace</kbd> / <kbd>Entrée</kbd> choisir<br><kbd>U</kbd> annuler<br><kbd>Échap</kbd> désélectionner / menu"},
+ en:{m:"<kbd>1</kbd> Easy · <kbd>2</kbd> Normal · <kbd>3</kbd> Two players · <kbd>4</kbd> Online · <kbd>5</kbd> Hard · In game: <kbd>←↑↓→</kbd> move · <kbd>Space</kbd> select · <kbd>U</kbd> undo · <kbd>Esc</kbd> deselect / menu",g:"<kbd>←↑↓→</kbd> move<br><kbd>Space</kbd> / <kbd>Enter</kbd> select<br><kbd>U</kbd> undo<br><kbd>Esc</kbd> deselect / menu"}};
 function kbHints(){const k=KT[lang]||KT.he;$("kh").innerHTML=k.m;$("kh2").innerHTML=k.g}
 let kv={r:5,c:0},kvG=null;
 const canPlay=()=>G&&!G.over&&!G.busy&&!G.paused&&!isCPU(G.turn)&&!(G.online&&G.turn!==G.me);
@@ -347,7 +441,7 @@ document.addEventListener("keydown",e=>{
  const on=id=>$(id).classList.contains("on"),click=el=>{if(el){e.preventDefault();el.click()}};
  if(on("appr")||on("pause"))return;
  if(on("win")){if(act&&!btn)click($("againBtn"));else if(k==="Escape"){e.preventDefault();toMenu()}return}
- if($("menu").classList.contains("active")){if(kk==="1")click($("bEasy"));else if(kk==="2")click($("bNorm"));else if(kk==="3")click($("bTwo"));else if(kk==="4")click($("bOnline"));return}
+ if($("menu").classList.contains("active")){if(kk==="1")click($("bEasy"));else if(kk==="2")click($("bNorm"));else if(kk==="3")click($("bTwo"));else if(kk==="4")click($("bOnline"));else if(kk==="5")click($("bHard"));return}
  if($("lobby").classList.contains("active")){if(k==="Escape")click($("lobBack"));else if($("lobMain").style.display!=="none"){if(kk==="1")click($("bCreate"));else if(kk==="2")click($("bJoin"))}return}
  if(!G||!$("game").classList.contains("active"))return;
  let dr=0,dc=0;if(k==="ArrowUp")dr=-1;else if(k==="ArrowDown")dr=1;else if(k==="ArrowLeft")dc=-1;else if(k==="ArrowRight")dc=1;
@@ -357,6 +451,7 @@ document.addEventListener("keydown",e=>{
  if(act){if(btn)return;e.preventDefault();if(kvG!==G){kvG=G;kv={r:5,c:0}}placeKC($("kcur"),kv.r,kv.c);$("boardBox").classList.add("kb");
   if(canPlay()){const r=V(kv.r),c=V(kv.c);if(inb(r,c))tap(r,c)}return}
  if(kk==="u"){if(!G.online)click($("undoBtn"));return}
+ if(kk==="r"){if(!G.online)click($("restartBtn"));return}
  if(k==="Escape"){e.preventDefault();if(G.sel&&!G.chain&&!G.busy){G.sel=null;draw()}else if(!G.online)$("menuBtn").click()}
 });
 document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&AnnabelleDesk.isDesk()){const b=e.target.closest&&e.target.closest("button");if(b)setTimeout(()=>b.blur(),0)}});
@@ -367,21 +462,29 @@ function fit(){const w=$("wrap");const s=Math.max(200,Math.min(w.clientWidth-4,w
 addEventListener("resize",fit);
 window.toMenu=function(){musicStop();netLeave();$("win").classList.remove("on");G=null;show("menu");applyLang()};
 $("menuBtn").addEventListener("click",()=>{SFX.click();toMenu()});
-function cupWin(w){ // cup flow: win = next match (stars by kittens left), loss = kindly replay the same match
+$("rulesBtn").addEventListener("click",()=>{const o=$("rules").classList.toggle("open");$("rulesBtn").setAttribute("aria-expanded",o)});
+// one-tap restart (same mode, same cup match). After a few moves a second tap confirms, so a stray touch cannot wipe a game.
+let rsT=0;function rsArm(on){clearTimeout(rsT);const b=$("restartBtn");b.dataset.arm=on?"1":"";b.textContent=on?"❓":"🔄";if(on){b.title=t("restartQ");rsT=setTimeout(()=>rsArm(false),2500)}}
+$("restartBtn").addEventListener("click",()=>{if(!G||G.online||G.paused)return;const b=$("restartBtn");
+ if(!b.dataset.arm&&!G.over&&G.hist.length>=2){SFX.click();rsArm(true);return}
+ SFX.click();rsArm(false);$("win").classList.remove("on");const m=G.mode;newGame(m)});
+function cupWin(w){ // cup flow: win = next match (stars by kittens left), loss or draw = kindly replay the same match
  const c=cpGet(),r=G.cr,R=RW();let left=0;for(const row of G.b)for(const q of row)if(q&&q.p===0)left++;
  if(w===0){
   const stars=left>=8?3:left>=5?2:1;c.stars[r]=Math.max(c.stars[r]||0,stars);if(r>=c.done)c.done=r+1;
   const before=c.skins,fin=r===4;c.skins=Math.max(c.skins,Math.min(5,r+2));if(fin){c.cups++;c.skins=5}cpSave(c);
-  $("winT").textContent=fin?t("cupWon"):t("winYou");$("winS").innerHTML=(fin?"🏆🦁🏆":"🧡🦁🧡")+`<div style="font-size:22px;margin-top:4px">${"⭐".repeat(stars)+"☆".repeat(3-stars)} · ${left} ${t("kleft")}${c.skins>before?"<br>"+t("unl"):""}</div>`;
+  $("winT").textContent=fin?t("cupWon"):winYouT();$("winS").innerHTML=(fin?"🏆🦁🏆":"🧡🦁🧡")+`<div style="font-size:22px;margin-top:4px">${"⭐".repeat(stars)+"☆".repeat(3-stars)} · ${left} ${t("kleft")}${c.skins>before?"<br>"+t("unl"):""}${G.byPts?"<br>"+t("byPts")+" "+G.byPts[0]+"–"+G.byPts[1]:""}</div>`;
   $("againBtn").textContent=fin?t("cupAgain"):t("cupNext");$("againBtn").dataset.lg="next";
   if(R){R.award({game:"checkers",event:"levelClear",level:r+1,score:left*10});R.award({game:"checkers",event:"star",stars});R.award({game:"checkers",event:"win",coins:fin?20:undefined});R.award({game:"checkers",event:"score",score:left*10})}
  }else{
-  $("winT").textContent=t("cupLose");$("winS").textContent="🐱💪";$("againBtn").textContent=t("cupRetry");$("againBtn").dataset.lg="retry";if(R)R.award({game:"checkers",event:"score",score:left*10})}
+  $("winT").textContent=w<0?t("drawT"):t("cupLose");$("winS").innerHTML=(w<0?"🤝":"🐱💪")+(G.byPts?`<div style="font-size:18px;margin-top:4px">${t("byPts")} ${G.byPts[0]}–${G.byPts[1]}</div>`:"");$("againBtn").textContent=t("cupRetry");$("againBtn").dataset.lg="retry";if(R)R.award({game:"checkers",event:"score",score:left*10})}
 }
-function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else if(G.mode==="two")s=w?t("winG"):t("winO");else s=w?t("winCpu"):t("winYou");$("winT").textContent=s;$("winS").textContent=w?"🤍🦁🤍":"🧡🦁🧡";$("againBtn").style.display="";delete $("againBtn").dataset.lg;musicStop();
+function showWin(w){let s;if(G.online)s=w===G.me?t("winOn"):t("loseOn");else s=resText(w);$("winT").textContent=s;$("winS").textContent=w<0?"🤝":w?"🤍🦁🤍":"🧡🦁🧡";$("againBtn").style.display="";delete $("againBtn").dataset.lg;musicStop();
+ if(G.byPts&&G.mode!=="cup"){const d=document.createElement("div");d.style.cssText="font-size:18px;margin-top:4px";d.textContent=t("byPts")+" "+G.byPts[0]+"–"+G.byPts[1];$("winS").appendChild(d)}
+ if(!G.online&&G.mode!=="two"&&G.mode!=="cup")recWin(G.mode,w===0);
  if(G.mode==="cup")cupWin(w);
- else if(RW()){const R=RW(),mine=G.online?w===G.me:G.mode!=="two"&&w===0;if(mine){let left=0;for(const row of G.b)for(const q of row)if(q&&q.p===(G.online?G.me:0))left++;R.award({game:"checkers",event:"win"});R.award({game:"checkers",event:"score",score:left*10});const st=left>=8?3:left>=5?2:1;if(!G.online||true)R.award({game:"checkers",event:"star",stars:st})}}
- $("win").classList.add("on");if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti();if(G.cr===4&&!w)setTimeout(confetti,1500)}else if(G.online)SFX.lose();else SFX.lose();
+ else if(RW()){const R=RW(),mine=G.online?w===G.me:G.mode!=="two"&&w===0;if(mine){let left=0;for(const row of G.b)for(const q of row)if(q&&q.p===(G.online?G.me:0))left++;const mult=G.mode==="hard"?2:1;R.award({game:"checkers",event:"win"});R.award({game:"checkers",event:"score",score:left*10*mult});const st=left>=8?3:left>=5?2:1;R.award({game:"checkers",event:"star",stars:st})}}
+ $("win").classList.add("on");if(w<0)SFX.back();else if(G.online?w===G.me:(G.mode==="two"||!w)){SFX.win();confetti();if(G.cr===4&&!w)setTimeout(confetti,1500)}else SFX.lose();
  if(RW())setTimeout(()=>RW().flush(),500)}
 function confetti(){const cv=$("conf"),x=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;const P=Array.from({length:120},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*3,c:`hsl(${Math.random()*360},90%,60%)`,a:Math.random()*6}));let n=0;(function f(){x.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.a+=.1;x.fillStyle=p.c;x.fillRect(p.x+Math.sin(p.a)*8,p.y,8,12)});if(++n<220)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
 $("againBtn").addEventListener("click",()=>{const lg=$("againBtn").dataset.lg;delete $("againBtn").dataset.lg;if(lg){if(lg==="next"){const c=cpGet();cupR=c.done>=5?0:c.done;if(c.done>=5){c.done=0;cpSave(c)}}$("win").classList.remove("on");newGame("cup");return}if(G.online){NET.myRe=true;netSend({t:"rematch"});$("winT").textContent=t("waitRe");$("againBtn").style.display="none";maybeRematch();return}const m=G.mode;$("win").classList.remove("on");newGame(m)});
@@ -427,7 +530,7 @@ function saveSess(){if(!G||!G.online)return;if(G.over){clearSess();return}try{lo
 function clearSess(){try{localStorage.removeItem(SK)}catch(e){}}
 function commit(){if(!G)return;G.seq=(G.seq||0)+1;if(G.online)saveSess()}
 function applyState(s){
- G.b=s.b;G.turn=s.turn;G.yarn=s.yarn;G.bonus=s.bonus;G.chain=s.chain;G.seq=s.seq;G.sel=null;G.busy=false;G.over=false;NET.q=[];
+ G.b=s.b;G.turn=s.turn;G.yarn=s.yarn;G.bonus=s.bonus;G.chain=s.chain;G.seq=s.seq;G.sel=null;G.busy=false;G.over=false;G.pendBonus=false;NET.q=[];
  $("win").classList.remove("on");$("againBtn").style.display="";draw();updTurn();if(s.over)checkEnd();saveSess();
 }
 function setPaused(on){if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();NET.paused=on;if(G)G.paused=on;$("pause").classList.toggle("on",on);if(!on){clearTimeout(NET.rt);NET.rt=null;NET.soft=0;clearTimeout(NET.hardT);weakBanner(false)}}
