@@ -121,6 +121,8 @@ body.onl #emos{display:grid}
 .desk #cMenu{max-width:820px;display:grid;grid-template-columns:1fr 1fr;gap:0 18px;align-items:center}
 .desk #cCups{max-width:860px}.desk #cupGrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 @media (max-height:700px){.card{padding:10px 14px}.btn{min-height:48px;margin:6px 0}#masc{font-size:56px}#mascRow{height:62px}.cup{margin:6px 0;padding:6px}.trk{min-height:60px}}
+@media (max-width:375px){#hud{gap:4px;left:6px;right:6px}.pill{padding:5px 8px}}
+@media (max-width:339px){body.onl #musBtn{display:none}}
 @media (prefers-reduced-motion:reduce){#masc,#mascRow span,.drift i,.trk.cur{animation:none}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/funrun.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/funrun-192.png"><meta name="apple-mobile-web-app-title" content="מרוץ התעלולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/funrun-apple-180.png"><script src="pwa.js" data-app="funrun" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#navSlot" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
@@ -400,8 +402,10 @@ const isLocal=r=>!r.rem;
 function ahead(r){let b=null;for(const o of G.R)if(o!==r&&o.x>r.x+20&&o.fin<0&&!(o.rem&&(o.fl&32))&&(!b||o.x<b.x))b=o;return b}
 function useItem(r){
  if(!r||r.item<0||r.roll>0||r.stun>0||r.fin>=0||G.phase!=='race'||r.itCd>0)return false;
- let k=r.item;r.item=-1;r.itCd=1.5;
+ let k=r.item;
  if((k===6||k===5)&&!ahead(r))k=3;
+ if(ON.on&&(k<3||k===6))sendState(); // online: the friend only accepts a prank from a racer whose newest state shows that item at that place
+ r.item=-1;r.itCd=1.5;
  if(k===0)dropBanana(r);
  else if(k===1||k===2){
   for(const o of G.R)if(o!==r&&isLocal(o))applyPrank(k,o,r);
@@ -427,7 +431,7 @@ function dropBanana(r){
  if(ON.on)NT.send({t:'pr',k:0,by:r.id,x:Math.round(p.x),id:id});
  if(r===ME())SFX.click()}
 function addBanana(id,x,y,by){const W=G.W;if(W.bn.length>=24){const o=W.bn.shift();o.dead=1}const o=obj(W,{k:'bn',x,y,id,by,age:0,dead:0});W.bn.push(o);return o}
-function eatBanana(o){o.dead=1;const W=G.W,i=W.bn.indexOf(o);if(i>=0)W.bn.splice(i,1);if(ON.on)NT.send({t:'bx',i:o.id})}
+function eatBanana(o){o.dead=1;const W=G.W,i=W.bn.indexOf(o);if(i>=0)W.bn.splice(i,1);if(ON.on){ON.eat[o.id]=performance.now();sendState();NT.send({t:'bx',i:o.id})}}
 function teleport(r,x){const s=safeSpot(G.W,x-15);burst(r.x,r.y-25,'#c9a6ff',14);r.x=s.x;r.y=s.y;r.ly=s.y;r.vy=0;r.g=1;r.w=0;r.inv=Math.max(r.inv,1);r.mag=0;burst(r.x,r.y-25,'#c9a6ff',14)}
 function doSwap(r,a){
  if(!a)return;
@@ -798,7 +802,8 @@ function frame(ts){
 /* ============ online 1-vs-1 (+2 bots) ============
    Racers: 0 = host girl, 1 = guest girl, 2 and 3 = bots simulated by the host.
    Each client simulates only its own racer(s) and streams their state 15x/s; everything received is validated. */
-const ON={on:false,wins:[0,0],race:0,seed:0,th:0,phase:'idle',skins:['cat','cat'],grace:0,gr:0,swp:{},prT:{},emT:0,emS:0,blT:0,sendT:0,gAcc:START,gT:0,gEl:0,gX:START,rdAt:0,rdT:0,cdEnd:0,goAt:0,pausedAt:0,fnT:0,nextT:0,endT:0,finMsg:null,over:false,pts:0};
+const ON={on:false,wins:[0,0],race:0,seed:0,th:0,phase:'idle',skins:['cat','cat'],grace:0,gr:0,swp:{},prT:{},emT:0,emS:0,emQ:-1,emQT:0,blT:0,sentAt:0,gAcc:START,gT:0,gCr:0,gBud:500,gEl:0,gX:START,rdAt:0,rdT:0,rkT:0,cdEnd:0,goAt:0,pausedAt:0,fnT:0,nextT:0,endT:0,
+ finMsg:null,finT:0,finOk:0,fkT:0,syT:0,syAt:0,rxAt:0,stT:-1e9,eat:{},over:false,pts:0};
 const EMO=['😄','😮','😭','👏'];
 const NT=window.Net1v1?Net1v1({pid:'annabelle-funrun-',shareTxt:{he:TX.he.share,fr:TX.fr.share,en:TX.en.share},
  hideMenu(){showOv(null)},showMenu(){toMenu()},onLink(){showOv(null)},
@@ -816,7 +821,7 @@ function onReset(seed,th){ON.on=true;ON.wins=[0,0];ON.race=0;ON.seed=seed>>>0;ON
 function botPick(){return['panda','fox','rabbit','tiger','penguin'].filter(s=>s!==ON.skins[0]&&s!==ON.skins[1]).slice(0,2)}
 function setSkins(){const b=botPick();G.R[0].skin=ON.skins[0];G.R[1].skin=ON.skins[1];G.R[2].skin=b[0];G.R[3].skin=b[1];if(NT.host)for(let i=2;i<4;i++){const r=G.R[i],P=PERS[r.skin]||PERS.cat,B=BOT.normal;r.base=B.sp*P.sp;r.ai.miss=B.miss*P.ms;r.ai.see=B.see}}
 function onSetup(r){
- ON.race=r;ON.phase='wait';ON.grace=0;ON.gr=0;ON.swp={};ON.prT={};ON.finMsg=null;ON.fnT=0;ON.nextT=0;ON.endT=0;ON.gAcc=START;ON.gX=START;ON.gEl=0;ON.gBud=500;ON.rdT=.25;ON.sendT=0;
+ ON.race=r;ON.phase='wait';ON.grace=0;ON.gr=0;ON.swp={};ON.prT={};ON.eat={};ON.finMsg=null;ON.finT=0;ON.finOk=0;ON.fnT=0;ON.nextT=0;ON.endT=0;ON.gAcc=START;ON.gX=START;ON.gEl=0;ON.gBud=500;ON.gCr=0;ON.rdT=.25;ON.rkT=2.5;ON.syT=0;ON.sentAt=0;ON.emQ=-1;ON.rxAt=performance.now();
  const h=NT.host,me=h?0:1,b=botPick();
  setupRace({mode:'on',seed:(ON.seed+r*7919)>>>0,theme:(ON.th+r)%4,tier:1+r*.35,len:9800+r*600,speed:335+r*6,diff:'normal',me:me,
   racers:[{skin:ON.skins[0],kind:h?'me':'rem'},{skin:ON.skins[1],kind:h?'rem':'me'},{skin:b[0],kind:h?'bot':'rem'},{skin:b[1],kind:h?'bot':'rem'}]});
@@ -825,29 +830,39 @@ function onSetup(r){
 function pk(r){let f=0;if(r.stun>0)f|=1;if(r.shr>0)f|=2;if(r.shd>0)f|=4;if(r.boost>0)f|=8;if(r.ink>0)f|=16;if(r.fin>=0)f|=32;if(r.mag>0)f|=64;if(r.g)f|=128;if(r.pad>0)f|=256;
  return[Math.round(r.x),Math.round(r.y),Math.round(r.vx),Math.round(r.vy),r.stun>0?3:(r.g?0:(r.vy<0?1:2)),r.item,f]}
 function okP(p){return Array.isArray(p)&&p.length===7&&fin(p[0])&&p[0]>=-200&&p[0]<=2e5&&fin(p[1])&&p[1]>=-3000&&p[1]<=1500&&fin(p[2])&&Math.abs(p[2])<=2500&&fin(p[3])&&Math.abs(p[3])<=4000&&isInt(p[4],0,3)&&isInt(p[5],-1,6)&&isInt(p[6],0,511)}
-function pushSnap(r,p,now){const f=p[6];r.buf.push({t:now,x:Math.min(p[0],G.W.len+1300),y:p[1],vx:p[2],vy:p[3]});if(r.buf.length>4)r.buf.shift();
+function pushSnap(r,p,now){const f=p[6],x=Math.min(p[0],G.W.len+1300);r.buf.push({t:now,x:x,y:p[1],vx:p[2],vy:p[3]});if(r.buf.length>4)r.buf.shift();if(!(r.mx>x))r.mx=x; // mx: the farthest she has been
  r.an=p[4];r.item=p[5];r.fl=f;r.stun=f&1?.2:0;r.shr=f&2?.2:0;r.shd=f&4?.2:0;r.boost=f&8?.2:0;r.ink=f&16?.2:0;r.mag=f&64?.2:0;r.g=f&128?1:0;r.pad=f&256?.2:0}
 function interp(r,tt){const b=r.buf,n=b.length;if(!n)return;const c=b[n-1];
  if(tt>=c.t){const e=Math.min(.25,(tt-c.t)/1000);r.x=c.x+c.vx*e;r.y=c.y;r.vx=c.vx;r.vy=c.vy;return}
  let a=b[0],z=b[0];for(let i=n-2;i>=0;i--)if(b[i].t<=tt){a=b[i];z=b[i+1];break}
  const f=clamp((tt-a.t)/Math.max(1,z.t-a.t),0,1);r.x=lerp(a.x,z.x,f);r.y=lerp(a.y,z.y,f);r.vx=z.vx;r.vy=z.vy}
-function sendState(){const m={t:'st',r:ON.race,p:pk(ME())};if(NT.host)m.b=[pk(G.R[2]),pk(G.R[3])];NT.send(m)}
+function sendState(){ON.sentAt=performance.now();const m={t:'st',r:ON.race,p:pk(ME())};if(NT.host)m.b=[pk(G.R[2]),pk(G.R[3])];NT.send(m)}
+const lastX=r=>r.buf.length?r.buf[r.buf.length-1].x:r.x; // newest reported position of a remote racer (not the smoothed one)
+function boxesTo(W,x){let n=0;for(let b=Math.floor(x/400);b>=0;b--){const L=W.bk[b];if(L)for(const o of L)if(o.k==='bx'&&o.x<=x)n++}return n}
 function sendSy(){const m={t:'sy',r:ON.race,w:ON.wins.slice(),ph:ON.phase==='race'?2:(ON.phase==='res'||ON.phase==='over')?3:0,el:Math.round(Math.max(0,G.clock)*1000),bn:G.W.bn.slice(-24).map(b=>[b.id,Math.round(b.x)])};
  if(ON.finMsg)m.f=ON.finMsg;NT.send(m);if(ON.phase==='wait'||ON.phase==='cd'){ON.phase='wait';G.phase='cd';G.cd=99;ON.rdT=.2;$('wait').classList.add('on')}}
 /* per display frame while a match is on (not during a network pause) */
 function onlineFrame(dt){
- const now=performance.now(),me=ME(),h=NT.host;
- if(ON.phase==='wait'){if(h){ON.rdT-=dt;if(ON.rdT<=0){ON.rdT=2;ON.rdAt=now;NT.send({t:'rd',r:ON.race,w:ON.wins.slice()})}}}
+ const now=performance.now(),me=ME(),h=NT.host,q=Date.now()-NT.NET.last; // q: for how long nothing at all arrived from the friend
+ if(ON.phase==='wait'){if(h){ON.rdT-=dt;if(ON.rdT<=0){ON.rdT=2;ON.rdAt=now;NT.send({t:'rd',r:ON.race,w:ON.wins.slice()})}}
+  else{ON.rkT-=dt;if(ON.rkT<=0){ON.rkT=2;NT.send({t:'rk',r:ON.race,sk:SKI[SV.skin],q:1})}}} // no "rd" for a while: her "go" may have been lost, ask again
  else if(ON.phase==='cd'){$('wait').classList.remove('on');G.cd=(ON.cdEnd-now)/1000;const n=Math.ceil(G.cd);if(n<G.cdN&&n>=1){G.cdN=n;SFX.beep()}
-  if(G.cd<=0){ON.phase='race';ON.goAt=ON.cdEnd;ON.gT=now;ON.gAcc=START;goRace()}}
+  if(G.cd<=0){ON.phase='race';ON.goAt=ON.cdEnd;ON.gT=now;ON.gAcc=START;ON.gCr=0;goRace()}}
  if(ON.phase==='race'){G.clock=Math.max(0,(now-ON.goAt)/1000);
   const o=G.R[1-G.me],of=!!(o.fl&32),mf=me.fin>=0;
   if(!ON.gr&&(of||mf)&&of!==mf){ON.gr=1;ON.grace=20}
   if(ON.grace>0)ON.grace=Math.max(0,ON.grace-dt);
-  if(!h&&mf){ON.fnT-=dt;if(ON.fnT<=0){ON.fnT=1;NT.send({t:'fn',r:ON.race,tm:Math.round(me.fin*1000)})}}}
- else if(ON.phase==='res'&&!ON.over){ON.nextT-=dt;const e=$('rNextIn');if(e)e.textContent=t('nextIn',{n:Math.max(1,Math.ceil(ON.nextT))});if(h&&ON.nextT<=0)onSetup(ON.race+1)}
+  if(!h&&mf&&q<700){ON.fnT-=dt;if(ON.fnT<=0){ON.fnT=1;NT.send({t:'fn',r:ON.race,tm:Math.round(me.fin*1000)})}}
+  if(h&&ON.syT>0){ON.syT-=dt;if(ON.syT<=0)sendSy()}} // the link was silent for a moment: make both worlds agree again
+ else if(ON.phase==='res'){
+  if(h&&!ON.finOk&&ON.finMsg&&q<700){ON.finT-=dt;if(ON.finT<=0){ON.finT=1.5;NT.send(ON.finMsg)}} // the result is repeated (while the link is alive) until the friend confirms it
+  if(!ON.over){ON.nextT-=dt;const e=$('rNextIn');if(e)e.textContent=t('nextIn',{n:Math.max(1,Math.ceil(ON.nextT))});if(h&&ON.nextT<=0&&(ON.finOk||ON.nextT<-15))onSetup(ON.race+1)}}
  for(const r of G.R)if(r.rem)interp(r,now-110);
- ON.sendT-=dt;if(ON.sendT<=0&&ON.phase!=='over'){ON.sendT=1/15;sendState()}}
+ if(ON.emQ>=0&&q<700&&now-ON.stT>1100){if(now-ON.emQT<12000)NT.send({t:'em',i:ON.emQ});ON.emQ=-1} // the emote tapped while the link was silent, once the backlog is through
+ /* state stream: 15x/s while racing; only a trickle on the cards and while the friend is silent, so that a stalled link
+    never piles up a backlog bigger than the receiver's flood limit (anything arriving switches it back at once) */
+ const iv=q>700?(q>5000?2000:1000):(ON.phase==='race'||ON.phase==='cd')?62:1000;
+ if(now-ON.sentAt>=iv&&ON.phase!=='over')sendState()}
 /* host only, inside the fixed simulation step */
 function onlineSim(h){
  if(!NT.host||ON.phase!=='race')return;const a=G.R[0],b=G.R[1];
@@ -857,12 +872,14 @@ function onlineSim(h){
 function onlineFinish(r){if(r===ME()&&!NT.host)ON.fnT=0}
 function hostEnd(){
  if(ON.phase!=='race')return;const o=ranking().map(r=>r.id),tm=G.R.map(r=>r.fin>=0?Math.round(r.fin*1000):-1),w=o.indexOf(0)<o.indexOf(1)?0:1;
- ON.wins[w]++;const m={t:'fin',r:ON.race,o:o,tm:tm,w:ON.wins.slice(),mo:ON.wins[w]>=2?1:0};ON.finMsg=m;NT.send(m);showOnRes(m)}
+ ON.wins[w]++;const m={t:'fin',r:ON.race,o:o,tm:tm,w:ON.wins.slice(),mo:ON.wins[w]>=2?1:0};ON.finMsg=m;ON.finOk=0;ON.finT=1.5;NT.send(m);showOnRes(m)}
 function okFin(d){
  if(!d||!isInt(d.r,0,2)||!Array.isArray(d.o)||d.o.length!==4||!Array.isArray(d.tm)||d.tm.length!==4||!Array.isArray(d.w)||d.w.length!==2)return false;
  const seen=[0,0,0,0];for(let i=0;i<4;i++){if(!isInt(d.o[i],0,3)||seen[d.o[i]]++)return false;if(!fin(d.tm[i])||d.tm[i]<-1||d.tm[i]>6e5)return false}
  if(!isInt(d.w[0],0,2)||!isInt(d.w[1],0,2)||d.w[0]+d.w[1]!==d.r+1)return false;
  return d.mo===(Math.max(d.w[0],d.w[1])>=2?1:0)}
+/* net1v1 stops watching the link once the match is over, so a "weak connection" pill that is up at that moment would stay on the final card for ever */
+function weakOff(){const e=$('n1Weak'),N=NT.NET;if(e)e.classList.remove('on');if(N){clearInterval(N.wt);N.wt=null;N.weak=false}}
 function showOnRes(m){
  if(ON.phase==='res'&&ON.finMsg===m&&G.resShown)return;
  ON.phase='res';ON.finMsg=m;G.phase='done';G.resShown=true;ON.grace=0;$('wait').classList.remove('on');
@@ -870,74 +887,100 @@ function showOnRes(m){
  G.R.forEach(r=>{r.fin=m.tm[r.id]>=0?m.tm[r.id]/1000:-1});ON.pts+=(5-place)*20+(iw?100:0);
  const ord=m.o.map(i=>G.R[i]),tms=G.R.map(r=>r.fin);
  let h='<h2>'+esc(t(m.mo?(iw?'onWinM':'onLoseM'):(iw?'onWinR':'onLoseR')))+'</h2><div class="onsc">'+esc(t('vs',{a:m.w[me],b:m.w[1-me]}))+'</div>'+podiumHtml(ord,tms);
- if(m.mo){ON.over=true;NT.setOver(true);if(!iw)h+='<p class="sub">'+esc(t('onLoseS'))+'</p>';h+='<div class="row r3"><button class="btn g" id="rAgain">'+esc(t('again'))+'</button><button class="btn w" id="rMenu">'+esc(t('home'))+'</button></div>';
+ if(m.mo){ON.over=true;NT.setOver(true);weakOff();if(!iw)h+='<p class="sub">'+esc(t('onLoseS'))+'</p>';h+='<div class="row r3"><button class="btn g" id="rAgain">'+esc(t('again'))+'</button><button class="btn w" id="rMenu">'+esc(t('home'))+'</button></div>';
   const aw=[{event:'score',score:ON.pts}];if(iw){aw.unshift({event:'win'});SV.onW++;save()}award(aw);flushR()}
  else{ON.nextT=7;h+='<p class="sub" id="rNextIn">'+esc(t('nextIn',{n:7}))+'</p><button class="btn w" id="rMenu" style="min-height:44px;font-size:16px">'+esc(t('home'))+'</button>'}
  $('cRes').innerHTML=h;showOv('ovRes');$('rMenu').onclick=()=>{SFX.click();toMenu()};
  if(iw){m.mo?SFX.rec():SFX.win();confetti(m.mo?160:80)}else SFX.lose();
  if(m.mo)$('rAgain').onclick=()=>{SFX.click();NT.rematch();$('rAgain').textContent=t('reW');$('rAgain').disabled=true}}
 function showEmote(id,i){const r=G.R[id];if(r){r.emo=EMO[i];r.emoT=2}SFX.emo();if(id!==G.me){const b=$('emoBub');b.textContent=EMO[i]+' ';const s=document.createElement('small');s.textContent=t('friend');b.appendChild(s);b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}}
-$('emos').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const now=performance.now(),i=+b.dataset.e;if(!ON.on||!NT||ON.phase==='over'||now-ON.emS<1000)return;ON.emS=now;NT.send({t:'em',i:i});showEmote(G.me,i);$('emos').classList.add('cool');setTimeout(()=>$('emos').classList.remove('cool'),1000)}));
+$('emos').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const now=performance.now(),i=+b.dataset.e;if(!ON.on||!NT||ON.phase==='over'||now-ON.emS<1000)return;ON.emS=now;
+ if(Date.now()-NT.NET.last>2000){ON.emQ=i;ON.emQT=now}else{ON.emQ=-1;NT.send({t:'em',i:i})} // friend silent right now: keep only the newest emote and send it when the link is back
+ showEmote(G.me,i);$('emos').classList.add('cool');setTimeout(()=>$('emos').classList.remove('cool'),1000)}));
 let leaveT=0;
 $('leaveBtn').onclick=()=>{const b=$('leaveBtn'),now=performance.now();if(b.classList.contains('ask')&&now-leaveT<3500){SFX.click();toMenu();return}leaveT=now;b.classList.add('ask');SFX.click();setTimeout(()=>b.classList.remove('ask'),3500)};
 /* every message from the friend lands here (already authenticated by net1v1) – trust nothing */
 function onNet(d){
  const now=performance.now(),h=NT.host,W=G.W,ty=d.t;if(!W||G.R.length!==4)return;
+ if(now-ON.rxAt>1500){ON.stT=now;if(h)ON.syT=1.3} // first message after a silence: what follows is a backlog (the host re-syncs the shared things right after it)
+ ON.rxAt=now;
  if(ty==='st'){
   if(d.r!==ON.race||!okP(d.p)||ON.phase==='over')return;
-  if(h){const p=d.p.slice(0,7);
+  if(h){const p=d.p.slice(0,7),b=G.R[1];
    if(ON.phase==='wait'||ON.phase==='cd')p[0]=Math.min(p[0],START+2);
-   else if(ON.phase==='race'){const dtm=Math.min(30,(now-ON.gT)/1000),base=dtm*W.speed*1.12+12,adv=p[0]-ON.gAcc; // sustained speed + a burst budget for boosts
-    if(adv>base){const ex=adv-base;if(ex>ON.gBud){p[0]=ON.gAcc+base+ON.gBud;ON.gBud=0}else ON.gBud-=ex}
-    ON.gBud=Math.min(900,ON.gBud+dtm*110)}
-   ON.gAcc=p[0];ON.gT=now;if(p[0]<W.len-40){ON.gEl=G.clock;ON.gX=p[0]}
-   pushSnap(G.R[1],p,now)}
+   else if(ON.phase==='race'){
+    /* anti-teleport, by elapsed time only (never per message): she may be anywhere up to the farthest point accepted so far (ON.gAcc);
+       going beyond it costs distance credit that grows at top running speed (unused credit fades in ~2 s, so the backlog after a
+       network stall is accepted but nothing can be saved up), plus a small burst budget for rockets, magnets and speed pads */
+    const dtm=clamp((now-ON.gT)/1000,0,30);
+    ON.gCr=ON.gCr*Math.exp(-dtm/2)+dtm*W.speed*1.12;ON.gBud=Math.min(900,ON.gBud+dtm*110);
+    let ex=p[0]-ON.gAcc;
+    if(ex>0){const c=Math.min(ex,ON.gCr);ON.gCr-=c;ex-=c;const u=Math.min(ex,ON.gBud);ON.gBud-=u;ex-=u;p[0]-=ex;ON.gAcc=p[0]}
+    if(p[0]<W.len-40){ON.gEl=G.clock;ON.gX=p[0]}}
+   ON.gT=now;
+   if(b.fin<0)p[6]&=~32;else p[6]|=32; // "finished" is true only once the host itself accepted her finish (see 'fn'): the flag starts the hurry timer
+   pushSnap(b,p,now)}
   else{if(!Array.isArray(d.b)||d.b.length!==2||!okP(d.b[0])||!okP(d.b[1]))return;pushSnap(G.R[0],d.p,now);pushSnap(G.R[2],d.b[0],now);pushSnap(G.R[3],d.b[1],now)}
   return}
  if(ty==='em'){if(isInt(d.i,0,3)&&now-ON.emT>900){ON.emT=now;showEmote(1-G.me,d.i)}return}
  if(ty==='pr'){
   if(ON.phase!=='race'||!(d.k===0||d.k===1||d.k===2||d.k===6))return;
   const by=h?1:d.by;if(!h&&by!==0&&by!==2&&by!==3)return;
-  if(now-(ON.prT[by]||0)<1000)return;ON.prT[by]=now;
-  const src=G.R[by];
-  if(d.k===0){if(!fin(d.x)||!isInt(d.id,by*1000,by*1000+999)||d.x<0||d.x>W.len+800||Math.abs(d.x-src.x)>600)return;if(W.bn.some(b=>b.id===d.id))return;const p=groundBelow(W,d.x);addBanana(d.id,p.x,p.y,by)}
-  else if(d.k===6){const tg=d.tg;if(!fin(d.x)||!isInt(tg,0,3)||tg===by||d.x<0||d.x>W.len||Math.abs(d.x-src.x)>600)return;const v=G.R[tg];if(v.rem||v.fin>=0)return;
+  /* per racer: one prank per 1.5 s, the item cooldown (two may arrive together after a network hiccup); her newest state must show that very
+     item in her paws; and she cannot have used more items than there are boxes behind her */
+  const src=G.R[by],sx=lastX(src),B=ON.prT[by]||(ON.prT[by]={n:2,t:now,u:0});
+  B.n=Math.min(2,B.n+(now-B.t)/1500);B.t=now;if(B.n<1)return;B.n--;
+  if(src.item!==d.k||src.fin>=0||B.u>=boxesTo(W,(src.mx||0)+80))return;
+  if(d.k===0){if(!fin(d.x)||!isInt(d.id,by*1000,by*1000+999)||d.x<0||d.x>W.len+800||Math.abs(d.x-sx)>600)return;if(W.bn.some(b=>b.id===d.id))return;B.u++;src.item=-1;const p=groundBelow(W,d.x);addBanana(d.id,p.x,p.y,by)}
+  else if(d.k===6){const tg=d.tg;if(!fin(d.x)||!isInt(tg,0,3)||tg===by||d.x<0||d.x>W.len||Math.abs(d.x-sx)>300)return;const v=G.R[tg];
+   if(v.rem||v.fin>=0||v.x<=sx+20||now-ON.stT<1000)return; // only the racer really ahead of her can be swapped, and never by a request that sat in a stalled link
+   B.u++;src.item=-1;
    if(v.shd>0){v.shd=0;fxBlock(v);NT.send({t:'bl',k:6,b:by});return}
-   const old=Math.round(v.x);teleport(v,d.x);NT.send({t:'sw',by:by,tg:tg,x:old});if(h&&by===1){ON.gAcc=Math.max(ON.gAcc,old);ON.gT=now}
+   const old=Math.round(v.x);teleport(v,d.x);NT.send({t:'sw',by:by,tg:tg,x:old});if(h&&by===1)ON.gAcc=Math.max(ON.gAcc,old); // she is now where the victim was: no teleport alarm for that
    if(v===ME()){pop(t('hSwap'));shake();SFX.swap()}}
-  else{for(const r of G.R)if(!r.rem&&r.id!==by)applyPrank(d.k,r,src)}
+  else{B.u++;src.item=-1;for(const r of G.R)if(!r.rem&&r.id!==by)applyPrank(d.k,r,src)}
   return}
  if(ty==='sw'){const s=ON.swp[d.by];if(!s||!isInt(d.by,0,3)||d.tg!==s.tg||now-s.at>4000||!fin(d.x))return;delete ON.swp[d.by];const r=G.R[d.by];
   if(r.rem||r.fin>=0||ON.phase!=='race'||d.x<0||d.x>W.len||Math.abs(d.x-s.vx)>700)return;teleport(r,d.x);if(r===ME()){pop(t('hSwap'));shake()}return}
  if(ty==='bl'){if(isInt(d.k,0,6)&&isInt(d.b,0,3)&&now-ON.blT>400){ON.blT=now;if(d.k===6)delete ON.swp[d.b];if(d.b===G.me){pop(t('hBlock'));SFX.block()}}return}
- if(ty==='bx'){if(isInt(d.i,0,3999)){const i=W.bn.findIndex(b=>b.id===d.i);if(i>=0){const o=W.bn[i];o.dead=1;W.bn.splice(i,1);burst(o.x,o.y-10,'#ffe14d',8)}}return}
+ if(ty==='bx'){if(isInt(d.i,0,3999)){const i=W.bn.findIndex(b=>b.id===d.i);if(i>=0){const o=W.bn[i];
+   if(!(h?[1]:[0,2,3]).some(j=>Math.abs(lastX(G.R[j])-o.x)<120))return; // a banana disappears only under a racer of hers that is really on it (her state comes right before the 'bx')
+   o.dead=1;W.bn.splice(i,1);burst(o.x,o.y-10,'#ffe14d',8)}}return}
  if(h){
   if(ty==='rk'){if(d.r!==ON.race||!isInt(d.sk,0,SKINS.length-1))return;
+   if(ON.phase==='wait'&&d.q===1){ON.rdT=Math.min(ON.rdT,.05);return} // she asks without having heard us: ping her first, so the countdown is timed on a fresh round trip
    if(ON.phase==='wait'){ON.skins[1]=SKINS[d.sk].id;setSkins();const rtt=clamp(now-ON.rdAt,0,800);ON.phase='cd';G.cdN=4;ON.cdEnd=now+3300+rtt/2;NT.send({t:'go',r:ON.race,ms:3300,sk:[SKI[ON.skins[0]],d.sk]})}
    else if(ON.phase==='cd'){NT.send({t:'go',r:ON.race,ms:clamp(Math.round(ON.cdEnd-now),200,3400),sk:[SKI[ON.skins[0]],SKI[ON.skins[1]]]})}
-   else if(ON.phase==='race')sendSy();
+   else if((ON.phase==='race'||ON.phase==='res')&&now-ON.syAt>400){ON.syAt=now;sendSy()} // she missed the start or the result: tell her where the match is
    return}
   if(ty==='fn'){const b=G.R[1];if(ON.phase!=='race'||d.r!==ON.race||!fin(d.tm)||d.tm<0||d.tm>6e5||b.fin>=0)return;
-   if(ON.gAcc<W.len-450)return; // her reported positions do not reach the line yet: ask again later
-   const el=G.clock*1000,lo=Math.max((W.len-START)/(W.speed*1.45)*1000,ON.gEl*1000+(W.len-ON.gX)/(W.speed*1.6)*1000-1000);
-   b.fin=clamp(d.tm,lo,Math.max(lo,el+500))/1000;b.fl|=32;return}
+   /* a finish counts only when her accepted positions reach the line AND the race clock has passed the fastest time an honest run can do
+      (the best of 200 simulated perfect runs averaged 1.17x the track speed, the typical one 1.0x); until then she simply asks again every second */
+   const el=G.clock*1000,lo=Math.max((W.len-START)/(W.speed*1.25)*1000,ON.gEl*1000+(W.len-ON.gX)/(W.speed*1.6)*1000-1000);
+   if(ON.gAcc<W.len-450||el<lo)return;
+   b.fin=clamp(d.tm,lo,el+500)/1000;b.fl|=32;return}
+  if(ty==='fk'){if(d.r===ON.race&&ON.phase==='res'&&!ON.finOk){ON.finOk=1;ON.nextT=Math.max(ON.nextT,3)}return} // she has the result card (give her a moment to read it if it came late)
   return}
  /* guest side */
  if(ty==='rd'){if(!isInt(d.r,0,2)||!Array.isArray(d.w)||d.w.length!==2||!isInt(d.w[0],0,2)||!isInt(d.w[1],0,2)||d.w[0]+d.w[1]!==d.r||d.w[0]<ON.wins[0]||d.w[1]<ON.wins[1])return;
-  if(d.r===ON.race+1&&(ON.phase==='res'||ON.phase==='race')&&!ON.over&&d.w[0]<2&&d.w[1]<2){ON.wins=[d.w[0],d.w[1]];onSetup(d.r)}
+  if(d.r===ON.race+1&&ON.phase!=='over'&&!ON.over&&d.w[0]<2&&d.w[1]<2){ON.wins=[d.w[0],d.w[1]];onSetup(d.r)} // the host moved on to the next race: follow from wherever we are
   else if(d.r!==ON.race||(ON.phase!=='wait'&&ON.phase!=='cd'))return;
-  ON.phase='wait';G.phase='cd';G.cd=99;$('wait').classList.add('on');NT.send({t:'rk',r:ON.race,sk:SKI[SV.skin]});return}
+  ON.phase='wait';G.phase='cd';G.cd=99;$('wait').classList.add('on');ON.rkT=2.5;NT.send({t:'rk',r:ON.race,sk:SKI[SV.skin]});return}
  if(ty==='go'){if(d.r!==ON.race||ON.phase!=='wait'||!isInt(d.ms,200,3400)||!Array.isArray(d.sk)||d.sk.length!==2||!isInt(d.sk[0],0,SKINS.length-1)||!isInt(d.sk[1],0,SKINS.length-1))return;
   ON.skins=[SKINS[d.sk[0]].id,SKINS[d.sk[1]].id];setSkins();ON.phase='cd';G.cdN=4;ON.cdEnd=now+d.ms;return}
- if(ty==='fin'){if(!okFin(d)||d.r!==ON.race||(ON.phase!=='race'&&ON.phase!=='cd'&&ON.phase!=='wait'))return;
+ if(ty==='fin'){if(!okFin(d)||d.r!==ON.race)return;
+  const ack=()=>{if(now-ON.fkT>400){ON.fkT=now;NT.send({t:'fk',r:ON.race})}}; // the host repeats the result until it hears this
+  if(ON.phase==='res'){ack();return}
+  if(ON.phase!=='race'&&ON.phase!=='cd'&&ON.phase!=='wait')return;
   if(d.w[0]<ON.wins[0]||d.w[1]<ON.wins[1])return;const wn=d.w[0]>ON.wins[0]?0:1;if(d.o.indexOf(wn)>d.o.indexOf(1-wn))return;
-  ON.wins=[d.w[0],d.w[1]];showOnRes({t:'fin',r:d.r,o:d.o.slice(0,4),tm:d.tm.slice(0,4),w:ON.wins.slice(),mo:d.mo});return}
+  ON.wins=[d.w[0],d.w[1]];showOnRes({t:'fin',r:d.r,o:d.o.slice(0,4),tm:d.tm.slice(0,4),w:ON.wins.slice(),mo:d.mo});ON.fkT=0;ack();return}
  if(ty==='sy'){if(!isInt(d.r,0,2)||!isInt(d.ph,0,3)||!fin(d.el)||d.el<0||d.el>6e5||!Array.isArray(d.bn)||d.bn.length>24)return;
   if(d.r===ON.race){
    if(d.ph===3&&d.f&&ON.phase!=='res'&&ON.phase!=='over'){onNet(Object.assign({},d.f,{t:'fin'}));return}
    if(d.ph===2&&(ON.phase==='wait'||ON.phase==='cd')){$('wait').classList.remove('on');ON.phase='race';ON.goAt=now-d.el;ON.gT=now;goRace()}
-   if(d.ph===2&&ON.phase==='race'){const ids={};for(const b of d.bn){if(!Array.isArray(b)||!isInt(b[0],0,3999)||!fin(b[1])||b[1]<0||b[1]>W.len+800)continue;ids[b[0]]=1;if(!W.bn.some(o=>o.id===b[0])){const p=groundBelow(W,b[1]);addBanana(b[0],p.x,p.y,Math.floor(b[0]/1000)).age=2}}
-    for(let i=W.bn.length-1;i>=0;i--)if(!ids[W.bn[i].id]){W.bn[i].dead=1;W.bn.splice(i,1)}}}
+   if(d.ph===2&&ON.phase==='race'){const ids={};for(const b of d.bn){if(!Array.isArray(b)||!isInt(b[0],0,3999)||!fin(b[1])||b[1]<0||b[1]>W.len+800)continue;ids[b[0]]=1;if(!W.bn.some(o=>o.id===b[0])&&!(now-ON.eat[b[0]]<3000)){const p=groundBelow(W,b[1]);addBanana(b[0],p.x,p.y,Math.floor(b[0]/1000)).age=2}}
+    /* the host's list wins, except for what is still on its way to the host: a banana I dropped a moment ago, one I just slipped on */
+    for(let i=W.bn.length-1;i>=0;i--){const o=W.bn[i];if(!ids[o.id]&&!(o.by===G.me&&o.age<3)){o.dead=1;W.bn.splice(i,1)}}}}
   return}
 }
 /* an online match never pauses on tab hide: keep the simulation (host bots too) and the state stream alive from a timer */
