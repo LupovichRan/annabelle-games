@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="safari"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="safari"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -122,6 +122,17 @@ a{color:inherit;text-decoration:none}
 .langs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .langs button{min-height:44px;min-width:56px;border-radius:10px;border:3px solid var(--ink);background:#fff;font-weight:900;font-size:15px}
 .langs button.on{background:var(--yel)}
+.btn.net{background:#2fb36a;color:#fff;text-shadow:0 2px 0 #0004}
+#emoBar{position:absolute;left:50%;transform:translateX(-50%);bottom:6px;display:none;gap:5px;z-index:7;direction:ltr}
+body.net #emoBar{display:flex}
+body.net #pauseBtn{display:none}
+#emoBar button{width:42px;height:42px;border-radius:12px;background:var(--cream);border:3px solid var(--ink);box-shadow:0 3px 0 #0007;font-size:21px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .07s,opacity .2s}
+#emoBar button:active{transform:translateY(2px) scale(.94)}
+#emoBar.cool button{opacity:.45}
+.nres{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.nr{border:3px solid var(--ink);border-radius:12px;background:#fff;padding:6px 4px;display:flex;flex-direction:column;gap:2px;align-items:center;min-width:0}
+.nr.me{background:#ffe0ee}.nr.fr{background:#d8f6fb}.nr.win{box-shadow:0 0 0 3px var(--yel)}
+.nr b{font-size:15px}.nr span{font-family:"Courier New",monospace;font-weight:900;font-size:32px;line-height:1.05}.nr small{font-size:12px;font-weight:800;line-height:1.3}
 @media (prefers-reduced-motion:reduce){#banner.on #bnBox{animation:none!important;transform:none}#ann.on{animation:none!important;opacity:1}#lvgrid button.cur{animation:none}}
 @media (min-width:760px){
  #menu .card{max-width:800px;flex-direction:row;align-items:center;gap:16px}
@@ -143,6 +154,7 @@ a{color:inherit;text-decoration:none}
  <div id="stage"><canvas id="cv"></canvas>
   <div id="banner"><div id="bnBox"><span id="bnEm"></span><span id="bnTx"><b id="bnT"></b><i id="bnS"></i></span></div></div>
   <div id="ann"></div><div id="bubble"></div><div id="hint"></div>
+  <div id="emoBar"><button data-e="0" aria-label="emote">😄</button><button data-e="1" aria-label="emote">😮</button><button data-e="2" aria-label="emote">😭</button><button data-e="3" aria-label="emote">👏</button></div>
  </div>
 
  <div class="ov on" id="menu"><div class="card">
@@ -152,6 +164,7 @@ a{color:inherit;text-decoration:none}
    <p id="mSub"></p>
    <div class="row seg" id="diffSeg"><button data-df="easy"></button><button data-df="normal"></button><button data-df="hard"></button></div>
    <div class="row"><button class="btn" id="playBtn" data-pri></button><button class="btn arc" id="arcBtn"></button></div>
+   <button class="btn net solo" id="netBtn"></button>
   </div>
   <div class="mcol">
    <div id="lvgrid"></div>
@@ -201,6 +214,8 @@ a{color:inherit;text-decoration:none}
   <button class="btn solo" id="alBack" data-pri></button>
  </div></div>
 
+ <div class="ov" id="netov"><div class="card" id="netcard"></div></div>
+
  <div class="ov" id="pause"><div class="card">
   <h2 id="pTitle"></h2>
   <button class="btn solo" id="pResume" data-pri></button>
@@ -208,13 +223,15 @@ a{color:inherit;text-decoration:none}
  </div></div>
 </div>
 
+<script src="net1v1.js"></script>
 <script>
 "use strict";
 /* ---------- safe storage & helpers ---------- */
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const $=id=>document.getElementById(id);
 const KEY="annabelle-retro-safari",ZOO="annabelle-retro-zoo";
-const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=a=>a[(Math.random()*a.length)|0];
+let RNGF=Math.random; // swapped for a seeded generator while an online schedule is built
+const rnd=(a,b)=>a+RNGF()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=a=>a[(RNGF()*a.length)|0];
 function hash(a,b){let h=(Math.imul(a|0,374761393)+Math.imul(b|0,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return((h^(h>>>16))>>>0)/4294967295}
 const isHe=s=>/[֐-׿]/.test(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -226,7 +243,7 @@ const isDesk=()=>!!(window.AnnabelleDesk&&AnnabelleDesk.isDesk());
 
 /* ---------- text ---------- */
 const TX={
-he:{title:"ספארי צילום",sub:"מימי, החתולה הווטרינרית, יוצאת לספארי עם מצלמה. הקישי על החיות וצלמי אותן לפני שהן מתחבאות!",
+he:{net:"אונליין עם חברה",you:"את",fr1:"החברה",shareT:"בואי נצלם יחד בספארי! 📸🦁 מי תצלם יותר חיות? הצטרפי למשחק:",netHow:"הראשונה שמצלמת חיה מקבלת 2 נק׳, השנייה 1 · ✨ זהובה = 5 · גרמלין תוקע את המצלמה!",nWin:"ניצחת!",nLose:"החברה ניצחה הפעם",nDraw:"תיקו!",nWin2:"צלמת ספארי מדהימה!",nLose2:"כמעט! בסיבוב הבא תצלמי קצת יותר מהר",nDraw2:"בדיוק אותו ניקוד!",ptsL:"נק׳",phsL:"תמונות",stkL:"רצף שיא",reBtn:"שוב",reWant:"החברה רוצה עוד סיבוב! 🎉",quitQ:"לצאת מהמשחק?",stay:"להישאר",quit:"לצאת",newRoom:"חדר חדש",frzT:"גרמלין! המצלמה תקועה",waitEnd:"מחכות לתוצאה…",title:"ספארי צילום",sub:"מימי, החתולה הווטרינרית, יוצאת לספארי עם מצלמה. הקישי על החיות וצלמי אותן לפני שהן מתחבאות!",
 play:"שחקי",cont:"המשיכי",arcade:"ארקייד",story:"הסיפור",album:"האלבום שלי",easy:"קל",normal:"רגיל",hard:"קשה",next:"הבא",skip:"דלגי",go:"יאללה!",resume:"להמשיך",restart:"מההתחלה",menu:"לתפריט",pause:"הפסקה",again:"עוד פעם",nextLv:"לסיבוב הבא",back:"חזרה",
 lvl:"סיבוב",wave:"גל",score:"ניקוד",
 reT:"כמעט! ננסה שוב",reS:"צילמת {n} מתוך {q} שצריך. החיות מחכות לך – ננסה שוב את אותו סיבוב!",reB:"{a} ממש מהיר... כמעט הצלחת! ננסה שוב?",
@@ -243,7 +260,7 @@ fin:"כל החיות צולמו, נבדקו ונרשמו במקלט! כל הכב
 st:["בשמורת החתולים, מימי היא גם וטרינרית וגם צלמת טבע!","כל חיה שמצלמים עוברת בדיקת בריאות ונרשמת במקלט, כדי שנוכל לשמור עליה.","רק זהירות: גרמליני-האשפה אוהבים להתפרץ לתמונות. מוכנה? יוצאים לספארי!"],
 h1:"הקישי על חיה כדי לצלם אותה!",h1d:"לחצי על חיה כדי לצלם אותה! (או חצים + רווח)",h2:"חיות מציצות מהדשא – מהר, לפני שהן מתחבאות!",hg:"זה גרמלין-אשפה! אותו לא מצלמים.",hgold:"חיה זהובה! צלמי מהר!",
 an:{tiger:"טיגריס",lion:"אריה",leopard:"נמר",cheetah:"ברדלס",puma:"פומה",panda:"פנדה",koala:"קואלה",monkey:"קוף",elephant:"פיל",giraffe:"ג'ירפה",zebra:"זברה",rabbit:"ארנב",fox:"שועל",owl:"ינשוף",parrot:"תוכי",turtle:"צב ים",dolphin:"דולפין",penguin:"פינגווין",hedgehog:"קיפוד",deer:"אייל"}},
-fr:{title:"Safari photo",sub:"Mimi, la chatte vétérinaire, part en safari avec son appareil photo. Touche les animaux pour les photographier avant qu'ils se cachent !",
+fr:{net:"En ligne avec une amie",you:"Toi",fr1:"Amie",shareT:"Viens photographier avec moi au safari ! 📸🦁 Qui prendra le plus d'animaux ? Rejoins la partie :",netHow:"Le premier cliché d'un animal vaut 2 pts, le second 1 · ✨ doré = 5 · un gremlin bloque l'appareil !",nWin:"Tu as gagné !",nLose:"Ton amie gagne cette fois",nDraw:"Égalité !",nWin2:"Quelle photographe de safari !",nLose2:"Presque ! Tu seras plus rapide la prochaine fois",nDraw2:"Exactement le même score !",ptsL:"pts",phsL:"photos",stkL:"meilleure série",reBtn:"Encore",reWant:"Ton amie veut rejouer ! 🎉",quitQ:"Quitter la partie ?",stay:"Rester",quit:"Quitter",newRoom:"Nouvelle salle",frzT:"Gremlin ! Appareil bloqué",waitEnd:"On attend le résultat…",title:"Safari photo",sub:"Mimi, la chatte vétérinaire, part en safari avec son appareil photo. Touche les animaux pour les photographier avant qu'ils se cachent !",
 play:"Jouer",cont:"Continuer",arcade:"Arcade",story:"Histoire",album:"Mon album",easy:"Facile",normal:"Normal",hard:"Difficile",next:"Suite",skip:"Passer",go:"Allons-y !",resume:"Reprendre",restart:"Recommencer",menu:"Menu",pause:"Pause",again:"Encore",nextLv:"Manche suivante",back:"Retour",
 lvl:"Manche",wave:"Vague",score:"Score",
 reT:"Presque ! On réessaie",reS:"Tu as pris {n} photos sur les {q} qu'il faut. Les animaux t'attendent : on refait la même manche !",reB:"{a} est vraiment rapide... Tu y étais presque ! On réessaie ?",
@@ -260,7 +277,7 @@ fin:"Tous les animaux sont photographiés, soignés et inscrits au refuge ! Brav
 st:["Au refuge des chats, Mimi est vétérinaire ET photographe de nature !","Chaque animal photographié passe sa visite médicale et est inscrit au refuge, pour qu'on puisse le protéger.","Attention : les gremlins des déchets adorent s'incruster sur les photos. Prête ? En route pour le safari !"],
 h1:"Touche un animal pour le photographier !",h1d:"Clique sur un animal pour le photographier ! (ou flèches + espace)",h2:"Des animaux sortent des herbes : vite, avant qu'ils se cachent !",hg:"C'est un gremlin des déchets ! Lui, on ne le photographie pas.",hgold:"Un animal doré ! Vite, une photo !",
 an:{tiger:"Tigre",lion:"Lion",leopard:"Léopard",cheetah:"Guépard",puma:"Puma",panda:"Panda",koala:"Koala",monkey:"Singe",elephant:"Éléphant",giraffe:"Girafe",zebra:"Zèbre",rabbit:"Lapin",fox:"Renard",owl:"Hibou",parrot:"Perroquet",turtle:"Tortue de mer",dolphin:"Dauphin",penguin:"Pingouin",hedgehog:"Hérisson",deer:"Cerf"}},
-en:{title:"Photo Safari",sub:"Mimi the vet cat goes on safari with her camera. Tap the animals to snap their photo before they hide again!",
+en:{net:"Online with a friend",you:"You",fr1:"Friend",shareT:"Come on safari with me! 📸🦁 Who can snap the most animals? Join the game:",netHow:"First to snap an animal gets 2 pts, second gets 1 · ✨ golden = 5 · a gremlin jams your camera!",nWin:"You won!",nLose:"Your friend wins this time",nDraw:"It's a tie!",nWin2:"What a safari photographer!",nLose2:"So close! Be a little quicker next round",nDraw2:"Exactly the same score!",ptsL:"pts",phsL:"photos",stkL:"best streak",reBtn:"Again",reWant:"Your friend wants another round! 🎉",quitQ:"Leave the game?",stay:"Stay",quit:"Leave",newRoom:"New room",frzT:"Gremlin! Camera jammed",waitEnd:"Waiting for the result…",title:"Photo Safari",sub:"Mimi the vet cat goes on safari with her camera. Tap the animals to snap their photo before they hide again!",
 play:"Play",cont:"Continue",arcade:"Arcade",story:"Story",album:"My album",easy:"Easy",normal:"Normal",hard:"Hard",next:"Next",skip:"Skip",go:"Let's go!",resume:"Resume",restart:"Restart",menu:"Menu",pause:"Paused",again:"Again",nextLv:"Next round",back:"Back",
 lvl:"Round",wave:"Wave",score:"Score",
 reT:"So close! Let's try again",reS:"You snapped {n} of the {q} photos needed. The animals are waiting: let's try the same round again!",reB:"{a} is really fast... you almost had it! Try again?",
@@ -531,15 +548,15 @@ function drawGrem(T){
 
 /* ---------- targets ---------- */
 function mkT(o){
-  const A=AN[o.a]||{z:1.05,s:1},dir=o.dir||(Math.random()<.5?1:-1),sp=Math.max(.2,(o.sm||1)*(A.s||1));
+  const A=AN[o.a]||{z:1.05,s:1},dir=o.dir||(RNGF()<.5?1:-1),sp=Math.max(.2,(o.sm||1)*(A.s||1));
   const T={id:++tid,kind:o.kind||"animal",a:o.a||"",em:o.a?SPR[o.a]:"",gold:!!o.gold,boss:!!o.boss,type:o.type,t:-(o.delay||0),k:1,ph:"live",st:0,vis:false,x:-999,y:-999,px:-999,py:-999,vx:0,vy:0,rot:0,face:dir>0?-1:1,dir,ln:0,zs:(A.z||1)*(o.boss?1.2:1),sz:SZ,dur:1};
   const xa=dir>0?-.14:1.14,xb=dir>0?1.14:-.14;
   if(o.type==="run"){T.ln=o.far===false?0:pick([0,0,.5,.5,1]);T.dur=6/sp;T.x0=xa;T.x1=xb;T.hf=rnd(7,10);T.ha=rnd(.05,.13);if(o.skid){T.skid=1;T.dur*=1.3}}
   else if(o.type==="fly"){T.dur=5.4/sp;T.x0=xa;T.x1=xb;T.ly=rnd(.13,.5);T.wf=rnd(2,3.4);T.wa=rnd(.04,.09);T.p0=rnd(0,6)}
   else if(o.type==="zig"){T.dur=3.8/sp;T.x0=xa;T.x1=xb;T.ly=.34;T.za=.2;T.zn=o.zn||2}
-  else if(o.type==="pop"){T.ln=o.far===false?0:pick([0,0,.5,1]);T.x0=o.x!=null?o.x:rnd(.12,.88);T.dur=2.6/sp+.8;T.face=Math.random()<.5?1:-1}
+  else if(o.type==="pop"){T.ln=o.far===false?0:pick([0,0,.5,1]);T.x0=o.x!=null?o.x:rnd(.12,.88);T.dur=2.6/sp+.8;T.face=RNGF()<.5?1:-1}
   else{T.type="jump";const hops=o.hops||1;T.hops=hops;T.hd=(o.hd||2.1)/sp;T.gap=o.gap||0;T.pts=[];T.hg=[];
-    if(o.leaps){for(let i=0;i<hops;i++){const d=Math.random()<.5?1:-1,c=rnd(.22,.78);T.pts.push([c-d*.11,c+d*.11]);T.hg.push(rnd(.6,.85))}}
+    if(o.leaps){for(let i=0;i<hops;i++){const d=RNGF()<.5?1:-1,c=rnd(.22,.78);T.pts.push([c-d*.11,c+d*.11]);T.hg.push(rnd(.6,.85))}}
     else{const tot=hops>1?1.28:rnd(.3,.48),st=hops>1?xa:(dir>0?rnd(.08,.92-tot):rnd(.08+tot,.92)),seg=tot/hops*dir;for(let i=0;i<hops;i++){T.pts.push([st+seg*i,st+seg*(i+1)]);T.hg.push(rnd(.55,.8)*(hops>1&&i%2?.75:1))}}
     T.dur=hops*(T.hd+T.gap)}
   return T;
@@ -588,6 +605,7 @@ function drawT(T){
   if(bur){ctx.save();ctx.beginPath();ctx.rect(0,0,W,T.by);ctx.clip()}
   drawSpr(T.em,x,y,sz,{rot,sx,sy,a,gold:T.gold});
   if(bur){ctx.restore();drawCover(T.x,T.by,sz)}
+  if(T.fb&&T.ph==="live"&&T.vis){const bx=x+sz*.38,by2=y-sz*.46;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(bx,by2,sz*.2,0,6.3);ctx.fill();ctx.fillStyle="#38d6e8";ctx.beginPath();ctx.arc(bx,by2,sz*.16,0,6.3);ctx.fill();drawSpr("📷",bx,by2,sz*.24)}
   if(T.ph==="snap"&&T.st<.6){const bx=x+sz*.42,by=y-sz*.42-Math.min(1,T.st/.2)*6,r=Math.max(9,sz*.2)*Math.min(1,T.st/.12);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(bx,by,r+2,0,6.3);ctx.fill();ctx.fillStyle="#2fae52";ctx.beginPath();ctx.arc(bx,by,r,0,6.3);ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=Math.max(2,r*.3);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(bx-r*.45,by);ctx.lineTo(bx-r*.1,by+r*.38);ctx.lineTo(bx+r*.5,by-r*.35);ctx.stroke()}
   if(T.ph==="pose"){
     if(T.st>.5&&T.st<1.9)for(let i=0;i<3;i++){const an=T.st*7+i*2.1;drawSpr("💫",x+Math.cos(an)*sz*.75,y-sz*.75+Math.sin(an)*sz*.2,sz*.34)}
@@ -621,11 +639,11 @@ function fx(dt){
 /* ---------- game flow ---------- */
 function setScreen(s){
   scrn=s;paused=false;
-  ["menu","story","result","retry","album","pause","reveal"].forEach(id=>$(id).classList.toggle("on",id===s));
+  ["menu","story","result","retry","album","pause","reveal","netov"].forEach(id=>$(id).classList.toggle("on",id===s));
   if(s!=="play")hideFx();
 }
 function newG(mode,n,diff){
-  const D=DIFF[diff];
+  const D=DIFF[diff];document.body.classList.toggle("net",mode==="net");
   return{mode,n,diff,state:"intro",st:0,introT:2.1,wave:0,waves:1,per:[],total:0,quota:0,photos:0,slots:[],score:0,disp:0,streak:0,bestStreak:0,shots:0,wasted:0,film:0,filmMax:0,unl:D.film===0,
     retries:0,wavePhotos:0,waveGot:0,waveN:0,waveWasted:0,sm:1,boss:null,hearts:D.hearts,maxH:D.hearts,newA:[],goldWave:-1,goldDone:0,noFilmT:0,gremSeen:0,sc:0,scWave:0,allPhotos:0};
 }
@@ -649,7 +667,7 @@ function startArcade(diff){
   showBanner("🕹️",t("arcade")+" · "+t("scn")[0],t("arcS"),false,G.introT);
   updHud();if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
 }
-function toMenu(){G=null;targets=[];cat=null;pols=[];floats=[];curScene=LV[Math.min(SV.unlocked,LV.length)-1].sc;buildMenu();setScreen("menu");updHud();requestAnimationFrame(resize)}
+function toMenu(){const wasNet=NG.on;NG.on=false;NG.phase="off";document.body.classList.remove("net");if(wasNet&&NT)NT.leaveToMenu();G=null;targets=[];cat=null;pols=[];floats=[];curScene=LV[Math.min(SV.unlocked,LV.length)-1].sc;buildMenu();setScreen("menu");updHud();requestAnimationFrame(resize)}
 window.toMenu=toMenu;
 function typeFor(a){return pick(AN[a].m)}
 function spawnGold(sm){
@@ -827,6 +845,7 @@ function update(dt){
   if(scrn!=="play")return;
   G.st+=dt;
   if(keys.l||keys.r||keys.u||keys.d){const v=Math.max(W,GT)*.8*dt;vf.x=clamp(vf.x+((keys.r?1:0)-(keys.l?1:0))*v,8,W-8);vf.y=clamp(vf.y+((keys.d?1:0)-(keys.u?1:0))*v,8,H-HUDH-8)}
+  if(G.mode==="net"){netTick(dt);return}
   for(const T of targets)tickT(T,dt);
   for(const T of targets){if((T.ph==="live"||T.ph==="flee")&&T.t>=T.dur)T.ph="gone";else if(T.ph==="snap"&&T.st>.75)T.ph="gone"}
   targets=targets.filter(T=>T.ph!=="gone");
@@ -904,11 +923,12 @@ function draw(){
   for(const f of floats){const a=Math.min(1,(f.life-f.t)*3),yy=f.y-f.t*f.rise;ctx.globalAlpha=Math.max(0,a);ctx.font="900 "+f.size+"px Rubik,Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction=isHe(f.txt)?"rtl":"ltr";ctx.lineWidth=Math.max(3,f.size*.24);ctx.strokeStyle="#1d1233";ctx.lineJoin="round";ctx.strokeText(f.txt,f.x,yy);ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,yy)}
   ctx.globalAlpha=1;ctx.direction="ltr";
   ctx.restore();
-  drawHud();drawAlbumIcon();
+  if(G&&G.mode==="net")drawNetHud();else{drawHud();drawAlbumIcon()}
   if(lflash){const k=1-lflash.t/.2,r=SZ*2.4;const g=ctx.createRadialGradient(lflash.x,lflash.y,0,lflash.x,lflash.y,r);g.addColorStop(0,"rgba(255,255,255,"+(.85*k)+")");g.addColorStop(1,"rgba(255,255,255,0)");ctx.fillStyle=g;ctx.fillRect(lflash.x-r,lflash.y-r,r*2,r*2)}
   if(flash>0){ctx.fillStyle="rgba(255,255,255,"+Math.min(.8,flash)+")";ctx.fillRect(0,0,W,H)}
   if(vfp){const k=Math.min(1,vfp.t/.14),r=SZ*.5*(1.7-.7*k);ctx.globalAlpha=Math.max(0,1-(vfp.t-.14)/.2);brk(vfp.x,vfp.y,r+1,Math.round(r*.5)+2,6,"#1d1233");brk(vfp.x,vfp.y,r,Math.round(r*.5),4,"#fff");ctx.globalAlpha=1}
-  if(scrn==="play"&&vf.on&&G&&(isDesk()||vf.kb)){const r=SZ*.6,l=Math.round(r*.45);brk(vf.x,vf.y,r+1,l+2,6,"#1d1233");brk(vf.x,vf.y,r,l,4,G.state==="wave"?"#fff":"#b9b0d0");R(vf.x-1,vf.y-7,3,15,"#1d1233");R(vf.x-7,vf.y-1,15,3,"#1d1233");R(vf.x,vf.y-6,1,13,"#fff");R(vf.x-6,vf.y,13,1,"#fff");if(Math.floor(time*2)%2)R(vf.x+r-9,vf.y-r+5,5,5,"#ff3b5c")}
+  if(scrn==="play"&&vf.on&&G&&(isDesk()||vf.kb)){const r=SZ*.6,l=Math.round(r*.45);brk(vf.x,vf.y,r+1,l+2,6,"#1d1233");brk(vf.x,vf.y,r,l,4,G.state==="wave"&&!(G.mode==="net"&&(NG.frz>0||NG.phase!=="play"))?"#fff":"#b9b0d0");R(vf.x-1,vf.y-7,3,15,"#1d1233");R(vf.x-7,vf.y-1,15,3,"#1d1233");R(vf.x,vf.y-6,1,13,"#fff");R(vf.x-6,vf.y,13,1,"#fff");if(Math.floor(time*2)%2)R(vf.x+r-9,vf.y-r+5,5,5,"#ff3b5c")}
+  if(G&&G.mode==="net")drawNetOverlay();
   if(scrn==="menu")drawMasc();
 }
 let mctx=null;
@@ -938,7 +958,7 @@ function frame(now){
 /* ---------- HUD & menus ---------- */
 function updHud(){
   let s="📸 "+t("title");
-  if(G){if(G.mode==="arcade")s="🕹️ "+t("arcade")+" · "+t("wave")+" "+(G.wave+1);else{const L=LV[G.n];s=(G.n+1)+" "+SPR[L.an]+" "+($("lvl").clientWidth<250?t("an")[L.an]:t("ch")[G.n])+(L.boss?" 👑":"")}}
+  if(G){if(G.mode==="net")s="🌐 "+t("title");else if(G.mode==="arcade")s="🕹️ "+t("arcade")+" · "+t("wave")+" "+(G.wave+1);else{const L=LV[G.n];s=(G.n+1)+" "+SPR[L.an]+" "+($("lvl").clientWidth<250?t("an")[L.an]:t("ch")[G.n])+(L.boss?" 👑":"")}}
   $("lvlT").textContent=s;$("lvlT").dir=lang==="he"?"rtl":"ltr";
   $("muteBtn").textContent=muted?"🔇":"🔊";$("musBtn").classList.toggle("off",!SV.music);
 }
@@ -955,6 +975,7 @@ function applyLang(){
   $("alBack").textContent=t("back");$("alT").textContent="📸 "+t("alT");
   $("pTitle").textContent=t("pause");$("pResume").textContent=t("resume");$("pRestart").textContent=t("restart");
   $("rvGo").textContent=t("next");
+  $("netBtn").textContent="🌐 "+t("net");$("netBtn").style.display=NT?"":"none";if(NT)NT.drawLang();
   buildMenu();updHud();
   if(scrn==="album")buildAlbum();
   document.querySelectorAll("#langs button[data-lang]").forEach(b=>b.classList.toggle("on",b.dataset.lang===lang));
@@ -1004,15 +1025,16 @@ function openAlbum(back){albumBack=back||"menu";buildAlbum();setScreen("album")}
 
 /* ---------- pause ---------- */
 function pauseToggle(){
+  if(G&&G.mode==="net")return;
   if(scrn==="play"){scrn="pause";paused=true;$("pause").classList.add("on");save()}
   else if(scrn==="pause"){scrn="play";paused=false;$("pause").classList.remove("on");last=performance.now()}
 }
-document.addEventListener("visibilitychange",()=>{if(document.hidden){if(scrn==="play")pauseToggle();save();if(AC&&AC.suspend)AC.suspend().catch(()=>{})}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){if(scrn==="play"&&!(G&&G.mode==="net"))pauseToggle();save();if(AC&&AC.suspend)AC.suspend().catch(()=>{})}});
 function toggleMute(){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");$("muteBtn").textContent=muted?"🔇":"🔊";if(!muted)SFX.click()}
 
 /* ---------- input ---------- */
 function cvXY(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
-cv.addEventListener("pointerdown",e=>{ac();const[x,y]=cvXY(e);if(e.pointerType==="mouse"){vf.on=true;vf.x=x;vf.y=y}else vf.on=false;vf.kb=false;e.preventDefault();snap(x,y)});
+cv.addEventListener("pointerdown",e=>{ac();const[x,y]=cvXY(e);if(e.pointerType==="mouse"){vf.on=true;vf.x=x;vf.y=y}else vf.on=false;vf.kb=false;e.preventDefault();doSnap(x,y)});
 cv.addEventListener("pointermove",e=>{if(e.pointerType!=="mouse")return;const[x,y]=cvXY(e);vf.x=x;vf.y=y;vf.on=true;vf.kb=false});
 cv.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&!vf.kb)vf.on=false});
 cv.addEventListener("contextmenu",e=>e.preventDefault());
@@ -1023,7 +1045,7 @@ document.addEventListener("keydown",e=>{
   if(c==="KeyP"||c==="Escape"){if(scrn==="play"||scrn==="pause"){pauseToggle();e.preventDefault()}return}
   if(scrn==="play"&&!paused){
     if(KM[c]){keys[KM[c]]=true;vf.on=true;vf.kb=true;e.preventDefault();return}
-    if(c==="Space"||c==="Enter"){e.preventDefault();const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur();if(!e.repeat){vf.on=true;vf.kb=true;ac();snap(vf.x,vf.y)}}
+    if(c==="Space"||c==="Enter"){e.preventDefault();const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur();if(!e.repeat){vf.on=true;vf.kb=true;ac();doSnap(vf.x,vf.y)}}
     return}
   if((c==="Enter"||c==="Space")&&!(document.activeElement&&/^(BUTTON|A)$/.test(document.activeElement.tagName))){const b=document.querySelector(".ov.on [data-pri]");if(b){e.preventDefault();b.click()}}
 });
@@ -1048,10 +1070,294 @@ $("rNext").onclick=()=>{SFX.click();stopCount();if(!G||G.mode==="arcade"||G.n>=L
 $("rAlbum").onclick=()=>{SFX.click();stopCount();openAlbum("result")};
 $("reGo").onclick=()=>{SFX.click();startLevel(G.n,G.diff)};
 $("reMenu").onclick=()=>{SFX.click();toMenu()};
+$("netBtn").onclick=()=>{ac();SFX.click();if(NT)NT.showLobby()};
 $("alBack").onclick=()=>{SFX.click();if(albumBack==="result"&&G&&lastRes){setScreen("result");$("rScV").textContent=lastRes.score;renderHs($("rHs"),lastRes.hi)}else toMenu()};
+
+/* ---------- online 1-vs-1 photo duel (net1v1.js, host-authoritative) ---------- */
+/* Both screens run the same seeded wave schedule on a shared match clock (3-2-1-GO, then 75 s).
+   The host arbitrates every photo: first photo of an animal 2 pts (golden 5), second 1 pt (golden 3).
+   A guest only ever says "I tapped animal #id at my clock c"; scores, streaks and the result come from the host. */
+const NET_LEN=75,NET_GRACE=.7,NET_CD=3.6,EMO_SET=["😄","😮","😭","👏"];
+const NG={on:false,role:0,mid:0,seed:1,sc:0,phase:"off",t:-NET_CD,t0:0,pAt:0,pAcc:0,netp:false,T:[],byId:{},S:[0,0],PH:[0,0],STK:[0,0],BEST:[0,0],R:{},tp:{},frz:0,gUntil:-1,
+  emo:[],fl:[],bump:[0,0],emT:0,emRx:0,gAt:0,scAt:0,fin:null,over:false,paid:-1,cdN:-1,reSeen:false,lastS:[0,0]};
+const iN=(v,a,b)=>typeof v==="number"&&Number.isInteger(v)&&v>=a&&v<=b;
+const fN=(v,a,b)=>typeof v==="number"&&isFinite(v)&&v>=a&&v<=b;
+function mulb(a){return function(){a|=0;a=a+0x6D2B79F5|0;let x=Math.imul(a^a>>>15,1|a);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296}}
+// the same seed + scene always give the same animals, times, speeds and paths (all randomness goes through RNGF)
+function buildSched(seed,sc){
+  const oldR=RNGF,oldT=tid;RNGF=mulb(seed);tid=0;const L=[],S=SCN[sc],pool=S.pool.concat([S.boss]);
+  try{
+    const golds=[rnd(12,22),rnd(32,43),rnd(52,63)],popX=[];let at=.9,gi=0,nextG=rnd(5,8);
+    while(at<NET_LEN-2.5){
+      const p=at/NET_LEN,sm=1.05+.4*p,a=pick(pool),o={a,type:pick(AN[a].m),sm,delay:at};
+      if(o.type==="pop"){let x=.5;for(let k=0;k<12;k++){x=rnd(.12,.88);if(popX.every(v=>Math.abs(v[0]-x)>.2||v[1]<at))break}popX.push([x,at+3.5]);if(popX.length>5)popX.shift();o.x=x}
+      L.push(mkT(o));
+      if(gi<3&&at>=golds[gi]){gi++;const g=pick(S.rare);L.push(mkT({a:g,gold:true,type:AN[g].m[0],sm:sm*1.3,delay:at+.5,far:false}))}
+      if(at>=nextG&&at>5){nextG=at+rnd(5,8);L.push(mkT({kind:"grem",type:RNGF()<.5?"pop":"run",sm:sm*.85,delay:at+rnd(.2,.9),far:false}))}
+      at+=rnd(.9,1.5)*(1-.25*p);
+    }
+  }finally{RNGF=oldR}
+  L.forEach(T=>{T.at=-T.t});tid=oldT;
+  return L;
+}
+function netStart(role){
+  stopCount();
+  NG.on=true;NG.role=role;NG.over=false;NG.phase="cd";NG.netp=false;NG.pAcc=0;NG.t0=performance.now()+NET_CD*1000;NG.t=-NET_CD;
+  NG.S=[0,0];NG.PH=[0,0];NG.STK=[0,0];NG.BEST=[0,0];NG.R={};NG.tp={};NG.frz=0;NG.gUntil=-1;NG.emo=[];NG.fl=[];NG.bump=[0,0];NG.lastS=[0,0];NG.fin=null;NG.scAt=0;NG.cdN=-1;NG.reSeen=false;
+  NG.T=buildSched(NG.seed,NG.sc);NG.byId={};NG.T.forEach(T=>{NG.byId[T.id]=T});
+  G=newG("net",0,"easy");G.state="wave";G.sc=curScene=NG.sc;
+  targets=[];parts=[];floats=[];pols=[];cat=null;shake=0;flash=0;hitStop=0;
+  setScreen("play");hideFx();rw({event:"play"});updHud();
+  if(NT)NT.setOver(false);
+  $("emoBar").classList.remove("cool");
+}
+function netClock(){
+  if(NG.netp)return;
+  NG.t=(performance.now()-NG.t0-NG.pAcc)/1000;
+}
+function applyScores(h,g,hp,gp){
+  NG.S=[h,g];NG.PH=[hp,gp];
+  for(let i=0;i<2;i++){if(NG.S[i]>NG.lastS[i])NG.bump[i]=1;NG.lastS[i]=NG.S[i]}
+}
+function netTick(dt){
+  const now=performance.now();
+  for(const e of NG.emo)e.t+=dt;NG.emo=NG.emo.filter(e=>e.t<1.8);
+  for(const f of NG.fl)f.t+=dt;NG.fl=NG.fl.filter(f=>f.t<.8);
+  NG.bump[0]=Math.max(0,NG.bump[0]-dt*3);NG.bump[1]=Math.max(0,NG.bump[1]-dt*3);
+  if(NG.frz>0&&!NG.netp)NG.frz=Math.max(0,NG.frz-dt);
+  if(NG.phase==="done"){
+    if(NT&&NT.NET.oppRe&&!NG.reSeen){NG.reSeen=true;const m=$("nMsg");if(m&&!NT.myRe){m.textContent=t("reWant");SFX.banner()}}
+    return}
+  if(NG.phase==="off"||NG.netp)return;
+  netClock();
+  const tt=NG.t;
+  if(tt<0){ // 3 - 2 - 1 - GO
+    NG.phase="cd";const r=-tt,n=r>.6?Math.ceil(r-.6):0;
+    if(n!==NG.cdN){NG.cdN=n;if(n>0)SFX.cnt();else{SFX.ding();flash=Math.max(flash,RM?.04:.2)}}
+    return}
+  if(NG.phase==="cd"){NG.phase="play"}
+  if(tt>=NET_LEN&&NG.phase==="play"){NG.phase="fin";G.state="net";SFX.shutter();announce(t("waitEnd"))}
+  // the animals of this exact moment (pure function of the shared clock)
+  const act=[];
+  for(const T of NG.T){
+    if(T.ph==="gone"||T.at>tt+1)continue;
+    if(T.ph==="live"){T.t=tt-T.at;tickT(T,0);if(T.t>=T.dur&&T.t>0){T.ph="gone";continue}
+      if(T.gold&&T.vis&&Math.random()<dt*16)parts.push({x:T.x+rnd(-.4,.4)*T.sz,y:T.y+rnd(-.4,.4)*T.sz,vx:rnd(-20,20),vy:rnd(-40,-5),life:rnd(.4,.8),t:0,c:Math.random()<.5?"#ffe14d":"#fff",s:PX,g:0})}
+    else if(T.ph==="snap"){tickT(T,dt);if(T.st>.75){T.ph="gone";continue}}
+    else if(T.ph==="flee"){tickT(T,dt);if(T.t>=T.dur){T.ph="gone";continue}}
+    act.push(T)}
+  targets=act;
+  if(NG.role===0){
+    if(now-NG.scAt>=1000&&NT){NG.scAt=now;NT.send({t:"sc",c:Math.round(tt*100)/100,h:NG.S[0],g:NG.S[1],hp:NG.PH[0],gp:NG.PH[1]})}
+    if(tt>=NET_LEN+NET_GRACE)netFinishHost();
+  }else if(tt>=NET_LEN+5)netDone({h:NG.S[0],g:NG.S[1],hp:NG.PH[0],gp:NG.PH[1],hb:NG.BEST[0],gb:NG.BEST[1]});
+}
+setInterval(()=>{if(NG.on&&document.hidden&&G&&G.mode==="net")netTick(0)},500); // the clock keeps running (and the host keeps judging) while the tab is in the background
+/* ---- my own taps ---- */
+function doSnap(x,y){return G&&G.mode==="net"?netTap(x,y):snap(x,y)}
+function netTap(x,y){
+  if(!NG.on||NG.phase!=="play"||NG.netp||!NT||NG.t<0||y>H-HUDH)return null;
+  if(time-lastSnap<.16)return null;lastSnap=time;
+  const me=NG.role;vfp={x,y,t:0};
+  if(NG.frz>0){SFX.empty();say("🗑️ "+NG.frz.toFixed(1),x,y-24,"#7be05a",18);return"frz"}
+  lflash={x,y,t:0};flash=Math.max(flash,RM?.05:.14);SFX.shutter();
+  let best=null,bd=1e9;
+  for(const T of targets){if(T.ph!=="live"||!T.vis||T.t<0)continue;const d=Math.hypot(T.x-x,T.y-y)/hitR(T);if(d<=1&&d<bd){bd=d;best=T}}
+  let id=0,gid=0,res;
+  if(!best){NG.STK[me]=0;SFX.miss();burst(x,y,5,["#fff","#d8d0f0"],70,10,180);res="miss"}
+  else if(best.kind==="grem"){gid=best.id;NG.STK[me]=0;NG.frz=1.5;best.ph="flee";best.st=0;SFX.grem();say(t("grem"),best.x,best.y-best.sz*.8,"#7be05a",20);announce("🗑️ "+t("frzT"));burst(best.x,best.y,14,["#7be05a","#5cc244","#fff"],150,40);if(!RM)shake=.12;res="grem"}
+  else{
+    id=best.id;res=best.gold?"gold":"photo";best.ph="snap";best.st=0;best.mine=1;NG.tp[id]={x:best.x,y:best.y,sz:best.sz};
+    burst(best.x,best.y,best.gold?16:9,best.gold?["#ffe14d","#fff","#ffb000"]:["#fff","#ffe14d","#bfefff"],140,30,60);
+    if(best.gold){announce("✨ "+t("gold"));SFX.gold();flash=RM?.1:.4}else SFX.photo();
+    SFX.zip();
+    if(me===1)say("📸",best.x,best.y-best.sz*.75,"#fff",20)}
+  const nx=Math.round(clamp(x/W,0,1)*1000),ny=Math.round(clamp(y/(H-HUDH),0,1.1)*1000);
+  if(me===1){NT.send({t:"snap",id,g:gid,x:nx,y:ny,c:Math.round(NG.t*100)/100})}
+  else{NT.send({t:"sh",x:nx,y:ny});hostSnap(0,id,gid,NG.t)}
+  return res;
+}
+/* ---- the host's judgement ---- */
+function hostSnap(who,id,gid,tg){
+  const now=NG.t;
+  if(NG.phase==="cd"||NG.phase==="done"||NG.phase==="off"||now<-.05||!NT)return;
+  if(who===0){if(now>NET_LEN)return;tg=now}
+  else{
+    if(!(tg>=0)||tg>now+.15)tg=now;
+    if(tg<now-.6)tg=now-.6;
+    if(tg>NET_LEN+.02||now>NET_LEN+NET_GRACE)return;
+    if(tg<NG.gUntil){NG.STK[1]=0;return} // her camera was jammed by a gremlin
+  }
+  if(gid){const g=NG.byId[gid];if(g&&g.kind==="grem"&&tg>=g.at-.25&&tg<=g.at+g.dur+.6){if(who===1)NG.gUntil=tg+1.4;NG.STK[who]=0}return}
+  if(!id){NG.STK[who]=0;return}
+  const T=NG.byId[id];
+  if(!T||T.kind!=="animal"||tg<T.at-.25||tg>T.at+T.dur+.6){NG.STK[who]=0;return}
+  const R=NG.R[id]||(NG.R[id]={w:[],tm:[]});
+  if(R.w.indexOf(who)>=0||R.w.length>=2)return;
+  const g1=T.gold?5:2,g2=T.gold?3:1,out=[];
+  if(R.w.length===0){R.w.push(who);R.tm.push(tg);NG.S[who]+=g1;out.push([who,g1])}
+  else if(who===1&&now-R.tm[0]<.4&&tg<R.tm[0]){ // lag tie: on her own clock her tap came first
+    NG.S[0]+=g2-g1;NG.S[1]+=g1;R.w=[1,0];R.tm=[tg,R.tm[0]];out.push([1,g1],[0,g2])}
+  else{R.w.push(who);R.tm.push(tg);NG.S[who]+=g2;out.push([who,g2])}
+  NG.PH[who]++;NG.STK[who]++;if(NG.STK[who]>NG.BEST[who])NG.BEST[who]=NG.STK[who];
+  applyScores(NG.S[0],NG.S[1],NG.PH[0],NG.PH[1]);
+  for(const o of out)NT.send({t:"ok",id,who:o[0],pts:o[1],h:NG.S[0],g:NG.S[1],hp:NG.PH[0],gp:NG.PH[1]});
+  if(who===0){const p=NG.tp[id]||{x:T.x,y:T.y,sz:T.sz};say("+"+out[0][1],p.x,p.y-p.sz*.75,T.gold?"#ffd54a":"#fff",out[0][1]>=5?26:22)}
+  else{T.fb=true;SFX.tick()}
+}
+function netFinishHost(){
+  if(NG.phase==="done")return;
+  const f={h:NG.S[0],g:NG.S[1],hp:NG.PH[0],gp:NG.PH[1],hb:NG.BEST[0],gb:NG.BEST[1]};
+  NT.send(Object.assign({t:"end"},f));netDone(f);
+}
+/* ---- result ---- */
+function netDone(f){
+  if(NG.phase==="done")return;
+  NG.phase="done";NG.fin=f;NG.over=true;G.state="done";targets=[];$("ann").classList.remove("on");if(NT)NT.setOver(true);
+  const me=NG.role,ms=me?f.g:f.h,os=me?f.h:f.g,mp=me?f.gp:f.hp,op=me?f.hp:f.gp,mb=me?f.gb:f.hb,ob=me?f.hb:f.gb,w=ms>os?1:ms<os?-1:0;
+  NG.S=[f.h,f.g];NG.PH=[f.hp,f.gp];
+  if(NG.paid!==NG.mid){ // rewards for the local player only, once per match, through the normal guarded calls
+    NG.paid=NG.mid;
+    if(w>0)rw({event:"win"});
+    if(mb>=6)rw({event:"combo",score:Math.min(99,mb)});
+    rw({event:"score",score:clamp(ms,0,999)});rwFlush();
+  }
+  if(w>0){SFX.fan();confetti(60)}else if(w<0)SFX.lost();else SFX.ding();
+  const c=$("netcard");
+  c.innerHTML="<div class='big'>"+(w>0?"🏆":w<0?"😿":"🤝")+"</div><h2>"+(w>0?t("nWin"):w<0?t("nLose"):t("nDraw"))+"</h2>"+
+    "<div class='nres'><div class='nr me"+(w>0?" win":"")+"'><b>"+t("you")+"</b><span>"+ms+"</span><small>📸 "+mp+" "+t("phsL")+"<br>🔥 "+t("stkL")+" "+mb+"</small></div>"+
+    "<div class='nr fr"+(w<0?" win":"")+"'><b>"+t("fr1")+"</b><span>"+os+"</span><small>📸 "+op+" "+t("phsL")+"<br>🔥 "+t("stkL")+" "+ob+"</small></div></div>"+
+    "<p id='nMsg'>"+(w>0?t("nWin2"):w<0?t("nLose2"):t("nDraw2"))+"</p>"+
+    "<div class='row'><button class='btn gr' id='nHome'>🏠 "+t("menu")+"</button><button class='btn' id='nAgain' data-pri>🔁 "+t("reBtn")+"</button></div>";
+  $("netov").classList.add("on");
+  $("nAgain").onclick=()=>{if(!NT||!NG.on||NT.myRe)return;SFX.click();NT.rematch();$("nAgain").disabled=true;const m=$("nMsg");if(m)m.textContent=NT.t("waitRe")};
+  $("nHome").onclick=()=>{SFX.click();toMenu()};
+}
+function netLeft(){ // the friend left (or the link is gone for good): a kind card, never a frozen screen
+  if(!(G&&G.mode==="net")||!NG.on)return;
+  const had=NG.S[0]+NG.S[1]>0&&NG.phase!=="done";
+  NG.over=true;if(NG.phase!=="done")NG.phase="done";targets=[];G.state="done";
+  const me=NG.role;
+  $("netcard").innerHTML="<div class='big'>🐾</div><h2 id='nLeftT'></h2>"+(had||NG.fin?"<p><b>"+t("you")+" "+NG.S[me]+" : "+NG.S[1-me]+" "+t("fr1")+"</b></p>":"")+
+    "<div class='row'><button class='btn net' id='nNew'>🌐 "+t("newRoom")+"</button><button class='btn gr' id='nHome'>🏠 "+t("menu")+"</button></div>";
+  $("nLeftT").textContent=NT?NT.t("left"):"";
+  $("netov").classList.add("on");
+  $("nNew").onclick=()=>{SFX.click();toMenu();if(NT)NT.showLobby()};
+  $("nHome").onclick=()=>{SFX.click();toMenu()};
+}
+function netAskQuit(){
+  SFX.click();
+  $("netcard").innerHTML="<div class='big'>🏠</div><h2>"+t("quitQ")+"</h2><div class='row'><button class='btn' id='nStay' data-pri>"+t("stay")+"</button><button class='btn gr' id='nQuit'>"+t("quit")+"</button></div>";
+  $("netov").classList.add("on");
+  $("nStay").onclick=()=>{SFX.click();$("netov").classList.remove("on")};$("nQuit").onclick=()=>{SFX.click();toMenu()};
+}
+/* ---- emotes ---- */
+function showEmo(i,side){NG.emo.push({i,side,t:0});if(NG.emo.length>4)NG.emo.shift();if(side==="o")tone(880,.09,"triangle",.09,1320)}
+function sendEmo(i){
+  const now=performance.now();if(!NT||!NG.on||!G||G.mode!=="net"||NG.phase==="done"||!iN(i,0,3)||now-NG.emT<1000)return;
+  NG.emT=now;NT.send({t:"em",i});showEmo(i,"p");SFX.click();
+  const bar=$("emoBar");bar.classList.add("cool");setTimeout(()=>bar.classList.remove("cool"),1000);
+}
+/* ---- messages from the friend (already authenticated by net1v1, still treated as hostile) ---- */
+function netData(d){
+  if(!NG.on||!d||typeof d!=="object"||typeof d.t!=="string"||!G||G.mode!=="net")return;
+  const now=performance.now();
+  switch(d.t){
+  case"em":if(iN(d.i,0,3)&&now-NG.emRx>500){NG.emRx=now;showEmo(d.i,"o")}break;
+  case"snap":{ // host only: the guest's photo claim
+    if(NG.role!==0||!iN(d.id,0,400)||!iN(d.g,0,400)||!iN(d.x,0,1000)||!iN(d.y,0,1100)||!fN(d.c,0,100))return;
+    if(now-NG.gAt<70)return;NG.gAt=now;
+    if(NG.fl.length<6)NG.fl.push({x:d.x/1000,y:d.y/1000,t:0});
+    hostSnap(1,d.id,d.g,d.c);break}
+  case"sh":{ // guest only: where the host's shutter clicked
+    if(NG.role!==1||!iN(d.x,0,1000)||!iN(d.y,0,1100))return;
+    if(NG.fl.length<6)NG.fl.push({x:d.x/1000,y:d.y/1000,t:0});break}
+  case"ok":{
+    if(NG.role!==1||NG.phase==="done"||!iN(d.id,1,400)||(d.who!==0&&d.who!==1)||!iN(d.pts,1,5)||!iN(d.h,0,999)||!iN(d.g,0,999)||!iN(d.hp,0,200)||!iN(d.gp,0,200))return;
+    const T=NG.byId[d.id];if(!T||T.kind!=="animal")return;
+    applyScores(d.h,d.g,d.hp,d.gp);
+    if(d.who===NG.role){NG.STK[1]++;if(NG.STK[1]>NG.BEST[1])NG.BEST[1]=NG.STK[1];const p=NG.tp[d.id]||{x:T.x,y:T.y,sz:T.sz};say("+"+d.pts,p.x,p.y-p.sz*.75,T.gold?"#ffd54a":"#fff",d.pts>=5?26:22)}
+    else{T.fb=true;SFX.tick()}
+    break}
+  case"sc":{
+    if(NG.role!==1||NG.phase==="done"||!fN(d.c,-5,100)||!iN(d.h,0,999)||!iN(d.g,0,999)||!iN(d.hp,0,200)||!iN(d.gp,0,200))return;
+    applyScores(d.h,d.g,d.hp,d.gp);
+    if(!NG.netp&&Math.abs(NG.t-d.c)>.4){NG.t0=performance.now()-NG.pAcc-d.c*1000;NG.t=d.c}
+    break}
+  case"full":{ // host after a connection pause: complete snapshot so both screens agree again
+    if(NG.role!==1||NG.phase==="done"||!fN(d.c,-5,100)||!iN(d.h,0,999)||!iN(d.g,0,999)||!iN(d.hp,0,200)||!iN(d.gp,0,200)||!Array.isArray(d.o)||d.o.length>250)return;
+    applyScores(d.h,d.g,d.hp,d.gp);
+    NG.t0=performance.now()-NG.pAcc-d.c*1000;NG.t=d.c;
+    for(const e of d.o){if(!Array.isArray(e)||e.length!==2||!iN(e[0],1,400)||!iN(e[1],1,3))continue;
+      const T=NG.byId[e[0]];if(!T)continue;
+      if(e[1]&(1<<NG.role)){if(T.ph==="live"){T.ph="snap";T.st=.5}T.mine=1}
+      if(e[1]&(1<<(1-NG.role)))T.fb=true}
+    break}
+  case"end":{
+    if(NG.role!==1||NG.phase==="done"||NG.phase==="cd"||!iN(d.h,0,999)||!iN(d.g,0,999)||!iN(d.hp,0,200)||!iN(d.gp,0,200)||!iN(d.hb,0,200)||!iN(d.gb,0,200))return;
+    netDone({h:d.h,g:d.g,hp:d.hp,gp:d.gp,hb:d.hb,gb:d.gb});break}
+  }
+}
+const NT=window.Net1v1?Net1v1({pid:"annabelle-safari-",shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
+  sfx:{join:()=>SFX.ding(),click:()=>SFX.click(),drop:()=>SFX.miss(),back:()=>SFX.ding(),huh:()=>SFX.empty()},
+  hideMenu(){},showMenu(){toMenu()},onLink(){},
+  makeStart(){return{g:"safari",v:1,seed:NG.seed,sc:NG.sc}},
+  cleanStart(d){return d&&typeof d==="object"&&d.g==="safari"&&d.v===1&&iN(d.seed,1,2147483646)&&iN(d.sc,0,3)?{seed:d.seed,sc:d.sc}:null},
+  onHostStart(){NG.mid++;NG.seed=1+crypto.getRandomValues(new Uint32Array(1))[0]%2147483646;NG.sc=crypto.getRandomValues(new Uint32Array(1))[0]%4;netStart(0)},
+  onGuestStart(c){NG.mid++;NG.seed=c.seed;NG.sc=c.sc;netStart(1)},
+  onResume(){
+    if(!(G&&G.mode==="net"))return;
+    if(NG.role===0){NG.scAt=0;netClock();const o=[];for(const k in NG.R){const R=NG.R[k];let m=0;R.w.forEach(w=>{m|=1<<w});o.push([+k,m])}
+      NT.send({t:"full",c:Math.round(NG.t*100)/100,h:NG.S[0],g:NG.S[1],hp:NG.PH[0],gp:NG.PH[1],o:o.slice(0,250)})}},
+  onData:netData,onLeft:netLeft,
+  onPause(on){const n=performance.now();if(on&&!NG.netp){NG.netp=true;NG.pAt=n}else if(!on&&NG.netp){NG.netp=false;NG.pAcc+=n-NG.pAt}}}):null;
+$("homeBtn").addEventListener("click",e=>{if(G&&G.mode==="net"&&NG.on&&NG.phase!=="done"){e.preventDefault();netAskQuit()}});
+document.querySelectorAll("#emoBar button").forEach(b=>b.onclick=()=>{ac();sendEmo(+b.dataset.e)});
+addEventListener("pagehide",()=>{if(NT&&NG.on)try{NT.send({t:"bye"})}catch(e){}});
+/* ---- drawing ---- */
+function drawNetHud(){
+  const me=NG.role,o=1-me,y0=H-HUDH;
+  R(0,y0,W,HUDH,"#14092b");R(0,y0,W,3,"#000");
+  const fs=Math.round(clamp(W*.04,13,17)),F="900 "+fs+"px Rubik,Arial,sans-serif",cx=W/2;
+  txt("📸 "+NG.PH[me],cx-142,y0+HUDH*.36,F,"#fff");
+  if(NG.STK[me]>=2)txt("🔥 "+NG.STK[me],cx-142,y0+HUDH*.7,F,"#ffd54a");
+  txt("📸 "+NG.PH[o],cx+142,y0+HUDH*.36,F,"#9fe0ff");
+  const SW=Math.min(W-12,560),X0=Math.round((W-SW)/2),bw=Math.floor((SW-8-84)/2),bh=44,by=6,fx=X0+SW-bw;
+  hudBox(X0,by,bw,bh);R(X0+2,by+2,bw-4,3,"#ff6fae");hudBox(fx,by,bw,bh);R(fx+2,by+2,bw-4,3,"#38d6e8");
+  const lab="900 11px Rubik,Arial,sans-serif";
+  txt(t("you"),X0+bw/2,by+15,lab,"#ff9ac9");txt(t("fr1"),fx+bw/2,by+15,lab,"#8fe8f4");
+  txt(String(NG.S[me]),X0+bw/2,by+32,"900 "+(22+Math.round(NG.bump[me]*8))+"px 'Courier New',monospace","#fff");
+  txt(String(NG.S[o]),fx+bw/2,by+32,"900 "+(22+Math.round(NG.bump[o]*8))+"px 'Courier New',monospace","#fff");
+  const left=Math.max(0,NET_LEN-Math.max(0,NG.t)),sec=Math.ceil(left-1e-6),tx=X0+bw+4,low=NG.phase==="play"&&sec<=10&&Math.floor(time*3)%2===0;
+  hudBox(tx,by,84,bh);txt(Math.floor(sec/60)+":"+("0"+sec%60).slice(-2),tx+42,by+bh/2+1,"900 24px 'Courier New',monospace",sec<=10?(low?"#fff":"#ff5a6e"):"#ffe14d");
+  R(X0,by+bh+4,SW,6,"#000");R(X0+1,by+bh+5,Math.max(0,(SW-2)*(left/NET_LEN)),4,sec<=10?"#ff5a6e":"#38d6e8");
+}
+function bigTxt(s,x,y,size,col){ctx.font="900 "+size+"px Rubik,Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineJoin="round";ctx.lineWidth=Math.max(5,size*.14);ctx.strokeStyle="#1d1233";ctx.strokeText(s,x,y);ctx.fillStyle=col;ctx.fillText(s,x,y)}
+function wrapTxt(s,x,y,maxW,lh,font,col){
+  ctx.font=font;const words=s.split(" "),lines=[];let cur="";
+  for(const w of words){const tt=cur?cur+" "+w:w;if(ctx.measureText(tt).width>maxW&&cur){lines.push(cur);cur=w}else cur=tt}
+  if(cur)lines.push(cur);
+  lines.forEach((l,i)=>{ctx.textAlign="center";ctx.textBaseline="middle";ctx.direction=isHe(l)?"rtl":"ltr";ctx.lineWidth=4;ctx.strokeStyle="#1d1233";ctx.lineJoin="round";ctx.strokeText(l,x,y+i*lh);ctx.fillStyle=col;ctx.fillText(l,x,y+i*lh)});ctx.direction="ltr";
+}
+function drawNetOverlay(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;
+  if(NG.phase==="cd"&&!NG.netp){
+    const r=-NG.t,n=r>.6?Math.ceil(r-.6):0,k=n>0?((r-.6)%1||1):(r/.6),size=Math.min(W,H*.8)*(n>0?.24:.17)*(1+.3*(n>0?k:0));
+    ctx.globalAlpha=n>0?1:Math.min(1,k*2+.2);bigTxt(n>0?String(n):t("go"),W/2,Math.max(GT*.34,110),size,n>0?"#ffd54a":"#7be05a");ctx.globalAlpha=1;
+    wrapTxt(t("netHow"),W/2,GT*.62,W-40,Math.round(clamp(W*.052,17,22)),"900 "+Math.round(clamp(W*.045,15,19))+"px Rubik,Arial,sans-serif","#fff");
+  }
+  for(const f of NG.fl){const a=Math.max(0,1-f.t/.8),x=f.x*W,y=f.y*(H-HUDH);ctx.globalAlpha=a;ctx.strokeStyle="#38d6e8";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,12+f.t*40,0,6.3);ctx.stroke();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x,y,16,0,6.3);ctx.fill();drawSpr("📷",x,y,24);ctx.globalAlpha=1}
+  for(const e of NG.emo){const a=Math.min(1,(1.8-e.t)*2),x=e.side==="o"?W*.8:W*.2,y=GT*.5-e.t*46,sc=e.t<.2?.4+e.t*3:1;ctx.globalAlpha=Math.max(0,a);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x,y,30*sc,0,6.3);ctx.fill();ctx.strokeStyle=e.side==="o"?"#38d6e8":"#ff6fae";ctx.lineWidth=4;ctx.stroke();drawSpr(EMO_SET[e.i],x,y,Math.round(38*sc));ctx.globalAlpha=1}
+  if(NG.frz>0){ctx.fillStyle="rgba(40,30,60,.28)";ctx.fillRect(0,0,W,H-HUDH);const cx=W/2,cy=GT*.9;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(cx,cy,30,0,6.3);ctx.fill();ctx.strokeStyle="#7be05a";ctx.lineWidth=5;ctx.beginPath();ctx.arc(cx,cy,26,-1.57,-1.57+6.28*(NG.frz/1.5));ctx.stroke();drawSpr("🗑️",cx,cy,26)}
+}
 
 /* ---------- test hook ---------- */
 window.__safari={
+  NT,NG,
+  net(){const f=NG.fin;return{on:NG.on,role:NG.role,phase:NG.phase,t:NG.t,netp:NG.netp,seed:NG.seed,sc:NG.sc,S:NG.S.slice(),PH:NG.PH.slice(),STK:NG.STK.slice(),BEST:NG.BEST.slice(),frz:NG.frz,fin:f?Object.assign({},f):null,over:NG.over,emo:NG.emo.map(e=>({i:e.i,side:e.side})),fl:NG.fl.length,nT:NG.T.length}},
+  netSched(){return NG.T.map(T=>({id:T.id,a:T.a,k:T.kind,gold:T.gold,at:Math.round(T.at*1000)/1000,dur:Math.round(T.dur*1000)/1000,type:T.type,x0:T.x0,fb:!!T.fb,ph:T.ph,mine:!!T.mine}))},
+  netTargets(){const r=cv.getBoundingClientRect(),kx=r.width/W,ky=r.height/H;return targets.filter(T=>T.t>=0&&T.ph==="live"&&T.vis).map(T=>({id:T.id,kind:T.kind,gold:T.gold,fb:!!T.fb,x:r.left+T.x*kx,y:r.top+T.y*ky,cx:T.x,cy:T.y}))},
+  netTap:netTap,netEmote:sendEmo,
   state(){const B=G&&G.boss;return{screen:scrn,paused,mode:G?G.mode:"",level:G&&G.mode==="story"?G.n+1:0,diff:G?G.diff:SV.diff,gstate:G?G.state:"",scene:curScene,wave:G?G.wave:0,waves:G?G.waves:0,photos:G?G.photos:0,total:G?G.total:0,quota:G?G.quota:0,
     film:G?(G.unl?-1:G.film):0,score:G?G.score:0,streak:G?G.streak:0,hearts:G?G.hearts:0,retries:G?G.retries:0,bossHp:B?B.hp:0,bossNeed:B?B.need:0,bossPass:B?B.pass:0,bossMax:B?B.maxPass:0,catUp:!!cat,
     targets:targets.length,shots:G?G.shots:0,wasted:G?G.wasted:0,newA:G?G.newA.slice():[],vf:{x:vf.x,y:vf.y,on:vf.on,kb:vf.kb},rescued:SV.rescued.slice(),unlocked:SV.unlocked,stars:Object.assign({},SV.stars),best:SV.best,hi:SV.hi.slice(),album:Object.keys(SV.album),photosTotal:SV.photos,W,H,GT,SZ,lang,reveal:$("rvN").textContent,shown:+$("rScV").textContent||0,newRec:$("rRec").classList.contains("on")}},
@@ -1061,7 +1367,7 @@ window.__safari={
   lose(){if(!G||scrn!=="play")return;targets=[];if(G.mode==="arcade"){G.hearts=0;G.state="over";G.st=0;SFX.over();return}loseRound()},
   step(sec){const n=Math.max(1,Math.round(sec/.02));for(let i=0;i<n;i++)tick(.02)},
   targets(){const r=cv.getBoundingClientRect(),kx=r.width/W,ky=r.height/H;return targets.filter(T=>T.t>=0&&T.ph==="live").map(T=>({id:T.id,kind:T.gold?"gold":T.kind,a:T.a,type:T.type,x:r.left+T.x*kx,y:r.top+T.y*ky,r:hitR(T)*kx,vis:T.vis,vx:T.vx*kx,vy:T.vy*ky}))},
-  snapAt(x,y){const r=cv.getBoundingClientRect();return snap((x-r.left)*W/r.width,(y-r.top)*H/r.height)},
+  snapAt(x,y){const r=cv.getBoundingClientRect();return doSnap((x-r.left)*W/r.width,(y-r.top)*H/r.height)},
   gold(){if(G&&G.state==="wave")spawnGold(G.sm*DIFF[G.diff].sp)},
   gremlin(){if(G&&G.state==="wave")spawnGrem(G.sm,0)},
   skipIntro(){if(G&&G.state==="intro")G.st=99},
