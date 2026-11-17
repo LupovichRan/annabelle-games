@@ -1093,7 +1093,7 @@ const O={on:false,mode:'race',n:4,me:0,netp:false,over:false,left:false,started:
  res:[null,null],myOk:null,fp:0,ff:0,t0:0,limit:1,len:2,fresh:true,pOut:null,pAt:0,reveal:-1,revAt:0,
  turn:0,tn:0,starter:0,hear:[1,1],fpos:0,warned:false,tick:0,resDur:2.3,cdN:-1,
  lag:0,rtt:-1,tqI:0,tqT:0,tqNext:0,taAt:-9,q0:-99,goAt:0,goT:0,rdy:false,frRdy:false,hint:false,tapH:false,bye:false,defer:null,emAt:-9,emIn:-9,reShown:false,showAt:0,tmW:-1,tmC:'',
- fq:[],fqAt:-9}; // fq: add mode, the friend's turn input that is waiting to be shown (one press at a time); fqAt: when her last press was shown
+ fq:[],fqAt:-9,mpr:[],mts:[],mt0:0,gpr:[],gbad:false}; // mpr/mts: my own presses this round and their times; gpr/gbad (host): the friend's press stream as it arrived and whether it ever left the song. fq: add mode, the friend's turn input that is waiting to be shown (one press at a time); fqAt: when her last press was shown
 const olSpeed=n=>Math.max(.6,1-.03*(n-1)),olShowDur=n=>.6+n*(OD.on+OD.gap)*olSpeed(n);
 const olEarly=()=>Math.max(G.clock-O.goAt,(performance.now()-O.goT)/1000)<olShowDur(O.seq.length)-.3; // host, race: too soon after I sent the song for the friend to have sung anything (her phone must play it first). Measured by whichever of my clocks ran longer, so a slow frame on my side never counts against her
 const NT=window.Net1v1?Net1v1({pid:'annabelle-simon-',shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
@@ -1173,7 +1173,7 @@ function olEmote(i){ // quick reaction: at most one per second
   O.emAt=G.rt;NT.send({t:'em',i:i});olBubble(0,i);
   const b=$('emoBar');if(b){b.classList.add('cool');setTimeout(()=>b.classList.remove('cool'),1000)}return true;
 }
-function olProg(n,f,now){O.pOut={t:'p',rd:O.rd,n:n,f:f};if(now||G.rt>=O.pAt){NT.send(O.pOut);O.pOut=null;O.pAt=G.rt+.09}} // live progress, rate-limited
+function olProg(n,f,now){O.pOut={t:'p',rd:O.rd,n:n,f:f,pr:O.mpr.slice()};if(now||G.rt>=O.pAt){NT.send(O.pOut);O.pOut=null;O.pAt=G.rt+.09}} // live progress, rate-limited
 function olSlipFx(i,want){if(i>=0)P[i].bad=.4;SFX.wrong();G.shake=.25;if(want>=0){O.reveal=want;O.revAt=G.clock+.45}}
 function olPress(i){
   if(!O.on||O.netp)return false;
@@ -1193,11 +1193,11 @@ function hostGo(replay){ // host: open a round. A replay (after a reconnection) 
   O.goAt=G.clock;O.goT=performance.now();NT.send({t:'go',rd:O.rd,q:O.seq.slice(),a:O.pts[0],b:O.pts[1]});olDefer(O.lag,olRound);
 }
 function olRound(){ // both: play the song (the guest on arrival of 'go', the host one network delay after sending it)
-  O.fp=0;O.ff=0;O.myOk=null;O.reveal=-1;O.pOut=null;O.showAt=Date.now();G.cur=O.seq;G.curDur=null;G.speed=olSpeed(O.seq.length);G.pos=0;
+  O.fp=0;O.ff=0;O.myOk=null;O.reveal=-1;O.pOut=null;O.mpr=[];O.mts=[];O.gpr=[];O.gbad=false;O.showAt=Date.now();G.cur=O.seq;G.curDur=null;G.speed=olSpeed(O.seq.length);G.pos=0;
   ui();startShow('oTurn');olTapHint();
 }
 function olAfterShow(){ // my turn starts when my phone has finished playing the song
-  G.pos=0;O.t0=G.clock;O.warned=false;O.tick=0;
+  G.pos=0;O.t0=G.clock;O.mt0=performance.now();O.warned=false;O.tick=0;
   if(O.mode==='race'){O.limit=Math.min(30,4+1.4*O.seq.length);setPhase('oTurn');setTurn('go p'+O.me,'🎤 '+t('turn'))}
   else{setPhase('oRep');setTurn('go p'+O.me,'🎤 '+t('oRep'))}
   SFX.cue();drawDots();updBar();olTapHint();
@@ -1206,7 +1206,7 @@ function olPressA(i){
   const want=O.seq[G.pos];
   if(i!==want&&i===G.lastPad&&G.clock-G.lastAt<.18)return false; // accidental double-tap: forgive
   G.lastPad=i;G.lastAt=G.clock;
-  if(i===want){lightPad(i,.3,true);notesFx(i,2);G.pos++;drawDots();if(G.pos>=O.seq.length)olDoneA(true,false,-1);else olProg(G.pos,0)}
+  if(i===want){lightPad(i,.3,true);notesFx(i,2);G.pos++;O.mpr.push(i);O.mts.push(Math.round(clamp(performance.now()-O.mt0,0,120000)));drawDots();if(G.pos>=O.seq.length)olDoneA(true,false,-1);else olProg(G.pos,0)}
   else{olSlipFx(i,want);olDoneA(false,false,want)}
   return true;
 }
@@ -1215,7 +1215,17 @@ function olDoneA(ok,timeout){ // my own result for this round: I report it, the 
   if(ok){O.best=Math.max(O.best,O.seq.length);SFX.good();P.forEach((p,i)=>{if(i<G.n)p.joy=.5+i*.04})}
   olProg(G.pos,ok?1:2,true);
   setPhase('oWait');setTurn(ok?'ok':'bad',ok?'✔ '+t('oWaitOk'):timeout?'⏰ '+t('oTime'):t('oSlip'));updBar();
-  if(O.me)NT.send({t:'r',round:O.rd,ok:ok,ms:ms});else{O.res[0]={ok:ok,ms:ms};hostCheck()}
+  if(O.me)NT.send({t:'r',round:O.rd,ok:ok,ms:ok&&O.mts.length?Math.max(ms,O.mts[O.mts.length-1]):ms,pr:O.mpr.slice(),ts:O.mts.slice()});else{O.res[0]={ok:ok,ms:ms};hostCheck()}
+}
+function olVerified(d){ // host: the guest's "right" counts only with her whole press stream: what she sent live ('p') and what she sends with the result must both equal the song, with human tap spacing
+  const q=O.seq,n=q.length,ts=d.ts;
+  if(O.gbad||O.gpr.length!==n||!Array.isArray(d.pr)||d.pr.length!==n||!Array.isArray(ts)||ts.length!==n)return false;
+  for(let i=0;i<n;i++){if(d.pr[i]!==q[i]||O.gpr[i]!==q[i]||!int(ts[i],0,120000)||(i&&ts[i]<ts[i-1]))return false}
+  return n<2||ts[n-1]-ts[0]>=(n-1)*40; // on average nobody taps faster than ~40 ms apart (a slow frame may bunch two taps, so not per press)
+}
+function olMs(d,n,ms){ // host: her time cannot be better than her own press times, nor than what I saw (the song reached her, she sang it, the last press came back: my wait minus one round trip, with slack)
+  const seen=(performance.now()-O.goT)-olShowDur(n)*1000-(O.rtt<0?800:O.rtt)-400;
+  return Math.max(ms,n*70,d.ts[n-1],Math.min(60000,Math.round(seen)));
 }
 function hostCheck(){if(O.res[0]&&O.res[1]&&O.resRd!==O.rd)hostResolveA()}
 function hostResolveA(){ // both right: the song grows (+ a cosmetic speed star). One wrong: a point for the other. Both wrong: nothing
@@ -1374,7 +1384,13 @@ function olUpdate(){
   case 'oSync':if(!O.me&&G.pt>=1.5)hostGo(true);break;
   }
 }
-function olFrProg(d){if(O.mode!=='race'||!int(d.rd,1,999)||d.rd!==O.rd||O.resRd===O.rd||!int(d.n,0,O.seq.length)||!int(d.f,0,2)||!['show','oTurn','oWait'].includes(G.ph)||(!O.me&&(d.n>0||d.f>0)&&olEarly()))return;O.fp=d.n;O.ff=d.f;olDots()}
+function olFrProg(d){
+  if(!O.me&&O.mode==='race'){ // host: the guest's press stream so far (every message repeats all of it): it must continue what I had and follow the song
+    if(!int(d.rd,1,999)||d.rd!==O.rd||O.resRd===O.rd||!Array.isArray(d.pr)||d.pr.length!==d.n||d.n>O.seq.length||!d.pr.every(v=>int(v,0,O.n-1)))return;
+    if(d.n<O.gpr.length||!O.gpr.every((v,i)=>v===d.pr[i])||!d.pr.every((v,i)=>v===O.seq[i]))O.gbad=true;else O.gpr=d.pr.slice();
+    if(O.gbad)return; // a press that is not in the song: no progress shown, and no "right" later
+  }
+  if(O.mode!=='race'||!int(d.rd,1,999)||d.rd!==O.rd||O.resRd===O.rd||!int(d.n,0,O.seq.length)||!int(d.f,0,2)||!['show','oTurn','oWait'].includes(G.ph)||(!O.me&&(d.n>0||d.f>0)&&olEarly()))return;O.fp=d.n;O.ff=d.f;olDots()}
 function olData(d){ // every game message from the friend lands here (already authenticated by net1v1): validate everything
   if(!O.on||O.left||!d||typeof d!=='object')return;
   const ty=d.t,host=!O.me,race=O.mode==='race',ph=G.ph;
@@ -1387,8 +1403,8 @@ function olData(d){ // every game message from the friend lands here (already au
     if(O.over||G.mode!=='play')return;
     if(ty==='r'){
       if(!race||!int(d.round,1,999)||d.round!==O.rd||O.resRd===O.rd||O.res[1]||typeof d.ok!=='boolean'||typeof d.ms!=='number'||!isFinite(d.ms)||!['show','oTurn','oWait'].includes(ph))return;
-      const n=O.seq.length,ok=d.ok&&!olEarly(); // "right" before the song can even have finished playing on her phone is impossible: it counts as a slip
-      let ms=clamp(Math.round(d.ms),0,60000);if(ok)ms=Math.max(ms,n*70); // nobody sings faster than that
+      const n=O.seq.length,ok=d.ok&&!olEarly()&&olVerified(d); // "right" before the song can even have finished playing on her phone is impossible: it counts as a slip. So is "right" without the proof: her actual presses, in order, equal to the song
+      let ms=clamp(Math.round(d.ms),0,60000);if(ok)ms=olMs(d,n,ms);
       O.res[1]={ok:ok,ms:ms};O.ff=ok?1:2;if(ok)O.fp=n;drawDots();hostCheck();
     }else if(ty==='p')olFrProg(d);
     else if(ty==='k'||ty==='n'||ty==='h'||ty==='to')olTurnMsg(d);
