@@ -88,6 +88,16 @@ body.onl #pauseBtn{display:none}
 #oStars span.off{filter:grayscale(1) opacity(.4)}
 .pill.pop{animation:pillPop .45s}@keyframes pillPop{40%{transform:scale(1.3) rotate(-4deg)}}
 body.shake #cv{animation:shk .35s}@keyframes shk{20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(3px,3px)}}
+.tiles{grid-template-columns:repeat(12,1fr)}.mt,.mt:nth-child(n+4){grid-column:span 3}.mt:nth-child(n+5){grid-column:span 4}.mt.t_ult{background:linear-gradient(#41c7c0,#1f8f9e)}
+#ultw{position:fixed;inset:0;z-index:16;display:none;background:linear-gradient(#2a1458,#1d1050);padding:70px 0}#ultw.show{display:flex;align-items:center;justify-content:center}
+#ult{--us:min(96vw,calc(100dvh - 150px));width:var(--us);height:var(--us);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--us)*.022);direction:ltr}
+#ult .sb{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:2px;padding:3px;border-radius:9px;background:#ffffff1f;border:2px solid transparent}
+#ult .sb.act{background:#ffe14d44;border-color:#ffe14d;box-shadow:0 0 12px #ffe14d99}
+#ult .sb.wl{box-shadow:0 0 0 3px #5fd38d,0 0 16px #5fd38d}
+#ult .uc{background:#ffd39e;border-radius:6px;font-size:calc(var(--us)/9*.52);padding:0;display:flex;align-items:center;justify-content:center;line-height:1;min-width:0;min-height:0;overflow:hidden}
+#ult .sb:not(.act) .uc{filter:brightness(.78)}#ult .uc.last{outline:3px solid #ff5d73;outline-offset:-3px}
+#ult .sw{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:calc(var(--us)/3*.62);border-radius:8px;background:#3a2a7ad9;pointer-events:none}
+#ult .sb.w0 .sw,#ult .sb.w1 .sw,#ult .sb.wd .sw{display:flex}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/tictactoe.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/tictactoe-192.png"><meta name="apple-mobile-web-app-title" content="איקס עיגול חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/tictactoe-apple-180.png"><script src="pwa.js" data-app="tictactoe" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -95,7 +105,7 @@ body.shake #cv{animation:shk .35s}@keyframes shk{20%{transform:translate(-6px,3p
 </head>
 <body>
 <canvas id="cv"></canvas><canvas id="conf"></canvas>
-<div id="flat"></div>
+<div id="flat"></div><div id="ultw"><div id="ult"></div></div>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button><button class="iconbtn corner" id="musBtn" aria-label="music">🎵</button>
 <div id="top"><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="homeBtn" aria-label="menu">☰</button><span class="pill" id="pSc" dir="ltr"></span><span class="pill" id="pTurn"></span></div>
 <div id="cap"></div><div id="pbar"></div>
@@ -153,21 +163,21 @@ en:{title:"Cat Tic-Tac-Toe",sub:"Fish vs balls of yarn – who wins? 🐟🧶",p
  score:"{a} : {b}",statsL:"Wins vs computer: {w} · Draws: {d}",
  again:"🔁 Again",next:"▶ Next round",menu:"☰ Menu",paused:"Paused",resume:"▶ Resume",noGL:"No 3D in this browser, but you can play the simple version 🐱",home:"🏠 All games",tile:"Cushion"}};
 const TXX={
-he:{smart:"🧠 חכם",g_classic:"קלאסי",g_endless:"צמר אינסופי",g_powers:"כוחות חתול",g_big:"לוח ענק",g_chaos:"חתול הכאוס",
+he:{g_ult:"אולטימטיבי",d_ult:"9 לוחות קטנים! הכרית שתבחרי שולחת את היריבה ללוח המתאים. נצחי בשלושה לוחות בשורה! (נגד המחשב או בשניים)",ultTip:"🏰 הכרית שתבחרי שולחת את היריבה ללוח המתאים!",ultFree:"בחרי כל לוח פתוח 👆",ultGo:"שחקי בלוח המואר ✨",ultBoard:"לוח נכבש! 🏁",ultWrong:"רק בלוח המואר! ☝️",smart:"🧠 חכם",g_classic:"קלאסי",g_endless:"צמר אינסופי",g_powers:"כוחות חתול",g_big:"לוח ענק",g_chaos:"חתול הכאוס",
  d_classic:"שלוש בשורה – הקלאסי!",d_endless:"לכל אחד רק 3 חתיכות. הרביעית מעלימה את הישנה ביותר (היא מהבהבת)!",d_powers:"כל אחד מקבל 3 כוחות חד־פעמיים: חכה, עכבר, זום, מגן וכפול!",d_big:"לוח גדול וארבע בשורה! (ברמת חכם – 5×5)",d_chaos:"חתול סורר מפיל חתיכה כל כמה תורות – ויש אזהרה לפני!",
  tip_endless:"♾️ רק 3 חתיכות לכל אחד – הישנה מהבהבת ותיעלם!",tip_big:"🧩 ארבע בשורה מנצח!",tip_chaos:"😼 כל כמה תורות חתול סורר מפיל חתיכה – שימי לב לאזהרה ⚠️",gift:"🎁 הקוסם נתן 3 כוחות לכל אחד! לחצי על כוח בשורה למטה",
  pw_hook:"חכה",pw_mouse:"עכבר",pw_zoom:"זום",pw_shield:"מגן",pw_dbl:"כפול",
  h_hook:"🐟 בחרי חתיכה של היריב להסרה",h_mouse:"🐭 בחרי כרית ריקה לחסימה",h_zoom1:"🌀 בחרי חתיכה ראשונה להחלפה",h_zoom2:"🌀 עכשיו בחרי חתיכה שנייה",h_shield:"😴 בחרי חתיכה שלך להגנה",
  hookSay:"החכה תפסה חתיכה! 🎣😹",mouseSay:"העכבר חסם את הכרית! 🐭",zoomSay:"זום! כולם התבלבלו 🌀😹",shieldSay:"החתיכה ישנה בשלום 😴🛡️",dblSay:"⚡ שני מהלכים ברצף!",noTarget:"אין מטרה לכוח הזה 🙈",
  chaosWarn:"⚠️ החתול הסורר בדרך! חתיכה בסכנה",chaosKnock:"😹 החתול הסורר הפיל חתיכה!",vanish:"🧶 החתיכה הישנה נעלמה! 💨",starNew:"⭐ כוכב חדש!",starGold:"🌟 כוכב זהב!"},
-fr:{smart:"🧠 Malin",g_classic:"Classique",g_endless:"Laine infinie",g_powers:"Pouvoirs de chat",g_big:"Grand plateau",g_chaos:"Chat chaos",
+fr:{g_ult:"Ultime",d_ult:"9 petits plateaux ! La case que tu choisis envoie l'adversaire sur le plateau correspondant. Gagne trois plateaux alignés ! (contre l'ordi ou à deux)",ultTip:"🏰 La case choisie envoie l'adversaire sur le plateau correspondant !",ultFree:"Choisis un plateau ouvert 👆",ultGo:"Joue dans le plateau lumineux ✨",ultBoard:"Plateau gagné ! 🏁",ultWrong:"Seulement dans le plateau lumineux ! ☝️",smart:"🧠 Malin",g_classic:"Classique",g_endless:"Laine infinie",g_powers:"Pouvoirs de chat",g_big:"Grand plateau",g_chaos:"Chat chaos",
  d_classic:"Trois en ligne – le classique !",d_endless:"Seulement 3 pièces chacun. La 4e fait disparaître la plus ancienne (elle clignote) !",d_powers:"Chacun reçoit 3 pouvoirs à usage unique : canne, souris, zoom, bouclier, double !",d_big:"Grand plateau, quatre en ligne ! (en Malin – 5×5)",d_chaos:"Un chat chenapan fait tomber une pièce tous les quelques tours – avec un avertissement !",
  tip_endless:"♾️ Seulement 3 pièces chacun – la plus ancienne clignote et disparaît !",tip_big:"🧩 Quatre en ligne gagne !",tip_chaos:"😼 Un chat chenapan fait tomber une pièce – attention à l'avertissement ⚠️",gift:"🎁 Le magicien donne 3 pouvoirs à chacun ! Touche un pouvoir en bas",
  pw_hook:"Canne",pw_mouse:"Souris",pw_zoom:"Zoom",pw_shield:"Bouclier",pw_dbl:"Double",
  h_hook:"🐟 Choisis une pièce adverse à retirer",h_mouse:"🐭 Choisis un coussin vide à bloquer",h_zoom1:"🌀 Choisis la première pièce à échanger",h_zoom2:"🌀 Maintenant la deuxième pièce",h_shield:"😴 Choisis une de tes pièces à protéger",
  hookSay:"La canne a attrapé une pièce ! 🎣😹",mouseSay:"La souris bloque le coussin ! 🐭",zoomSay:"Zoom ! Tout le monde est perdu 🌀😹",shieldSay:"La pièce dort en paix 😴🛡️",dblSay:"⚡ Deux coups d'affilée !",noTarget:"Pas de cible pour ce pouvoir 🙈",
  chaosWarn:"⚠️ Le chat chenapan arrive ! Une pièce est en danger",chaosKnock:"😹 Le chat chenapan a fait tomber une pièce !",vanish:"🧶 La plus ancienne pièce a disparu ! 💨",starNew:"⭐ Nouvelle étoile !",starGold:"🌟 Étoile d'or !"},
-en:{smart:"🧠 Smart",g_classic:"Classic",g_endless:"Endless yarn",g_powers:"Cat powers",g_big:"Big board",g_chaos:"Chaos cat",
+en:{g_ult:"Ultimate",d_ult:"9 little boards! The cushion you pick sends your opponent to the matching board. Win three boards in a row! (vs computer or two players)",ultTip:"🏰 The cushion you pick sends your opponent to the matching board!",ultFree:"Pick any open board 👆",ultGo:"Play in the glowing board ✨",ultBoard:"Board captured! 🏁",ultWrong:"Only in the glowing board! ☝️",smart:"🧠 Smart",g_classic:"Classic",g_endless:"Endless yarn",g_powers:"Cat powers",g_big:"Big board",g_chaos:"Chaos cat",
  d_classic:"Three in a row – the classic!",d_endless:"Only 3 pieces each. The 4th makes your oldest one vanish (it blinks)!",d_powers:"Everyone gets 3 one-use powers: hook, mouse, zoomies, shield and double!",d_big:"Big board, four in a row! (on Smart – 5×5)",d_chaos:"A naughty cat knocks a piece off every few turns – with a warning first!",
  tip_endless:"♾️ Only 3 pieces each – the blinking one will vanish!",tip_big:"🧩 Four in a row wins!",tip_chaos:"😼 A naughty cat knocks a piece off every few turns – watch the warning ⚠️",gift:"🎁 The referee gave everyone 3 powers! Tap a power below",
  pw_hook:"Hook",pw_mouse:"Mouse",pw_zoom:"Zoomies",pw_shield:"Shield",pw_dbl:"Double",
@@ -304,8 +314,8 @@ function mkLines(n,k){const L=[],dirs=[[1,0],[0,1],[1,1],[1,-1]];for(let r=0;r<n
 function setBoard(n,k){N=n;K=k;PITCH=n===3?2.45:n===4?2.1:1.85;BS=PITCH/2.45;LINES=mkLines(n,k);
  tiles.forEach((x,i)=>{const vis=i<n*n;x.g.visible=vis;if(!vis)return;const r=Math.floor(i/n),c=i%n;x.g.position.set((c-(n-1)/2)*PITCH,0,(r-(n-1)/2)*PITCH);x.g.scale.set(BS,1,BS);const alt=(r+c)%2===0;x.base=[alt?0xff8fb8:0xffb347,alt?0xffd1e3:0xffe3b8];x.cur=""});
  selRing.geometry.dispose();selRing.geometry=new THREE.TorusGeometry(1.2*BS,.08,4,20)}
-const GAMES=["classic","endless","powers","big","chaos"],TILES=[...GAMES,"adv"],DIFFS=["easy","norm","smart"],PWK=["hook","mouse","zoom","shield","dbl"];
-const GIC={classic:"🐾",endless:"♾️",powers:"⚡",big:"🧩",chaos:"😼",adv:"🗺️"};
+const GAMES=["classic","endless","powers","big","chaos"],TILES=[...GAMES,"ult","adv"],DIFFS=["easy","norm","smart"],PWK=["hook","mouse","zoom","shield","dbl"];
+const GIC={classic:"🐾",endless:"♾️",powers:"⚡",big:"🧩",chaos:"😼",adv:"🗺️",ult:"🏰"};
 let cfg={mode:ls.get("annabelle-ttt-mode")==="2"?2:1,diff:DIFFS.includes(ls.get("annabelle-ttt-diff"))?ls.get("annabelle-ttt-diff"):"easy",start:"me",match:ls.get("annabelle-ttt-match")!=="0",game:TILES.includes(ls.get("annabelle-ttt-game"))?ls.get("annabelle-ttt-game"):"classic"};
 setBoard(3,3);
 function judge(b,pref){const order=pref==null?[0,1]:[pref,pref^1];for(const w of order)for(const l of LINES){let ok=b[l[0]]===w;for(let j=1;ok&&j<l.length;j++)ok=b[l[j]]===w;if(ok)return{who:w,line:l}}return b.every(x=>x!==null)?{who:-1,line:null}:null}
@@ -383,7 +393,7 @@ function clearBoard(){for(let i=0;i<25;i++){if(pcs[i]){scene.remove(pcs[i]);pcs[
  tiles.forEach(x=>{x.glow=0;x.hl=0;x.cur="";x.rimM.color.setHex(x.base[0]);x.padM.color.setHex(x.base[1])});updFlat()}
 function boardSizeFor(){return cfg.game==="big"?((cfg.mode===1&&cfg.diff==="smart")?5:4):3}
 function startMatch(){ac();scores=[0,0];first=cfg.mode===1&&cfg.start==="cpu"?1:0;silly=false;document.body.classList.add("play");document.body.classList.toggle("onl",!!OL.on);$("menu").classList.remove("show");$("map").classList.remove("show");$("over").classList.remove("show");$("againBtn").style.display="";if(!glOK)document.body.classList.add("noglplay");rw({event:"play"});newRound(true)}
-function newRound(initial){if(!initial)first^=1;rng=OL.on?mulberry(OL.seed):Math.random;OL.seq=0;OL.rcv=0;OL.aq=[];OL.pend=false;OL.pendT=0;if(adv)adv.moves=0;const n=boardSizeFor();setBoard(n,cfg.game==="big"?4:3);flatBuild();clearBoard();gift();document.body.classList.toggle("pw",cfg.game==="powers");moved=false;turn=first;phase="play";busy=.3;idle=0;sleeping=false;mood="idle";moodT=0;sel=-1;newStar=0;hud();announceTurn();renderPbar();
+function newRound(initial){if(!initial)first^=1;if(cfg.game==="ult")return ultRound();rng=OL.on?mulberry(OL.seed):Math.random;OL.seq=0;OL.rcv=0;OL.aq=[];OL.pend=false;OL.pendT=0;if(adv)adv.moves=0;const n=boardSizeFor();setBoard(n,cfg.game==="big"?4:3);flatBuild();clearBoard();gift();document.body.classList.toggle("pw",cfg.game==="powers");moved=false;turn=first;phase="play";busy=.3;idle=0;sleeping=false;mood="idle";moodT=0;sel=-1;newStar=0;hud();announceTurn();renderPbar();
  if(cfg.game!=="classic"){say(t(cfg.game==="powers"?"gift":"tip_"+cfg.game));tipT=3.4}else if(adv){say(t("goal").replace("{n}",adv.st.par-1));tipT=3.4}
  if(cpuIs(turn))cpuT=.9+Math.random()*.5}
 function announceTurn(){if(phase!=="play")return;if(chaosT>=0){say(t("chaosWarn"));return}if(OL.on){say(turn===OL.me?t(OL.me===0?"turnMe":"turnMeY"):t("theirTurn"));return}if(cfg.mode===1){say(cpuIs(turn)?t("cpuThink"):t("turnMe"))}else say(turn===0?t("turnF"):t("turnY"))}
@@ -414,6 +424,7 @@ function endRound(){phase="end";endT=2.4;const r=res;cancelTarget(true);tg=null;
 function stat(k){if(cfg.mode!==1)return;stats[k]=(stats[k]|0)+1;const m=modeRec(cfg.game);m[k]++;
  if(k==="w"){m.streak++;m.best=Math.max(m.best,m.streak);const was=m.s;if(cfg.diff==="norm"&&m.s<1)m.s=1;if(cfg.diff==="smart")m.s=2;if(m.s>was){newStar=m.s;rw({event:"star",stars:m.s})}
   if(!adv)rw({event:"levelClear",level:Math.min(999,stats.w),score:stats.w*10});if(m.streak>=2)rw({event:"combo",score:m.streak})}else if(k==="l")m.streak=0;
+ else if(k==="d"&&!adv&&cfg.game==="classic"&&cfg.diff==="smart"&&m.s<2){m.s=2;newStar=2;rw({event:"star",stars:2})}
  ls.set("annabelle-ttt-stats",JSON.stringify(stats))}
 function showOver(){phase="over";const r=res,me=OL.on?OL.me:0,champ=cfg.match&&(scores[0]>=3||scores[1]>=3);let T,S=t("score").replace("{a}",scores[0]).replace("{b}",scores[1]);
  $("againBtn").style.display="";$("againBtn").disabled=false;$("oStars").innerHTML="";let B="";
@@ -470,6 +481,7 @@ let T0=0;const tcol=new THREE.Color();
 function tick(dt){T0+=dt;
  if(!paused&&!netp){
   if(OL.on){if(OL.pend){OL.pendT-=dt;if(OL.pendT<=0)OL.pend=false}if(OL.aq.length&&phase==="play"&&busy<=0&&!moved&&!pendingNext&&!chaos){const a=OL.aq.shift();OL.pend=false;applyAct(a)}}
+  if(phase==="ult"&&ultT>0){ultT-=dt;if(ultT<=0)ultCpuMove()}
   if(tipT>0){tipT-=dt;if(tipT<=0&&phase==="play"&&!tg&&!(busy>0))announceTurn()}
   if(phase==="play"){if(busy>0){busy-=dt;if(busy<=0){busy=0;if(moved){moved=false;afterMove()}else if(pendingNext&&!chaos)nextTurn()}}
    else if(pendingNext&&!chaos)nextTurn();
@@ -509,7 +521,7 @@ if(glOK)requestAnimationFrame(frame);else{setInterval(()=>{if(!document.hidden){
 /* ============ UI ============ */
 function say(s){$("cap").textContent=s||""}
 function hud(){$("pSc").textContent=cfg.match?("🐟 "+scores[0]+" : "+scores[1]+" 🧶"):"";$("pSc").style.display=cfg.match?"":"none";
- $("pTurn").textContent=phase==="play"?(cfg.mode===1?(cpuIs(turn)?"🧶":"🐟"):(turn===0?"🐟":"🧶"))+" "+GIC[cfg.game]:""}
+ $("pTurn").textContent=(phase==="play"||phase==="ult")?(cfg.mode===1?(cpuIs(turn)?"🧶":"🐟"):(turn===0?"🐟":"🧶"))+" "+GIC[cfg.game]:""}
 const starStr=s=>s>=2?"🌟":s===1?"⭐":"☆";
 function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=t("title");$("mT").textContent=t("title");$("mS").textContent=t("sub");$("playBtn").textContent=t("play");
  $("m1p").textContent=t("p1");$("m2p").textContent=t("p2");$("m3p").textContent=t("p3");$("mEasy").textContent=t("easy");$("mNorm").textContent=t("norm");$("mSmart").textContent=t("smart");$("mMatch").textContent=t("match");$("mOne").textContent=t("one");
@@ -531,12 +543,12 @@ const setCfg=(k,v,key)=>{cfg[k]=v;ls.set(key,typeof v==="boolean"?(v?"1":"0"):St
 $("m1p").onclick=()=>setCfg("mode",1,"annabelle-ttt-mode");$("m2p").onclick=()=>setCfg("mode",2,"annabelle-ttt-mode");$("m3p").onclick=()=>setCfg("mode",3,"annabelle-ttt-mode");
 $("mEasy").onclick=()=>setCfg("diff","easy","annabelle-ttt-diff");$("mNorm").onclick=()=>setCfg("diff","norm","annabelle-ttt-diff");$("mSmart").onclick=()=>setCfg("diff","smart","annabelle-ttt-diff");
 $("mMatch").onclick=()=>setCfg("match",true,"annabelle-ttt-match");$("mOne").onclick=()=>setCfg("match",false,"annabelle-ttt-match");
-function onPlay(){SFX.click();cfg.start="me";if(cfg.game==="adv"){openMap();return}if(cfg.mode===3){if(!NT)return;if(cfg.game==="adv")cfg.game="classic";NT.showLobby();return}OL.on=false;startMatch()}
+function onPlay(){SFX.click();cfg.start="me";if(cfg.game==="adv"){openMap();return}if(cfg.mode===3){if(!NT)return;if(cfg.game==="adv"||cfg.game==="ult")cfg.game="classic";NT.showLobby();return}OL.on=false;startMatch()}
 $("playBtn").onclick=onPlay;
 $("againBtn").onclick=()=>{SFX.click();if(OL.on){if(NT.myRe)return;NT.rematch();$("againBtn").disabled=true;$("oB").textContent=t("waitRe");return}if(adv){advAgain();return}$("over").classList.remove("show");if($("againBtn").dataset.champ==="1")startMatch();else newRound(false)};
 $("oMenu").onclick=()=>{SFX.click();if(advWas){toMap()}else toMenu()};$("pMenu").onclick=()=>{SFX.click();toMenu()};$("homeBtn").onclick=()=>{SFX.click();toMenu()};
 $("pauseBtn").onclick=()=>{SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};
-function toMenu(){if(NT)NT.leaveToMenu();OL.on=false;netp=false;adv=null;if(advKeep){Object.assign(cfg,advKeep);advKeep=null}advWas=false;rng=Math.random;document.body.classList.remove("onl");$("againBtn").style.display="";$("againBtn").disabled=false;$("oStars").innerHTML="";$("map").classList.remove("show");paused=false;phase="menu";$("pause").classList.remove("show");$("over").classList.remove("show");document.body.classList.remove("play","noglplay","pw");$("pbar").classList.remove("show");$("menu").classList.add("show");say("");setBoard(3,3);flatBuild();clearBoard();mood="idle";moodT=0;demo();drawTexts()}
+function toMenu(){ultOff();if(NT)NT.leaveToMenu();OL.on=false;netp=false;adv=null;if(advKeep){Object.assign(cfg,advKeep);advKeep=null}advWas=false;rng=Math.random;document.body.classList.remove("onl");$("againBtn").style.display="";$("againBtn").disabled=false;$("oStars").innerHTML="";$("map").classList.remove("show");paused=false;phase="menu";$("pause").classList.remove("show");$("over").classList.remove("show");document.body.classList.remove("play","noglplay","pw");$("pbar").classList.remove("show");$("menu").classList.add("show");say("");setBoard(3,3);flatBuild();clearBoard();mood="idle";moodT=0;demo();drawTexts()}
 window.toMenu=toMenu;
 function demo(){for(const [i,w] of [[0,0],[4,1],[8,0]]){const p=mkPiece(w);p.position.copy(tilePos(i));p.userData.state="rest";p.userData.y=0;scene.add(p);pcs[i]=p;board[i]=null}}
 function doPause(on){if(phase==="menu"||phase==="over"||OL.on)return;paused=on;$("pause").classList.toggle("show",on)}
@@ -564,7 +576,7 @@ addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey||(window.Annabe
  const mv={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
  if(mv){e.preventDefault();if(sel<0||sel>=N*N)sel=Math.floor(N*N/2);else{let r=Math.floor(sel/N)+mv[1],c=sel%N+mv[0];r=(r+N)%N;c=(c+N)%N;sel=r*N+c}selKb=true;SFX.hover();return}
  if((e.key==="Enter"||e.key===" ")&&!btn){e.preventDefault();if(sel<0||sel>=N*N)sel=Math.floor(N*N/2);humanPlace(sel)}});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&phase==="play"&&!paused&&!OL.on)doPause(true)});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&(phase==="play"||phase==="ult")&&!paused&&!OL.on)doPause(true)});
 /* ============ 2D fallback board ============ */
 const flat=$("flat");
 for(let i=0;i<25;i++){const b=document.createElement("button");b.dataset.i=i;b.setAttribute("aria-label",i+1);b.onclick=()=>{ac();humanPlace(i)};flat.appendChild(b)}
@@ -602,6 +614,59 @@ $("mapBack").onclick=()=>{SFX.click();$("map").classList.remove("show")};
 $("dailyBtn").onclick=()=>startStage(0,true);
 $("mapGrid").addEventListener("click",e=>{const b=e.target.closest("[data-st]");if(b)startStage(+b.dataset.st)});
 
+/* ============ ultimate tic-tac-toe (9 little boards, 2D, offline only) ============ */
+const UL=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+let U={b:Array(81).fill(null),sb:Array(9).fill(null),act:-1,g:null,last:-1},ultT=0,uAbort=false,uNodes=0;
+const ultEl=$("ult"),ultCpuTurn=()=>cfg.mode===1&&turn===1&&!OL.on;
+(()=>{let h="";for(let b=0;b<9;b++){h+=`<div class="sb">`;for(let c=0;c<9;c++)h+=`<button class="uc" data-i="${b*9+c}" aria-label="${b+1}.${c+1}"></button>`;h+=`<span class="sw"></span></div>`}ultEl.innerHTML=h})();
+const uWin=(b,o,w)=>{for(const l of UL)if(b[o+l[0]]===w&&b[o+l[1]]===w&&b[o+l[2]]===w)return true;return false};
+function uMoves(S){const a=[];if(S.g!==null)return a;if(S.act>=0&&S.sb[S.act]===null){for(let c=0;c<9;c++)if(S.b[S.act*9+c]===null)a.push(S.act*9+c)}else for(let bi=0;bi<9;bi++)if(S.sb[bi]===null)for(let c=0;c<9;c++)if(S.b[bi*9+c]===null)a.push(bi*9+c);return a}
+function uApply(S,m,w){const bi=(m/9)|0,ci=m%9,r={m,act:S.act,sbv:S.sb[bi],g:S.g};S.b[m]=w;
+ if(S.sb[bi]===null){if(uWin(S.b,bi*9,w))S.sb[bi]=w;else{let f=true;for(let c=0;c<9;c++)if(S.b[bi*9+c]===null){f=false;break}if(f)S.sb[bi]=-1}}
+ if(S.sb[bi]===w){for(const l of UL)if(S.sb[l[0]]===w&&S.sb[l[1]]===w&&S.sb[l[2]]===w){S.g=w;break}}
+ if(S.g===null&&S.sb.every(v=>v!==null))S.g=-1;
+ S.act=S.sb[ci]===null?ci:-1;return r}
+function uUndo(S,r){S.b[r.m]=null;S.sb[(r.m/9)|0]=r.sbv;S.act=r.act;S.g=r.g}
+function uEval(S,me){let s=0;const op=me^1,b=S.b;
+ for(let bi=0;bi<9;bi++){const o=S.sb[bi],cw=bi===4?60:40;if(o===me)s+=cw;else if(o===op)s-=cw;else if(o===null){let k=0;const off=bi*9;for(const l of UL){let a=0,p=0;for(const j of l){const v=b[off+j];if(v===me)a++;else if(v===op)p++}if(!p&&a)k+=a===2?5:1;else if(!a&&p)k-=p===2?5:1}if(b[off+4]===me)k+=2;else if(b[off+4]===op)k-=2;s+=k*(bi===4?1.4:1)}}
+ for(const l of UL){let a=0,p=0,d=0;for(const j of l){const v=S.sb[j];if(v===me)a++;else if(v===op)p++;else if(v===-1)d++}if(d)continue;if(!p&&a)s+=a===2?120:20;else if(!a&&p)s-=p===2?120:20}
+ return s}
+function uSearch(S,who,me,d,al,be,dl){if(S.g!==null)return S.g===-1?0:S.g===me?100000+d:-100000-d;if(d<=0)return uEval(S,me);
+ if((++uNodes&255)===0&&performance.now()>dl)uAbort=true;if(uAbort)return 0;
+ const mv=uMoves(S),hi=[],lo=[];for(const m of mv){S.b[m]=who;const w=uWin(S.b,(m/9|0)*9,who);S.b[m]=null;(w?hi:lo).push(m)}const ord=hi.concat(lo);
+ let best=who===me?-1e9:1e9;
+ for(const m of ord){const r=uApply(S,m,who);const v=uSearch(S,who^1,me,d-1,al,be,dl);uUndo(S,r);if(uAbort)return 0;
+  if(who===me){if(v>best)best=v;if(best>al)al=best}else{if(v<best)best=v;if(best<be)be=best}if(al>=be)break}
+ return best}
+function uPick(S,who){const mv=uMoves(S);silly=false;if(!mv.length)return -1;const d=cfg.diff,rnd=a=>a[Math.random()*a.length|0];
+ const wins=w=>mv.filter(m=>{S.b[m]=w;const r=uWin(S.b,(m/9|0)*9,w);S.b[m]=null;return r});
+ if(d==="easy"){if(Math.random()<.5){silly=true;return rnd(mv)}const a=wins(who);if(a.length)return rnd(a);const bl=wins(who^1);if(bl.length&&Math.random()<.6)return rnd(bl);return rnd(mv)}
+ if(d==="norm"&&Math.random()<.12){silly=true;return rnd(mv)}
+ const maxD=d==="norm"?2:6,T=performance.now()+(d==="norm"?150:450);let best=null,order=mv.slice();
+ for(let dep=1;dep<=maxD;dep++){uAbort=false;uNodes=0;const sc=[];
+  for(const m of order){const r=uApply(S,m,who);const v=uSearch(S,who^1,who,dep-1,-1e9,1e9,T);uUndo(S,r);if(uAbort)break;sc.push([m,v])}
+  if(uAbort||sc.length<order.length)break;best=sc;order=sc.slice().sort((a,b)=>b[1]-a[1]).map(x=>x[0])}
+ if(!best)return rnd(mv);const top=Math.max(...best.map(x=>x[1])),slack=d==="norm"?8:0;return rnd(best.filter(x=>x[1]>=top-slack))[0]}
+function ultDraw(){const sbs=ultEl.children,open=new Set(uMoves(U).map(m=>(m/9)|0));let wl=null;
+ if(U.g!==null&&U.g>=0)for(const l of UL)if(l.every(j=>U.sb[j]===U.g)){wl=l;break}
+ for(let b=0;b<9;b++){const e=sbs[b],o=U.sb[b];e.className="sb"+(o===0?" w0":o===1?" w1":o===-1?" wd":"")+(open.has(b)?" act":"")+(wl&&wl.includes(b)?" wl":"");e.lastChild.textContent=o===0?"🐟":o===1?"🧶":o===-1?"🤝":"";
+  for(let c=0;c<9;c++){const v=U.b[b*9+c],x=e.children[c];x.textContent=v===0?"🐟":v===1?"🧶":"";x.classList.toggle("last",b*9+c===U.last)}}}
+function ultAnnounce(){if(phase!=="ult"||U.g!==null)return;if(ultCpuTurn()){say(t("cpuThink"));return}say((cfg.mode===1?"":(turn===0?"🐟 ":"🧶 "))+t(U.act<0||U.sb[U.act]!==null?"ultFree":"ultGo"))}
+function ultRound(){clearBoard();document.body.classList.toggle("pw",false);U={b:Array(81).fill(null),sb:Array(9).fill(null),act:-1,g:null,last:-1};turn=first;res=null;moved=false;busy=0;phase="ult";newStar=0;
+ $("ultw").classList.add("show");ultDraw();hud();renderPbar();ultAnnounce();ultT=ultCpuTurn()?.9+Math.random()*.5:0;if(!ultCpuTurn()){say(t("ultTip"))}}
+function ultOff(){$("ultw").classList.remove("show")}
+function ultPlay(m,byCpu){if(phase!=="ult"||paused||U.g!==null||!(m>=0&&m<81))return false;if(!byCpu&&ultCpuTurn())return false;if(!uMoves(U).includes(m))return false;
+ const bi=(m/9)|0,who=turn,was=U.sb[bi];uApply(U,m,who);U.last=m;(who===0?SFX.meow:SFX.boing)();SFX.pop();ultDraw();
+ if(byCpu&&silly){say(pick(t("silly")));SFX.silly()}
+ if(U.g!==null){ultEnd();return true}
+ turn^=1;hud();if(U.sb[bi]!==was&&U.sb[bi]>=0){SFX.cheerUp();if(!(byCpu&&silly)){ultAnnounce();const c=$("cap").textContent;say(t("ultBoard")+" "+c)}}else if(!(byCpu&&silly))ultAnnounce();
+ ultT=ultCpuTurn()?.8+Math.random()*.5:0;return true}
+function ultCpuMove(){if(phase!=="ult"||paused||!ultCpuTurn()||U.g!==null)return;const m=uPick(U,1);if(m>=0)ultPlay(m,true)}
+function ultEnd(){phase="end";endT=2.2;const w=U.g;res={who:w,line:null};ultT=0;
+ if(w===-1){say(t("draw"));SFX.draw();stat("d")}
+ else{scores[w]++;confetti();SFX.win();shake();if(cfg.mode===1){say(w===0?t("winMe"):t("loseMe"));stat(w===0?"w":"l")}else say(w===0?t("winF"):t("winY"))}
+ hud()}
+ultEl.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".uc");if(!b)return;ac();if(phase!=="ult"||paused||ultCpuTurn())return;if(!ultPlay(+b.dataset.i,false)){SFX.warn();say(t("ultWrong"));setTimeout(ultAnnounce,1100)}});
 /* ============ online 1-vs-1 (host-authoritative, lock-step: both screens run the same rules from the same actions) ============ */
 const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
 const NT=window.Net1v1?Net1v1({pid:"annabelle-ttt-",shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
@@ -609,8 +674,8 @@ const NT=window.Net1v1?Net1v1({pid:"annabelle-ttt-",shareTxt:{he:TX.he.shareT,fr
  hideMenu(){$("menu").classList.remove("show");$("map").classList.remove("show")},showMenu(){toMenu()},
  onLink(){cfg.mode=3},
  cleanStart(d){if(!GAMES.includes(d.g)||!int(d.sd,0,4294967295)||!(d.m===0||d.m===1)||!(d.nr===0||d.nr===1))return null;return{g:d.g,sd:d.sd,m:d.m,nr:d.nr}},
- makeStart(){return{g:cfg.game==="adv"?"classic":cfg.game,sd:OL.seed,m:cfg.match?1:0,nr:OL.nr}},
- onHostStart(re){olBegin(0,crypto.getRandomValues(new Uint32Array(1))[0]>>>0,cfg.game==="adv"?"classic":cfg.game,cfg.match,re&&cfg.match&&!(scores[0]>=3||scores[1]>=3)&&phase==="over")},
+ makeStart(){return{g:cfg.game==="adv"||cfg.game==="ult"?"classic":cfg.game,sd:OL.seed,m:cfg.match?1:0,nr:OL.nr}},
+ onHostStart(re){olBegin(0,crypto.getRandomValues(new Uint32Array(1))[0]>>>0,cfg.game==="adv"||cfg.game==="ult"?"classic":cfg.game,cfg.match,re&&cfg.match&&!(scores[0]>=3||scores[1]>=3)&&phase==="over")},
  onGuestStart(c){olBegin(1,c.sd,c.g,!!c.m,c.nr===1)},
  onResume(){if(NT.host)olSnap()},
  onData:olData,onLeft:olLeft,onPause(on){netp=on;if(on){cancelTarget(true)}}}):null;
@@ -640,7 +705,7 @@ function olLeft(){if(!OL.on)return;phase="over";OL.on=true;$("oT").textContent=N
 /* ============ test hooks ============ */
 function loadBoard(b,h){clearBoard();for(let i=0;i<b.length;i++){board[i]=b[i];if(b[i]!==null){const p=mkPiece(b[i]);p.userData.bs=BS;p.position.copy(tilePos(i));p.userData.state="rest";p.userData.y=0;scene.add(p);pcs[i]=p}}
  hist=h?[h[0].slice(),h[1].slice()]:[[],[]];if(!h)for(let i=0;i<b.length;i++)if(b[i]!==null)hist[b[i]].push(i);updFlat()}
-window.__ttt={NT,OL,get adv(){return adv},AV,STAGES,startStage,openMap,toMap,dailyStage,setBl(v){blunderOverride=v},olSnap,aqLen:()=>OL.aq.length,step(sec){const n=Math.ceil(sec*30);for(let i=0;i<n;i++)tick(1/30);if(glOK)R.render(scene,cam)},
+window.__ttt={ult:{get U(){return U},play:m=>ultPlay(m,false),cpu:ultCpuMove,moves:()=>uMoves(U),pick:()=>uPick(U,turn),pickFor:(S,w)=>uPick(S,w),apply:uApply,undo:uUndo},NT,OL,get adv(){return adv},AV,STAGES,startStage,openMap,toMap,dailyStage,setBl(v){blunderOverride=v},olSnap,aqLen:()=>OL.aq.length,step(sec){const n=Math.ceil(sec*30);for(let i=0;i<n;i++)tick(1/30);if(glOK)R.render(scene,cam)},
  state(){return{phase,turn,board:[...board],scores:[...scores],res:res&&{who:res.who,line:res.line},cfg:{...cfg},busy,paused,mood,sleeping,tris:glOK?R.info.render.triangles:0,calls:glOK?R.info.render.calls:0,glOK,N,K,hist:hist.map(h=>[...h]),frozen:frozen.slice(0,N*N),shielded:shielded.slice(0,N*N),pw:pw.map(o=>({...o})),extra,tg:tg&&{...tg},chaosT,chaosRun:!!chaos,ply,stats:JSON.parse(JSON.stringify(stats)),tilesVisible:tiles.filter(x=>x.g.visible).length,lines:LINES.length,blink:[...(ENDLESS()?hist.filter(h=>h.length>=3).map(h=>h[0]):[])]}},
  play:i=>place(i,false),playAs(i){return place(i,true)},click:tileClick,arm:armPower,power:applyPower,canUse,setBlunder(p){blunderOverride=p},cpuPick,cpuPowerChoice,cpuPlay,
  start(o){Object.assign(cfg,{game:"classic",diff:cfg.diff,start:"me"},o||{});startMatch()},toMenu,newRound,showOver,judge,bestMoves,topMoves,doPause,loadBoard,setPw(who,o){pw[who]=o;renderPbar()},setTurn(x){turn=x;hud()},setChaos(i){chaosT=i;warnG.visible=i>=0},cap:()=>$("cap").textContent,tileScreen(i){const v=tilePos(i).clone();v.y+=.3;v.project(cam);return{x:(v.x+1)/2*vw,y:(1-v.y)/2*vh}}};
