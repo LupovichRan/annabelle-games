@@ -56,6 +56,8 @@
   .tool.sel{background:#fff1b8;box-shadow:0 0 0 3px var(--accent),0 3px 0 #0002;transform:translateY(-4px)}
   @media (min-width:700px){ .tool{height:68px;font-size:30px} .tool small{font-size:12px} }
   .hosted #tools{padding-bottom:max(46px,var(--sab,env(safe-area-inset-bottom)))}
+  #hud.jrow{flex-wrap:wrap} #hud.jrow .grow{flex:1 1 0;min-width:0}
+  .runrow{flex:0 0 100%;height:30px !important;justify-content:center;box-shadow:none !important;background:#ffffffb0 !important;font-size:clamp(13px,3.8vw,17px) !important;padding:0 10px !important}
   #ghost{position:fixed;z-index:70;pointer-events:none;font-size:42px;transform:translate(-50%,-70%);filter:drop-shadow(0 4px 2px #0003)}
 
   #toast{position:fixed;left:50%;z-index:20;pointer-events:none;background:#fff;border-radius:22px;padding:6px 16px;font-size:clamp(16px,4.4vw,24px);font-weight:900;top:70px;
@@ -1052,7 +1054,7 @@ function openOv(id){ if(state!=="play") return; prevState="play"; state="paused"
 function closeOv(){ if(state==="paused"){ state="play"; show(null); } }
 function startPlay(){ ac(); state="play"; show(null); $("hud").classList.remove("hidden"); $("tools").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); layout(); updateHUD(); setTool(tool,true);
   if(S.play<1){ setTimeout(()=>{ if(state==="play") hint(L().hints.pet); },900); } }
-function toMenu(){ save(); TOWN=null; const tp=$("townPill"); if(tp) tp.remove(); state="menu"; ptr.cat=null; $("hud").classList.add("hidden"); $("tools").classList.add("hidden"); $("card").classList.add("hidden"); $("tip").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); sel=null; renderMenu(); show("menu"); layout(); }
+function toMenu(){ save(); TOWN=null; clearTimeout(toastT); clearTimeout(hintT); $("toast").classList.remove("show"); $("hint").classList.remove("show"); const tp=$("townPill"); if(tp) tp.remove(); $("hud").classList.remove("jrow"); state="menu"; ptr.cat=null; $("hud").classList.add("hidden"); $("tools").classList.add("hidden"); $("card").classList.add("hidden"); $("tip").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); sel=null; renderMenu(); show("menu"); layout(); }
 function pause(){ if(state==="play"){ prevState="play"; state="paused"; ptr.cat=null; ptr.down=false; show("pause"); $("resetBtn").dataset.sure=""; $("resetBtn").textContent=L().reset; save(); } }
 function resume(){ if(state==="paused"){ state="play"; show(null); } }
 
@@ -1309,10 +1311,10 @@ function mapView(anim){ stop(); const i=Math.min(J.town,TOWNS.length-1); $("jyBg
     if(busy) return; busy=true; honk(); const b=$("jyBus"); b.style.left=PTS[i][0]+"%"; b.style.top=(PTS[i][1]-4)+"%"; setTimeout(()=>go(i),1300); });
   fitMap(); $("jyR").onclick=()=>{ J={town:0,kits:[],stars:[]}; sv(); mapView(false); }; $("jyX").onclick=close; }
 function go(i){ const jy=$("jy"); jy.style.transition="opacity .4s"; jy.style.opacity="0";
-  setTimeout(()=>{ close(); jy.style.opacity=""; const T=TOWNS[i]; TOWN={sky:T.sky,gr:T.gr,lm:T.lm}; const goal=T.goal*2, h0=S.hearts, t0=Date.now(); startPlay(); try{ if(T.mod==="thirst") S.cats.forEach(c=>{ c.thi=Math.min(c.thi,35); }); if(T.mod==="snow") S.nextRain=Math.min(S.nextRain,10); setTimeout(()=>{ if(TOWN) toast(T.ic+" "+T.n[lg()]+(T.mod==="thirst"?" 💧":T.mod==="snow"?" 🌧️":""),"#3fa9ff"); },700); }catch(e){}
-    const pill=document.createElement("div"); pill.className="pill"; pill.id="townPill"; $("dayPill").after(pill);
-    const upd=()=>{ pill.textContent=`${T.ic} ${T.n[lg()]} ❤️${Math.min(goal,S.hearts-h0)}/${goal}`; }; upd();
-    tick=setInterval(()=>{ if(!TOWN){ clearInterval(tick); tick=null; return; } upd(); if(S.hearts-h0>=goal){ clearInterval(tick); tick=null; win(i,(Date.now()-t0)/1000); } },300); },400); }
+  setTimeout(()=>{ close(); jy.style.opacity=""; const T=TOWNS[i]; TOWN={sky:T.sky,gr:T.gr,lm:T.lm}; const goal=T.goal*2, p0=S.play; let earned=0, lastH=S.hearts; startPlay(); try{ if(T.mod==="thirst") S.cats.forEach(c=>{ c.thi=Math.min(c.thi,35); }); if(T.mod==="snow") S.nextRain=Math.min(S.nextRain,10); setTimeout(()=>{ if(TOWN) toast(T.ic+" "+T.n[lg()]+(T.mod==="thirst"?" 💧":T.mod==="snow"?" 🌧️":""),"#3fa9ff"); },700); }catch(e){}
+    const pill=document.createElement("div"); pill.className="pill runrow"; pill.id="townPill"; $("hud").classList.add("jrow"); $("hud").appendChild(pill); layout();
+    const upd=()=>{ const d=S.hearts-lastH; lastH=S.hearts; if(d>0) earned+=d; pill.textContent=`${T.ic} ${T.n[lg()]} ❤️${Math.min(goal,earned)}/${goal}`; }; upd();
+    tick=setInterval(()=>{ if(!TOWN){ clearInterval(tick); tick=null; return; } upd(); if(earned>=goal){ clearInterval(tick); tick=null; win(i,S.play-p0); } },300); },400); }
 function win(i,sec){ toMenu(); const T=TOWNS[i], ns=sec<=T.t*3?3:sec<=T.t*6?2:1; J.stars[i]=Math.max(J.stars[i]||0,ns); J.kits=J.kits.concat([0,1].map(n=>{ const k=KN[(i*2+n)%KN.length]; return k[1]+":"+k[2]+":"+k[0]; })); J.town=i+1; sv(); lbl(); try{ const R=window.AnnabelleRewards; if(R){ R.award({game:"streetcats",event:"levelClear",level:i+1,score:S.hearts}); R.award({game:"streetcats",event:"star",stars:ns}); if(J.town>=TOWNS.length) R.award({game:"streetcats",event:"win"}); setTimeout(()=>R.flush(),1500); } }catch(e){}
   $("jy").classList.add("show"); $("jy").dir=lg()==="he"?"rtl":"ltr"; bg(i); bar(`<span class="pl">${T.lic} ${T.n[lg()]}</span>`); try{ confetti(120); }catch(e){}
   [0,1,2].forEach(n=>n<ns&&setTimeout(()=>beep(660+n*220,.18,"triangle",.15),200+n*300)); const SH=`<div class="stars">${[0,1,2].map(n=>`<span style="animation-delay:${.2+n*.3}s">${n<ns?"⭐":"☆"}</span>`).join("")}</div>`;
@@ -1331,7 +1333,7 @@ const btn=document.createElement("button"); btn.className="big"; btn.id="journey
 $("playBtn").after(btn); btn.onclick=()=>{ snd("click"); open(); };
 const lbl=()=>{ btn.textContent=t().btn+(J.town?` (${Math.min(J.town,TOWNS.length)}/${TOWNS.length})`:""); }; lbl();
 document.addEventListener("click",e=>{ if(e.target.closest("[data-lang]")) setTimeout(lbl,0); });
-window.__jy={open,adoption,mapView,state:()=>J,set:o=>{Object.assign(J,o);sv();},win:()=>{ if(TOWN) S.hearts+=999; }};
+window.__jy={open,adoption,mapView,state:()=>J,towns:()=>TOWNS,set:o=>{Object.assign(J,o);sv();},win:()=>{ if(TOWN) S.hearts+=999; }};
 })();
 </script>
 
@@ -1389,6 +1391,143 @@ const al0=applyLang; applyLang=function(){ al0.apply(this,arguments); try{ drawQ
 SFX.fanfare=()=>{ [523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.2,'triangle',.1)); };
 try{ check(); drawQ(); drawMus(); }catch(e){}
 window.__scq={get DQ(){return DQ;},check,drawQ,prog};
+})();
+</script>
+
+<style>
+/* ===== challenges: Care Rush + Expert Journey (added) ===== */
+#chOv{z-index:35}#chRes{z-index:36}
+#chOv .card,#chRes .card{max-width:min(94vw,520px);gap:8px}
+#chOv h2,#chRes h2{font-size:clamp(24px,6.5vw,34px)}
+.chs{width:100%;background:#fff6e0;border-radius:20px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.chs h3{margin:0;font-size:clamp(18px,5vw,22px);color:var(--accent2)}
+.chs p{margin:0;font-size:clamp(13px,3.6vw,15px);font-weight:700;line-height:1.3}
+.top5{display:flex;flex-direction:column;gap:3px;width:100%;max-width:300px}
+.top5 div{display:flex;gap:8px;background:#fff;border-radius:12px;padding:2px 12px;font-weight:900;font-size:15px;justify-content:space-between}
+.top5 div.me{background:#ffe3a3;box-shadow:0 0 0 3px var(--accent)}
+.xgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;width:100%}
+.xb{min-width:0;background:#fff;border-radius:14px;padding:6px 2px;box-shadow:0 3px 0 #0002;font-size:12px;font-weight:800;min-height:78px;line-height:1.25}
+.xb .ic{font-size:26px;display:block}
+.xb small{display:block;font-size:10.5px;font-weight:700;opacity:.8}
+.xb.lock{opacity:.5;filter:grayscale(.7)}
+.xb:focus-visible,.big:focus-visible{outline:4px solid var(--accent2);outline-offset:2px}
+#chMsg{min-height:20px;font-weight:800;font-size:14px;color:#e8487f}
+#chBtn{background:linear-gradient(#ff9f6b,#ff6b3d);font-size:19px;padding:10px 18px}
+#chRestart{font-size:18px;padding:9px 20px;display:none}
+.stars3{font-size:38px;letter-spacing:4px}
+</style>
+<section class="ov dim" id="chOv"></section>
+<section class="ov dim" id="chRes"></section>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const X={
+ he:{btn:"🏆 אתגרים",title:"🏆 אתגרים",close:"סגירה",rush:"⏱️ מרוץ טיפול",rushD:"שתי דקות! האכילי, השקי, טפלי וסרקי – כל טיפול מוסיף נקודות. מי השיא שלך?",top:"🏅 טבלת שיאים",start:"▶ יאללה!",
+  exp:"🔥 מסע מומחים",expD:"החתולים מתחילים רעבים ועצובים. החזיקי את כל החתולים שמחים מעל היעד לכמה שניות – לפני שהזמן נגמר!",lockJ:"קודם מסיימים את העיר במסע הרגיל 🚌",lockX:"קודם מסיימים את העיר הקודמת כמומחית 🔥",
+  retry:"🔁 עוד פעם",again:"🔁 מחדש",toCh:"🏆 לאתגרים",toMenu:"🏠 תפריט",win:"מדהים! כל החתולים מאושרים 💖",lose:"נגמר הזמן ⏰ כמעט!",best:"שיא החתולים שלך: {n}%",score:"ניקוד: {n}",rec:"שיא חדש! 🏆",rushEnd:"נגמר הזמן! ⏱️",pts:"נק׳",
+  bar:"😺 {j}%/{t}% · ⏳ {h}/{s} · ⏱ {m}",barR:"⏱ {m} · ⭐ {p}",tgt:"🎯{t}% · ⏱{m}",town:"עיר {n}"},
+ fr:{btn:"🏆 Défis",title:"🏆 Défis",close:"Fermer",rush:"⏱️ Course aux soins",rushD:"Deux minutes ! Nourris, fais boire, soigne et brosse : chaque soin rapporte des points. Quel est ton record ?",top:"🏅 Meilleurs scores",start:"▶ C'est parti !",
+  exp:"🔥 Voyage expert",expD:"Les chats commencent affamés et tristes. Garde tous les chats heureux au-dessus de l'objectif pendant quelques secondes avant la fin du temps !",lockJ:"Termine d'abord la ville dans le voyage normal 🚌",lockX:"Termine d'abord la ville précédente en expert 🔥",
+  retry:"🔁 Encore",again:"🔁 Recommencer",toCh:"🏆 Aux défis",toMenu:"🏠 Menu",win:"Incroyable ! Tous les chats sont heureux 💖",lose:"Temps écoulé ⏰ presque !",best:"Ton meilleur : {n}%",score:"Score : {n}",rec:"Nouveau record ! 🏆",rushEnd:"Temps écoulé ! ⏱️",pts:"pts",
+  bar:"😺 {j}%/{t}% · ⏳ {h}/{s} · ⏱ {m}",barR:"⏱ {m} · ⭐ {p}",tgt:"🎯{t}% · ⏱{m}",town:"Ville {n}"},
+ en:{btn:"🏆 Challenges",title:"🏆 Challenges",close:"Close",rush:"⏱️ Care Rush",rushD:"Two minutes! Feed, water, heal and brush: every kind of care scores points. What is your record?",top:"🏅 Top 5",start:"▶ Go!",
+  exp:"🔥 Expert Journey",expD:"The cats start hungry and sad. Keep every cat happy above the target for a few seconds before time runs out!",lockJ:"Clear this town in the normal Journey first 🚌",lockX:"Clear the previous town as an expert first 🔥",
+  retry:"🔁 Try again",again:"🔁 Restart",toCh:"🏆 Challenges",toMenu:"🏠 Menu",win:"Amazing! Every cat is happy 💖",lose:"Time is up ⏰ so close!",best:"Your best cat joy: {n}%",score:"Score: {n}",rec:"New record! 🏆",rushEnd:"Time is up! ⏱️",pts:"pts",
+  bar:"😺 {j}%/{t}% · ⏳ {h}/{s} · ⏱ {m}",barR:"⏱ {m} · ⭐ {p}",tgt:"🎯{t}% · ⏱{m}",town:"Town {n}"}};
+const x=()=>X[lang]||X.he, f=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
+const KX="annabelle-streetcats-expert", KR="annabelle-streetcats-rush", RLEN=120;
+const lsj=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
+const lss=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+const aw=o=>{ try{ const r=window.AnnabelleRewards; if(r) r.award(Object.assign({game:"streetcats"},o)); }catch(e){} }, fl=()=>{ try{ const r=window.AnnabelleRewards; if(r) r.flush(); }catch(e){} };
+let XP=lsj(KX,null); if(!XP||!Array.isArray(XP.stars)) XP={stars:[]};
+let RB=lsj(KR,[]); if(!Array.isArray(RB)) RB=[]; RB=RB.filter(n=>typeof n==="number"&&isFinite(n)).sort((a,b)=>b-a).slice(0,5);
+const TW=()=>{ try{ return __jy.towns(); }catch(e){ return []; } }, JT=()=>{ try{ return __jy.state().town||0; }catch(e){ return 0; } };
+const EX=i=>({target:62+i,hold:12+i*4,limit:80+i*14});
+const mmss=s=>{ s=Math.max(0,Math.ceil(s)); return (s/60|0)+":"+String(s%60).padStart(2,"0"); };
+const mean=c=>Math.min(c.hun,c.thi,c.hap,c.cln);
+function joy(){ const ps=present(); return ps.length?Math.min(...ps.map(mean)):0; }
+let RUN=null;
+const rb=document.createElement("button"); rb.className="big orange"; rb.id="chRestart"; $("resumeBtn").after(rb);
+rb.onclick=()=>{ const sp=RUN&&RUN.spec; if(!sp) return; SFX.click(); finish(null,true); toMenu(); begin(sp); };
+
+function snapshot(){ return {S,cats:S.cats.map(c=>({id:c.id,hun:c.hun,thi:c.thi,hap:c.hap,cln:c.cln})),bowls:S.bowls.map(b=>Object.assign({},b)),nextRain:S.nextRain,tod:S.tod}; }
+function restore(sn){ if(!sn||sn.S!==S) return; sn.cats.forEach(o=>{ const c=catById(o.id); if(c) Object.assign(c,{hun:o.hun,thi:o.thi,hap:o.hap,cln:o.cln}); }); sn.bowls.forEach((o,i)=>Object.assign(S.bowls[i],o)); S.nextRain=sn.nextRain; S.tod=sn.tod; S.rainT=0; }
+
+function begin(spec){
+  if(RUN) finish(null,true);
+  closeCh(); hideRes();
+  const sn=snapshot(); let ex=null; S.tod=.06;
+  if(spec.kind==="expert"){ const T=TW()[spec.i]; if(!T) return; ex=EX(spec.i); TOWN={sky:T.sky,gr:T.gr,lm:T.lm};
+    S.cats.forEach(c=>{ c.hun=Math.min(c.hun,28); c.thi=Math.min(c.thi,28); c.hap=Math.min(c.hap,40); c.cln=Math.min(c.cln,50); });
+    if(spec.i>=4) S.nextRain=Math.min(S.nextRain,55); }
+  else S.cats.forEach(c=>{ c.hun=Math.min(c.hun,45); c.thi=Math.min(c.thi,45); c.hap=Math.min(c.hap,50); });
+  const bar=document.createElement("div"); bar.className="pill runrow"; bar.id="runBar"; bar.dir="ltr"; $("hud").appendChild(bar); $("hud").classList.add("jrow");
+  RUN={kind:spec.kind,i:spec.i,spec,ex,snap:sn,p0:S.play,last:S.play,hold:0,best:0,joy:0,score:0,ps:Object.assign({},S.stats),petT:-9,brT:-9,bp:-1,iv:null};
+  RUN.iv=setInterval(tick,100);
+  startPlay(); rb.style.display="inline-flex"; draw();
+  try{ if(spec.kind==="expert") toast("🔥 "+TW()[spec.i].n[lang],"#ff6b3d"); else toast(x().rush+"  "+mmss(RLEN),"#ff6b3d"); }catch(e){} }
+function draw(){ const bar=$("runBar"); if(!bar||!RUN) return; const el=S.play-RUN.p0;
+  if(RUN.kind==="expert"){ const e=RUN.ex, pct=Math.min(100,RUN.hold/e.hold*100); bar.textContent=f(x().bar,{j:Math.round(RUN.joy),t:e.target,h:Math.min(e.hold,RUN.hold|0),s:e.hold,m:mmss(e.limit-el)});
+    bar.style.background="linear-gradient(90deg,#b8f0cc "+pct+"%,#ffffffb0 "+pct+"%)"; }
+  else bar.textContent=f(x().barR,{m:mmss(RLEN-el),p:Math.round(RUN.score)}); }
+function tick(){ if(!RUN) return; if(state==="menu"){ finish(null,true); return; }
+  const dt=S.play-RUN.last; RUN.last=S.play; if(dt<=0){ draw(); return; }
+  if(S.tod>.6) S.tod=.6; // keep the cats awake and the street in daylight for the whole run
+  const el=S.play-RUN.p0, left=(RUN.kind==="expert"?RUN.ex.limit:RLEN)-el;
+  if(RUN.kind==="expert"){ const j=joy(), e=RUN.ex; RUN.joy=j; RUN.best=Math.max(RUN.best,j); if(j>=e.target) RUN.hold+=dt; else RUN.hold=Math.max(0,RUN.hold-dt*2);
+    if(RUN.hold>=e.hold) return finish("win"); if(left<=0) return finish("lose"); }
+  else { const W8={meals:6,drinks:4,treats:8,sweeps:1}; for(const k in W8){ const d=(S.stats[k]||0)-(RUN.ps[k]||0); if(d>0) RUN.score+=d*W8[k]; RUN.ps[k]=S.stats[k]||0; }
+    const dp=S.stats.pets-RUN.ps.pets; RUN.ps.pets=S.stats.pets; if(dp>0&&el-RUN.petT>=1.5){ RUN.score+=1; RUN.petT=el; }
+    const db=S.stats.brush-RUN.ps.brush; RUN.ps.brush=S.stats.brush; if(db>0&&el-RUN.brT>=2){ RUN.score+=2; RUN.brT=el; }
+    if(left<=0) return finish("end"); }
+  const b=Math.ceil(left); if(b<=3&&b!==RUN.bp){ RUN.bp=b; try{ if(!muted) tone(660+(3-b)*110,0,.12,"triangle",.1); }catch(e){} }
+  draw(); }
+
+function finish(res,quiet){ if(!RUN) return; const R=RUN; RUN=null; clearInterval(R.iv); const bar=$("runBar"); if(bar) bar.remove(); $("hud").classList.remove("jrow"); rb.style.display="none"; restore(R.snap);
+  if(quiet||!res) return;
+  const el=S.play-R.p0; let html="", btns="";
+  if(R.kind==="expert"){ const L=R.ex.limit, ns=res==="win"?(el<=L*.55?3:el<=L*.8?2:1):0, prev=XP.stars[R.i]||0, T=TW()[R.i];
+    if(ns>prev){ XP.stars[R.i]=ns; lss(KX,XP); aw({event:"star",stars:ns-prev}); if(!prev) aw({event:"levelClear",level:8+R.i,score:Math.round(R.best)});
+      if(XP.stars.filter(v=>v>0).length>=TW().length&&!XP.all){ XP.all=1; lss(KX,XP); aw({event:"win"}); } fl(); }
+    html=`<h2>${res==="win"?x().win:x().lose}</h2><div>${T.lic} ${T.n[lang]}</div>`+(ns?`<div class="stars3">${"⭐".repeat(ns)}${"☆".repeat(3-ns)}</div>`:`<div style="font-weight:800">${f(x().best,{n:Math.round(R.best)})}</div>`);
+    btns=`<button class="big go" id="chR1">${ns?x().again:x().retry}</button>`;
+    if(ns&&R.i+1<TW().length&&JT()>R.i+1) btns+=`<button class="big orange" id="chR2">${x().exp.slice(0,2)} ${TW()[R.i+1].n[lang]}</button>`; }
+  else { const prevBest=RB[0]||0, sc=Math.round(R.score); RB.push(sc); RB.sort((a,b)=>b-a); RB=RB.slice(0,5); lss(KR,RB); const idx=RB.indexOf(sc); aw({event:"score",score:sc}); fl();
+    html=`<h2>${x().rushEnd}</h2><div style="font-size:26px;font-weight:900">${f(x().score,{n:sc})}</div>`+(()=>{ const ns=sc>=120?3:sc>=80?2:sc>=40?1:0; return `<div class="stars3">${"⭐".repeat(ns)}${"☆".repeat(3-ns)}</div>`; })()+(sc>prevBest&&sc>0?`<div class="bestline">${x().rec}</div>`:"")+top5(idx);
+    btns=`<button class="big go" id="chR1">${x().retry}</button>`; }
+  btns+=`<button class="big home" id="chR3">${x().toCh}</button>`;
+  toMenu(); try{ SFX.chime(); confetti(res==="win"||(R.kind==="rush"&&R.score>0)?90:0); }catch(e){}
+  showRes(`<div class="card">${html}<div class="row">${btns}</div></div>`);
+  const r1=$("chR1"); if(r1) r1.onclick=()=>{ SFX.click(); begin(R.spec); };
+  const r2=$("chR2"); if(r2) r2.onclick=()=>{ SFX.click(); begin({kind:"expert",i:R.i+1}); };
+  $("chR3").onclick=()=>{ SFX.click(); hideRes(); openCh(); }; }
+function top5(hi){ const m=["🥇","🥈","🥉","4","5"]; return `<div class="top5">`+m.map((e,i)=>`<div class="${i===hi?"me":""}"><span>${e}</span><span>${RB[i]!=null?RB[i]+" "+x().pts:"–"}</span></div>`).join("")+`</div>`; }
+
+function showRes(h){ const o=$("chRes"); o.innerHTML=h; o.dir=T[lang].dir; o.classList.add("show"); focusFirst(o); }
+function hideRes(){ $("chRes").classList.remove("show"); }
+function focusFirst(o){ try{ if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) setTimeout(()=>{ const b=o.querySelector("button:not(:disabled)"); b&&b.focus({preventScroll:true}); },30); }catch(e){} }
+function renderCh(){ const t=x(), o=$("chOv"), tw=TW(), jt=JT(); o.dir=T[lang].dir;
+  o.innerHTML=`<div class="card"><h2>${t.title}</h2>
+  <div class="chs"><h3>${t.rush}</h3><p>${t.rushD}</p><b>${t.top}</b>${top5(-1)}<button class="big go" id="chRush">${t.start}</button></div>
+  <div class="chs"><h3>${t.exp}</h3><p>${t.expD}</p><div class="xgrid">${tw.map((T0,i)=>{ const e=EX(i), lk=!(jt>i&&(i===0||(XP.stars[i-1]||0)>0)), s=XP.stars[i]||0;
+    return `<button class="xb ${lk?"lock":""}" data-x="${i}" data-lk="${lk?(jt>i?2:1):0}"><span class="ic">${lk?"🔒":T0.lic}</span>${T0.n[lang]}<small>${lk?"":"🎯"+e.target+"% ⏱"+mmss(e.limit)}</small><small>${"⭐".repeat(s)}${"☆".repeat(3-s)}</small></button>`; }).join("")}</div><div id="chMsg"></div></div>
+  <button class="big home" id="chClose">${t.close}</button></div>`;
+  $("chClose").onclick=()=>{ SFX.click(); closeCh(); }; $("chRush").onclick=()=>{ SFX.click(); begin({kind:"rush"}); };
+  o.querySelectorAll(".xb").forEach(b=>b.onclick=()=>{ const lk=+b.dataset.lk; if(lk){ $("chMsg").textContent=lk===1?t.lockJ:t.lockX; try{ SFX.startle(); }catch(e){} return; } SFX.click(); begin({kind:"expert",i:+b.dataset.x}); }); }
+function openCh(){ renderCh(); $("chOv").classList.add("show"); focusFirst($("chOv")); }
+function closeCh(){ $("chOv").classList.remove("show"); }
+const btn=document.createElement("button"); btn.className="big"; btn.id="chBtn"; $("journeyBtn").after(btn);
+btn.onclick=()=>{ if(state!=="menu") return; SFX.click(); openCh(); };
+const lab=()=>{ btn.textContent=x().btn; rb.textContent=x().again; };
+// keys: overlays own the keyboard; Esc closes
+window.addEventListener("keydown",e=>{ const ov=$("chRes").classList.contains("show")?"chRes":$("chOv").classList.contains("show")?"chOv":null; if(!ov) return;
+  if(e.code==="Escape"){ e.preventDefault(); e.stopPropagation(); if(ov==="chRes"){ hideRes(); } else closeCh(); return; }
+  if(/^Arrow/.test(e.code)){ e.preventDefault(); const fs=[...$(ov).querySelectorAll("button:not(:disabled)")].filter(b=>b.getClientRects().length); if(fs.length){ const a=document.activeElement; let i=fs.indexOf(a); const rtl=document.documentElement.dir==="rtl"; let st=(e.code==="ArrowRight"||e.code==="ArrowDown")?1:-1; if(rtl&&(e.code==="ArrowRight"||e.code==="ArrowLeft")) st=-st; i=i<0?0:(i+st+fs.length)%fs.length; fs[i].focus(); } }
+  e.stopPropagation(); },true);
+const tm1=toMenu; toMenu=function(){ finish(null,true); const r=tm1.apply(this,arguments); return r; };
+const al1=applyLang; applyLang=function(){ al1.apply(this,arguments); try{ lab(); if($("chOv").classList.contains("show")) renderCh(); }catch(e){} };
+lab();
+window.__ch={begin,tick,finish:r=>finish(r),joy,EX,open:openCh,state:()=>RUN&&{kind:RUN.kind,i:RUN.i,hold:RUN.hold,joy:RUN.joy,best:RUN.best,score:RUN.score,el:S.play-RUN.p0},xp:()=>XP,rush:()=>RB,setRush:a=>{ RB=a; lss(KR,RB); },setXP:o=>{ XP=o; lss(KX,XP); }};
 })();
 </script>
 </body>
