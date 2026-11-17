@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="breakout"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="breakout"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -118,6 +118,26 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
 .vname{font:900 34px/1.1 Rubik,Arial;color:#2a1a0e;background:#ffd36b;border-radius:14px;padding:4px 18px;border:3px solid #2a1a0e}
 @media (max-height:560px){.card{padding:8px 12px;gap:6px}.big{font-size:40px}.pan .em{font-size:30px}.vem{font-size:70px}}
 @media (min-width:760px) and (max-height:800px){#menu .card{width:min(100%,740px)}.mcols{flex-direction:row;align-items:center;gap:16px}.mcol{flex:1 1 0}}
+/* online 1-vs-1 race */
+#opp,#emo{display:none}
+body.ol #opp{display:flex;flex-direction:column;gap:3px;flex:none;padding:0 2px 6px}
+.orow{display:flex;align-items:center;gap:6px;font:800 12px/1 Rubik,Arial;height:16px;color:#fff}
+.orow .nm{width:64px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otr{flex:1;height:12px;border-radius:8px;background:#0006;border:2px solid #fff3;overflow:hidden;direction:ltr}
+.otr i{display:block;height:100%;width:0;background:#ff7eb6;transition:width .3s}
+.orow.fr .otr i{background:#4aa3df}
+.orow .ct{width:50px;flex:none;text-align:end;direction:ltr;white-space:nowrap}
+body.ol #emo{display:flex;gap:8px;justify-content:center;flex:none;padding-top:6px}
+#emo .ib{width:52px;height:44px;font-size:22px;border-radius:14px}
+#emo.cool .ib{opacity:.45}
+body.ol #pauseBtn,body.ol #musBtn{display:none}
+.eb{position:absolute;z-index:4;font-size:46px;line-height:1;pointer-events:none;animation:ebUp 2s ease-out forwards}
+.eb.fr{top:6%}.eb.me{bottom:12%}
+@keyframes ebUp{0%{transform:translateY(10px) scale(.4);opacity:0}15%{transform:scale(1.2);opacity:1}100%{transform:translateY(-70px) scale(1);opacity:0}}
+.scl{font:900 clamp(22px,6.5vw,30px)/1.2 Rubik,Arial;margin:0;color:var(--ink)}
+#olCard button:disabled{opacity:.55}
+body.ol #n1Weak{top:104px;left:8px;right:8px;transform:none;margin:0 auto;width:fit-content;font-size:13px;line-height:1.2;padding:2px 10px;opacity:.93}
+@media (max-height:640px){body.ol #opp{padding-bottom:3px}#emo .ib{height:38px}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/breakout.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/breakout-192.png"><meta name="apple-mobile-web-app-title" content="שוברת הכלובים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/breakout-apple-180.png"><script src="pwa.js" data-app="breakout" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -132,7 +152,9 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
     <button id="muteBtn" class="ib" aria-label="sound">🔊</button>
     <button id="pauseBtn" class="ib" aria-label="pause">⏸</button>
   </div>
+  <div id="opp"><div class="orow"><span class="nm" id="oMeN"></span><div class="otr"><i id="oMeB"></i></div><span class="ct" id="oMeC"></span></div><div class="orow fr"><span class="nm" id="oFrN"></span><div class="otr"><i id="oFrB"></i></div><span class="ct" id="oFrC"></span></div></div>
   <div id="stage"><div id="wrap"><canvas id="cv" width="360" height="560"></canvas><div id="banner"></div><div id="hint"><span id="hintT"></span></div></div></div>
+  <div id="emo"><button class="ib" data-e="0" aria-label="emote">😄</button><button class="ib" data-e="1" aria-label="emote">😮</button><button class="ib" data-e="2" aria-label="emote">😭</button><button class="ib" data-e="3" aria-label="emote">👏</button></div>
   <div id="ctrl"><button class="cb" id="bL" aria-label="left">◀</button><button class="cb go" id="bGo" aria-label="launch">🧶</button><button class="cb" id="bR" aria-label="right">▶</button></div>
 </div>
 
@@ -160,6 +182,7 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
     <p class="sub" id="mSub"></p>
     <div class="row dif" id="dif"></div>
     <div class="row"><button class="btn" id="mPlay"></button><button class="btn arc" id="mArc"></button></div>
+    <div class="row"><button class="btn gr" id="mNet" style="min-width:min(100%,280px)"></button></div>
   </div>
   <div class="mcol">
     <div class="row"><button class="btn alt sm" id="mLv"></button><button class="btn gr sm" id="mZoo"></button><button class="btn alt sm" id="mHow" aria-label="help">❓</button></div>
@@ -173,10 +196,14 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
 <section class="scr" id="how"><div class="card"><h2 id="hT"></h2><div class="panels" id="hList"></div><button class="btn sm" id="hBack"></button></div></section>
 <section class="scr" id="pause"><div class="card"><h2 id="pT"></h2><div class="row"><button class="btn" id="pRes"></button></div><div class="row"><button class="btn alt sm" id="pRetry"></button><button class="btn gr sm" id="pMenu"></button></div></div></section>
 <section class="scr" id="reveal"><div class="card rv"><div class="rays"></div><h2 id="vT"></h2><div class="vem" id="vEm"></div><div class="vname" id="vName"></div><p class="sub" id="vSub"></p><button class="btn" id="vOk"></button></div></section>
+<section class="scr" id="olres"><div class="card" id="olCard"></div></section>
+<section class="scr" id="olq"><div class="card"><h2 id="olqT"></h2><div class="row"><button class="btn gr" id="olqStay"></button><button class="btn alt" id="olqGo"></button></div></div></section>
 <section class="scr" id="result"><div class="card"><div class="big" id="rEm"></div><h2 id="rT"></h2><div class="stars" id="rStars"></div><p class="sub" id="rTxt"></p><div class="score" id="rScore"></div><div class="rec" id="rRec"></div><p class="sub" id="rNote"></p><div class="hi" id="rHi"></div><div class="row"><button class="btn" id="rNext"></button></div><div class="row"><button class="btn alt sm" id="rRetry"></button><button class="btn gr sm" id="rMenu"></button></div></div></section>
 
+<script src="net1v1.js"></script>
 <script>
 "use strict";
+const LINK=/[?&]room=\d{6}/.test(location.search); // opened from a friend's invitation link: go straight to the online flow
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const $=id=>document.getElementById(id);
 function clamp(v,a,b){return v<a?a:v>b?b:v}
@@ -198,7 +225,11 @@ he:{title:"שוברת הכלובים",sub:"הכפה הגדולה משחררת ח
  arcOver:"איזה משחק!",arcTxt:"הגעת לגל {n}",newRec:"שיא חדש!",hiT:"שיאים",playAgain:"🔄 שוב",
  h1:"גרירה במסך או חיצים: מזיזים את הכפה",h2:"הקשה / רווח: משגרים את כדור הצמר",h3:"שוברים כלובים. חיות נופלות - תפסי אותן בכפה!",h4:"כלובי ברזל צריכים כמה מכות",h5:"גם אם חיה נופלת, היא רצה למקלט. אין עונש!",h6:"P או ⏸ להפסקה",
  pu_wide:"↔️ כפה רחבה",pu_multi:"🧶 הרבה כדורים",pu_slow:"🐢 כדור איטי",pu_sticky:"🍯 כפה דביקה",pu_net:"🕸️ רשת הצלה",
- fin:"כל החיות חופשיות! מסיבה במקלט!",finT:"ניצחת את כולם!"},
+ fin:"כל החיות חופשיות! מסיבה במקלט!",finT:"ניצחת את כולם!",
+ net:"🌐 אונליין עם חברה",shareT:"בואי נתחרות בשוברת הכלובים! מי משחררת את כל החיות קודם? 🐾🧶",you:"את",friend:"החברה",olRound:"סבב",olGoT:"יאללה!",
+ olWinR:"ניצחת בסבב! 🏆",olLoseR:"החברה הקדימה בסבב",olDone:"שחררת את כולם! ממתינה להכרעה…",olWin:"ניצחת במרוץ!",olLose:"החברה ניצחה הפעם",olWin2:"כל הכבוד, שחררת את החיות ראשונה! 🐾",olLose2:"היה צמוד! רוצות עוד סיבוב? 🧶",
+ olRe:"🔁 שוב",olQuit:"🏠 יציאה",olStay:"▶ להמשיך",olQuitQ:"לצאת מהמשחק?",olNew:"🌐 משחק חדש",olReWant:"החברה רוצה עוד סיבוב! 🔁",olYou:"הניקוד שלך",
+ olPen:"😴 נחות 3 שניות…",olNewL:"חיים חדשים!",olHurry:"⏱ 30 שניות לסוף הסבב!",pr0:"☁️ ערפל!",pr1:"🐭 כפה קטנה!",pr2:"🔒 כלובי ברזל!",pr3:"💨 צמר מהיר!",olPrSent:"😈 שלחת:",olPrGot:"😈 החברה שלחה:"},
 fr:{title:"La Casseuse de Cages",sub:"La grosse patte libère les animaux !",play:"▶ Histoire",arc:"🕹️ Arcade",levels:"🗺️ Niveaux",zoo:"🐾 Refuge",how:"Comment jouer",easy:"Facile",normal:"Normal",hard:"Difficile",
  inT:"L'histoire",in1:"Mimi, Tiggy et Leo gardent le refuge des animaux.",in2:"Des robots farceurs ont enfermé les animaux dans des cages !",in3:"Frappe la pelote de laine avec la grosse patte et casse les cages !",go:"C'est parti !",skip:"Passer",
  lvl:"Niveau",wave:"Vague",tap:"Touche pour lancer !",pause:"Pause",resume:"▶ Reprendre",retry:"🔄 Recommencer",menu:"☰ Menu",back:"⬅ Retour",
@@ -209,7 +240,11 @@ fr:{title:"La Casseuse de Cages",sub:"La grosse patte libère les animaux !",pla
  arcOver:"Quelle partie !",arcTxt:"Tu as atteint la vague {n}",newRec:"Nouveau record !",hiT:"Records",playAgain:"🔄 Rejouer",
  h1:"Glisse sur l'écran ou flèches : bouge la patte",h2:"Touche / espace : lance la pelote",h3:"Casse les cages. Les animaux tombent : attrape-les !",h4:"Les cages en fer demandent plusieurs coups",h5:"Si un animal tombe, il court au refuge. Aucune punition !",h6:"P ou ⏸ pour la pause",
  pu_wide:"↔️ Patte large",pu_multi:"🧶 Plein de balles",pu_slow:"🐢 Balle lente",pu_sticky:"🍯 Patte collante",pu_net:"🕸️ Filet de secours",
- fin:"Tous les animaux sont libres ! Fête au refuge !",finT:"Tu as gagné !"},
+ fin:"Tous les animaux sont libres ! Fête au refuge !",finT:"Tu as gagné !",
+ net:"🌐 En ligne avec une amie",shareT:"Viens faire la course dans la Casseuse de Cages ! Qui libère tous les animaux la première ? 🐾🧶",you:"Toi",friend:"Ton amie",olRound:"Manche",olGoT:"Partez !",
+ olWinR:"Manche gagnée ! 🏆",olLoseR:"Ton amie a été plus rapide",olDone:"Tous libérés ! On attend le résultat…",olWin:"Tu as gagné la course !",olLose:"Ton amie gagne cette fois",olWin2:"Bravo, tu as libéré les animaux la première ! 🐾",olLose2:"C'était serré ! Encore une manche ? 🧶",
+ olRe:"🔁 Encore",olQuit:"🏠 Quitter",olStay:"▶ Continuer",olQuitQ:"Quitter la partie ?",olNew:"🌐 Nouvelle partie",olReWant:"Ton amie veut rejouer ! 🔁",olYou:"Ton score",
+ olPen:"😴 Repos 3 secondes…",olNewL:"Nouvelles vies !",olHurry:"⏱ 30 secondes avant la fin !",pr0:"☁️ Brouillard !",pr1:"🐭 Mini patte !",pr2:"🔒 Cages en fer !",pr3:"💨 Pelote rapide !",olPrSent:"😈 Envoyé :",olPrGot:"😈 Ton amie envoie :"},
 en:{title:"Cage Breaker",sub:"The big paw sets animals free!",play:"▶ Story",arc:"🕹️ Arcade",levels:"🗺️ Levels",zoo:"🐾 Sanctuary",how:"How to play",easy:"Easy",normal:"Normal",hard:"Hard",
  inT:"The story",in1:"Mimi, Tiggy and Leo guard the animal sanctuary.",in2:"Naughty robots locked the animals in cages!",in3:"Bat the yarn ball with the big paw and break the cages!",go:"Let's go!",skip:"Skip",
  lvl:"Level",wave:"Wave",tap:"Tap to launch!",pause:"Paused",resume:"▶ Resume",retry:"🔄 Restart",menu:"☰ Menu",back:"⬅ Back",
@@ -220,7 +255,11 @@ en:{title:"Cage Breaker",sub:"The big paw sets animals free!",play:"▶ Story",a
  arcOver:"What a run!",arcTxt:"You reached wave {n}",newRec:"New record!",hiT:"High scores",playAgain:"🔄 Play again",
  h1:"Drag on screen or arrow keys: move the paw",h2:"Tap / space: launch the yarn ball",h3:"Break cages. Animals fall - catch them with the paw!",h4:"Iron cages need a few hits",h5:"If an animal falls, it runs to the sanctuary. No penalty!",h6:"P or ⏸ to pause",
  pu_wide:"↔️ Wide paw",pu_multi:"🧶 Many balls",pu_slow:"🐢 Slow ball",pu_sticky:"🍯 Sticky paw",pu_net:"🕸️ Safety net",
- fin:"All animals are free! Party at the sanctuary!",finT:"You won!"}};
+ fin:"All animals are free! Party at the sanctuary!",finT:"You won!",
+ net:"🌐 Online with a friend",shareT:"Race me in Cage Breaker! Who frees all the animals first? 🐾🧶",you:"You",friend:"Friend",olRound:"Round",olGoT:"GO!",
+ olWinR:"You won the round! 🏆",olLoseR:"Your friend was faster",olDone:"All freed! Waiting for the result…",olWin:"You won the race!",olLose:"Your friend won this time",olWin2:"Great job, you freed the animals first! 🐾",olLose2:"That was close! Another round? 🧶",
+ olRe:"🔁 Again",olQuit:"🏠 Leave",olStay:"▶ Keep playing",olQuitQ:"Leave the game?",olNew:"🌐 New match",olReWant:"Your friend wants another go! 🔁",olYou:"Your score",
+ olPen:"😴 Resting for 3 seconds…",olNewL:"Fresh lives!",olHurry:"⏱ 30 seconds left in the round!",pr0:"☁️ Fog!",pr1:"🐭 Tiny paw!",pr2:"🔒 Iron cages!",pr3:"💨 Speedy yarn!",olPrSent:"😈 Sent:",olPrGot:"😈 Friend sent:"}};
 let lang=ls.get("annabelle-lang")||"he";if(!TX[lang])lang="he";
 const LI=()=>lang==="he"?1:lang==="fr"?2:3;
 const t=k=>TX[lang][k]??TX.he[k];
@@ -322,11 +361,11 @@ const W=360,COLS=7,BW=49,BH=36,BX0=(W-COLS*BW)/2,TOP=40,PAWH=22,BR=8;
 let H=560,PADY=490,PT=478,NETY=528,FLOOR=542,bgCache={};
 function setH(h){H=h;PADY=H-70;PT=PADY-12;NETY=PADY+38;FLOOR=H-18;bgCache={};if(G)for(const b of G.balls)if(b.y>PT-BR)b.y=PT-BR}
 const cv=$("cv"),cx=cv.getContext("2d"),stage=$("stage");
-let G=null,mode="menu",keys={L:0,R:0},shakeT=0,shakeM=0,hitStop=0,flashT=0,flashMax=.2;
-function dif(){return DIF[S.diff]}
+let G=null,mode="menu",keys={L:0,R:0},shakeT=0,shakeM=0,hitStop=0,flashT=0,flashMax=.2,OL={on:false};
+function dif(){return DIF[OL.on&&OL.df?OL.df:S.diff]}
 function impact(stop,fl){hitStop=Math.max(hitStop,stop||0);if(fl){flashT=fl;flashMax=fl}}
 function newBall(stuck){return{x:G.px,y:PT-BR,dx:0,dy:-1,stuck:!!stuck,off:0,trail:[],rot:0}}
-function baseG(){const D=dif();return{arc:false,n:1,wave:0,def:null,boss:null,bricks:[],balls:[],falls:[],caps:[],parts:[],pops:[],px:W/2,pw:D.pw,pwT:D.pw,squash:0,wide:0,slow:0,sticky:0,net:false,lives:D.lives,lost:0,score:0,caught:0,combo:0,maxCombo:0,state:"ready",clearT:0,scoreStart:0,runPrev:0,bonusDone:false,sinceDrop:0,sinceHit:0,helped:0,left:99,t:0,won:false}}
+function baseG(){const D=dif();return{arc:false,n:1,wave:0,def:null,boss:null,bricks:[],balls:[],falls:[],caps:[],parts:[],pops:[],px:W/2,pw:D.pw,pwT:D.pw,squash:0,wide:0,slow:0,sticky:0,net:false,lives:D.lives,fog:0,tiny:0,fast:0,penT:0,lost:0,score:0,caught:0,combo:0,maxCombo:0,state:"ready",clearT:0,scoreStart:0,runPrev:0,bonusDone:false,sinceDrop:0,sinceHit:0,helped:0,left:99,t:0,won:false}}
 function buildField(def){
  const D=dif(),rows=def.L,by0=TOP+12+Math.round((H-560)*.22);
  G.def=def;G.bricks=[];G.boss=null;G.balls=[];G.caps=[];G.combo=0;G.sinceDrop=0;G.sinceHit=0;G.helped=0;G.caught=0;G.bonusDone=false;G.state="ready";G.clearT=0;
@@ -336,7 +375,7 @@ function buildField(def){
   G.bricks.push({x:BX0+c*BW,y:by0+r*BH,hp,max:hp,alive:true,flash:0,em:aEm(id)})}}
  if(def.boss){const hp=def.bossHp||D.boss;G.boss={x:W/2-70,y:-200,y0:by0+rows.length*BH+20,w:140,h:84,hp,max:hp,flash:0,cd:0,alive:true,ph:0,enter:0,dying:0,puff:0}}
  G.balls.push(newBall(true))}
-function setTitle(){$("title").textContent=!G||(mode!=="play"&&mode!=="pause"&&mode!=="result")?t("title"):G.arc?"🕹️ "+t("wave")+" "+G.wave:t("lvl")+" "+G.n+" "+aEm(G.def.a)+(G.def.boss?" 🤖":"")}
+function setTitle(){if(OL.on){$("title").textContent=olTitle();return}$("title").textContent=!G||(mode!=="play"&&mode!=="pause"&&mode!=="result")?t("title"):G.arc?"🕹️ "+t("wave")+" "+G.wave:t("lvl")+" "+G.n+" "+aEm(G.def.a)+(G.def.boss?" 🤖":"")}
 function introBanner(){const d=G.def;
  if(d.boss){banner("🤖 "+t("bossHit")+"<small>"+t("bossHit2")+"</small>",2300);SFX.bossIn()}
  else if(G.arc)banner("🕹️ "+t("wave")+" "+G.wave,1500);
@@ -354,21 +393,21 @@ function pop(txt,col,lane,size){if(!G)return;G.pops=G.pops.filter(p=>p.sm||p.lan
 function floatTxt(txt,x,y,col){G.pops.push({txt,col,sm:1,t:.9,max:.9,x:clamp(x,40,W-40),y})}
 function R(ev,o){try{window.AnnabelleRewards&&AnnabelleRewards.award(Object.assign({game:"breakout",event:ev},o||{}))}catch(e){}}
 function RF(){try{window.AnnabelleRewards&&AnnabelleRewards.flush&&AnnabelleRewards.flush()}catch(e){}}
-function ballSpeed(){const D=dif();return(D.spd+(G.arc?Math.min(G.wave-1,22)*8:G.n*6))*(G.slow>0?.72:1)}
+function ballSpeed(){const D=dif();return(D.spd+(G.arc?Math.min(G.wave-1,22)*8:G.n*6))*(G.slow>0?.72:1)*(G.fast>0?1.25:1)}
 function launch(){
- if(!G||mode!=="play"||(G.state!=="ready"&&G.state!=="play"))return false;let any=false;
+ if(!G||mode!=="play"||(G.state!=="ready"&&G.state!=="play")||(OL.on&&(OL.ph!==1||OL.done||OL.netp)))return false;let any=false;
  for(const b of G.balls)if(b.stuck){b.stuck=false;const a=(Math.random()*.5-.25)+(b.off/G.pw)*.6;b.dx=Math.sin(a);b.dy=-Math.cos(a);any=true}
  if(any){if(G.state==="ready")G.state="play";G.squash=1;SFX.launch()}return any}
 function burst(x,y,cols,n,sp,life){for(let i=0;i<n;i++){const a=Math.random()*6.283,v=(.3+Math.random())*(sp||120);G.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:(life||.7)*(.6+Math.random()*.6),max:life||.7,c:cols[i%cols.length],s:3+(Math.random()*4|0)})}}
 function shake(m,d){shakeM=Math.max(shakeM,m);shakeT=Math.max(shakeT,d||.2)}
-const PUS=["wide","multi","slow","sticky","net"],PUEM={wide:"↔️",multi:"🧶",slow:"🐢",sticky:"🍯",net:"🕸️"},PUCOL={wide:"#4aa3df",multi:"#ff7eb6",slow:"#7bc67b",sticky:"#ffb347",net:"#b79bff"};
+const PUS=["wide","multi","slow","sticky","net"],PUEM={wide:"↔️",multi:"🧶",slow:"🐢",sticky:"🍯",net:"🕸️",tiny:"🐭",fast:"💨",fog:"☁️"},PUCOL={wide:"#4aa3df",multi:"#ff7eb6",slow:"#7bc67b",sticky:"#ffb347",net:"#b79bff",tiny:"#ff5a7a",fast:"#ff5a7a",fog:"#dfe6ee"};
 const CONF=["#ffd36b","#ff7eb6","#7bc67b","#4aa3df","#fff"];
-function dropCap(x,y,force){G.caps.push({x:clamp(x,20,W-20),y,type:force||PUS[Math.random()*5|0],vy:95})}
+function dropCap(x,y,force){G.caps.push({x:clamp(x,20,W-20),y,type:force||PUS[(OL.on?OL.rng():Math.random())*5|0],vy:95})}
 function breakBrick(b){
  b.alive=false;G.score+=10*b.max*(1+Math.min(G.combo,10)*.1)|0;G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);
  const cx0=b.x+BW/2,cy0=b.y+BH/2;burst(cx0,cy0,CONF,14,170,.8);shake(2.5,.12);SFX.brk();
  G.falls.push({x:cx0,y:cy0,em:b.em,vy:50,run:0,vx:0,hop:0,sz:34,w:Math.random()*6});
- G.sinceDrop++;const D=dif();if(Math.random()<D.drop||G.sinceDrop>=8){G.sinceDrop=0;dropCap(cx0,cy0)}
+ G.sinceDrop++;const D=dif();if((OL.on?OL.rng():Math.random())<D.drop||G.sinceDrop>=8){G.sinceDrop=0;dropCap(cx0,cy0)}
  const c=G.combo,key=c===3?"c3":c===5?"c5":c===8?"c8":c===12?"c12":null;
  if(key){pop(t(key),c>=8?"#ff7eb6":"#ffd36b",0,c>=8?40:34);SFX.combo(c);impact(c>=8?.07:.04,c>=8?.14:0);burst(W/2,H*.44,CONF,c*2,220,.9);if(c===5||c===12)R("combo",{score:c})}
 }
@@ -392,10 +431,11 @@ function clearAll(){for(const b of G.bricks)if(b.alive){b.alive=false;burst(b.x+
 function winLevel(){
  if(G.state==="clear")return;G.state="clear";G.clearT=0;for(const b of G.balls)burst(b.x,b.y,["#ff7eb6","#fff"],8,120,.5);G.balls.length=0;SFX.win();shake(4,.3);impact(.08,.28);
  for(let i=0;i<6;i++)burst(40+Math.random()*280,TOP+60+Math.random()*220,CONF,22,230,1.3);
- if(G.arc){G.score+=100+G.wave*10;pop(t("waveClear"),"#7bc67b",0,36)}}
+ if(G.arc){G.score+=100+G.wave*10;pop(t("waveClear"),"#7bc67b",0,36)}
+ if(OL.on)olDone()}
 function loseLife(){
  G.lives--;G.lost++;G.combo=0;G.wide=G.slow=G.sticky=0;G.pwT=dif().pw;G.net=false;SFX.lose();shake(5,.25);impact(.12,.18);
- if(G.lives<=0){G.state="dead";G.clearT=0;return}
+ if(G.lives<=0){if(OL.on){G.state="penalty";G.penT=OLC.PEN;G.balls.length=0;pop(t("olPen"),"#fff",0,30);OL.dirty=true;return}G.state="dead";G.clearT=0;return}
  pop(t("lost"),"#fff",0,30);G.balls.push(newBall(true));G.state="ready"}
 function aimTarget(b){if(G.boss&&G.boss.alive&&!G.boss.dying)return{x:G.boss.x+G.boss.w/2,y:G.boss.y+G.boss.h/2};
  let best=null,bd=1e9;for(const k of G.bricks)if(k.alive){const d=Math.hypot(k.x+BW/2-b.x,k.y+BH/2-b.y);if(d<bd){bd=d;best=k}}return best?{x:best.x+BW/2,y:best.y+BH/2}:null}
@@ -431,10 +471,13 @@ function stepBall(b,dt){
 function update(dt){
  if(!G)return;G.t+=dt;const D=dif();
  const kv=(keys.R-keys.L)*360*dt;if(kv)G.px+=kv;
+ if(OL.on)G.pwT=pawTarget();
  G.pw+=(G.pwT-G.pw)*Math.min(1,dt*10);G.px=clamp(G.px,G.pw/2+4,W-G.pw/2-4);
  if(G.squash>0)G.squash=Math.max(0,G.squash-dt*5);
  if(G.wide>0){G.wide-=dt;if(G.wide<=0)G.pwT=D.pw}
  if(G.slow>0)G.slow-=dt;
+ if(G.fog>0)G.fog-=dt;if(G.tiny>0)G.tiny-=dt;if(G.fast>0)G.fast-=dt;
+ if(G.state==="penalty"){G.penT-=dt;if(G.penT<=0){G.lives=D.lives;G.balls.push(newBall(true));G.state="ready";G.combo=0;G.sinceHit=0;pop(t("olNewL"),"#7bc67b",0,30);OL.dirty=true}}
  if(G.sticky>0){G.sticky-=dt;if(G.sticky<=0&&G.state==="play")for(const b of G.balls)if(b.stuck){b.stuck=false;b.dy=-1;b.dx=0}}
  for(const k of G.bricks)if(k.flash>0)k.flash-=dt;
  const bo=G.boss;
@@ -457,11 +500,11 @@ function update(dt){
   G.left=0;for(const k of G.bricks)if(k.alive)G.left++;
   if((G.state==="play"||G.state==="ready")&&!G.boss&&!G.left)winLevel()}
  else if(G.state==="bossdown"&&!G.boss.alive)winLevel();
- const live=G.state!=="dead";
+ const live=G.state!=="dead"&&G.state!=="penalty";
  for(let i=G.falls.length-1;i>=0;i--){const f=G.falls[i];
   if(!f.run){f.y+=f.vy*dt;f.vy=Math.min(105,f.vy+30*dt);f.w+=dt*5;
-   if(live&&f.y+12>=PT&&f.y-12<=PADY+PAWH&&Math.abs(f.x-G.px)<G.pw/2+18){G.falls.splice(i,1);G.caught++;G.score+=50;G.squash=Math.max(G.squash,.6);SFX.catch();burst(f.x,PT,["#ffd36b","#fff","#ff7eb6"],14,150,.6);floatTxt(t("caught")+" +50",f.x,PT-26,"#fff");
-    if(G.caught===3&&!G.bonusDone&&G.def.b){G.bonusDone=true;banner("🎁 "+t("bonus")+"<small>"+aEm(G.def.b)+" "+t("bonus2")+"</small>",2000)}continue}
+   if(live&&f.y+12>=PT&&f.y-12<=PADY+PAWH&&Math.abs(f.x-G.px)<G.pw/2+18){G.falls.splice(i,1);G.caught++;if(OL.on)olCatch();G.score+=50;G.squash=Math.max(G.squash,.6);SFX.catch();burst(f.x,PT,["#ffd36b","#fff","#ff7eb6"],14,150,.6);floatTxt(t("caught")+" +50",f.x,PT-26,"#fff");
+    if(G.caught===3&&!G.bonusDone&&G.def.b&&!OL.on){G.bonusDone=true;banner("🎁 "+t("bonus")+"<small>"+aEm(G.def.b)+" "+t("bonus2")+"</small>",2000)}continue}
    if(f.y>=FLOOR){f.y=FLOOR;f.run=1;f.vx=(f.x<W/2?-1:1)*(80+Math.random()*40)}}
   else{f.x+=f.vx*dt;f.hop+=dt*14;if(f.x<-30||f.x>W+30)G.falls.splice(i,1)}}
  for(let i=G.caps.length-1;i>=0;i--){const c=G.caps[i];c.y+=c.vy*dt;
@@ -470,7 +513,7 @@ function update(dt){
  for(let i=G.parts.length-1;i>=0;i--){const p=G.parts[i];p.life-=dt;if(p.life<=0){G.parts.splice(i,1);continue}p.vy+=300*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
  for(let i=G.pops.length-1;i>=0;i--){G.pops[i].t-=dt;if(G.pops[i].t<=0)G.pops.splice(i,1)}
  if(shakeT>0){shakeT-=dt;if(shakeT<=0)shakeM=0}
- if(G.state==="clear"){G.clearT+=dt;if(G.clearT>1.7&&mode==="play"){if(G.arc)nextWave();else showResult(true)}}
+ if(G.state==="clear"){G.clearT+=dt;if(G.clearT>1.7&&mode==="play"&&!OL.on){if(G.arc)nextWave();else showResult(true)}}
  if(G.state==="dead"){G.clearT+=dt;if(G.clearT>.9&&mode==="play")showResult(false)}
 }
 /* ===================== RENDER ===================== */
@@ -566,7 +609,7 @@ function render(){
  for(const k of G.bricks)if(k.alive)cage(k);
  if(G.boss&&G.boss.alive)drawBoss(G.boss);
  if(G.net){cx.fillStyle="#b79bff";cx.fillRect(0,NETY,W,4);cx.strokeStyle="#fff";cx.globalAlpha=.85;cx.lineWidth=1.5;for(let x=0;x<W;x+=12){cx.beginPath();cx.moveTo(x,NETY+2);cx.lineTo(x+6,NETY+13);cx.lineTo(x+12,NETY+2);cx.stroke()}cx.globalAlpha=1}
- if(G.state!=="dead")drawPaw();
+ if(G.state!=="dead"){if(G.state==="penalty")cx.globalAlpha=.35;drawPaw();cx.globalAlpha=1}
  cx.textAlign="center";cx.textBaseline="middle";
  for(const f of G.falls){cx.fillStyle="#000";
   if(f.run){const hy=-Math.abs(Math.sin(f.hop))*9;cx.font=(f.sz-4)+"px "+EF;cx.fillText(f.em,f.x,f.y-6+hy);cx.font="11px "+EF;cx.fillText("🐾",f.x-Math.sign(f.vx)*22,f.y+6)}
@@ -574,13 +617,15 @@ function render(){
  for(const c of G.caps){const bob=Math.sin(G.t*8+c.x)*2;cx.fillStyle="#2a1a0e";rr(c.x-19,c.y-15+bob,38,30,9);cx.fill();cx.fillStyle=PUCOL[c.type];rr(c.x-16,c.y-12+bob,32,24,7);cx.fill();cx.fillStyle="#fff6";cx.fillRect(c.x-12,c.y-10+bob,24,4);cx.font="19px "+EF;cx.fillStyle="#000";cx.fillText(PUEM[c.type],c.x,c.y+2+bob)}
  for(const b of G.balls)drawBall(b);
  for(const p of G.parts){cx.globalAlpha=Math.min(1,p.life/p.max*1.6);cx.fillStyle=p.c;cx.fillRect(p.x|0,p.y|0,p.s,p.s)}cx.globalAlpha=1;
+ if(OL.on&&G.fog>0)fogFx();
  cx.restore();
  // HUD strip
  cx.fillStyle="#2a1a0ee8";cx.fillRect(0,0,W,TOP-4);cx.fillStyle="#ffd36b";cx.fillRect(0,TOP-6,W,2);
  for(let i=0;i<Math.min(G.lives,9);i++)heart(8+i*17,10,2.2);
+ if(OL.on)drawMeter();
  cx.font="bold 17px monospace";cx.textAlign="right";cx.textBaseline="middle";cx.fillStyle="#fff";cx.fillText(String(G.score).padStart(5,"0"),W-8,16);
  let tx=172;cx.font="13px "+EF;cx.textAlign="left";
- for(const [k,v,m] of [["wide",G.wide,14],["slow",G.slow,10],["sticky",G.sticky,15]]){if(v>0){cx.fillStyle=PUCOL[k];cx.fillRect(tx,26,22*v/m,4);cx.fillStyle="#fff";cx.fillText(PUEM[k],tx,14);tx+=28}}
+ for(const [k,v,m] of [["wide",G.wide,14],["slow",G.slow,10],["sticky",G.sticky,15],...(OL.on?[["tiny",G.tiny,6],["fast",G.fast,6],["fog",G.fog,5]]:[])]){if(v>0){cx.fillStyle=PUCOL[k];cx.fillRect(tx,26,22*v/m,4);cx.fillStyle="#fff";cx.fillText(PUEM[k],tx,14);tx+=28}}
  if(G.net){cx.fillStyle="#fff";cx.fillText("🕸️",tx,14)}
  // pop-up texts (direction-aware so Hebrew punctuation stays on the correct side)
  cx.textAlign="center";cx.textBaseline="middle";cx.lineJoin="round";cx.direction=dirOf();
@@ -589,16 +634,18 @@ function render(){
   else{const k=Math.min(1,age/.16),s=k<1?.3+k*.9:1.2-Math.min(.2,(age-.16)*1.6)+.04*Math.sin(age*16);cx.translate(p.x,p.y);cx.scale(s,s);cx.rotate(Math.sin(age*9)*.04);cx.font="900 "+p.size+"px "+TF;cx.lineWidth=7}
   cx.strokeStyle="#2a1a0e";cx.strokeText(p.txt,0,0);cx.fillStyle=p.col||"#ffd36b";cx.fillText(p.txt,0,0);cx.restore()}
  cx.direction="ltr";
+ if(OL.on)drawOlOver();
  if(flashT>0){cx.globalAlpha=Math.min(.75,flashT/flashMax*.75);cx.fillStyle="#fff";cx.fillRect(0,0,W,H);cx.globalAlpha=1}
 }
 /* ===================== LOOP ===================== */
 let last=0,acc=0;const STEP=1/120;
 function frame(ts){requestAnimationFrame(frame);const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
  if(flashT>0)flashT-=dt;
- if(mode==="play"&&G&&!document.hidden){if(hitStop>0)hitStop-=dt;else{acc+=dt;let s=0;while(acc>=STEP&&s<10){update(STEP);acc-=STEP;s++;if(hitStop>0||mode!=="play")break}if(s>=10)acc=0}}else acc=0;
- if(G&&(mode==="play"||mode==="result"||mode==="pause"))render();syncHint()}
+ if(OL.on)olPump();
+ else if(mode==="play"&&G&&!document.hidden){if(hitStop>0)hitStop-=dt;else{acc+=dt;let s=0;while(acc>=STEP&&s<10){update(STEP);acc-=STEP;s++;if(hitStop>0||mode!=="play")break}if(s>=10)acc=0}}else acc=0;
+ if(G&&(mode==="play"||mode==="result"||mode==="pause"))render();syncHint();syncOpp()}
 let hintOn=null;
-function syncHint(){const on=!!(G&&mode==="play"&&G.state==="ready"&&G.balls.some(b=>b.stuck)&&!(G.boss&&G.boss.enter<1));if(on!==hintOn){hintOn=on;$("hint").classList.toggle("on",on)}}
+function syncHint(){const on=!!(G&&mode==="play"&&G.state==="ready"&&G.balls.some(b=>b.stuck)&&!(G.boss&&G.boss.enter<1)&&(!OL.on||(OL.ph===1&&!OL.done)));if(on!==hintOn){hintOn=on;$("hint").classList.toggle("on",on)}}
 let banT=[];
 function banner(html,ms){const b=$("banner");banT.forEach(clearTimeout);banT=[];b.innerHTML="<div>"+html+"</div>";b.style.transition="none";b.className="";void b.offsetWidth;b.style.transition="";b.className="in";
  banT.push(setTimeout(()=>{b.className="out";banT.push(setTimeout(()=>{b.style.transition="none";b.className="";void b.offsetWidth;b.style.transition=""},340))},ms||1900))}
@@ -624,20 +671,20 @@ addEventListener("keydown",e=>{
  if(window.AnnabelleDesk&&AnnabelleDesk.typing(e))return;const c=e.code;
  if(c==="ArrowLeft"||c==="KeyA"){keys.L=1;e.preventDefault()}
  else if(c==="ArrowRight"||c==="KeyD"){keys.R=1;e.preventDefault()}
- else if(c==="Space"||c==="ArrowUp"){e.preventDefault();if(e.repeat)return;if(mode==="play"){if(!launch()&&c==="Space")togglePause()}else if(mode==="pause")resumeGame()}
- else if(c==="KeyP"||c==="Escape"){if(mode==="play")togglePause();else if(mode==="pause")resumeGame()}
+ else if(c==="Space"||c==="ArrowUp"){e.preventDefault();if(e.repeat)return;if(mode==="play"){if(!launch()&&c==="Space"&&!OL.on)togglePause()}else if(mode==="pause")resumeGame()}
+ else if(c==="KeyP"||c==="Escape"){if(OL.on)olAskQuit();else if(mode==="play")togglePause();else if(mode==="pause")resumeGame()}
  else if(c==="KeyM"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");setBtns()}
  else if(c==="Enter"){if(e.target&&e.target.closest&&e.target.closest("button,a"))return;
   if(mode==="pause")resumeGame();else if(mode==="result")($("reveal").classList.contains("on")?$("vOk"):$("rNext")).click();else if(mode==="menu")$("mPlay").click();else if(mode==="intro")$("inGo").click()}});
 addEventListener("keyup",e=>{const c=e.code;if(c==="ArrowLeft"||c==="KeyA")keys.L=0;if(c==="ArrowRight"||c==="KeyD")keys.R=0});
 addEventListener("blur",()=>{keys.L=keys.R=0});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="play")togglePause()});
-function togglePause(){if(mode!=="play")return;mode="pause";showScreen("pause")}
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="play"&&!OL.on)togglePause()}); // an online match never pauses: the friend keeps playing
+function togglePause(){if(mode!=="play"||OL.on)return;mode="pause";showScreen("pause")}
 function resumeGame(){if(mode!=="pause")return;mode="play";showScreen(null)}
 $("pauseBtn").onclick=()=>{if(mode==="play")togglePause();else if(mode==="pause")resumeGame()};
 
 /* ===================== SCREENS ===================== */
-const SCREENS=["intro","menu","levels","zoo","how","pause","reveal","result"];
+const SCREENS=["intro","menu","levels","zoo","how","pause","reveal","result","olres"];
 function showScreen(name){for(const s of SCREENS)$(s).classList.toggle("on",s===name)}
 function stars(n){return"⭐".repeat(n)+"☆".repeat(3-n)}
 function hiHTML(mark){let h=`<div class="hd">★ HIGH SCORES ★${lang==="en"?"":" · "+t("hiT")}</div>`;
@@ -653,6 +700,7 @@ function drawTexts(){
  $("lT").textContent=t("levels");$("lBack").textContent=t("back");$("zT").textContent=t("zooT");$("zBack").textContent=t("back");$("hT").textContent="❓ "+t("how");$("hBack").textContent=t("back");
  $("pT").textContent=t("pause");$("pRes").textContent=t("resume");$("pRetry").textContent=t("retry");$("pMenu").textContent=t("menu");$("rMenu").textContent=t("menu");
  $("hintT").textContent="👆 "+t("tap");
+ $("mNet").textContent=t("net");$("mNet").style.display=NT?"":"none";$("olqT").textContent=t("olQuitQ");$("olqStay").textContent=t("olStay");$("olqGo").textContent=t("olQuit");$("oMeN").textContent=t("you");$("oFrN").textContent=t("friend");if(NT)NT.drawLang();
  $("hList").innerHTML=[1,2,3,4,5,6].map(i=>`<div class="pan"><span class="em">${["👆","🧶","🐾","🔒","🏃","⏸"][i-1]}</span><span>${t("h"+i)}</span></div>`).join("")+`<div class="pan" style="font-size:13px"><span class="em">✨</span><span>${PUS.map(k=>t("pu_"+k)).join(" · ")}</span></div>`;
  $("mHi").innerHTML=hiHTML(-1);
  setTitle();buildLevels();buildZoo();setBtns()}
@@ -662,8 +710,9 @@ document.addEventListener("click",e=>{
  const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();return}
  const D=e.target.closest&&e.target.closest("[data-d]");if(D){S.diff=D.dataset.d;save();SFX.click();drawTexts();return}
  const V=e.target.closest&&e.target.closest("[data-lv]");if(V&&!V.disabled){SFX.click();startLevel(+V.dataset.lv,0,0)}});
-window.toMenu=function(){if(G&&G.arc&&(mode==="play"||mode==="pause")&&G.score>0)recordHi(G.score,"arcade",0);mode="menu";showScreen("menu");drawTexts()};
+window.toMenu=function(){if(OL.on||(NT&&(NT.gameOn||mode==="lobby")))olReset();if(G&&G.arc&&(mode==="play"||mode==="pause")&&G.score>0)recordHi(G.score,"arcade",0);mode="menu";showScreen("menu");drawTexts()};
 $("mPlay").onclick=()=>{SFX.click();startLevel(Math.min(S.unl,NLV),0,0)};
+$("mNet").onclick=()=>{SFX.click();if(NT)NT.showLobby()};
 $("mArc").onclick=()=>{SFX.click();startArcade(1)};
 $("mLv").onclick=()=>{SFX.click();buildLevels();mode="levels";showScreen("levels")};
 $("mZoo").onclick=()=>{SFX.click();buildZoo();mode="zoo";showScreen("zoo")};
@@ -716,8 +765,269 @@ function boot(){
  dr.innerHTML=ems.map((e,i)=>`<span style="left:${(i*8.3+3)%96}%;animation-duration:${9+(i*5)%8}s;animation-delay:-${(i*2.7)%12}s;font-size:${24+(i*7)%18}px">${e}</span>`).join("");
  drawTexts();setBtns();resize();
  requestAnimationFrame(ts=>{last=ts;frame(ts)});
- if(!S.intro){mode="intro";showScreen("intro")}else{mode="menu";showScreen("menu")}
+ if(!S.intro&&!LINK){mode="intro";showScreen("intro")}else{mode="menu";showScreen("menu")}
  if(window.ResizeObserver)new ResizeObserver(resize).observe(stage)}
+/* ===================== ONLINE 1-vs-1 RACE (shared module net1v1.js) =====================
+   Both girls get the SAME three cage layouts (best of 3 rounds) and the same power-up drop seed, and each plays her OWN board on her
+   own phone. First to free every animal wins the round. The HOST decides the match (round, wins, who won a round); a guest may only
+   report her own progress and her own "done". Messages (every field is checked, anything else is ignored):
+     start {g:"breakout",v:1,sd,ly:[3 layout ids],df}   host -> guest, sent by net1v1
+     rk    {r}                      guest -> host: "round r is on my screen" (the host uses the round trip to line up the 3-2-1)
+     st    {r,ph,a,b,w,cd}          host -> guest: round, phase (0 countdown, 1 play, 2 round over, 3 match over), wins host:guest, round winner, countdown ms (repeated every 2 s)
+     pg    {r,l,s,k}                my progress ~4/s: cages left, score, resting (no lives) - monotone, rate-limited, bounded by how fast cages can really break
+     dn    {r}                      guest -> host: I freed everything (accepted only if her last progress says <= 2 cages left; re-sent until the host answers)
+     pr    {r,k}                    prank for the friend: 0 fog, 1 tiny paw, 2 iron cages, 3 speedy yarn (one every 4 s at most, only during a round)
+     em    {i}                      emote 0..3 */
+const int=(v,lo,hi)=>Number.isInteger(v)&&v>=lo&&v<=hi;
+const OLC={CD:3,BETW:3.4,SNAP:.25,CAP:180,PEN:3,METER:4,PRCD:4,GRACE:.2},EMO=["😄","😮","😭","👏"];
+function rng32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function olPick(){const c=[];LV.forEach((d,i)=>{if(!d.boss)c.push(i)});const u=crypto.getRandomValues(new Uint32Array(c.length));for(let i=c.length-1;i>0;i--){const j=u[i]%(i+1);const x=c[i];c[i]=c[j];c[j]=x}return c.slice(0,3)}
+function olMatch(c){ // both sides: a fresh best-of-3 race
+ OL={on:true,sd:c.sd,ly:c.ly.slice(),df:c.df,me:NT.host?0:1,round:0,ph:0,cd:0,cdN:0,goT:0,w:[0,0],lastW:-1,netp:!!NT.paused,acked:false,t0:0,nextT:0,stAt:0,stT:2,koT:0,
+  done:false,hostDoneT:0,rt:0,fb:null,fbL:99,fbT:0,snapT:0,snapMin:0,dirty:false,meter:0,prCd:0,prRx:-9e9,sentPr:0,gotPr:0,rng:Math.random,total:0,warned:false,
+  emo:[],emT:0,emRx:0,tot:0,counted:false,startAt:performance.now(),paid:false,reSeen:false,left:false,tit:""};
+ olLast=performance.now();document.body.classList.add("ol");$("olq").classList.remove("on");
+ R("play");
+ olRound(1,OLC.CD+(NT.host?.25:0));
+}
+function olRound(r,cd){ // a new round: the next layout, 3-2-1
+ OL.round=r;OL.ph=cd>0?0:1;OL.cd=cd;OL.cdN=0;OL.goT=0;OL.done=false;OL.hostDoneT=0;OL.acked=false;OL.t0=performance.now();OL.rt=0;OL.koT=0;OL.fb=null;OL.fbL=99;OL.fbT=0;
+ OL.snapT=0;OL.dirty=true;OL.meter=0;OL.prCd=0;OL.prRx=-9e9;OL.counted=false;OL.warned=false;OL.rng=rng32((OL.sd^Math.imul(r,0x9E3779B1))>>>0);
+ const idx=OL.ly[r-1];
+ G=baseG();G.n=idx+1;mode="play";showScreen(null);keys.L=keys.R=0;resize();buildField(LV[idx]);
+ G.left=G.bricks.length;OL.total=G.left;
+ setTitle();banner(t("olRound")+" "+r+"/3<small>"+aEm(LV[idx].a)+"</small>",1800);
+}
+function olGo(){if(OL.ph!==0)return;OL.ph=1;OL.cd=0;OL.goT=.9;OL.dirty=true;SFX.pu()}
+function olTitle(){
+ const tl=OL.ph===1&&!OL.done&&OL.rt>OLC.CAP-45?" ⏱"+Math.max(0,Math.ceil(OLC.CAP-OL.rt)):"";
+ return t("olRound")+" "+OL.round+"/3 · "+OL.w[OL.me]+":"+OL.w[1-OL.me]+tl}
+// the online clock: real time (also fed by a timer while the tab is hidden, so nobody gains by looking away)
+let olLast=0;
+function olPump(){
+ const now=performance.now();let el=(now-olLast)/1000;olLast=now;
+ if(!OL.on||!G)return;
+ el=Math.max(0,Math.min(1.5,el));
+ while(el>1e-4){const dt=Math.min(1/60,el);el-=dt;olTick(dt)}
+}
+function stepSim(dt){if(hitStop>0)hitStop-=dt;else update(dt)}
+function olTick(dt){
+ for(const e of OL.emo)e.t+=dt;
+ if(OL.emo.length&&OL.emo[0].t>2.4)OL.emo.shift();
+ if(OL.netp)return; // the connection is lost: the match is frozen on both sides until net1v1 resumes
+ if(OL.goT>0)OL.goT-=dt;
+ if(NT.host&&!OL.left){OL.stT-=dt;if(OL.stT<=0)olSendState()} // the host repeats the state of the match every 2 s (a lost message heals itself)
+ if(OL.left||OL.ph===3){
+  stepSim(dt);
+  if(!OL.left&&!OL.reSeen&&NT.NET.oppRe&&!NT.myRe){OL.reSeen=true;const m=$("olMsg");if(m){m.textContent=t("olReWant");SFX.pu()}}
+  return;
+ }
+ if(OL.ph===0){
+  stepSim(dt);OL.cd-=dt;
+  const n=Math.ceil(OL.cd);if(n!==OL.cdN){OL.cdN=n;if(n>=1&&n<=3)SFX.click()}
+  if(OL.cd<=0)olGo();
+ }else if(OL.ph===1){
+  stepSim(dt);
+  if(!OL.done)olUpdate(dt);
+  if(OL.hostDoneT>0&&NT.host){OL.hostDoneT-=dt;if(OL.hostDoneT<=0)olDecide(0)}
+  if(OL.done&&!NT.host&&OL.ph===1){OL.koT-=dt;if(OL.koT<=0){OL.koT=1.2;NT.send({t:"dn",r:OL.round})}}
+ }else{ // 2: the round is decided, the next one comes
+  stepSim(dt);
+  if(NT.host){OL.nextT-=dt;if(OL.nextT<=0)olNext()}
+ }
+ OL.snapT-=dt;OL.snapMin-=dt;
+ if(OL.snapT<=0||(OL.dirty&&OL.snapMin<=0))olSnap();
+ const tt=olTitle();if(tt!==OL.tit){OL.tit=tt;$("title").textContent=tt}
+}
+function olUpdate(dt){ // every simulation step of a running round
+ OL.rt+=dt;
+ if(OL.prCd>0)OL.prCd-=dt;
+ if(OL.meter>=OLC.METER&&OL.prCd<=0)olSendPrank();
+ if(!OL.warned&&OL.rt>=OLC.CAP-30){OL.warned=true;pop(t("olHurry"),"#ffd36b",1,22)}
+ if(NT.host&&OL.rt>=OLC.CAP)olTimeUp();
+}
+function olCatch(){if(OL.ph===1&&!OL.done&&OL.meter<OLC.METER){OL.meter++;OL.dirty=true}}
+function olSendPrank(){
+ const k=Math.random()*4|0;OL.meter=0;OL.prCd=OLC.PRCD;OL.sentPr++;
+ NT.send({t:"pr",r:OL.round,k});pop(t("olPrSent")+" "+t("pr"+k),"#ff7eb6",1,20);SFX.boss();
+}
+function olPrank(k){ // a prank from the friend lands on MY board (only local effects, all timed)
+ if(k===0)G.fog=5;
+ else if(k===1)G.tiny=6;
+ else if(k===2){const c=G.bricks.filter(b=>b.alive&&b.hp<3);for(let i=0;i<3&&c.length;i++){const b=c.splice(Math.random()*c.length|0,1)[0];b.hp++;b.max++;b.flash=.3}}
+ else G.fast=6;
+ OL.gotPr++;pop(t("olPrGot")+" "+t("pr"+k),"#ff5a7a",1,20);SFX.bossIn();shake(3,.2);
+}
+function pawTarget(){const D=dif();let w=G.wide>0?Math.min(170,D.pw*1.55):D.pw;if(G.tiny>0)w=Math.max(38,w*.55);return w}
+function olDone(){ // I freed every animal of this round
+ if(!OL.on||OL.done||OL.ph!==1)return;
+ OL.done=true;olSnap();banner("🏁 "+t("olDone"),20000);
+ if(NT.host)OL.hostDoneT=OLC.GRACE; // a blink of grace: a friend who finished at the same moment is not cheated by lag
+ else{NT.send({t:"dn",r:OL.round});OL.koT=1.2}
+}
+function olSendState(){OL.stT=2;NT.send({t:"st",r:OL.round,ph:OL.ph,a:OL.w[0],b:OL.w[1],w:OL.lastW,cd:OL.ph===0?Math.max(0,Math.min(6000,Math.round(OL.cd*1000))):0})}
+function olDecide(w){ // host: w won this round (0 = host, 1 = guest)
+ if(!NT.host||OL.ph!==1)return;
+ OL.w[w]++;OL.lastW=w;const fin=OL.w[w]>=2;OL.ph=fin?3:2;OL.nextT=OLC.BETW;
+ olSendState();olRoundEnd(fin);
+}
+function olTimeUp(){ // host: nobody finished in time: fewer cages left wins, then the higher score, then the host
+ if(!NT.host||OL.ph!==1)return;
+ const ml=G.left,hl=OL.fb?OL.fb.l:OL.total,hs=OL.fb?OL.fb.s:0;
+ olDecide(ml<hl?0:hl<ml?1:(G.score>=hs?0:1));
+}
+function olNext(){if(!NT.host||OL.ph!==2)return;olRound(OL.round+1,OLC.CD+.25);olSendState()}
+function olRoundEnd(fin){ // both sides: the round is decided (OL.w and OL.lastW are already set)
+ const won=OL.lastW===OL.me,o=OL;
+ OL.done=true;OL.hostDoneT=0;
+ if(!OL.counted){OL.counted=true;OL.tot+=G.score|0}
+ if(G.state!=="clear"){G.state="clear";G.clearT=0;for(const b of G.balls)burst(b.x,b.y,["#ff7eb6","#fff"],8,120,.5);G.balls.length=0;if(won)SFX.win();else SFX.lose()}
+ if(won){for(let i=0;i<4;i++)burst(40+Math.random()*280,TOP+60+Math.random()*220,CONF,18,230,1.2)}
+ banner((won?t("olWinR"):"🐾 "+t("olLoseR"))+"<small>"+OL.w[OL.me]+" : "+OL.w[1-OL.me]+"</small>",OLC.BETW*1000-600);
+ OL.tit="";setTitle();
+ if(fin){NT.setOver(true);olPay();setTimeout(()=>{if(OL===o&&OL.on&&!OL.left)olFinish()},1800)}
+}
+function olState(d){ // guest: the host's word on the match
+ if(!int(d.r,1,3)||!int(d.ph,0,3)||!int(d.a,0,2)||!int(d.b,0,2)||!int(d.w,-1,1)||!int(d.cd,0,6000))return;
+ const fin=d.a===2||d.b===2;
+ if(d.a+d.b!==(d.ph>=2?d.r:d.r-1)||(d.a===2&&d.b===2)||fin!==(d.ph===3))return; // the numbers must tell one possible story
+ if(d.ph>=2&&(d.w<0||(d.w===0?d.a:d.b)<1||(d.ph===3&&(d.w===0?d.a:d.b)!==2)))return;
+ if(OL.ph===3||d.r<OL.round||d.a<OL.w[0]||d.b<OL.w[1])return; // never backwards
+ const nw=d.r>OL.round;
+ if(d.ph<=1){
+  if(nw){OL.w=[d.a,d.b];olRound(d.r,d.ph===0?Math.max(.05,Math.min(OLC.CD,d.cd/1000)):0);NT.send({t:"rk",r:d.r})}
+  else if(OL.ph===0){if(d.ph===1)olGo();else if(Math.abs(OL.cd-d.cd/1000)>.6)OL.cd=Math.min(OLC.CD+.5,d.cd/1000)} // only a countdown that really drifted is corrected
+  return;
+ }
+ if(!nw&&OL.ph>=2)return; // already on my screen
+ if(nw){OL.round=d.r;OL.fb=null}
+ OL.w=[d.a,d.b];OL.lastW=d.w;OL.ph=d.ph;olRoundEnd(d.ph===3);
+}
+function olSnap(){ // about 4 a second, and right after something changed (never more than ~8 a second)
+ if(!OL.on||!G||OL.left||OL.ph!==1)return;
+ OL.snapT=OLC.SNAP;OL.snapMin=.12;OL.dirty=false;
+ NT.send({t:"pg",r:OL.round,l:clamp(G.left|0,0,60),s:clamp(G.score|0,0,9999999),k:G.state==="penalty"?1:0});
+}
+function olData(d){ // a message from the friend: authenticated by net1v1, still treated as hostile
+ if(!OL.on||!G||OL.left)return;
+ const ty=d.t,now=performance.now();
+ if(ty==="em"){if(int(d.i,0,3)&&now-OL.emRx>700){OL.emRx=now;olEmo(d.i,1)}return}
+ if(ty==="pg"){
+  if(!int(d.r,1,3)||!int(d.l,0,60)||!int(d.s,0,9999999)||!(d.k===0||d.k===1)||d.r!==OL.round||OL.ph!==1)return;
+  let l=Math.min(d.l,OL.total);
+  if(l>OL.fbL)return;                                                      // cages only ever go down
+  if(OL.fb)l=Math.max(l,OL.fbL-Math.floor(8+30*(now-OL.fbT)/1000));        // ...and not faster than cages can really break
+  l=Math.max(l,OL.total-Math.floor(4+3*(OL.rt+.7)));                        // ...nor faster than the round's own clock allows
+  OL.fb={l,s:Math.max(d.s,OL.fb?OL.fb.s:0),k:d.k};OL.fbL=l;OL.fbT=now;
+  return;
+ }
+ if(ty==="pr"){
+  if(!int(d.r,1,3)||!int(d.k,0,3)||d.r!==OL.round||OL.ph!==1||OL.done||G.state==="clear"||now-OL.prRx<3500)return; // at most one prank every ~4 s, only in a running round
+  OL.prRx=now;olPrank(d.k);return;
+ }
+ if(NT.host){
+  if(ty==="rk"){if(int(d.r,1,3)&&d.r===OL.round&&OL.ph===0&&!OL.acked){OL.acked=true;const L=(now-OL.t0)/2000;if(L>=0&&L<.6)OL.cd=OLC.CD-L}} // both screens reach GO at the same moment
+  else if(ty==="dn"){
+   if(!int(d.r,1,3))return;
+   if(d.r===OL.round&&OL.ph===1&&OL.fb&&OL.fb.l<=2)olDecide(1);
+   else if(d.r<=OL.round&&now-OL.stAt>900){OL.stAt=now;olSendState()} // she missed my answer: say it again
+  }
+ }else if(ty==="st")olState(d);
+}
+function olEmo(i,side){
+ OL.emo.push({i,side,t:0});if(OL.emo.length>4)OL.emo.shift();
+ const e=document.createElement("div");e.className="eb "+(side?"fr":"me");e.textContent=EMO[i];e.style.left=(10+Math.random()*60)+"%";$("stage").appendChild(e);setTimeout(()=>e.remove(),2100);
+ if(side)tone(880,.1,"triangle",.09,440);
+}
+function sendEmo(i){
+ const now=performance.now();if(!NT||!OL.on||OL.left||!int(i,0,3)||now-OL.emT<1000)return;
+ OL.emT=now;NT.send({t:"em",i});olEmo(i,0);SFX.click();
+ const b=$("emo");b.classList.add("cool");setTimeout(()=>b.classList.remove("cool"),1000);
+}
+document.querySelectorAll("#emo .ib").forEach(b=>b.addEventListener("pointerdown",e=>{e.preventDefault();unlockAudio();sendEmo(+b.dataset.e)}));
+function olPay(){ // rewards for the local player only, through the normal guarded calls; once, at the moment the match is decided
+ if(OL.paid||OL.ph!==3)return;OL.paid=true;
+ const won=OL.lastW===OL.me;
+ if(won&&performance.now()-OL.startAt>20000&&OL.tot>0)R("win");
+ R("score",{score:OL.tot});RF();
+}
+function olCard(html){$("olCard").innerHTML=html;showScreen("olres")}
+function olFinish(){ // the match is over: each side sees her own result
+ if(!OL.on||OL.ph!==3||OL.left)return;
+ const won=OL.lastW===OL.me,mine=OL.w[OL.me],hers=OL.w[1-OL.me];
+ olPay();
+ olCard(`<div class="big">${won?"🏆🐾":"😿🧶"}</div><h2>${won?t("olWin"):t("olLose")}</h2><p class="scl"><bdi>${t("you")}</bdi> ${mine} : ${hers} <bdi>${t("friend")}</bdi></p><p class="sub" id="olMsg">${won?t("olWin2"):t("olLose2")}</p><p class="sub">${t("olYou")}: <b>${OL.tot}</b></p><div class="row"><button class="btn gr" id="olA">${t("olRe")}</button><button class="btn alt" id="olM">${t("olQuit")}</button></div>`);
+ if(won)SFX.fanfare();
+ $("olA").onclick=()=>{if(!OL.on||OL.left||NT.myRe)return;SFX.click();NT.rematch();$("olA").disabled=true;OL.reSeen=true;const m=$("olMsg");if(m)m.textContent=NT.t("waitRe")};
+ $("olM").onclick=()=>{SFX.click();toMenu()};
+ if(NT.NET.oppRe&&!NT.myRe){OL.reSeen=true;$("olMsg").textContent=t("olReWant")}
+}
+function olLeft(){ // the friend left (or the connection is gone for good): a kind card, never a frozen screen
+ if(!OL.on)return;
+ OL.left=true;OL.netp=false;OL.done=true;OL.hostDoneT=0;if(G&&G.state!=="clear"){G.state="clear";G.balls.length=0}
+ const dec=OL.ph===3,wonM=OL.lastW===OL.me; // the friend left after the match was decided: the result still counts and is shown
+ if(dec)olPay();
+ olCard(`<div class="big">${dec?(wonM?"🏆🐾":"😿🧶"):"🐾"}</div>${dec?`<h2>${wonM?t("olWin"):t("olLose")}</h2><p class="sub" id="olLeftT"></p>`:`<h2 id="olLeftT"></h2>`}<p class="scl"><bdi>${t("you")}</bdi> ${OL.w[OL.me]} : ${OL.w[1-OL.me]} <bdi>${t("friend")}</bdi></p><div class="row"><button class="btn gr" id="olA">${t("olNew")}</button><button class="btn alt" id="olM">${t("menu")}</button></div>`);
+ $("olLeftT").textContent=NT.t("left");
+ $("olA").onclick=()=>{SFX.click();toMenu();NT.showLobby()};
+ $("olM").onclick=()=>{SFX.click();toMenu()};
+}
+function olReset(){ // back to the menu: the match is over for me (tells the friend "bye")
+ OL={on:false};document.body.classList.remove("ol");$("olq").classList.remove("on");
+ document.querySelectorAll(".eb").forEach(e=>e.remove());
+ if(NT)NT.leaveToMenu();
+}
+function olAskQuit(){if(!OL.on||OL.left||$("olres").classList.contains("on"))return;SFX.click();$("olq").classList.toggle("on")} // the match goes on behind the question
+$("olqStay").onclick=()=>{SFX.click();$("olq").classList.remove("on")};
+$("olqGo").onclick=()=>{SFX.click();toMenu()};
+$("home").addEventListener("click",e=>{if(OL.on){e.preventDefault();olAskQuit()}});
+// ---- the friend's progress and what is drawn on my board ----
+let oppKey="";
+function syncOpp(){
+ if(!OL.on||!G)return;
+ const tot=OL.total||1,ml=clamp(G.left,0,tot),fl=OL.fb?OL.fb.l:tot,rest=G.state==="penalty",frest=OL.fb&&OL.fb.k===1;
+ const k=ml+"|"+fl+"|"+(rest?1:0)+"|"+(frest?1:0)+"|"+(OL.done?1:0)+"|"+tot;if(k===oppKey)return;oppKey=k;
+ $("oMeB").style.width=((1-ml/tot)*100)+"%";$("oFrB").style.width=((1-fl/tot)*100)+"%";
+ $("oMeC").textContent=rest?"😴":ml===0?"🏁":"🔒 "+ml;$("oFrC").textContent=frest?"😴":fl===0?"🏁":"🔒 "+fl;
+}
+function drawMeter(){
+ const mw=112,seg=(mw-2)/OLC.METER;cx.fillStyle="#0008";cx.fillRect(8,27,mw,7);
+ for(let i=0;i<OLC.METER;i++){cx.fillStyle=i<OL.meter?(OL.meter>=OLC.METER&&(G.t*6|0)%2?"#fff":"#ff7eb6"):"#ffffff30";cx.fillRect(9+i*seg,28,seg-2,5)}
+ cx.font="12px "+EF;cx.textAlign="left";cx.textBaseline="middle";cx.fillStyle="#fff";cx.fillText("😈",mw+13,31);
+}
+function fogFx(){ // clouds drift over the top of my board
+ const a=Math.min(1,G.fog*2,(5-G.fog)*3+.2);cx.globalAlpha=.88*a;cx.fillStyle="#f4f8ff";
+ for(let i=0;i<9;i++){const x=((i*67+G.t*34*(1+(i%3)*.4))%(W+160))-80,y=TOP+6+(i%4)*46,s=24+(i%3)*8;cx.fillRect(x|0,y|0,s*3.2,s);cx.fillRect((x+s*.7)|0,(y-s*.55)|0,s*1.9,s*.6);cx.fillRect((x+s*.3)|0,(y+s)|0,s*2.4,s*.35)}
+ cx.globalAlpha=1;
+}
+function drawOlOver(){
+ cx.textAlign="center";cx.textBaseline="middle";cx.lineJoin="round";cx.direction="ltr";
+ if(G.state==="penalty"){cx.fillStyle="#2b1d4a88";cx.fillRect(0,TOP,W,H-TOP);cx.font="64px "+EF;cx.fillStyle="#000";cx.fillText("😴",W/2,H*.4);
+  cx.font="900 52px "+TF;cx.lineWidth=8;cx.strokeStyle="#2a1a0e";const n=String(Math.max(1,Math.ceil(G.penT)));cx.strokeText(n,W/2,H*.4+62);cx.fillStyle="#ffd36b";cx.fillText(n,W/2,H*.4+62)}
+ let txt="",col="#ffd36b";
+ if(OL.ph===0){const n=Math.ceil(OL.cd);if(n>=1&&n<=3)txt=String(n)}else if(OL.goT>0){txt=t("olGoT");col="#7bc67b"}
+ if(txt){const age=OL.ph===0?1-(OL.cd%1||1):.9-OL.goT,s=1+Math.max(0,.35-age*.6);cx.save();cx.translate(W/2,H*.34);cx.scale(s,s);cx.font="900 "+(txt.length>2?60:96)+"px "+TF;cx.lineWidth=10;cx.strokeStyle="#2a1a0e";cx.strokeText(txt,0,0);cx.fillStyle=col;cx.fillText(txt,0,0);cx.restore()}
+}
+// ---- net1v1 ----
+const NT=window.Net1v1?Net1v1({pid:"annabelle-breakout-",shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
+ sfx:{join:()=>SFX.pu(),click:()=>SFX.click(),drop:()=>SFX.lose(),back:()=>SFX.catch(),huh:()=>SFX.clank()},
+ hideMenu(){mode="lobby";showScreen(null)},showMenu(){toMenu()},onLink(){},
+ makeStart(){return{g:"breakout",v:1,sd:OL.sd,ly:OL.ly,df:OL.df}},
+ cleanStart(d){
+  if(!d||typeof d!=="object"||d.g!=="breakout"||d.v!==1||!int(d.sd,1,2147483646)||typeof d.df!=="string"||!Object.prototype.hasOwnProperty.call(DIF,d.df)||!Array.isArray(d.ly)||d.ly.length!==3)return null;
+  for(let i=0;i<3;i++){const v=d.ly[i];if(!int(v,0,NLV-1)||LV[v].boss||d.ly.indexOf(v)!==i)return null}
+  return{sd:d.sd,ly:d.ly.slice(),df:d.df}},
+ onHostStart(){olMatch({sd:1+crypto.getRandomValues(new Uint32Array(1))[0]%2147483646,ly:olPick(),df:S.diff})},
+ onGuestStart(c){if(OL.on&&!OL.left&&OL.sd===c.sd)return;olMatch(c);NT.send({t:"rk",r:1})},
+ onResume(){if(!OL.on||OL.left)return;OL.snapT=0;if(NT.host)olSendState();else if(OL.done&&OL.ph===1)OL.koT=0}, // the link is back: the host repeats the state of the match
+ onData:olData,onLeft:olLeft,onPause(on){if(OL.on)OL.netp=!!on}}):null;
+setInterval(()=>{if(OL.on&&document.hidden)olPump()},250);
+addEventListener("pagehide",()=>{if(NT&&OL.on&&!OL.left)try{NT.send({t:"bye"})}catch(e){}});
+addEventListener("pageshow",e=>{if(e.persisted&&OL.on)toMenu()});
+function olDebug(){if(!OL.on)return{on:false};
+ return{on:true,host:NT.host,me:OL.me,sd:OL.sd,ly:OL.ly.slice(),df:OL.df,round:OL.round,ph:OL.ph,cd:OL.cd,w:OL.w.slice(),mine:OL.w[OL.me],hers:OL.w[1-OL.me],lastW:OL.lastW,done:OL.done,netp:OL.netp,left:OL.left,total:OL.total,fb:OL.fb?Object.assign({},OL.fb):null,meter:OL.meter,prCd:OL.prCd,rt:OL.rt,
+  sentPr:OL.sentPr,gotPr:OL.gotPr,tot:OL.tot,emo:OL.emo.map(e=>({i:e.i,side:e.side})),gstate:G.state,gleft:G.left,gscore:G.score,lives:G.lives,fog:G.fog,tiny:G.tiny,fast:G.fast,pw:Math.round(G.pw),pwT:Math.round(G.pwT),pen:G.penT,iron:G.bricks.filter(b=>b.alive&&b.max>1).length}}
+
 /* ===================== TEST HOOK ===================== */
 window.__breakout={
  state(){const scr=SCREENS.find(s=>$(s).classList.contains("on"))||null;
@@ -736,7 +1046,10 @@ window.__breakout={
  save(){return JSON.parse(JSON.stringify(S))},
  zoo(){try{return JSON.parse(ls.get("annabelle-retro-zoo")||"[]")}catch(e){return[]}},
  levels:NLV,layouts(){return{story:LV.map(d=>d.L),arcade:ARC}},
- setLang(l){if(TX[l]){lang=l;ls.set("annabelle-lang",l);drawTexts()}}};
+ setLang(l){if(TX[l]){lang=l;ls.set("annabelle-lang",l);drawTexts()}},
+ NT,get OL(){return OL},get G(){return G},ol:olDebug,emote:sendEmo,
+ clearBricks(keep){if(!G)return;let n=G.bricks.filter(b=>b.alive).length;for(const b of G.bricks)if(b.alive&&n>keep){b.alive=false;n--}G.left=n},
+ catchN(n){for(let i=0;i<n;i++){G.caught++;olCatch()}}};
 boot();
 </script>
 <script src="retrofx.js" defer></script>
