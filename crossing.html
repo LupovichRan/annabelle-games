@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="crossing"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="crossing"></script><!--/pt-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -128,6 +128,18 @@ a{color:inherit;text-decoration:none}
  #menuCard{max-width:none;flex-direction:row;align-items:center;gap:12px}
  #menuCard .mcol{flex:1 1 0}
 }
+.btn.net{background:#2fb36a;color:#fff;width:100%}
+#emoBar{position:absolute;left:50%;transform:translateX(-50%);top:14px;display:none;gap:5px;z-index:7;direction:ltr}
+body.net #emoBar{display:flex}
+body.net #pauseBtn{display:none}
+body.net #hint{top:62px}
+#emoBar button{width:38px;height:38px;border-radius:12px;background:var(--cream);border:3px solid var(--ink);box-shadow:0 3px 0 #0007;font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .07s,opacity .2s}
+#emoBar button:active{transform:translateY(2px) scale(.94)}
+#emoBar.cool button{opacity:.45}
+.nres{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.nr{border:3px solid var(--ink);border-radius:12px;background:#fff;padding:6px 4px;display:flex;flex-direction:column;gap:2px;align-items:center;min-width:0}
+.nr.me{background:#ffe0ee}.nr.fr{background:#d8f6fb}.nr.win{box-shadow:0 0 0 3px var(--yel)}
+.nr b{font-size:15px}.nr span{font-family:"Courier New",monospace;font-weight:900;font-size:36px;line-height:1.05}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/crossing.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/crossing-192.png"><meta name="apple-mobile-web-app-title" content="מעבר החיות"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/crossing-apple-180.png"><script src="pwa.js" data-app="crossing" data-slots='[["#langs", "append"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
@@ -136,7 +148,8 @@ a{color:inherit;text-decoration:none}
 <body>
 <div id="app">
  <div id="hud"><a class="ib" id="homeBtn" href="retro.html" aria-label="home">🏠</a><button class="ib" id="pauseBtn" aria-label="pause">⏸</button><button class="ib" id="muteBtn" aria-label="sound">🔊</button><button class="ib" id="musBtn" aria-label="music">🎵</button><span class="pill" id="lvl"></span><span class="pill" id="hearts"></span></div>
- <div id="stage"><canvas id="cv"></canvas><div id="sc"><b>0</b><small></small></div><div id="banner"></div><div id="pop"></div><div id="hint"></div></div>
+ <div id="stage"><canvas id="cv"></canvas><div id="sc"><b>0</b><small></small></div><div id="banner"></div><div id="pop"></div><div id="hint"></div>
+  <div id="emoBar"><button data-e="0" aria-label="emote">😄</button><button data-e="1" aria-label="emote">😮</button><button data-e="2" aria-label="emote">😭</button><button data-e="3" aria-label="emote">👏</button></div></div>
  <div id="dpad"><button class="u" data-d="u" aria-label="up">▲</button><button class="l" data-d="l" aria-label="left">◀</button><button class="d" data-d="d" aria-label="down">▼</button><button class="r" data-d="r" aria-label="right">▶</button></div>
 </div>
 
@@ -147,6 +160,7 @@ a{color:inherit;text-decoration:none}
   <p id="mSub"></p>
   <div class="row seg" id="diffSeg"><button data-df="easy"></button><button data-df="normal"></button><button data-df="hard"></button></div>
   <div class="row two"><button class="btn" id="playBtn"></button><button class="btn arc" id="arcBtn"></button></div>
+  <button class="btn net" id="netBtn"></button>
  </div>
  <div class="mcol">
   <div id="lvgrid"></div>
@@ -221,12 +235,15 @@ a{color:inherit;text-decoration:none}
  <button class="btn" id="sBack"></button>
 </div></div>
 
+<div class="ov" id="netov"><div class="card" id="netcard"></div></div>
+
 <div class="ov" id="pause"><div class="card">
  <h2 id="pTitle"></h2>
  <button class="btn" id="pResume" style="width:100%"></button>
  <button class="btn alt" id="pRestart" style="width:100%"></button>
 </div></div>
 
+<script src="net1v1.js"></script>
 <script>
 "use strict";
 /* ---------- safe storage ---------- */
@@ -249,6 +266,7 @@ boss:"{b} מסתובב בשורה! עקפי אותו כשהוא מתרחק.",
 ch:["הכביש הראשון","כביש עמוס","גרמלין האשפה","הנהר","כביש ונהר","רובוט הכלוב","פסי הרכבת","הכול ביחד","בלון המלכודת","הנמר הגדול"],
 bn:{3:"גרמלין האשפה",6:"רובוט הכלוב",9:"בלון המלכודת",10:"מלך הציידים-בוטים"},
 an:{rabbit:"ארנבון",hedgehog:"קיפוד",turtle:"צב",fox:"שועל",owl:"ינשוף",penguin:"פינגווין",koala:"קואלה",monkey:"קוף",deer:"צבי",tiger:"נמר",lion:"אריה",leopard:"נמרה",cheetah:"ברדלס",puma:"פומה",panda:"פנדה",elephant:"פיל",giraffe:"ג'ירפה",zebra:"זברה",parrot:"תוכי",dolphin:"דולפין"},
+net:"אונליין עם חברה",you:"את",fr1:"החברה",shareT:"בואי נחצה את הכביש יחד! 🐱🚗 מי תגיע ראשונה למרפאה? הצטרפי למשחק:",netHow:"מי שמגיעה ראשונה למרפאה זוכה בסיבוב · הטובה מ-3",rdN:"סיבוב",goT:"יאללה!",nWin:"ניצחת!",nLose:"החברה ניצחה הפעם",nDraw:"תיקו!",nWin2:"שומרת שמורה מהירה! 🏆",nLose2:"כמעט! בפעם הבאה תקפצי קצת יותר מהר",nDraw2:"בדיוק אותו ניקוד!",reBtn:"שוב",reWant:"החברה רוצה עוד משחק! 🎉",quitQ:"לצאת מהמשחק?",stay:"להישאר",quit:"לצאת",newRoom:"חדר חדש",rW:"זכית בסיבוב! 🏁",rL:"החברה הגיעה ראשונה!",rD:"תיקו בסיבוב! 🤝",
 found:a=>a+" אבוד! בואי נעזור ל"+a+" להגיע למרפאה!"},
 fr:{title:"Traversée des Bébés",sub:"Guide les petits animaux jusqu'à la clinique !",play:"Histoire",cont:"Continuer",arcade:"Arcade",story:"Intro",sanct:"Mon refuge",easy:"Facile",normal:"Normal",hard:"Difficile",next:"Suite",skip:"Passer",go:"Allons-y !",resume:"Reprendre",restart:"Recommencer",menu:"Menu",pause:"Pause",again:"Encore",nextLv:"Niveau suivant",
 reT:"Oups ! On réessaie",reS:"Le petit animal t'attend. On refait le même niveau !",careT:"Soins à la clinique",careH:"Touche le bon bouton !",band:"Pansement",food:"Repas",hug:"Câlin",
@@ -263,6 +281,7 @@ boss:"{b} se promène sur la ligne ! Contourne-le quand il s'éloigne.",
 ch:["La première route","Route chargée","Le gremlin des déchets","La rivière","Route et rivière","Le robot-cage","Les rails","Tout ensemble","Le ballon piège","Le grand tigre"],
 bn:{3:"Gremlin des déchets",6:"Robot-cage",9:"Ballon piège",10:"Roi des robots-chasseurs"},
 an:{rabbit:"Lapin",hedgehog:"Hérisson",turtle:"Tortue",fox:"Renard",owl:"Hibou",penguin:"Pingouin",koala:"Koala",monkey:"Singe",deer:"Cerf",tiger:"Tigre",lion:"Lion",leopard:"Léopard",cheetah:"Guépard",puma:"Puma",panda:"Panda",elephant:"Éléphant",giraffe:"Girafe",zebra:"Zèbre",parrot:"Perroquet",dolphin:"Dauphin"},
+net:"En ligne avec une amie",you:"Toi",fr1:"Amie",shareT:"Traversons la route ensemble ! 🐱🚗 Qui arrivera la première à la clinique ? Rejoins la partie :",netHow:"La première à la clinique gagne la manche · au meilleur des 3",rdN:"Manche",goT:"Allez !",nWin:"Tu as gagné !",nLose:"Ton amie gagne cette fois",nDraw:"Égalité !",nWin2:"Gardienne de refuge ultra rapide ! 🏆",nLose2:"Presque ! Saute un peu plus vite la prochaine fois",nDraw2:"Exactement le même score !",reBtn:"Encore",reWant:"Ton amie veut rejouer ! 🎉",quitQ:"Quitter la partie ?",stay:"Rester",quit:"Quitter",newRoom:"Nouvelle salle",rW:"Tu gagnes la manche ! 🏁",rL:"Ton amie est arrivée la première !",rD:"Égalité sur la manche ! 🤝",
 found:a=>a+" s'est perdu ! Aidons "+a+" à rejoindre la clinique !"},
 en:{title:"Critter Crossing",sub:"Lead the baby animals to the clinic!",play:"Story",cont:"Continue",arcade:"Arcade",story:"Intro",sanct:"My sanctuary",easy:"Easy",normal:"Normal",hard:"Hard",next:"Next",skip:"Skip",go:"Let's go!",resume:"Resume",restart:"Restart",menu:"Menu",pause:"Paused",again:"Again",nextLv:"Next level",
 reT:"Oops! Let's retry",reS:"The little critter is waiting. Let's try the same level again!",careT:"Clinic care",careH:"Tap the right button!",band:"Bandage",food:"Food",hug:"Cuddle",
@@ -277,6 +296,7 @@ boss:"{b} patrols the lane! Sneak past when it walks away.",
 ch:["The first road","Busy road","Litter Gremlin","The river","Road and river","Cage Robot","Train tracks","All together","Trap Balloon","The big tiger"],
 bn:{3:"Litter Gremlin",6:"Cage Robot",9:"Trap Balloon",10:"Poacher-Bot King"},
 an:{rabbit:"Bunny",hedgehog:"Hedgehog",turtle:"Turtle",fox:"Fox",owl:"Owl",penguin:"Penguin",koala:"Koala",monkey:"Monkey",deer:"Deer",tiger:"Tiger",lion:"Lion",leopard:"Leopard",cheetah:"Cheetah",puma:"Puma",panda:"Panda",elephant:"Elephant",giraffe:"Giraffe",zebra:"Zebra",parrot:"Parrot",dolphin:"Dolphin"},
+net:"Online with a friend",you:"You",fr1:"Friend",shareT:"Let's cross the road together! 🐱🚗 Who gets to the clinic first? Join the game:",netHow:"First to the clinic wins the round · best of 3",rdN:"Round",goT:"Go!",nWin:"You won!",nLose:"Your friend wins this time",nDraw:"It's a tie!",nWin2:"What a speedy sanctuary keeper! 🏆",nLose2:"So close! Hop a little faster next time",nDraw2:"Exactly the same score!",reBtn:"Again",reWant:"Your friend wants another game! 🎉",quitQ:"Leave the game?",stay:"Stay",quit:"Leave",newRoom:"New room",rW:"You win the round! 🏁",rL:"Your friend got there first!",rD:"Round tie! 🤝",
 found:a=>a+" is lost! Let's help "+a+" reach the clinic!"}
 };
 const EMO={tiger:"🐯",lion:"🦁",leopard:"🐆",cheetah:"🐆",puma:"🐈",panda:"🐼",koala:"🐨",monkey:"🐒",elephant:"🐘",giraffe:"🦒",zebra:"🦓",rabbit:"🐰",fox:"🦊",owl:"🦉",parrot:"🦜",turtle:"🐢",dolphin:"🐬",penguin:"🐧",hedgehog:"🦔",deer:"🦌"};
@@ -370,7 +390,8 @@ let screen="menu",paused=false,G=null,time=0,shake=0,hitStop=0,flash=0;
 const cv=$("cv"),ctx=cv.getContext("2d");let W=0,H=0,dpr=1,S=40,OX=0;
 let parts=[],floats=[],hintT=0;
 function hash(a,b){let h=(Math.imul(a|0,374761393)+Math.imul(b|0,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return((h^(h>>>16))>>>0)/4294967295}
-const rnd=(a,b)=>a+Math.random()*(b-a);
+let RF=Math.random;
+const rnd=(a,b)=>a+RF()*(b-a);
 
 function fillLane(LL,mk){
   const items=[];let tot=0;
@@ -380,15 +401,15 @@ function fillLane(LL,mk){
   return items;
 }
 function mkRow(ch,r,n,D,arc){
-  const dir=arc?(Math.random()<.5?1:-1):(r%2?1:-1),LL=COLS+6,row={t:ch,dir,objs:[],r,dist:0,hk:0};
+  const dir=arc?(RF()<.5?1:-1):(r%2?1:-1),LL=COLS+6,row={t:ch,dir,objs:[],r,dist:0,hk:0};
   if(ch==="r"){
     row.speed=(1.1+.11*(n+1))*D.dm*rnd(.85,1.15);row.slow=0;
-    row.objs=fillLane(LL,()=>{const k=Math.random(),w=k<.2?2.3:k<.55?1.6:1.3;return{w,col:CARCOL[(Math.random()*5)|0],truck:w>2,gap:Math.max(2.3,(2.7+rnd(0,2.2)-.08*n)*D.gap)}});
+    row.objs=fillLane(LL,()=>{const k=RF(),w=k<.2?2.3:k<.55?1.6:1.3;return{w,col:CARCOL[(RF()*5)|0],truck:w>2,gap:Math.max(2.3,(2.7+rnd(0,2.2)-.08*n)*D.gap)}});
   }else if(ch==="w"){
-    row.speed=(.6+.05*(n+1))*D.rm*rnd(.8,1.2);const pads=Math.random()<.4;
-    row.objs=fillLane(LL,()=>{const lg=pads?Math.random()<.2:Math.random()<.75,w=lg?(Math.random()<.5?2:3):1;return{w,log:lg,gap:(.9+rnd(0,.9))*D.cov*(lg?1:.9)*(1+Math.min(.35,n*.025))}});
+    row.speed=(.6+.05*(n+1))*D.rm*rnd(.8,1.2);const pads=RF()<.4;
+    row.objs=fillLane(LL,()=>{const lg=pads?RF()<.2:RF()<.75,w=lg?(RF()<.5?2:3):1;return{w,log:lg,gap:(.9+rnd(0,.9))*D.cov*(lg?1:.9)*(1+Math.min(.35,n*.025))}});
   }else if(ch==="t"){row.state="idle";row.timer=rnd(1.2,3);row.x=0;row.len=COLS+4;row.speed=15+COLS*.5}
-  else if(ch==="b"){row.x=rnd(0,COLS-2);row.v=(1.5+.05*n)*D.dm*(Math.random()<.5?1:-1);row.w=2;row.def=null;row.gone=false}
+  else if(ch==="b"){row.x=rnd(0,COLS-2);row.v=(1.5+.05*n)*D.dm*(RF()<.5?1:-1);row.w=2;row.def=null;row.gone=false}
   return row;
 }
 function genRows(upTo){
@@ -434,10 +455,10 @@ function startLevel(n,diff){
 function startArcade(diff){newGame(true,0,diff);banner("🕹️ "+t("arcade")+" · "+t("go"))}
 function setScreen(s){
   screen=s;paused=false;
-  ["menu","story","chap","care","reveal","result","ares","retry","sanct","pause"].forEach(id=>$(id).classList.toggle("on",id===s));
+  ["menu","story","chap","care","reveal","result","ares","retry","sanct","pause","netov"].forEach(id=>$(id).classList.toggle("on",id===s));
   $("dpad").style.visibility=s==="play"?"visible":"hidden";if(s!=="play"){$("hint").textContent="";hintT=0}
 }
-function toMenu(){buildMenu();setScreen("menu")}
+function toMenu(){const wasNet=NG.on;if(wasNet){NG.on=false;NG.phase="off";document.body.classList.remove("net");paused=false;if(NT)NT.leaveToMenu();G=null;$("netov").classList.remove("on")}buildMenu();setScreen("menu");if(wasNet)requestAnimationFrame(resize)}
 window.toMenu=toMenu;
 
 /* ---------- geometry ---------- */
@@ -474,6 +495,7 @@ function bigHit(stop,fl,sh){hitStop=Math.max(hitStop,stop);flash=Math.max(flash,
 /* ---------- player actions ---------- */
 function hopDir(d){
   if(screen!=="play"||!G||paused)return;
+  if(G.net&&(NG.phase!=="race"||NG.netp))return;
   if(G.state!=="play")return;
   if(G.hop){G.buf=d;return}
   let nx=G.px,nr=G.r;
@@ -500,14 +522,15 @@ function land(){
       else if(G.combo>0&&G.combo%10===0)comboPop(Math.min(3,G.combo/10-1));
     }else if(row.t!=="c"&&(G.combo===4||G.combo===8))comboPop(G.combo/4-1);
   }
-  if(row.t==="c"){win();return}
+  if(row.t==="c"){win();if(G.net)netArrive();return}
   if(row.pick&&!row.pick.got&&Math.round(G.px)===row.pick.c){row.pick.got=true;if(G.hearts<G.maxH)G.hearts++;SFX.heart();heartsFx(pcx(),pcy(),6);updHud()}
-  if(!G.arc&&row.t==="g"&&!G.visited[G.r]){G.visited[G.r]=1;if(G.r>0&&G.hearts<G.maxH){G.hearts++;SFX.heart();heartsFx(pcx(),pcy()-S*.3,3);updHud()}}
+  if(!G.arc&&!G.net&&row.t==="g"&&!G.visited[G.r]){G.visited[G.r]=1;if(G.r>0&&G.hearts<G.maxH){G.hearts++;SFX.heart();heartsFx(pcx(),pcy()-S*.3,3);updHud()}}
   if(G.buf){const b=G.buf;G.buf=null;hopDir(b)}
 }
-function comboPop(i){announce(t("cmb")[i]);SFX.combo(i);rw({event:"combo",score:G.combo});burst(pcx(),pcy(),14+i*6,CONF,170,90)}
+function comboPop(i){announce(t("cmb")[i]);SFX.combo(i);if(!G.net)rw({event:"combo",score:G.combo});burst(pcx(),pcy(),14+i*6,CONF,170,90)}
 function dust(x,y){burst(x,y+S*.3,5,["#ffffffaa","#e6dcc0"],45,12)}
 function hurt(){
+  if(G.net){G.hits++;G.combo=0;G.inv=1.3;return true}
   G.hits++;G.hearts--;G.combo=0;updHud();G.inv=1.3;
   if(G.hearts<=0){G.state="lost";G.stateT=0;SFX.lose();return false}
   return true;
@@ -565,9 +588,10 @@ function update(dt){
   if(!G||screen!=="play")return;
   G.t+=dt;G.sq+=dt;
   if(G.inv>0)G.inv-=dt;
+  if(G.net)netTick(dt);
   if(G.arc){G.camT=Math.max(G.camT,G.maxR-3);G.cam+=(G.camT-G.cam)*Math.min(1,dt*7);genRows(Math.ceil(G.cam+H/S)+3)}
   const v0=Math.max(0,Math.floor(G.cam)-1),v1=Math.min(G.rows.length-1,Math.ceil(G.cam+H/S)+1);
-  for(let i=v0;i<=v1;i++){
+  for(let i=v0;i<=v1&&!G.net;i++){
     const row=G.rows[i];
     if(row.slow>0)row.slow-=dt;if(row.hk>0)row.hk-=dt;
     if(row.t==="w")row.dist+=row.speed*dt;
@@ -595,7 +619,7 @@ function update(dt){
       G.hop.t+=dt/HOPT;
       if(G.hop.t>=1){G.hop.t=1;if(G.hop.back){G.px=G.hop.x1;G.r=G.hop.r1;G.hop=null;G.sq=0}else land()}
     }else if(G.rows[G.r].t==="w"){
-      const row=G.rows[G.r];G.px+=row.dir*row.speed*dt;
+      const row=G.rows[G.r];G.px+=row.dir*row.speed*(G.net?G.dc:dt);
       if(G.px<-.45||G.px>COLS-.55)doSplash();
       else if(!platformAt(row,G.px+.5))doSplash();
     }
@@ -620,7 +644,7 @@ function update(dt){
     G.hT-=dt;if(G.hT<=0&&G.stateT>.5){G.hT=.1;heartsFx(OX+COLS*S/2,rowY(G.R-1)+S*.1,1)}
     G.cT-=dt;if(G.cT<=0){G.cT=.5;burst(OX+rnd(.15,.85)*COLS*S,rowY(G.R-1)+rnd(-S*.5,S*.5),18,CONF,190,120)}
     G.bfade=Math.max(0,Math.min(1,(2.1-G.stateT)/.35));
-    if(G.stateT>2.3){G.state="care";startCare()}
+    if(G.stateT>2.3&&!G.net){G.state="care";startCare()}
   }
   // baby follower
   const k=Math.min(1,dt*10),rf=prf(),cur=G.rows[Math.round(rf)];let tx,ty,pgT=0;
@@ -772,6 +796,7 @@ function drawPlayer(){
   if(!pig)drawBaby();
   if(!blink)drawCat(ctx,x,feet-lift,S/13,sx,sy,(time%3.4)<.14);
   if(pig)drawBaby();
+  if(G.net&&!blink)netTag(t("you"),x,feet-S*1.28-lift,"#ff6fae");
 }
 function drawHedge(x0,w){
   R(x0,0,w,H,"#2b7a35");const u=Math.max(2,Math.floor(S/9));
@@ -798,6 +823,7 @@ function draw(){
     if(row.t==="r")for(const o of row.objs)drawCar(objX(row,o),y,o.w,o.col,row.dir,o.truck);
     else if(row.t==="t"&&row.state==="go")drawTrain(row,y);
     else if(row.t==="b"&&!row.gone)drawBoss(row,y);
+    if(G.net&&r===Math.max(0,Math.min(G.R-1,Math.round(NG.gh.r))))drawGhost();
     if(r===pr)drawPlayer();
   }
   for(const p of parts){ctx.globalAlpha=Math.max(0,1-p.t/p.life);if(p.e)emoji(p.e,p.x,p.y,p.s);else{ctx.fillStyle=p.c;ctx.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s)}}
@@ -808,6 +834,7 @@ function draw(){
   ctx.font="900 "+Math.floor(Math.max(15,S*.42))+"px Rubik,Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineJoin="round";
   for(const f of floats){const fx=Math.max(60,Math.min(W-60,f.x));ctx.globalAlpha=Math.min(1,(1.2-f.t)*2);ctx.lineWidth=5;ctx.strokeStyle="#000";ctx.strokeText(f.txt,fx,f.y-f.t*S*.8);ctx.fillStyle=f.col;ctx.fillText(f.txt,fx,f.y-f.t*S*.8)}
   ctx.globalAlpha=1;ctx.direction="ltr";
+  drawNetOver();
   ctx.restore();
   if(flash>0){ctx.fillStyle="rgba(255,255,255,"+Math.min(.75,flash)+")";ctx.fillRect(0,0,W,H)}
 }
@@ -826,6 +853,7 @@ requestAnimationFrame(frame);
 /* ---------- HUD ---------- */
 function updHud(){
   if(!G)return;
+  if(G.net){const me=NG.role;$("hearts").textContent="💗 "+NG.w[me]+" · "+NG.w[1-me]+" 💙";$("lvl").textContent=t("rdN")+" "+(NG.rd+1)+"/3";$("sc").classList.remove("on");$("muteBtn").textContent=muted?"🔇":"🔊";$("musBtn").classList.toggle("off",!SV.music);return}
   $("hearts").textContent="❤️".repeat(Math.max(0,G.hearts))+"🤍".repeat(Math.max(0,G.maxH-G.hearts));
   $("lvl").textContent=G.arc?"🕹️":(G.n+1)+" "+EMO[LV[G.n].an];
   $("sc").classList.toggle("on",!!G.arc);
@@ -839,7 +867,7 @@ function applyLang(){
   document.title=t("title");
   $("mTitle").textContent=t("title");$("mSub").textContent=t("sub");
   document.querySelectorAll("#diffSeg button").forEach(b=>b.textContent=t(b.dataset.df));
-  $("storyBtn").textContent="📖 "+t("story");$("sanctBtn").textContent="🦁 "+t("sanct");$("arcBtn").textContent="🕹️ "+t("arcade");
+  $("storyBtn").textContent="📖 "+t("story");$("sanctBtn").textContent="🦁 "+t("sanct");$("netBtn").textContent="🌐 "+t("net");$("netBtn").style.display=NT?"":"none";if(NT)NT.drawLang();$("arcBtn").textContent="🕹️ "+t("arcade");
   $("stSkip").textContent=t("skip");$("chGo").textContent=t("go");$("rvGo").textContent=t("next");$("rvT").textContent="✨ "+t("newA")+" ✨";
   $("rAgain").textContent=t("again");$("rSanct").textContent="🦁 "+t("sanct");
   $("reT").textContent=t("reT");$("reS").textContent=t("reS");$("reGo").textContent=t("again");$("reMenu").textContent=t("menu");
@@ -986,6 +1014,7 @@ function openSanct(back){sanctBack=back||"menu";buildSanct();setScreen("sanct")}
 
 /* ---------- pause ---------- */
 function pauseToggle(){
+  if(G&&G.net&&screen==="play")return;
   if(screen==="play"){screen="pause";paused=true;$("pause").classList.add("on")}
   else if(screen==="pause"){screen="play";paused=false;$("pause").classList.remove("on");last=performance.now()}
 }
@@ -1081,8 +1110,255 @@ function botSuggest(){
   return null;
 }
 
+/* ---------- online 1-vs-1 race (net1v1.js): same seeded course on both screens, each client simulates its own cat ---------- */
+const iN=(v,a,b)=>typeof v==="number"&&Number.isInteger(v)&&v>=a&&v<=b;
+const fN=(v,a,b)=>typeof v==="number"&&isFinite(v)&&v>=a&&v<=b;
+const NG={on:false,role:0,phase:"off",seed:1,df:"easy",rd:0,nextRd:0,w:[0,0],mid:0,paid:-1,netp:false,pAcc:0,pAt:0,t0:0,fin:[null,null],dec:null,gMax:0,sendAt:0,pRx:0,emT:0,emRx:0,emo:[],cdN:0,sy:false,rdAt:0,rdT:0,res:null,reSeen:false,gh:{x:3,r:0,tx:3,tr:0,s:0,seen:false}};
+const EMO_SET=["😄","😮","😭","👏"],GHOST_C={o:"#7fb0ff",d:"#3f64c8",k:"#2a1b2a",w:"#fff",p:"#ff7fa8",r:"#e2a23a"};
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function netMap(seed,rd){
+  const g=mulberry((seed^Math.imul(rd+1,0x9e3779b1))>>>0),T=[9,11,13][rd],pool=rd===0?["r","r","w"]:rd===1?["r","r","w","t"]:["r","w","t","w"];
+  let s="g",guard=0;
+  while(s.length<T-2&&guard++<300){
+    const k=pool[(g()*pool.length)|0],len=k==="r"?1+((g()*2.4)|0):k==="w"?2:1;
+    if(s.length+len+1>T-1){if(s.length>=T-3)break;continue}
+    s+=k.repeat(len)+"g";
+  }
+  if(s[s.length-1]!=="g")s+="g";
+  return s+"c";
+}
+function netBuild(seed,rd,diff){
+  const D=DIFF[diff]||DIFF.easy,map=netMap(seed,rd),old=RF;RF=mulberry((Math.imul(seed,31)+rd*977+7)>>>0);
+  try{
+    return map.split("").map((ch,r)=>{
+      const row=mkRow(ch,r,2+rd*2,D,false);
+      if(ch==="t"){row.idleT=rnd(2.2,4.2);row.warnT=D.warn;row.trav=(COLS+row.len+2)/row.speed;row.cyc=row.idleT+row.warnT+row.trav;row.ph=rnd(0,row.cyc)}
+      return row;
+    });
+  }finally{RF=old}
+}
+function netRows(){ // every lane is a pure function of (seed, race clock): both screens show the same traffic
+  const c=G.clock;
+  for(let i=0;i<G.rows.length;i++){
+    const row=G.rows[i];
+    if(row.t==="r"||row.t==="w")row.dist=row.speed*c;
+    else if(row.t==="t"){
+      const tt=(((c+row.ph)%row.cyc)+row.cyc)%row.cyc,ps=row.state;
+      if(tt<row.idleT){row.state="idle";row.timer=row.idleT-tt}
+      else if(tt<row.idleT+row.warnT){row.state="warn";row.timer=row.idleT+row.warnT-tt}
+      else{row.state="go";const e=tt-row.idleT-row.warnT;row.x=row.dir>0?-row.len+row.speed*e:COLS+1-row.speed*e}
+      if(ps!==row.state&&Math.abs(i-G.r)<5){if(row.state==="warn")SFX.ding();else if(row.state==="go")SFX.whoosh()}
+    }
+  }
+}
+function netRound(rd){
+  COLS=9;const rows=netBuild(NG.seed,rd,NG.df);
+  W=Math.max(10,cv.clientWidth);H=Math.max(10,cv.clientHeight);
+  NG.rd=rd;NG.fin=[null,null];NG.dec=null;NG.gMax=0;NG.sendAt=0;NG.res=null;NG.rdT=0;NG.sy=false;NG.cdN=4;
+  const gc=NG.role?3:5;NG.gh={x:gc,r:0,tx:gc,tr:0,s:0,seen:false};
+  G={arc:false,net:true,n:[0,3,6][rd],diff:NG.df,need:rows.length+1.25,rows,R:rows.length,hearts:3,maxH:3,hits:0,px:NG.role?5:3,r:0,hop:null,buf:null,inv:0,state:"play",stateT:0,visited:{},face:1,t:0,maxR:0,combo:0,cam:0,camT:0,sq:1,bl:0,pg:0,q:[],lastK:"",nextSign:1e9,nextHeart:1e9,door:0,hT:0,cT:0,bfade:1,clock:-3,dc:0};
+  G.bx=G.px-.72;G.by=0;
+  parts=[];floats=[];shake=0;flash=0;hitStop=0;care=null;
+  setScreen("play");resize();updHud();
+}
+function netStart(role){
+  NG.on=true;NG.role=role;NG.mid++;NG.w=[0,0];NG.nextRd=0;NG.netp=false;NG.pAcc=0;NG.emo=[];NG.reSeen=false;NG.emT=0;NG.emRx=0;NG.pRx=0;
+  document.body.classList.add("net");paused=false;
+  NG.phase="wait";netRound(0);NG.phase="wait";NG.t0=performance.now()+3000;
+  $("netov").classList.remove("on");$("emoBar").classList.remove("cool");
+  $("hint").textContent=t("netHow");hintT=6;
+  rw({event:"play"});if(NT)NT.setOver(false);
+  if(role===0){const mid=NG.mid;setTimeout(()=>{if(NG.on&&NG.mid===mid&&NG.phase==="wait")netBeginRound(0)},400)}
+}
+function netBeginRound(i){ // host: new course, synchronised 3-2-1-GO
+  netRound(i);NG.phase="count";NG.t0=performance.now()+3000-NG.pAcc;G.clock=-3;NG.rdAt=performance.now();
+  if(NT)NT.send({t:"rd",i});
+}
+function netTick(dt){
+  if(!NG.on||!G||!G.net)return;
+  const now=performance.now();
+  for(const e of NG.emo)e.t+=dt;NG.emo=NG.emo.filter(e=>e.t<1.8);
+  if(NG.netp)return;
+  if(NG.phase==="wait"||NG.phase==="off")NG.t0=now+3000-NG.pAcc;
+  const prev=G.clock;G.clock=(now-NG.t0-NG.pAcc)/1000;G.dc=Math.max(0,Math.min(1,G.clock-prev));
+  netRows();
+  const gh=NG.gh,k=1-Math.exp(-dt*16);gh.x+=(gh.tx-gh.x)*k;gh.r+=(gh.tr-gh.r)*k;
+  if(NG.phase==="count"){
+    const n=Math.ceil(-G.clock-1e-6);
+    if(n>0&&n!==NG.cdN){NG.cdN=n;announce(String(n));SFX.tick()}
+    if(G.clock>=0){NG.phase="race";NG.cdN=0;announce(t("goT"));SFX.ding();flash=Math.max(flash,.15)}
+  }
+  if(now-NG.sendAt>=100&&NT&&NG.phase!=="wait"&&NG.phase!=="done"){NG.sendAt=now;netPos()}
+  if(NG.role===0){
+    if(NG.phase==="race"&&NG.dec!=null&&G.clock>=NG.dec)netJudge();
+    if(NG.phase==="rdone"&&G.clock>=NG.rdT){if(NG.res.m===0)netBeginRound(NG.rd+1);else netMatchEnd(NG.res.m)}
+  }else if(NG.phase==="rdone"&&NG.res&&NG.res.m>0&&G.clock>=NG.rdT)netMatchEnd(NG.res.m);
+}
+function netPos(){if(NT)NT.send({t:"p",x:Math.round(pxf()*100)/100,r:Math.round(prf()*100)/100,s:G.state==="splash"?2:G.inv>0?1:0})}
+setInterval(()=>{if(NG.on&&document.hidden&&G&&G.net)netTick(0)},500); // the match keeps running (and the host keeps judging) while the tab is in the background
+function netArrive(){ // I reached the clinic door
+  if(!NG.on||NG.phase!=="race"||NG.fin[NG.role]!=null)return;
+  const c=Math.max(0,Math.round(G.clock*1000)/1000);NG.fin[NG.role]=c;
+  if(NG.role===0){if(NG.dec==null)NG.dec=G.clock+.35}
+  else if(NT){netPos();NT.send({t:"fin",i:NG.rd,c})}
+}
+function netJudge(){ // host: first to the door wins; arrivals within 150 ms are a draw
+  const a=NG.fin[0],b=NG.fin[1];let w;
+  if(a!=null&&b!=null)w=Math.abs(a-b)<.15?2:a<b?0:1;else w=a!=null?0:1;
+  const W2=NG.w.slice();if(w<2)W2[w]++;
+  let m=0;if(W2[0]>=2)m=1;else if(W2[1]>=2)m=2;else if(NG.rd>=2)m=W2[0]>W2[1]?1:W2[1]>W2[0]?2:3;
+  const ta=a==null?-1:Math.round(a*100)/100,tb=b==null?-1:Math.round(b*100)/100;
+  if(NT)NT.send({t:"rr",i:NG.rd,w,a:W2[0],b:W2[1],m,ta,tb});
+  netRoundEnd(w,W2[0],W2[1],m,ta,tb);
+}
+function netRoundEnd(w,a,b,m,ta,tb){
+  if(!G||!G.net||NG.phase==="rdone"||NG.phase==="done")return;
+  NG.phase="rdone";NG.w=[a,b];NG.res={w,m,ta,tb};NG.rdT=G.clock+3.2;
+  if(G.state!=="won"){G.hop=null;G.buf=null;G.state="idle"}
+  const me=NG.role,good=w===me,draw=w===2;
+  banner(draw?t("rD"):good?t("rW"):t("rL"),good?"":"boss");
+  if(good){SFX.fan();burst(pcx(),pcy(),30,CONF,200,120)}else if(draw)SFX.ding();else SFX.lose();
+  $("hint").textContent="";updHud();
+}
+function netMatchEnd(m){
+  if(!G||!G.net||NG.phase==="done")return;
+  NG.phase="done";NG.over=true;NG.res=NG.res||{w:2,m,ta:-1,tb:-1};if(NT)NT.setOver(true);
+  const me=NG.role,mw=NG.w[me],ow=NG.w[1-me],w=m===3?0:((m===1&&me===0)||(m===2&&me===1))?1:-1;
+  if(NG.paid!==NG.mid){ // rewards for the local player only, once per match
+    NG.paid=NG.mid;if(w>0)rw({event:"win"});rw({event:"score",score:Math.max(0,Math.min(30,mw*10+(w>0?5:0)))});rwFlush();
+  }
+  if(w>0){SFX.fan();burst(W/2,H*.4,50,CONF,230,140)}else if(w<0)SFX.lose();else SFX.ding();
+  const c=$("netcard");
+  c.innerHTML="<div class='big'>"+(w>0?"🏆":w<0?"😿":"🤝")+"</div><h2>"+(w>0?t("nWin"):w<0?t("nLose"):t("nDraw"))+"</h2>"+
+    "<div class='nres'><div class='nr me"+(w>0?" win":"")+"'><b>"+t("you")+"</b><span>"+mw+"</span></div>"+
+    "<div class='nr fr"+(w<0?" win":"")+"'><b>"+t("fr1")+"</b><span>"+ow+"</span></div></div>"+
+    "<p id='nMsg'>"+(w>0?t("nWin2"):w<0?t("nLose2"):t("nDraw2"))+"</p>"+
+    "<div class='row'><button class='btn gr' id='nHome'>🏠 "+t("menu")+"</button><button class='btn' id='nAgain'>🔁 "+t("reBtn")+"</button></div>";
+  $("netov").classList.add("on");
+  $("nAgain").onclick=()=>{if(!NT||!NG.on||NT.myRe)return;SFX.click();NT.rematch();$("nAgain").disabled=true;const mm=$("nMsg");if(mm)mm.textContent=NT.t("waitRe")};
+  $("nHome").onclick=()=>{SFX.click();toMenu()};
+  updHud();
+}
+function netLeft(){ // the friend left (or the link is gone for good): a kind card, never a frozen screen
+  if(!(G&&G.net)||!NG.on)return;
+  const had=NG.w[0]+NG.w[1]>0&&NG.phase!=="done";
+  NG.over=true;NG.phase="done";G.state="idle";G.hop=null;G.buf=null;
+  const me=NG.role;
+  $("netcard").innerHTML="<div class='big'>🐾</div><h2 id='nLeftT'></h2>"+(had?"<p><b>"+t("you")+" "+NG.w[me]+" : "+NG.w[1-me]+" "+t("fr1")+"</b></p>":"")+
+    "<div class='row'><button class='btn net' id='nNew' style='width:auto'>🌐 "+t("newRoom")+"</button><button class='btn gr' id='nHome'>🏠 "+t("menu")+"</button></div>";
+  $("nLeftT").textContent=NT?NT.t("left"):"";
+  $("netov").classList.add("on");
+  $("nNew").onclick=()=>{SFX.click();toMenu();if(NT)NT.showLobby()};
+  $("nHome").onclick=()=>{SFX.click();toMenu()};
+}
+function netAskQuit(){
+  SFX.click();
+  $("netcard").innerHTML="<div class='big'>🏠</div><h2>"+t("quitQ")+"</h2><div class='row'><button class='btn' id='nStay'>"+t("stay")+"</button><button class='btn gr' id='nQuit'>"+t("quit")+"</button></div>";
+  $("netov").classList.add("on");
+  $("nStay").onclick=()=>{SFX.click();$("netov").classList.remove("on")};$("nQuit").onclick=()=>{SFX.click();toMenu()};
+}
+function showEmo(i,side){NG.emo.push({i,side,t:0});if(NG.emo.length>4)NG.emo.shift();if(side==="o")tone(880,.09,"triangle",.09,1320)}
+function sendEmo(i){
+  const now=performance.now();if(!NT||!NG.on||!G||!G.net||NG.phase==="done"||!iN(i,0,3)||now-NG.emT<1000)return;
+  NG.emT=now;NT.send({t:"em",i});showEmo(i,"p");SFX.click();
+  const bar=$("emoBar");bar.classList.add("cool");setTimeout(()=>bar.classList.remove("cool"),1000);
+}
+/* ---- messages from the friend (already authenticated by net1v1, still treated as hostile) ---- */
+function netData(d){
+  if(!NG.on||!d||typeof d!=="object"||typeof d.t!=="string"||!G||!G.net)return;
+  const now=performance.now(),host=NG.role===0;
+  switch(d.t){
+  case"em":if(iN(d.i,0,3)&&now-NG.emRx>500){NG.emRx=now;showEmo(d.i,"o")}break;
+  case"p":{
+    if(!fN(d.x,-1.5,COLS+1.5)||!fN(d.r,0,G.R-1)||!iN(d.s,0,2))return;
+    if(now-NG.pRx<60)return;NG.pRx=now;
+    if(d.r>Math.max(0,G.clock)/.08+1.5)return; // nobody hops that fast
+    const gh=NG.gh;gh.tx=d.x;gh.tr=d.r;gh.s=d.s;if(!gh.seen){gh.seen=true;gh.x=d.x;gh.r=d.r}
+    if(host&&d.r>NG.gMax)NG.gMax=d.r;
+    break}
+  case"fin":{ // host only: the guest says she reached the door
+    if(!host||NG.phase!=="race"||!iN(d.i,0,2)||d.i!==NG.rd||!fN(d.c,0,300)||NG.fin[1]!=null)return;
+    if(d.c<(G.R-1)*.09||d.c>G.clock+.3||NG.gMax<G.R-3)return;
+    NG.fin[1]=d.c;if(NG.dec==null)NG.dec=G.clock+.35;
+    break}
+  case"ra":{ // host only: the guest got the round start, measure the delay and align her clock
+    if(!host||NG.phase!=="count"||NG.sy||G.clock>-.5)return;
+    NG.sy=true;const lat=Math.max(0,Math.min(.6,(now-NG.rdAt)/2000));
+    if(NT)NT.send({t:"sy",d:Math.round(lat*1000)/1000});
+    break}
+  case"sy":{
+    if(host||NG.phase!=="count"||NG.sy||!fN(d.d,0,.6))return;
+    NG.sy=true;NG.t0-=d.d*1000;break}
+  case"rd":{ // guest only: a new round starts
+    if(host||NG.phase==="done"||!iN(d.i,0,2)||d.i!==NG.nextRd)return;
+    NG.nextRd=d.i+1;netRound(d.i);NG.phase="count";NG.t0=now+3000-NG.pAcc;G.clock=-3;
+    if(NT)NT.send({t:"ra"});
+    break}
+  case"rr":{
+    if(host||NG.phase==="done"||!iN(d.i,0,2)||d.i!==NG.rd||!iN(d.w,0,2)||!iN(d.a,0,3)||!iN(d.b,0,3)||!iN(d.m,0,3)||!fN(d.ta,-1,300)||!fN(d.tb,-1,300))return;
+    netRoundEnd(d.w,d.a,d.b,d.m,d.ta,d.tb);break}
+  case"full":{ // host after a connection pause: complete snapshot so both screens agree again
+    if(host||NG.phase==="done"||!iN(d.i,0,2)||!iN(d.ph,0,4)||!fN(d.c,-5,300)||!iN(d.a,0,3)||!iN(d.b,0,3)||!iN(d.m,0,3)||!iN(d.w,-1,2)||!fN(d.ta,-1,300)||!fN(d.tb,-1,300))return;
+    if(d.i!==NG.rd||!G.net){netRound(d.i);NG.nextRd=d.i+1}
+    NG.w=[d.a,d.b];
+    if(d.ph===1||d.ph===2){if(NG.phase!=="rdone"||d.i!==NG.rd){NG.phase=d.ph===1?"count":"race"}NG.t0=now-NG.pAcc-d.c*1000;G.clock=d.c;NG.sy=true;
+      if(d.ph===2&&NG.fin[1]!=null&&NT)NT.send({t:"fin",i:NG.rd,c:NG.fin[1]})}
+    else if(d.ph===3&&d.w>=0)netRoundEnd(d.w,d.a,d.b,d.m,d.ta,d.tb);
+    else if(d.ph===4){NG.res={w:d.w,m:d.m,ta:d.ta,tb:d.tb};netMatchEnd(d.m)}
+    break}
+  }
+}
+function netFull(){ // host: after the connection is back, one complete snapshot
+  if(!(G&&G.net&&NG.role===0&&NT))return;
+  const ph={wait:0,count:1,race:2,rdone:3,done:4}[NG.phase]||0,r=NG.res||{w:-1,m:0,ta:-1,tb:-1};
+  NT.send({t:"full",i:NG.rd,ph,c:Math.round(G.clock*1000)/1000,a:NG.w[0],b:NG.w[1],m:r.m,w:r.w,ta:r.ta,tb:r.tb});
+}
+const NT=window.Net1v1?Net1v1({pid:"annabelle-crossing-",shareTxt:{he:TX.he.shareT,fr:TX.fr.shareT,en:TX.en.shareT},
+  sfx:{join:()=>SFX.ding(),click:()=>SFX.click(),drop:()=>SFX.oops(),back:()=>SFX.ding(),huh:()=>SFX.oops()},
+  hideMenu(){},showMenu(){toMenu()},onLink(){},
+  makeStart(){return{g:"crossing",v:1,seed:NG.seed,df:NG.df}},
+  cleanStart(d){return d&&typeof d==="object"&&d.g==="crossing"&&d.v===1&&iN(d.seed,1,2147483646)&&(d.df==="easy"||d.df==="normal"||d.df==="hard")?{seed:d.seed,df:d.df}:null},
+  onHostStart(){NG.seed=1+crypto.getRandomValues(new Uint32Array(1))[0]%2147483646;NG.df=DIFF[SV.diff]?SV.diff:"easy";netStart(0)},
+  onGuestStart(c){NG.seed=c.seed;NG.df=c.df;netStart(1)},
+  onResume(){netFull()},
+  onData:netData,onLeft:netLeft,
+  onPause(on){const n=performance.now();if(on&&!NG.netp){NG.netp=true;NG.pAt=n;paused=true}else if(!on&&NG.netp){NG.netp=false;NG.pAcc+=n-NG.pAt;paused=false;last=performance.now()}}}):null;
+$("homeBtn").addEventListener("click",e=>{if(G&&G.net&&NG.on&&NG.phase!=="done"){e.preventDefault();netAskQuit()}});
+$("netBtn").onclick=()=>{ac();SFX.click();if(NT)NT.showLobby()};
+document.querySelectorAll("#emoBar button").forEach(b=>b.onclick=()=>{ac();sendEmo(+b.dataset.e)});
+addEventListener("pagehide",()=>{if(NT&&NG.on)try{NT.send({t:"bye"})}catch(e){}});
+function netTag(s,x,y,col){
+  ctx.save();ctx.direction="ltr";ctx.font="900 "+Math.max(10,Math.floor(S*.27))+"px Rubik,Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  const w=ctx.measureText(s).width+12,h=Math.max(15,S*.34);ctx.globalAlpha=.94;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(x-w/2+h/2,y-h/2);ctx.lineTo(x+w/2-h/2,y-h/2);ctx.arc(x+w/2-h/2,y,h/2,-1.5708,1.5708);ctx.lineTo(x-w/2+h/2,y+h/2);ctx.arc(x-w/2+h/2,y,h/2,1.5708,4.7124);ctx.fill();
+  ctx.globalAlpha=1;ctx.fillStyle="#1d1233";ctx.fillText(s,x,y+1);ctx.restore();
+}
+function drawGhost(){
+  const gh=NG.gh;if(!gh.seen)return;
+  const x=OX+gh.x*S+S/2,y=H-(gh.r-G.cam+1)*S+S/2,feet=y+S*.46,mv=Math.min(1,Math.hypot(gh.tx-gh.x,gh.tr-gh.r)*1.5),lift=mv*S*.12*(1+Math.sin(time*18));
+  if(gh.s===2){emoji("💦",x,y,S*.7)}
+  else{
+    ctx.fillStyle="rgba(0,0,0,.2)";ctx.beginPath();ctx.ellipse(x,feet-S*.03,S*.34,S*.09,0,0,6.3);ctx.fill();
+    ctx.globalAlpha=gh.s===1&&Math.floor(time*14)%2===0?.35:.92;drawCat(ctx,x,feet-lift,S/13,1,1,(time%3.6)<.14,GHOST_C);ctx.globalAlpha=1;
+    netTag(t("fr1"),x,feet-S*1.28-lift,"#38d6e8");
+  }
+}
+function drawNetOver(){
+  if(!G||!G.net)return;
+  const tw=Math.min(W-24,420),x0=Math.round((W-tw)/2),y=6;
+  ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(x0,y,tw,5);
+  const pm=Math.max(0,Math.min(1,prf()/(G.R-1))),po=Math.max(0,Math.min(1,NG.gh.r/(G.R-1)));
+  if(NG.gh.seen){ctx.fillStyle="#38d6e8";ctx.beginPath();ctx.arc(x0+tw*po,y+2.5,6,0,6.3);ctx.fill()}
+  ctx.fillStyle="#ff6fae";ctx.beginPath();ctx.arc(x0+tw*pm,y+2.5,6,0,6.3);ctx.fill();
+  ctx.strokeStyle="#1d1233";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x0+tw*pm,y+2.5,6,0,6.3);ctx.stroke();
+  emoji("🏁",x0+tw+2,y+3,14);
+  for(const e of NG.emo){const a=Math.min(1,(1.8-e.t)*2),x=e.side==="o"?W*.78:W*.22,yy=H*.2-e.t*46,sc=e.t<.2?.4+e.t*3:1;ctx.globalAlpha=Math.max(0,a);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x,yy,28*sc,0,6.3);ctx.fill();ctx.strokeStyle=e.side==="o"?"#38d6e8":"#ff6fae";ctx.lineWidth=4;ctx.stroke();emoji(EMO_SET[e.i],x,yy,Math.round(34*sc));ctx.globalAlpha=1}
+}
+
 /* ---------- test hook ---------- */
 window.__crossing={
+  NT,NG,
+  net(){const f=NG.res;return{on:NG.on,role:NG.role,phase:NG.phase,rd:NG.rd,w:NG.w.slice(),clock:G?G.clock:0,seed:NG.seed,df:NG.df,map:G&&G.net?G.rows.map(r=>r.t).join(""):"",fin:NG.fin.slice(),res:f?Object.assign({},f):null,over:NG.over,netp:NG.netp,emo:NG.emo.map(e=>({i:e.i,side:e.side})),gh:Object.assign({},NG.gh),COLS,me:G&&G.net?{x:pxf(),r:prf(),state:G.state}:null,gMax:NG.gMax,sig:G&&G.net?G.rows.map(r=>r.t==="t"?[r.cyc.toFixed(3),r.ph.toFixed(3)].join(":"):r.t==="r"||r.t==="w"?r.speed.toFixed(3)+":"+r.objs.map(o=>o.x0.toFixed(2)+"/"+o.w).join(","):"").join("|"):""}},
+  netEmote:sendEmo,
   state(){return{screen,paused,mode:G?(G.arc?"arcade":"story"):"",level:G?G.n+1:0,hearts:G?G.hearts:0,hits:G?G.hits:0,r:G?G.r:0,px:G?G.px:0,rows:G?G.rows.length:0,gstate:G?G.state:"",diff:G?G.diff:SV.diff,score:G?G.maxR:0,combo:G?G.combo:0,cols:COLS,rescued:SV.rescued.slice(),unlocked:SV.unlocked,stars:SV.stars,best:SV.best,hi:SV.hi,types:G?G.rows.map(r=>r.t).join(""):"",S,OX,W,H,cam:G?G.cam:0,careNeed:care&&care.list[care.i]?care.list[care.i].k:null,bossDown:G?G.rows.filter(r=>r.t==="b"&&(r.gone||r.def!=null)).length:0}},
   start(n,diff){startLevel((n||1)-1,diff||SV.diff)},
   arcade(diff){startArcade(diff||SV.diff)},
