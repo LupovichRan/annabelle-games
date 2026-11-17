@@ -91,6 +91,7 @@ html[lang=he] #banner,html[lang=he] #tip,html[lang=he] #pop,html[lang=he] #cd,ht
 body.ol #tip{bottom:calc(var(--bot) + 160px)}
 .desk #tip,.desk body.ol #tip{left:16px;right:auto;bottom:16px;margin:0;max-width:430px}
 #tip.on{display:block}
+@media (max-height:600px) and (orientation:portrait){html:not(.desk) #tip,html:not(.desk) body.ol #tip{font-size:10.5px;line-height:1.2;padding:3px 8px;bottom:calc(var(--bot) + 96px)}html:not(.desk) #tip div:nth-child(2){display:none}}   /* 320x568: a short tip (the skid line is left out) that stays below the kart */
 @media (max-height:789px) and (orientation:portrait){html:not(.desk) body.ol #tip{bottom:calc(var(--bot) + 104px)}html:not(.desk) body.ol #tip.on~#ctl #emo{display:none}html:not(.desk) body.ol #tip.on~#ctl #itemWrap{min-width:196px}}
 #bub{position:absolute;left:0;top:0;font-size:44px;pointer-events:none;opacity:0;will-change:transform}
 #bub.go{animation:bubA 1.7s ease-out}
@@ -851,7 +852,7 @@ function cleanStart(d){if(!d||typeof d!=='object')return null;if(!isInt(d.seed,1
  return{seed:d.seed,cc:d.cc,hd:d.hd,hk:d.hk,tr:d.tr.slice()}}
 function olNew(c){OL.on=true;OL.seed=c.seed;OL.cc=c.cc;OL.tr=c.tr.slice();OL.look=[[c.hd,c.hk],NT.host?[OL.look[1][0],OL.look[1][1]]:[selD(),selK()]];OL.w=[0,0];OL.done=false;G.cup=null;
  NT.setOver(false);CF.length=0;ac();award([{event:'play'}]);S.stat.online++;save();olLoad(0)}
-function olLoad(r){OL.r=r;OL.ph='wait';OL.res=null;OL.claims=[];OL.obs=[];OL.obsGap=[];OL.fl=[];OL.endT=0;OL.allT=0;OL.nextT=0;OL.cdSent=false;OL.goSent=false;OL.pgX=0;clearTimeout(OL.pgT);OL.gapMax=0;OL.lastSt=0;OL.pAcc=0;OL.bud=18;OL.gap=0;OL.bGap=0;OL.bT=0;OL.lapT=0;OL.itT=[0,0,0,0];OL.itB=[2,2,2,2];OL.rdT=performance.now();OL.t0=performance.now();
+function olLoad(r){OL.r=r;OL.ph='wait';OL.res=null;OL.claims=[];OL.obs=[];OL.obsGap=[];OL.fl=[];OL.endT=0;OL.allT=0;OL.nextT=0;OL.cdSent=false;OL.goSent=false;OL.pgX=0;clearTimeout(OL.pgT);OL.gapMax=0;OL.lastSt=0;OL.pAcc=0;OL.bud=18;OL.gap=0;OL.bGap=0;OL.bT=0;OL.lapT=0;OL.itT=[0,0,0,0];OL.own=[0,0,0,0];OL.syT=performance.now();OL.itB=[2,2,2,2];OL.rdT=performance.now();OL.t0=performance.now();
  startRace({mode:'online',ti:OL.tr[r],cc:OL.cc,seed:(OL.seed+r*7919)>>>0});
  if(NT.host){if(r>0)olRd()}else NT.send({t:'rdy',r,d:selD(),k:selK()})}
 function olRd(){NT.send({t:'rd',r:OL.r,w:OL.w.slice()})}   // host: "next race" + the score so far (a guest who missed the last result still shows the right score)
@@ -867,7 +868,7 @@ function olState(d){if(!G.T||G.mode!=='online'||(OL.ph!=='wait'&&OL.ph!=='count'
  // After a silence (network stall) the reliable channel delivers its whole backlog in one burst, and net1v1's flood limit may drop the tail of that burst.
  // So the silence stays credited to the packets that follow it: in full for 1.5 s, then it runs out as fast as it was earned (bk = seconds still credited).
  let bk=Math.max(0,OL.bGap-Math.max(0,(now-OL.bT)/1000-1.5));if(gap>.4&&gap>=bk){OL.bGap=bk=gap;OL.bT=now}
- if(OL.ph==='race'&&!fr.fin){OL.gap=Math.max(gap,bk);olFollow(fr,a,gap,bk);const q=T.S[fr.idx];if(Math.hypot(a[0]-q.x,a[1]-q.y)>T.hw+380)fr.ncT=now+400}
+ if(OL.ph==='race'&&!fr.fin){OL.gap=Math.max(gap,bk);if(olFollow(fr,a,gap,bk))olOwn(fr,a);const q=T.S[fr.idx];if(Math.hypot(a[0]-q.x,a[1]-q.y)>T.hw+380)fr.ncT=now+400}
  if(!NT.host&&OL.ph==='race'&&(a[6]&32)&&!fr.fin){fr.fin=true;fr.ft=G.time}   // guest: the referee says she has finished - take her word for it (starts the 25 s countdown even if my own tracker of her kart lags)
  if(!NT.host&&Array.isArray(d.b)&&d.b.length===2)for(let q=0;q<2;q++){const b=cleanK(d.b[q]);if(!b)continue;const k=G.karts[2+q];pushBuf(k,b,now);k.lap=b[4];k.idx=b[5];k.tot=k.lap*T.N+k.idx;if((b[6]&32)&&!k.fin){k.fin=true;k.ft=G.time}}}
 /* Referee's view of the friend's progress.  Her own (lap, sample index) is accepted only when (1) that sample really is where her kart is and
@@ -878,8 +879,8 @@ function olFollow(fr,a,gap,bk){const T=G.T,N=T.N,rate=G.vmax*1.5/T.sp;OL.bud+=ga
  const s=T.S[a[5]],d=Math.hypot(a[0]-s.x,a[1]-s.y);if(d>T.hw+330)return;
  let best=d;for(let j=-8;j<=8;j+=2){const q=T.S[((a[5]+j)%N+N)%N],e=Math.hypot(a[0]-q.x,a[1]-q.y);if(e<best)best=e}if(d>best+40)return;
  const target=a[4]*N+a[5],adv=target-(fr.lap*N+fr.idx);if(adv>OL.bud+6||adv<-14)return;if(adv>0)OL.bud-=adv;OL.bud=Math.min(OL.bud,rate*(1.2+bk));   // accepted: only a small reserve is kept (plus what a recent silence still covers)
- if(adv===0)return;
- fr.lap=a[4];fr.idx=a[5];fr.tot=target;while(fr.maxLap<fr.lap){fr.maxLap++;if(fr.maxLap>=1)olObsLap(fr.maxLap)}}
+ if(adv===0)return true;
+ fr.lap=a[4];fr.idx=a[5];fr.tot=target;while(fr.maxLap<fr.lap){fr.maxLap++;if(fr.maxLap>=1)olObsLap(fr.maxLap)}return true}
 const olAgree=(c,o,g)=>c>=o-g*1000-700&&c<=o+350;   // the claim must fit the packet that showed the crossing (network delay + the gap / the stall before it)
 function olObsLap(n){const fr=OL.fr,ms=Math.round(G.time*1000),c=OL.claims[n-1];OL.obs[n-1]=ms;OL.obsGap[n-1]=OL.gap||0;
  OL.fl[n-1]=c!==undefined&&olAgree(c,ms,OL.obsGap[n-1])?c:ms;if(n>=LAPS){fr.fin=true;fr.ft=OL.fl[n-1]/1000}}
@@ -888,9 +889,12 @@ function olLapMsg(d){if(OL.ph!=='race'||!isInt(d.n,1,LAPS)||!isInt(d.ms,0,600000
  const prev=d.n>1?OL.claims[d.n-2]:0;if(d.ms-prev<G.T.minLap[G.cc]*1000)return;                                                    // not faster than the track allows
  if(d.ms>G.time*1000+1500)return;OL.claims.push(d.ms);                                                                           // not from the future
  const o=OL.obs[d.n-1];if(o!==undefined&&!OL.res&&olAgree(d.ms,o,OL.obsGap[d.n-1]||0)){OL.fl[d.n-1]=d.ms;if(d.n>=LAPS)OL.fr.ft=d.ms/1000}}
+/* Item ownership is tracked by the referee herself: an item counts as owned only when the friend's ACCEPTED position (olFollow: on the track, within the speed budget) passed an item box;
+   it is consumed by the first use.  Nothing a modified friend writes in her state stream (item field, claimed position) can create one. */
+function olOwn(fr,a){fr.ax=a[0];fr.ay=a[1];if(OL.own[fr.i]||fr.fin)return;for(const b of G.T.boxes)if(Math.hypot(a[0]-b.x,a[1]-b.y)<80){OL.own[fr.i]=performance.now();return}}
 function olItem(d){if(OL.ph!=='race'||!isInt(d.k,2,6)||d.k===4||!isInt(d.b,0,3))return;const src=d.b;if(NT.host?src!==1:src===1)return;
  const T=G.T,now=performance.now();if(now-OL.itT[src]<900)return;if(!isNum(d.x,T.b.x0-900,T.b.x1+900)||!isNum(d.y,T.b.y0-900,T.b.y1+900))return;
- const sk=G.karts[src];if(Math.hypot(d.x-sk.rx,d.y-sk.ry)>380||sk.nextIt!==d.k)return;const bud=Math.min(2,OL.itB[src]+(OL.itT[src]?(now-OL.itT[src])/3000:0));if(bud<1)return;OL.itB[src]=bud-1;OL.itT[src]=now;sk.nextIt=sk.item=0; // near the sender, and the sender's own state stream showed that item
+ const sk=G.karts[src];if(!OL.own[src]||sk.ax===undefined||Math.hypot(d.x-sk.ax,d.y-sk.ay)>380||sk.nextIt!==d.k)return;const bud=Math.min(2,OL.itB[src]+(OL.itT[src]?(now-OL.itT[src])/3000:0));if(bud<1)return;OL.itB[src]=bud-1;OL.itT[src]=now;OL.own[src]=0;sk.nextIt=sk.item=0; // near the sender, and the sender's own state stream showed that item
  if(d.k===2||d.k===3){if(!isInt(d.id,0,0x3ffff)||(d.id>>16)!==src||G.haz.length>=40||G.haz.some(h=>h.id===d.id))return;
   if(d.k===2)G.haz.push({id:d.id,ty:2,x:d.x,y:d.y,own:src,age:0});
   else{if(!isNum(d.p,0,T.N)||!isNum(d.l,-T.hw*1.5,T.hw*1.5))return;const p=d.p%T.N,s=T.S[Math.floor(p)%T.N];if(Math.hypot(s.x-d.x,s.y-d.y)>T.hw+260)return;G.haz.push({id:d.id,ty:3,p,l:d.l,x:d.x,y:d.y,own:src,age:0})}}
@@ -954,6 +958,7 @@ function olTick(dt){const me=G.me,fr=OL.fr;if(!OL.on||!fr)return;
   if(NT.host&&((OL.allT&&G.time>=OL.allT+(OL.claims.length<LAPS?2:0))||(OL.endT&&G.time>=OL.endT)||G.time>330))olFinalize()}}   // her finish was seen but her own time for it is still on its way (lost in a burst, re-sent every second): give it 2 more seconds
 function olNet(now){if(!OL.on||!NT||G.netPaused)return;
  if((OL.ph==='wait'||OL.ph==='count'||OL.ph==='race')&&now-OL.sendT>=66&&G.me){OL.sendT=now;olSendState()}
+ if(OL.ph==='race'&&NT.host&&now-OL.syT>4000){OL.syT=now;olSnapshot()}   // hazards heal after a stall: the guest rebuilds hers from this snapshot (item / hazard-removed messages lost in a dropped tail)
  if(OL.ph==='race'&&!NT.host&&G.me&&G.me.laps.length&&now-OL.lapT>1000){OL.lapT=now;olSendLaps()}   // lap times again and again (cumulative, the referee takes each lap once): a claim lost in a burst after a stall heals within a second
  if(OL.ph==='wait'&&now-OL.rdT>2500){OL.rdT=now;if(!NT.host)NT.send({t:'rdy',r:OL.r,d:selD(),k:selK()});else if(OL.r>0&&!OL.cdSent)olRd()}
  if(NT.host&&OL.ph==='res'&&OL.nextT&&now>=OL.nextT){OL.nextT=0;olLoad(OL.r+1)}}
