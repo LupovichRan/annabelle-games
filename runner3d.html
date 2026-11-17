@@ -78,6 +78,8 @@
   #goalBar i{font-style:normal;background:#fffc;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:900;box-shadow:0 2px 0 #0002;direction:ltr;white-space:nowrap}
   #goalBar i.ok{background:#bff0d4;color:#17683f}#goalBar i.daily{box-shadow:0 0 0 2px #ffc61a,0 2px 0 #0002}
   #cfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:25}
+  .top5{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;direction:ltr;font-weight:900;font-size:clamp(13px,3.6vw,16px)}
+  .top5 i{font-style:normal;background:#fff;border-radius:999px;padding:2px 9px;box-shadow:0 2px 0 #0002}.top5 i.me{background:#ffe27a;box-shadow:0 0 0 2px #ffc61a,0 2px 0 #0002}.top5 b{color:#e8487f}
   .rec{font-size:clamp(20px,5.5vw,30px);font-weight:900;color:#e8487f;animation:pulse .6s infinite alternate}
   .unl{font-size:clamp(17px,4.6vw,24px);font-weight:900;color:#2fb36a}
   @keyframes pulse{to{transform:scale(1.08)}}
@@ -139,6 +141,7 @@
   <a class="big orange" id="go2d" href="runner.html"></a>
   <div class="bestline" id="bestLine"></div>
   <div class="goalcard" id="dailyCard"></div>
+  <div class="top5" id="topMenu"></div>
   <button class="lang" id="musBtn"></button>
   <div class="how" id="tHow"></div>
   <div class="ctrl" id="tCtrl"></div>
@@ -162,6 +165,7 @@
     <div class="stars" id="overStars"></div>
     <div class="sub" id="overSub"></div>
     <div class="goals" id="overGoals"></div>
+    <div class="top5" id="topOver"></div>
     <div class="rec" id="overRec"></div>
     <div class="unl" id="overUnlock"></div>
     <div class="row"><button class="big go" id="againBtn"></button><button class="big home" id="oMenuBtn"></button></div>
@@ -271,7 +275,7 @@ const T={
   mile:"{d} מטר! איזה ספרינט! 🏃‍♀️",cheer:["רצף מדהים! 🔥","את אלופה! ⭐","איזו זריזות! ⚡"],yum:["יאמי! 😋","מממ, טעים!","עוד חטיף!"],zzz:"זזז... 😴",
   diffT:"איך רצים?",diff_easy:"🐣 קל וכיפי",diff_normal:"🐯 רגיל",extra:"לב נוסף! 💖",d2:"🎮 משחק רגיל (2D)",
   silly:["הסלע צחק ונתגלגל הצידה! 🗿😄","הופה! הכל בסדר, אפילו לא כואב 🎈","האף שלי מדגדג… אפצ'י! 🤧","בוינג! קפצתי כמו כדור 🏀","התנין פיהק ושכח לנשוך 🥱"],
-  keys:"A/D או ←/→ – נתיב · רווח / ↑ / W – קפיצה (פעמיים באוויר) · ↓ / S – גלישה · Esc/P – הפסקה · M – שקט",
+  keys:"A/D או ←/→ – נתיב · רווח / ↑ / W – קפיצה (פעמיים באוויר) · ↓ / S – גלישה · Esc/P – הפסקה · R – מההתחלה · M – שקט",
   nogl:"הדפדפן הזה לא יודע להציג תלת-ממד 😿 אפשר לשחק במשחק הרגיל!"},
  fr:{dir:"ltr",title:"La course dans la savane 3D",
   how:"Ton bébé félin court dans la savane et la caméra est derrière lui ! Change de voie, saute par-dessus les rochers, les troncs, les flaques et les crocodiles endormis, et glisse sous les branches basses. Attrape les étoiles ⭐ et les en-cas 🍖🐟, l'aimant 🧲 et le bouclier 🛡️.",
@@ -285,7 +289,7 @@ const T={
   mile:"{d} mètres ! Quel sprint ! 🏃‍♀️",cheer:["Super série ! 🔥","Tu es une championne ! ⭐","Quelle agilité ! ⚡"],yum:["Miam ! 😋","Mmm, délicieux !","Encore un en-cas !"],zzz:"Zzz... 😴",
   diffT:"On court comment ?",diff_easy:"🐣 Facile et rigolo",diff_normal:"🐯 Normal",extra:"Un cœur en plus ! 💖",d2:"🎮 Jeu classique (2D)",
   silly:["Le rocher a ri et roulé de côté ! 🗿😄","Hop là ! Même pas mal 🎈","Mon nez chatouille… atchoum ! 🤧","Boing ! Je rebondis comme un ballon 🏀","Le croco a bâillé et oublié de mordre 🥱"],
-  keys:"A/D ou ←/→ – voie · Espace / ↑ / W – sauter (2x en l'air) · ↓ / S – glisser · Échap/P – pause · M – son",
+  keys:"A/D ou ←/→ – voie · Espace / ↑ / W – sauter (2x en l'air) · ↓ / S – glisser · Échap/P – pause · R – rejouer · M – son",
   nogl:"Ce navigateur ne sait pas afficher la 3D 😿 Tu peux jouer au jeu classique !"},
  en:{dir:"ltr",title:"Savanna Run 3D",
   how:"Your big-cat cub races across the savanna and the camera is right behind! Switch lanes, jump over rocks, logs, puddles and sleepy crocodiles, and slide under low branches. Grab stars ⭐ and snacks 🍖🐟, plus the magnet 🧲 and the shield 🛡️.",
@@ -299,15 +303,15 @@ const T={
   mile:"{d} metres! What a sprint! 🏃‍♀️",cheer:["Amazing streak! 🔥","You're a champion! ⭐","So speedy! ⚡"],yum:["Yum! 😋","Mmm, tasty!","Another snack!"],zzz:"Zzz... 😴",
   diffT:"How shall we run?",diff_easy:"🐣 Easy & funny",diff_normal:"🐯 Normal",extra:"Extra heart! 💖",d2:"🎮 Classic game (2D)",
   silly:["The rock giggled and rolled away! 🗿😄","Whoopsie! Didn't hurt a bit 🎈","My nose tickles… achoo! 🤧","Boing! I bounced like a ball 🏀","The croc yawned and forgot to bite 🥱"],
-  keys:"A/D or ←/→ – lane · Space / ↑ / W – jump (twice in the air) · ↓ / S – slide · Esc/P – pause · M – mute",
+  keys:"A/D or ←/→ – lane · Space / ↑ / W – jump (twice in the air) · ↓ / S – slide · Esc/P – pause · R – restart · M – mute",
   nogl:"This browser can't show 3D 😿 You can play the classic game!"}
 };
 Object.assign(T.he,{diff_hard:"🔥 מאתגר",music:"מוזיקה",daily:"אתגר יומי",stageN:"שלב {n}:",stageNames:["יום בסוואנה","לילה מלא כוכבים","אחו ירוק","שדה הזהב"],
-  goal:{dist:"רוצי {n} מטר",collect:"אספי {n} פריטים",dj:"{n} קפיצות כפולות",power:"תפסי {n} כוחות-על",stage:"הגיעי לשלב {n}"},goalDone:"משימה הושלמה! ✅",dailyDone:"אתגר יומי הושלם! 🎉"});
+  goal:{dist:"רוצי {n} מטר",collect:"אספי {n} פריטים",dj:"{n} קפיצות כפולות",power:"תפסי {n} כוחות-על",stage:"הגיעי לשלב {n}"},goalDone:"משימה הושלמה! ✅",dailyDone:"אתגר יומי הושלם! 🎉",top:"טופ 5",topRank:"מקום {n} בטבלה!"});
 Object.assign(T.fr,{diff_hard:"🔥 Défi",music:"Musique",daily:"Défi du jour",stageN:"Étape {n} :",stageNames:["Jour de savane","Nuit étoilée","Prairie verte","Champ doré"],
-  goal:{dist:"Cours {n} m",collect:"Ramasse {n} objets",dj:"{n} doubles sauts",power:"Attrape {n} pouvoirs",stage:"Atteins l'étape {n}"},goalDone:"Mission réussie ! ✅",dailyDone:"Défi du jour réussi ! 🎉"});
+  goal:{dist:"Cours {n} m",collect:"Ramasse {n} objets",dj:"{n} doubles sauts",power:"Attrape {n} pouvoirs",stage:"Atteins l'étape {n}"},goalDone:"Mission réussie ! ✅",dailyDone:"Défi du jour réussi ! 🎉",top:"Top 5",topRank:"Place n°{n} au classement !"});
 Object.assign(T.en,{diff_hard:"🔥 Challenge",music:"Music",daily:"Daily challenge",stageN:"Stage {n}:",stageNames:["Savanna day","Starry night","Green meadow","Golden field"],
-  goal:{dist:"Run {n} m",collect:"Collect {n} items",dj:"{n} double jumps",power:"Grab {n} power-ups",stage:"Reach stage {n}"},goalDone:"Goal complete! ✅",dailyDone:"Daily challenge done! 🎉"});
+  goal:{dist:"Run {n} m",collect:"Collect {n} items",dj:"{n} double jumps",power:"Grab {n} power-ups",stage:"Reach stage {n}"},goalDone:"Goal complete! ✅",dailyDone:"Daily challenge done! 🎉",top:"Top 5",topRank:"Rank #{n} on the board!"});
 const GICON={dist:"🏁",collect:"⭐",dj:"🦘",power:"🧲",stage:"🌙"};
 const GDEF={dist:[250,400,600],collect:[15,25,40],dj:[4,8,12],power:[1,2,3],stage:[2,3,4]};
 const STG=[
@@ -345,6 +349,12 @@ const LS={best3:()=>parseInt(sget("annabelle-runner3d-best"))||0,
   best:()=>Math.max(LS.best3(),parseInt(sget("annabelle-runner-best"))||0),
   char:()=>{const c=sget("annabelle-runner-char");return CHAR_KEYS.includes(c)&&LS.best()>=CHAR_NEED[c]?c:"lion"}};
 let hero=LS.char();
+const TOPK="annabelle-runner3d-top5";
+function topAll(){ try{ const o=JSON.parse(sget(TOPK)); return o&&typeof o==="object"?o:{}; }catch(e){ return {}; } }
+function topList(d){ const a=topAll()[d]; return Array.isArray(a)?a.filter(n=>typeof n==="number").slice(0,5):[]; }
+function topAdd(d,sc){ const all=topAll(), a=topList(d); a.push(sc); a.sort((x,y)=>y-x); const keep=a.slice(0,5); all[d]=keep; sset(TOPK,JSON.stringify(all)); return sc>0&&keep.includes(sc)?keep.indexOf(sc)+1:0; }
+function topHtml(d,mark){ const a=topList(d); return a.length?`<b>🏅 ${T[lang].top}</b>`+a.map((v,i)=>`<i class="${i+1===mark?"me":""}">${i+1}. ${v}</i>`).join(""):""; }
+let overAt=0;
 const TEST={noSpawn:false,god:false};
 
 /* ============ STATE ============ */
@@ -621,7 +631,7 @@ function update(dt){
   stateT+=dt; if(goT>0) goT-=dt;
   slowF=Math.min(1,slowF+dt*.6);
   const target=D.spd0+(D.spdmax-D.spd0)*(1-Math.exp(-dist/D.ramp));
-  speed=target*slowF*(state==="fall"?Math.max(0,1-stateT*1.2):1);
+  speed=target*slowF*(state==="fall"?Math.max(0,1-stateT*1.9):1);
   const dx=speed*dt; dist+=dx;
   pl.ph+=dt*(7+speed*.85); pl.roar=Math.max(0,pl.roar-dt); pl.inv=Math.max(0,pl.inv-dt); pl.magnet=Math.max(0,pl.magnet-dt); if(pl.shield>0) pl.shield=Math.max(0,pl.shield-dt);
   pl.sq*=Math.max(0,1-dt*9); palStep(dt);
@@ -664,7 +674,7 @@ function update(dt){
   if(state==="play"&&Math.floor(dist/STAGE_LEN)>stageNo) enterStage(stageNo+1);
   if(state==="play"){ checkGoals(); if((++frameN&15)===0) updateGoalBar(); }
   if(state==="play"&&dist>=nextMile){ toast(fmt(T[lang].mile,{d:nextMile}),"#34c47c"); SFX.mile(); nextMile+=250; }
-  if(state==="fall"&&stateT>1.7) gameOver();
+  if(state==="fall"&&stateT>1.0) gameOver();
   updateHUDnum();
 }
 
@@ -738,6 +748,7 @@ function renderMenu(){ const t=T[lang], best=LS.best();
   $("langs").innerHTML=LANGS.map(([k,l])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}" dir="auto">${l}</button>`).join("");
   $("chars").innerHTML=CHAR_KEYS.map(k=>{ const lock=best<CHAR_NEED[k]; return `<button class="ch ${k===hero?"sel":""} ${lock?"locked":""}" data-ch="${k}"><span class="em">${HERO[k].emoji}</span><span>${t.chars[k]}</span>${lock?`<small>${fmt(t.lock,{n:CHAR_NEED[k]})}</small>`:""}</button>`; }).join("");
   $("tDiffT").textContent=t.diffT; $("diffs").innerHTML=["easy","normal","hard"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}" dir="auto">${t["diff_"+k]}</button>`).join("");
+  $("topMenu").innerHTML=topHtml(diff,0);
   $("bestLine").textContent=LS.best3()?`🏆 ${t.best}: ${LS.best3()}`:"";
   const dg=getDaily(); $("dailyCard").textContent=`🎯 ${t.daily}: ${GICON[dg.id]} ${goalText(dg)} ${dg.done?"✅":""}`;
   $("musBtn").textContent=$("musBtn2").textContent=`🎵 ${t.music} ${MUS.on?"✅":"⬜"}`; }
@@ -777,18 +788,19 @@ function stopConfetti(){ cancelAnimationFrame(confRaf); const c=$("confetti"); c
 const PRIMARY={menu:"playBtn",pause:"resumeBtn",over:"againBtn"};
 function show(id){ ["menu","pause","over"].forEach(o=>$(o).classList.toggle("show",o===id));
   if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()){ if(id&&PRIMARY[id]) setTimeout(()=>{ try{ $(PRIMARY[id]).focus({preventScroll:true}); }catch(_){} },30); else if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); } }
-function startGame(){ resetRun(); stopConfetti(); try{ RW()&&RW().award({game:"runner3d",event:"play"}); }catch(e){} state="play"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); resize(); updateHUD(); SFX.ready(); camera.position.set(0,3.8,7.2); }
-function toMenu(){ MUS.stop(); $("goalBar").classList.remove("on"); resetPal(); state="menu"; stopConfetti(); clearObjs(); pl=null; $("hud").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); $("powers").innerHTML=""; $("goBanner").classList.remove("on"); renderMenu(); show("menu"); resize(); }
-function pause(){ if(state==="play"||state==="fall"){ prevState=state; state="paused"; show("pause"); } }
+function startGame(){ ptr=null; resetRun(); stopConfetti(); try{ RW()&&RW().award({game:"runner3d",event:"play"}); }catch(e){} state="play"; stateT=0; show(null); $("hud").classList.remove("hidden"); $("muteBtn").classList.add("hidden"); resize(); updateHUD(); SFX.ready(); camera.position.set(0,3.8,7.2); }
+function toMenu(){ ptr=null; clearTimeout(toastT); $("toast").classList.remove("show"); MUS.stop(); $("goalBar").classList.remove("on"); resetPal(); state="menu"; stopConfetti(); clearObjs(); pl=null; $("hud").classList.add("hidden"); $("muteBtn").classList.remove("hidden"); $("powers").innerHTML=""; $("goBanner").classList.remove("on"); renderMenu(); show("menu"); resize(); }
+function pause(){ if(state==="play"||state==="fall"){ ptr=null; if(pl) pl.slideHold=false; prevState=state; state="paused"; show("pause"); } }
 function resume(){ if(state==="paused"){ state=prevState; show(null); } }
 function gameOver(){
-  state="over"; const t=T[lang], prev=LS.best(), rec=score>LS.best3();
+  state="over"; ptr=null; clearTimeout(toastT); $("toast").classList.remove("show"); overAt=performance.now(); const t=T[lang], prev=LS.best(), rec=score>LS.best3();
   if(rec) sset("annabelle-runner3d-best",score);
   const newly=CHAR_KEYS.filter(k=>prev<CHAR_NEED[k]&&score>=CHAR_NEED[k]);
   $("overHero").className=rec?"jumpers":"tired"; $("overHero").innerHTML='<span style="font-size:clamp(70px,22vw,110px)">'+HERO[hero].emoji+'</span>';
   $("overTitle").textContent=rec?t.win:t.overT; $("overTitle").className=rec?"winT":"";
   $("overSub").textContent=fmt(t.overS,{d:Math.floor(dist),s:score});
-  $("overRec").textContent=rec?t.rec:""; $("overUnlock").textContent=newly.length?fmt(t.unlock,{c:newly.map(k=>t.chars[k]).join(", ")}):"";
+  const rank=topAdd(diff,score); $("topOver").innerHTML=topHtml(diff,rank);
+  $("overRec").textContent=rec?t.rec:(rank?fmt(t.topRank,{n:rank}):""); $("overUnlock").textContent=newly.length?fmt(t.unlock,{c:newly.map(k=>t.chars[k]).join(", ")}):"";
   $("againBtn").textContent=t.again; $("oMenuBtn").textContent=t.menu;
   const at=STAR_AT[diff], stars=score>=at[2]?3:score>=at[1]?2:score>=at[0]?1:0; let sv={}; try{ sv=JSON.parse(sget("annabelle-runner3d-stars"))||{}; }catch(e){}
   if(stars>(sv[diff]||0)){ sv[diff]=stars; sset("annabelle-runner3d-stars",JSON.stringify(sv)); }
@@ -804,10 +816,12 @@ addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e))) return;
   const c=e.code, onBtn=e.target&&e.target.closest&&e.target.closest("button,a");
   if(c==="KeyM"){ if(!e.repeat){ muted=!muted; sset("annabelle-muted",muted?"1":"0"); updateMute(); if(!muted) SFX.click(); } return; }
+  if(c==="KeyR"&&!e.repeat&&(state==="over"||state==="paused"||state==="fall")&&!onBtn){ if(state==="over"&&performance.now()-overAt<450) return; e.preventDefault(); ac(); startGame(); return; }
   if(c==="KeyP"||c==="Escape"){ e.preventDefault(); if(e.repeat) return; if(state==="paused") resume(); else if(state==="over") toMenu(); else pause(); return; }
   if(c==="Space"||c==="Enter"){
     if(onBtn) return; e.preventDefault(); ac();
-    if(state==="menu"||state==="over"){ if(!e.repeat) startGame(); return; }
+    if(state==="fall"){ if(!e.repeat&&stateT>.45) gameOver(); return; }
+    if(state==="menu"||state==="over"){ if(!e.repeat&&(state==="menu"||performance.now()-overAt>450)) startGame(); return; }
     if(state==="paused"){ if(!e.repeat) resume(); return; }
     if(c==="Space"&&!e.repeat) jump(); return; }
   if(c==="ArrowUp"||c==="KeyW"){ e.preventDefault(); ac(); if(state==="play"&&!e.repeat) jump(); return; }
@@ -818,7 +832,7 @@ addEventListener("keydown",e=>{
 addEventListener("keyup",e=>{ if((e.code==="ArrowDown"||e.code==="KeyS")&&pl) pl.slideHold=false; });
 addEventListener("blur",()=>{ if(pl) pl.slideHold=false; if(window.AnnabelleDesk&&AnnabelleDesk.isDesk()) pause(); });
 let ptr=null;
-cv.addEventListener("pointerdown",e=>{ ac(); if(state!=="play") return; e.preventDefault(); ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
+cv.addEventListener("pointerdown",e=>{ ac(); if(state==="fall"&&stateT>.45){ gameOver(); return; } if(state!=="play") return; e.preventDefault(); ptr={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),done:false}; });
 addEventListener("pointermove",e=>{ if(!ptr||e.pointerId!==ptr.id||ptr.done) return; const dx=e.clientX-ptr.x, dy=e.clientY-ptr.y, th=Math.max(26,Math.min(44,innerWidth*.07));
   if(Math.abs(dx)>th&&Math.abs(dx)>Math.abs(dy)){ ptr.done=true; lane(dx>0?1:-1); }
   else if(dy>th&&dy>Math.abs(dx)){ ptr.done=true; slide(); }
