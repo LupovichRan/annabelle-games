@@ -77,6 +77,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 .goals{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:min(78vw,300px)}
 .goals div{background:#fff;border-radius:12px;padding:3px 12px;font-size:clamp(14px,3.8vw,16px);font-weight:800;box-shadow:0 2px 0 #0002}
 .goals div.ok{background:#d9f7e6;color:#1f7a49}
+.goals .topt{background:none;box-shadow:none;text-align:center;padding:0;color:var(--accent);font-size:15px}
+.goals:empty{display:none}
 .unl{font-weight:900;color:#2fb36a;font-size:17px}
 #cfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
 @media (max-height:480px){.goals{flex-direction:row;flex-wrap:wrap;justify-content:center;min-width:0}}
@@ -121,6 +123,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
     <div class="logo"><span class="l1" id="tTitle"></span><span class="l2" id="tSub"></span></div>
     <button class="big go" id="playBtn"></button>
     <div class="mstats" id="tBest"></div>
+    <div class="langs" id="modes"></div>
     <div class="langs" id="diffs"></div>
     <div class="langs" id="maps"></div>
     <div class="tip" id="tTip"></div>
@@ -137,6 +140,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action
 </div></div>
 <div class="ov" id="over"><div class="card">
   <h2 id="tOver"></h2><div class="sub" id="tOverS"></div>
+  <div class="goals" id="topList"></div>
   <div class="row"><button class="big go" id="cpBtn"></button></div>
   <div class="row"><button class="big orange" id="againBtn"></button><button class="big home" id="oMenuBtn"></button></div>
 </div></div>
@@ -211,6 +215,15 @@ Object.assign(T.fr,{diff_hard:"🔥 Défi",map_day:"🌅 Jour",map_night:"🌙 N
   g_bugs:"Ramasse {n} insectes",g_foes:"Bats {n} ennemis",g_paws:"Trouve {n} pattes d'or",g_hearts:"Finis avec {n} cœurs",goalDone:"Mission réussie ! ✅",starsBest:"⭐ {n}/3"});
 Object.assign(T.en,{diff_hard:"🔥 Challenge",map_day:"🌅 Day",map_night:"🌙 Night",nightLock:"🔒 The night map opens after you finish the adventure!",nightUnl:"🌙 New night map unlocked!",
   g_bugs:"Collect {n} bugs",g_foes:"Beat {n} foes",g_paws:"Find {n} golden paws",g_hearts:"Finish with {n} hearts",goalDone:"Goal complete! ✅",starsBest:"⭐ {n}/3"});
+Object.assign(T.he,{mode_story:"🏞️ הרפתקה",mode_endless:"♾️ ריצה אינסופית",diff_expert:"💀 מומחה",expertLock:"🔒 מומחה נפתח אחרי שמסיימים את \"מאתגר\"!",lapW:"סיבוב",lapNew:"🏁 סיבוב {n}! יותר מהר ויותר קשה",
+  endOver:"הריצה נגמרה!",endSum:"סיבוב {l} · {s} נקודות",endRank:"🏆 מקום {n} בטבלה!",endNew:"🎉 שיא חדש!",topTitle:"🏆 טבלת השיאים",endBest:"♾️ שיא: {n}",
+  endTip:"רוצי כמה שיותר רחוק! כל סיבוב מהיר וקשה יותר ואין נקודות שמירה. סיימי סיבוב מהר לבונוס!"});
+Object.assign(T.fr,{mode_story:"🏞️ Aventure",mode_endless:"♾️ Course sans fin",diff_expert:"💀 Expert",expertLock:"🔒 Expert s'ouvre après avoir fini « Défi » !",lapW:"Tour",lapNew:"🏁 Tour {n} ! Plus vite et plus dur",
+  endOver:"Course terminée !",endSum:"Tour {l} · {s} points",endRank:"🏆 N°{n} au classement !",endNew:"🎉 Nouveau record !",topTitle:"🏆 Meilleurs scores",endBest:"♾️ Record : {n}",
+  endTip:"Cours le plus loin possible ! Chaque tour est plus rapide et plus dur, sans point de sauvegarde. Finis un tour vite pour un bonus !"});
+Object.assign(T.en,{mode_story:"🏞️ Adventure",mode_endless:"♾️ Endless Dash",diff_expert:"💀 Expert",expertLock:"🔒 Expert unlocks after you beat Challenge!",lapW:"Lap",lapNew:"🏁 Lap {n}! Faster and tougher",
+  endOver:"Run over!",endSum:"Lap {l} · {s} points",endRank:"🏆 #{n} on the leaderboard!",endNew:"🎉 New record!",topTitle:"🏆 Top 5",endBest:"♾️ Best: {n}",
+  endTip:"Run as far as you can! Every lap is faster and tougher, with no checkpoints. Finish a lap quickly for a bonus!"});
 const RW=()=>window.AnnabelleRewards;
 const NIGHT_KEY="annabelle-lionking-night", MAP_KEY="annabelle-lionking-map", STARS_KEY="annabelle-lionking-stars";
 const nightOK=()=>{ try{ return localStorage.getItem(NIGHT_KEY)==="1"; }catch(e){ return false; } };
@@ -323,8 +336,18 @@ function setMuted(m){ muted=m; lsSet("annabelle-muted",m?"1":"0"); if(master) ma
 const PRESETS={
  easy:  {hearts:5,inv:2.6,pitInv:2,pitFree:true,beetleV:22,lizV:40,shrink:4,silly:.3,trip:.1,bossTired:.9,bossTell:.3,bossSpd:.85,bones:2,extra:true},
  normal:{hearts:3,inv:1.6,pitInv:1.4,pitFree:false,beetleV:32,lizV:58,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1,bones:3,extra:false},
- hard:  {hearts:3,inv:1.2,pitInv:1.2,pitFree:false,beetleV:38,lizV:66,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1.12,bones:4,extra:false}
+ hard:  {hearts:3,inv:1.2,pitInv:1.2,pitFree:false,beetleV:38,lizV:66,shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1.12,bones:4,extra:false},
+ /* expert (unlocked by clearing Challenge): 2 hearts, no heal pickups, fewer checkpoints, faster foes, short boss openings */
+ expert:{hearts:2,inv:1,pitInv:1,pitFree:false,beetleV:46,lizV:80,shrink:0,silly:0,trip:0,bossTired:-.45,bossTell:-.2,bossSpd:1.25,bones:5,extra:false,noHeal:true}
 };
+/* endless dash: the adventure run as laps (no boss), each lap faster and busier; endD() = the preset for lap n */
+const LAP_END=7040, END_KEY="annabelle-lionking-endless", MODE_KEY="annabelle-lionking-mode";
+const endD=n=>({hearts:3,inv:Math.max(.8,1.3-.07*(n-1)),pitInv:1.2,pitFree:false,beetleV:Math.min(70,36+5*(n-1)),lizV:Math.min(104,64+7*(n-1)),shrink:0,silly:0,trip:0,bossTired:0,bossTell:0,bossSpd:1,bones:3,extra:false});
+let MODE=(()=>{ try{ return localStorage.getItem(MODE_KEY)==="endless"?"endless":"story"; }catch(e){ return "story"; } })();
+const ENDLESS=()=>MODE==="endless";
+function setMode(m){ MODE=m==="endless"?"endless":"story"; try{ localStorage.setItem(MODE_KEY,MODE); }catch(e){} }
+const expertOK=()=>{ const v=starsGet(); return (v["day-hard"]||0)>0||(v["night-hard"]||0)>0; };
+const endTop=()=>{ try{ const a=JSON.parse(localStorage.getItem(END_KEY)); return Array.isArray(a)?a.filter(r=>r&&typeof r.s==="number").slice(0,5):[]; }catch(e){ return []; } };
 const pick=a=>a[Math.random()*a.length|0];
 const DIFF_KEY="annabelle-lion-diff";
 let diff=(()=>{ try{ const d=localStorage.getItem(DIFF_KEY); return PRESETS[d]?d:"easy"; }catch(e){ return "easy"; } })(), D=PRESETS[diff];
@@ -349,6 +372,8 @@ const VINES=[{ax:4835,ay:92,len:152},{ax:4985,ay:92,len:152}];
 const RIDE={start:5220,end:6830,logs:[5480,5760,6060,6380,6660],branches:[5910,6230,6520]};
 const CPS_BASE=[{x:2880,y:G},{x:3850,y:G},{x:4600,y:250},{x:5130,y:G},{x:7020,y:G}];
 const CPS_EXTRA=[{x:1040,y:G},{x:1640,y:G},{x:2300,y:G},{x:6900,y:G}]; /* easy only: closer retry points */
+const CPS_EXPERT=[{x:3850,y:G},{x:5130,y:G},{x:7020,y:G}]; /* expert only: fewer retry points */
+const EN_LAP=[[2,["lizard",380,300,480]],[3,["porc",4040,4000,4100]],[4,["lizard",5110,5080,5190]],[5,["beetle",2040,2000,2080]]]; /* endless: extra foes join on later laps */
 let CPS=CPS_BASE;
 const SIGNS=[{x:120,k:"run",i:"▶"},{x:770,k:"jump",i:"⤒"},{x:1060,k:"roll",i:"🌀"},{x:1620,k:"bounce",i:"🐞"},{x:2340,k:"roar",i:"🦁"},{x:2990,k:"rhino",i:"🦏"},
  {x:3360,k:"giraffe",i:"🦒"},{x:4250,k:"monkey",i:"🐒"},{x:4700,k:"vine",i:"🌿",y:250},{x:5150,k:"ride",i:"🕊️"}];
@@ -358,7 +383,7 @@ const EN_DEF=[ // kind,x,patrol a,b
  ["porc",2600,2480,2725],["beetle",2800,2760,2870],["beetle",3220,3130,3290],
  ["lizard",3950,3880,4120],["beetle",4160,4120,4250],["lizard",6930,6870,6990],["porc",7300,7248,7362]];
 const PAWS_DEF=[{x:3348,y:98},{x:5112,y:110},{x:7308,y:134}];
-function makeBugs(){ const B=[]; const add=(x,y,h)=>B.push({x,y,heal:!!h,got:false,ph:Math.random()*6});
+function makeBugs(){ const B=[]; const add=(x,y,h)=>B.push({x,y,heal:!!h&&!D.noHeal,got:false,ph:Math.random()*6});
   const line=(x0,x1,y,n)=>{ for(let i=0;i<n;i++) add(x0+(x1-x0)*i/(n-1||1),y); };
   const arc=(x0,x1,y,hh,n)=>{ for(let i=0;i<n;i++){ const u=i/(n-1); add(x0+(x1-x0)*u,y-Math.sin(u*Math.PI)*hh); } };
   line(220,440,356,5); arc(500,610,334,40,4); line(660,730,280,3); arc(850,990,350,70,5);
@@ -635,13 +660,15 @@ let tm=0, hs=0, shk=0, ts=1, cp=null, stats=null, wallUp=0, hintsShown={}, rideO
 const keys={l:0,r:0,j:0,roar:0,roll:0}; let jEdge=0, roarEdge=0, rollEdge=0;
 function newPlayer(x,y){ return {x,y,vx:0,vy:0,on:true,face:1,coy:0,buf:0,roll:0,rollCd:0,roarA:0,hurt:0,inv:0,hearts:D.hearts,roarM:1,mode:"normal",
   ang:0,av:0,vine:-1,vineCd:0,sq:0,blink:0,blinkT:2,runPh:0,lastSafe:{x,y},plat:null,idleT:0,ctrlLock:0,jumpHeld:false,wasOn:true,duck:false,fallStart:y}; }
+function buildEN(){ const defs=EN_DEF.concat(ENDLESS()&&stats?EN_LAP.filter(l=>stats.lap>=l[0]).map(l=>l[1]):[]);
+  return defs.map(d=>({k:d[0],x:d[1],a:d[2],b:d[3],y:(d[0]==="porc"&&d[1]>7000)?252:G,dir:-1,st:"walk",t:Math.random()*5,vx:0,vy:0,rot:0,fade:1,stunT:0})); }
 function resetLevel(fromCp){
   const keep=fromCp&&stats? stats:null;
-  if(!fromCp){ D=PRESETS[diff]; CPS=D.extra?CPS_BASE.concat(CPS_EXTRA):CPS_BASE; }
-  stats=keep||{bugs:0,paws:[false,false,false],foes:0,time:0,start:performance.now(),hearts:D.hearts};
+  if(!fromCp){ D=ENDLESS()?endD(1):PRESETS[diff]; CPS=ENDLESS()?[]:D.extra?CPS_BASE.concat(CPS_EXTRA):diff==='expert'?CPS_EXPERT:CPS_BASE; }
+  stats=keep||{bugs:0,paws:[false,false,false],foes:0,time:0,start:performance.now(),hearts:D.hearts,lap:1,maxX:0,bonus:0,pawsAll:0,lapT0:0};
   const sp=fromCp&&cp?cp:{x:60,y:G};
   P=newPlayer(sp.x,sp.y); P.hearts=D.hearts;
-  EN=EN_DEF.map(d=>({k:d[0],x:d[1],a:d[2],b:d[3],y:(d[0]==="porc"&&d[1]>7000)?252:G,dir:-1,st:"walk",t:Math.random()*5,vx:0,vy:0,rot:0,fade:1,stunT:0}));
+  EN=buildEN();
   if(!keep){ BUGS=makeBugs(); PAWS=PAWS_DEF.map(p=>({...p,got:false})); cp=null; resetGoals(); }
   else { PAWS.forEach((p,i)=>p.got=stats.paws[i]); }
   // enemies already behind the checkpoint are gone
@@ -665,7 +692,7 @@ function ring(x,y,R,col,life){ FX.push({k:"ring",x,y,R,life:life||.5,t:0,col}); 
 function pop(x,y,txt,col){ POP.push({x,y,txt,col:col||"#fff",t:0}); }
 function shake(a){ shk=Math.max(shk,a); }
 function stop(t){ hs=Math.max(hs,t); }
-let toastT=0; function toast(s){ const el=$("toast"); el.textContent=s; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2600); }
+let overAt=0; let toastT=0; function toast(s){ const el=$("toast"); el.textContent=s; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2600); }
 function hint(k){ if(hintsShown[k]) return; hintsShown[k]=1; toast(t()["h_"+k]); }
 /* ---- player ---- */
 function hurtPlayer(from,silly){
@@ -841,7 +868,7 @@ function updateCritters(dt){ rhinoB=rhinoB.map(b=>Math.max(0,b-dt*1.6));
 /* ---- boss: grumpy hyena ---- */
 function startBoss(){ BOSS={x:7960,y:G,vx:0,vy:0,face:-1,hp:3,phase:1,st:"intro",t:2.2,inv:0,cnt:0,t2:0}; wallUp=.001; SFX.laugh(); hint("boss"); playSong("boss"); }
 function bossVulnerable(){ return BOSS&&(BOSS.st==="tired"||BOSS.st==="dizzy"||BOSS.st==="stunned"); }
-function updateBoss(dt){ const B=BOSS; if(!B){ if(P.x>ARENA_L+40&&P.mode==="normal"&&!cine) startBoss(); return; }
+function updateBoss(dt){ const B=BOSS; if(!B){ if(!ENDLESS()&&P.x>ARENA_L+40&&P.mode==="normal"&&!cine) startBoss(); return; }
   if(B.st!=="defeat"&&B.st!=="run") wallUp=Math.min(1,wallUp+dt*1.5);
   B.t-=dt; B.inv=Math.max(0,B.inv-dt); B.t2+=dt;
   const toP=Math.sign(P.x-B.x)||1, L=ARENA_L+30, R=ARENA_R-30;
@@ -899,6 +926,7 @@ function step(dt){
   if(hs>0){ hs-=dt; jEdge=roarEdge=rollEdge=0; return; }
   dt*=ts;
   updatePlayer(dt); updateEnemies(dt); updateItems(dt); updateMonkey(dt); updateCritters(dt); updateBoss(dt); updateBones(dt); if(cine) updateCine(dt);
+  if(ENDLESS()&&state==="play"&&P.mode==="normal"){ stats.maxX=Math.max(stats.maxX,P.x); if(P.x>=LAP_END) nextLap(); }
   FX.forEach(f=>{ f.t+=dt; if(f.k!=="ring"){ f.x+=f.vx*dt; f.y+=f.vy*dt; if(f.k==="dust") { f.vy-=10*dt; f.vx*=.95; } else if(f.k==="conf"||f.k==="leaf"){ f.vx+=Math.sin(f.t*4+f.rot)*30*dt; f.rot+=dt*5; if(f.k==="leaf") f.vy+=120*dt; } else f.vy+=420*dt; } });
   FX=FX.filter(f=>f.t<f.life); POP.forEach(p=>{ p.t+=dt; p.y-=40*dt; }); POP=POP.filter(p=>p.t<.9);
   shk*=Math.pow(.004,dt); if(shk<.2) shk=0;
@@ -1164,7 +1192,8 @@ let lastRoarP=-1;
 function drawHUD(){ const c=ctx; c.setTransform(DPR,0,0,DPR,0,0); if(state!=="play"&&state!=="pause") return;
   const x0=INS.l+12, y0=INS.t+12, k=Math.min(1.15,Math.max(.85,Math.min(W,H)/420));
   c.save(); c.translate(x0,y0); c.scale(k,k);
-  rrect(c,-6,-6,198,64,16); c.fillStyle="rgba(70,30,10,.38)"; c.fill();
+  rrect(c,-6,-6,198,ENDLESS()?86:64,16); c.fillStyle="rgba(70,30,10,.38)"; c.fill();
+  if(ENDLESS()){ c.font="900 15px Rubik,Arial,sans-serif"; c.textAlign="left"; c.textBaseline="middle"; c.lineWidth=3.2; c.strokeStyle="#5a2e12"; const lt="🏁 "+stats.lap+"   ⭐ "+endScore(); c.strokeText(lt,4,69); c.fillStyle="#fff"; c.fillText(lt,4,69); }
   { const nh=D.hearts, sp=nh>3?16:26, hs_=nh>3?17:22; for(let i=0;i<nh;i++) heart(c,12+i*sp,12,hs_,i<P.hearts); }
   // bug count
   drawBug(c,104,12,0,false); c.font="900 17px Rubik,Arial,sans-serif"; c.textAlign="left"; c.textBaseline="middle"; c.lineWidth=3.5; c.strokeStyle="#5a2e12"; const bt="×"+stats.bugs; c.strokeText(bt,114,13); c.fillStyle="#fff"; c.fillText(bt,114,13);
@@ -1202,14 +1231,17 @@ function showOv(id){ OVS.forEach(o=>$(o).classList.toggle("show",o===id)); const
 function applyLang(){ const L=t(); document.documentElement.lang=lang; document.documentElement.dir=L.dir; document.title=L.title;
   $("tTitle").textContent=L.title; $("tSub").textContent=L.sub; $("playBtn").textContent=L.play;
   const best=lsGet(BEST_KEY), bp=lsGet(PAWS_KEY); $("tBest").innerHTML=(best?"<span>"+L.best.replace("{n}",best)+"</span>":"")+(bp?"<span>"+L.pawsBest.replace("{n}",bp)+"</span>":"");
-  $("tTip").innerHTML=L.tip+(matchMedia("(pointer:fine)").matches?"<br><small>"+L.keys+"</small>":""); $("tRot").textContent=L.rot; $("keysPause").textContent=L.keys.replace("⌨️ ","")+" · Esc/P = "+({he:"הפסקה",fr:"pause",en:"pause"})[lang]+" · M = "+({he:"שקט",fr:"son",en:"mute"})[lang];
+  $("tTip").innerHTML=(ENDLESS()?L.endTip:L.tip)+(matchMedia("(pointer:fine)").matches?"<br><small>"+L.keys+"</small>":""); $("tRot").textContent=L.rot; $("keysPause").textContent=L.keys.replace("⌨️ ","")+" · Esc/P = "+({he:"הפסקה",fr:"pause",en:"pause"})[lang]+" · M = "+({he:"שקט",fr:"son",en:"mute"})[lang];
   $("tPause").textContent=L.pause; $("resumeBtn").textContent=L.resume; $("pCpBtn").textContent=L.fromCp; $("restartBtn").textContent=L.restart; $("pMenuBtn").textContent=L.menu;
   $("tOver").textContent=L.over; $("tOverS").textContent=(L.oversilly?pick(L.oversilly)+" ":"")+L.overS; $("cpBtn").textContent=L.retry; $("againBtn").textContent=L.restart; $("oMenuBtn").textContent=L.menu;
   $("tWin").textContent=L.win; $("tWinS").textContent=L.winS; $("wAgainBtn").textContent=L.again; $("wMenuBtn").textContent=L.menu;
-  $("diffs").innerHTML=""; ["easy","normal","hard"].forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===diff?" sel":""); b.textContent=L["diff_"+k]; b.onclick=()=>{ setDiff(k); SFX.click(); applyLang(); }; $("diffs").appendChild(b); });
+  $("topList").innerHTML=""; $("modes").innerHTML=""; ["story","endless"].forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===MODE?" sel":""); b.textContent=L["mode_"+k]; b.onclick=()=>{ if(k===MODE) return; setMode(k); SFX.click(); resetLevel(false); applyLang(); }; $("modes").appendChild(b); });
+  $("diffs").style.display=ENDLESS()?"none":"";
+  $("diffs").innerHTML=""; ["easy","normal","hard","expert"].forEach(k=>{ const lock=k==="expert"&&!expertOK(), b=document.createElement("button"); b.className="lang"+(k===diff?" sel":"")+(lock?" lock":""); b.textContent=(lock?"🔒 ":"")+L["diff_"+k]; b.style.opacity=lock?".7":""; b.onclick=()=>{ if(lock){ SFX.boing(); toast(L.expertLock); return; } setDiff(k); SFX.click(); applyLang(); }; $("diffs").appendChild(b); });
   $("maps").innerHTML=""; ["day","night"].forEach(k=>{ const lock=k==="night"&&!nightOK(), b=document.createElement("button"); b.className="lang"+(k===MAP?" sel":"")+(lock?" lock":""); b.textContent=(lock?"🔒 ":"")+L["map_"+k]; b.style.opacity=lock?".7":"";
     b.onclick=()=>{ if(lock){ SFX.boing(); toast(L.nightLock); return; } setMap(k); SFX.click(); resetLevel(false); applyLang(); }; $("maps").appendChild(b); });
-  { const sv=starsGet()[MAP+"-"+diff]; if(sv) $("tBest").innerHTML+="<span>"+L.starsBest.replace("{n}",sv)+"</span>"; }
+  if(ENDLESS()){ const tp=endTop()[0]; if(tp) $("tBest").innerHTML=`<span>${L.endBest.replace("{n}",tp.s)}</span>`; else $("tBest").innerHTML=""; }
+  else { const sv=starsGet()[MAP+"-"+diff]; if(sv) $("tBest").innerHTML+="<span>"+L.starsBest.replace("{n}",sv)+"</span>"; }
   const box=$("langs"); box.querySelectorAll(".lang").forEach(b=>b.remove());
   Object.keys(LN).forEach(k=>{ const b=document.createElement("button"); b.className="lang"+(k===lang?" sel":""); b.textContent=LN[k]; b.onclick=()=>{ lang=k; lsSet("annabelle-lang",k); SFX.click(); applyLang(); }; box.insertBefore(b,box.querySelector(".an-nav")); });
   $("muteBtn").textContent=muted?"🔇":"🔊"; }
@@ -1218,13 +1250,27 @@ function startGame(fromCp){ ac(); SFX.click(); resetLevel(!!fromCp); state="play
   if(!fromCp) setTimeout(()=>{ if(state==="play") hint("run"); },700); }
 window.toMenu=function(){ state="menu"; stopSong(); showOv("menu"); applyLang(); };
 function pauseGame(){ if(state!=="play") return; state="pause"; showOv("pause"); $("pad").classList.add("hidden"); $("pCpBtn").classList.toggle("hidden",!cp); releaseAll(); }
-function resumeGame(){ if(state!=="pause") return; state="play"; showOv(null); ac(); }
-function gameOver(){ if(state!=="play") return; state="over"; stopSong(); try{ const R=RW(); if(R){ R.award({game:"lionking",event:"score",score:stats.bugs*10+stats.foes*50}); R.flush(); } }catch(e){} showOv("over"); $("pad").classList.add("hidden"); releaseAll(); }
+function resumeGame(){ if(state!=="pause") return; state="play"; showOv(null); ac(); if(P&&P.hearts<=0) gameOver(); /* paused during the death delay: do not resume with 0 hearts */ }
+const endScore=()=>{ const s=stats; return Math.round((s.bonus||0)+Math.floor(Math.min(s.maxX||0,LAP_END)/7)+s.bugs*10+s.foes*50+((s.pawsAll||0)+s.paws.filter(Boolean).length)*250); };
+function nextLap(){ const s=stats, secs=s.time-s.lapT0, speedB=Math.max(0,Math.round(90-secs))*10;
+  s.bonus+=1000+speedB+300*s.lap; s.pawsAll+=s.paws.filter(Boolean).length; s.paws=[false,false,false]; s.lap++; s.lapT0=s.time; s.maxX=60; D=endD(s.lap);
+  const hp=Math.min(D.hearts,P.hearts+1); EN=buildEN(); BUGS=makeBugs(); PAWS=PAWS_DEF.map(p=>({...p,got:false})); cp=null; BONES=[];
+  rideO={x:RIDE.start,y:G,st:"wait",stum:0,jt:0,vy:0,duck:false,done:false}; monkey={st:"idle",t:0,k:0}; VINES.forEach(v=>{ v.a=0; v.av=0; });
+  P=newPlayer(60,G); P.hearts=hp; P.inv=1.5; cam.x=0; cam.y=camTargetY(); cam.look=0; $("pad").classList.remove("ride");
+  SFX.cp(); burstConf(24); toast(t().lapNew.replace("{n}",s.lap)+(speedB?" +"+speedB:"")); pop(P.x,P.y-40,"+"+(1000+speedB+300*(s.lap-1)),"#fff3a0");
+  try{ const R=RW(); if(R){ R.award({game:"lionking",event:"levelClear",level:s.lap-1,score:endScore()}); } }catch(e){} }
+function endRecord(sc,lap,sec){ const a=endTop(), run={s:sc,l:lap,t:sec,m:MAP==="night"?"n":"d"}; a.push(run); a.sort((x,y)=>y.s-x.s); const top=a.slice(0,5); let rank=top.indexOf(run)+1;
+  if(rank>0) try{ localStorage.setItem(END_KEY,JSON.stringify(top)); }catch(e){} return {top,rank,run}; }
+function topHTML(r){ const L=t(); return `<div class="topt">${L.topTitle}</div>`+r.top.map((x,i)=>{ const sec=x.t|0; return `<div class="${x===r.run?"ok":""}">${["🥇","🥈","🥉","4.","5."][i]} <b>${x.s}</b> · ${L.lapW} ${x.l} · ${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}${x.m==="n"?" 🌙":""}</div>`; }).join(""); }
+function gameOver(){ if(state!=="play") return; state="over"; overAt=performance.now(); stopSong();
+  let sc=stats.bugs*10+stats.foes*50, er=null; if(ENDLESS()){ sc=endScore(); er=endRecord(sc,stats.lap,Math.round(stats.time)); window.__lionResult={endless:true,score:sc,lap:stats.lap,rank:er.rank,time:Math.round(stats.time)}; }
+  try{ const R=RW(); if(R){ R.award({game:"lionking",event:"score",score:sc}); R.flush(); } }catch(e){} showOv("over"); $("pad").classList.add("hidden"); releaseAll();
+  if(er){ const L=t(), prev=er.top.filter(x=>x!==er.run)[0]; $("tOver").textContent=L.endOver; $("tOverS").textContent=L.endSum.replace("{l}",stats.lap).replace("{s}",sc)+(er.rank===1&&(!prev||sc>prev.s)?" · "+L.endNew:er.rank?" · "+L.endRank.replace("{n}",er.rank):""); $("topList").innerHTML=topHTML(er); } }
 function finishWin(){ const s=stats, paws=s.paws.filter(Boolean).length, total=BUGS.filter(b=>!b.heal).length+BUGS.filter(b=>b.heal).length;
   const sec=Math.round(s.time), score=s.bugs*10+paws*250+s.foes*50+1000+Math.min(P.hearts,3)*200+Math.max(0,420-sec)*5;
   const stars=1+(s.bugs>=total*.5?1:0)+(paws>=2?1:0);
   const best=lsGet(BEST_KEY), rec=score>best; if(rec) lsSet(BEST_KEY,score); if(paws>lsGet(PAWS_KEY)) lsSet(PAWS_KEY,paws);
-  state="win"; showOv("win"); $("pad").classList.add("hidden");
+  state="win"; overAt=performance.now(); showOv("win"); $("pad").classList.add("hidden");
   const L=t(); $("stats").innerHTML=`<span>${L.bugsL}</span><b>${s.bugs} / ${total}</b><span>${L.pawsL}</span><b>${paws} / 3</b><span>${L.timeL}</span><b>${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}</b><span>${L.scoreL}</span><b>${score}</b>`;
   $("tRec").textContent=rec?L.rec:"";
   const st=$("stars").children; for(let i=0;i<3;i++){ st[i].className="star"; ((i)=>setTimeout(()=>{ st[i].className="star "+(i<stars?"on":"off"); if(i<stars) SFX.bug(i*2); },350+i*380))(i); }
@@ -1258,7 +1304,7 @@ addEventListener("keydown",e=>{
   const onBtn=e.target&&e.target.closest&&e.target.closest("button");
   if(e.code==="KeyM"){ if(!e.repeat){ setMuted(!muted); $("muteBtn").textContent=muted?"🔇":"🔊"; ac(); } return; }
   if(e.code==="Escape"||e.code==="KeyP"){ e.preventDefault(); if(e.repeat) return; if(state==="play") pauseGame(); else if(state==="pause") resumeGame(); else if(state==="over"||state==="win") toMenu(); return; }
-  if((e.code==="Enter"||e.code==="Space")&&!onBtn&&state!=="play"){ e.preventDefault(); if(e.repeat) return; ac();
+  if((e.code==="Enter"||e.code==="Space")&&!onBtn&&state!=="play"){ e.preventDefault(); if(e.repeat) return; if((state==="win"||state==="over")&&performance.now()-overAt<(state==="win"?900:300)) return; /* button-mashing must not skip the result card */ ac();
     if(state==="menu") startGame(false); else if(state==="pause") resumeGame(); else if(state==="over") startGame(!!cp); else if(state==="win"){ cp=null; startGame(false); } return; }
   const k=KM[e.code]; if(k&&state==="play"){ e.preventDefault(); if(!e.repeat) ac(); press(k,1); } });
 addEventListener("keyup",e=>{ const k=KM[e.code]; if(k) press(k,0); });
@@ -1302,7 +1348,7 @@ function frame(now){ const d=Math.min(.1,(now-last)/1000); last=now;
 /* test hook */
 window.__lion={ get state(){ return state; }, get P(){ return P; }, get boss(){ return BOSS; }, get stats(){ return stats; }, get cam(){ return cam; }, keys, press, step:(n)=>{ for(let i=0;i<(n||1);i++) step(STEP); },
   tp:(x,y)=>{ P.x=x; P.y=y==null?G:y; P.vx=0; P.vy=0; P.mode="normal"; P.on=false; cam.x=Math.max(0,x-VW*.45); }, info:()=>({state,x:Math.round(P.x),y:Math.round(P.y),mode:P.mode,hearts:P.hearts,bugs:stats&&stats.bugs,boss:BOSS&&{st:BOSS.st,hp:BOSS.hp,x:Math.round(BOSS.x)},cp,S,VW,VH}),
-  setCp:(x,y)=>{ cp={x,y:y||G}; }, setMap:(m)=>{ setMap(m); resetLevel(false); }, get map(){ return MAP; }, get goals(){ return GOALS; }, bugsTotal:()=>BUGS.length, start:startGame, hearts:(n)=>{ P.hearts=n; }, setDiff, rideO:()=>rideO, monkey:()=>monkey };
+  setCp:(x,y)=>{ cp={x,y:y||G}; }, setMap:(m)=>{ setMap(m); resetLevel(false); }, get map(){ return MAP; }, get goals(){ return GOALS; }, bugsTotal:()=>BUGS.length, start:startGame, hearts:(n)=>{ P.hearts=n; }, setDiff, rideO:()=>rideO, monkey:()=>monkey, setMode:(m)=>{ setMode(m); resetLevel(false); applyLang(); }, get mode(){ return MODE; }, endScore, nextLap, endTop, get D(){ return D; } };
 /* init */
 resize(); resetLevel(false); applyLang(); requestAnimationFrame(frame);
 </script>
