@@ -43,6 +43,9 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
 .big:active{transform:translateY(4px);box-shadow:0 2px 0 #0005}
 .g{background:linear-gradient(#5fd38d,#2fb36a)}.o{background:linear-gradient(#ffb84d,#ff7a1f)}.p{background:linear-gradient(#a58bff,#7c5cff)}.s{background:linear-gradient(#8aa0b8,#5b6f88)}.r{background:linear-gradient(#ff8fb8,#ff4d8d)}
 .row{display:flex;gap:8px;width:100%}.row .big{min-width:0;font-size:17px;padding:8px 6px;min-height:56px}
+.big.x{background:linear-gradient(#4b4b66,#1b1b2c);box-shadow:0 0 0 2px #ff4d6d inset,0 6px 0 #0005}
+#dRow .big{font-size:15px;padding:8px 3px}
+.top5{display:flex;flex-direction:column;gap:1px;font-size:15px;font-weight:800;line-height:1.25;direction:ltr;min-width:170px}.top5:empty{display:none}.top5 .th{font-size:13px;opacity:.85;unicode-bidi:plaintext;text-align:center;margin-bottom:2px}.top5 .me{color:#ffe14d;background:#ffffff22;border-radius:8px}
 .row .big.sel{box-shadow:0 0 0 5px #fff,0 6px 0 #0005}
 .row .big.off{filter:saturate(.4) brightness(.8)}
 .langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -89,14 +92,14 @@ h2{margin:0;font-size:28px;color:#ffe14d;text-shadow:0 3px 0 #a2410f}
 
 <div class="ov show" id="menu"><div class="box">
   <div class="mascot">😸</div><h1 id="mT"></h1><div class="sub" id="mS"></div>
-  <div class="row" id="dRow"><button class="big o" data-d="0"></button><button class="big p" data-d="1"></button><button class="big r" data-d="2"></button></div>
+  <div class="row" id="dRow"><button class="big o" data-d="0"></button><button class="big p" data-d="1"></button><button class="big r" data-d="2"></button><button class="big x" data-d="3"></button></div><div class="sub" id="dHint" style="display:none;font-size:14px"></div>
   <button class="big g" id="playBtn"></button>
   <button class="big r" id="dailyBtn" style="min-height:54px;font-size:20px"></button>
   <div class="langs" id="langs"><span class="langs" id="flags"></span></div><div class="rules" id="rules"></div></div></div>
 <div class="ov" id="picker"><h2 id="pkT"></h2><div class="tiles" id="mapTiles"></div><div class="stg" id="stgTiles" style="display:none"></div><button class="big s" id="pkBack" style="max-width:300px"></button></div>
 <div class="ov" id="mission"><div class="card"><div class="mascot" style="font-size:64px">🐱</div><h2 id="miT"></h2><div class="sub" id="miG" style="font-size:20px"></div><div class="sub" id="miD"></div><button class="big g" id="goBtn"></button></div></div>
-<div class="ov" id="over"><div class="card"><div class="mascot" id="oM">😻</div><h2 id="oT"></h2><div class="stars" id="oSt"></div><div class="sub" id="oS" style="font-size:20px"></div><div class="sub" id="oB"></div><button class="big g" id="nextBtn"></button><button class="big o" id="againBtn"></button><button class="big s" id="oMenu"></button></div></div>
-<div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big s" id="pMenu"></button></div></div>
+<div class="ov" id="over"><div class="card"><div class="mascot" id="oM">😻</div><h2 id="oT"></h2><div class="stars" id="oSt"></div><div class="sub" id="oS" style="font-size:20px"></div><div class="sub" id="oB"></div><div class="top5" id="oTop"></div><button class="big g" id="nextBtn"></button><button class="big o" id="againBtn"></button><button class="big s" id="oMenu"></button></div></div>
+<div class="ov" id="pause"><div class="card"><h2 id="pT"></h2><button class="big g" id="resBtn"></button><button class="big o" id="pRestart"></button><button class="big s" id="pMenu"></button></div></div>
 <div id="nogl"><div style="font-size:70px">😿</div><div id="nglT"></div></div>
 
 <script>
@@ -107,7 +110,7 @@ const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k
 const rnd=Math.random,PI=Math.PI,TAU=PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pick=a=>a[(rnd()*a.length)|0];
 /* ================= i18n ================= */
 const TX={
-he:{title:"החור הרעבתן",sub:"בלעי הכול והפכי לחור ענק! 🐾",play:"שחקי ▶",d0:"🐣 קל ומצחיק",d1:"🐯 רגיל",d2:"🦁 מאתגר",pickMap:"בחרי מפה",pickStage:"בחרי שלב",endless:"⏱️ משחק חופשי (2 דקות)",back:"חזרה",
+he:{title:"החור הרעבתן",sub:"בלעי הכול והפכי לחור ענק! 🐾",play:"שחקי ▶",d0:"🐣 קל ומצחיק",d1:"🐯 רגיל",d2:"🦁 מאתגר",d3:"💀 מומחה",xLock:"נצחי שלב אחד באתגר 🦁 כדי לפתוח מומחה",xUnlocked:"💀 נפתח מצב מומחה!",top5:"🏆 5 התוצאות הכי גבוהות",pickMap:"בחרי מפה",pickStage:"בחרי שלב",endless:"⏱️ משחק חופשי (2 דקות)",back:"חזרה",
  rules:"גוררים עם האצבע כדי לזוז. בולעים רק דברים קטנים מהחור – וככל שאוכלים, גדלים! 🐱",
  goSize:"הגיעי לגודל {n}",goCollect:"בלעי {n} {item}",goGold:"מצאי {n} כדורי צמר זהובים ✨",goRescue:"הצילי {n} גורים מהבועות 🐱",goZone:"בלעי את כל מה שבאזור {zone}!",goCombo:"בלעי {n} דברים ברצף!",goRace:"הגיעי לגודל {n} לפני {rival}!",goEndless:"בלעי כמה שיותר ב-2 דקות!",
  stage:"שלב",go:"קדימה! 🐾",next:"לשלב הבא ▶",again:"עוד פעם 🔁",maps:"למפות",resume:"המשך ▶",paused:"הפסקה",
@@ -121,7 +124,7 @@ he:{title:"החור הרעבתן",sub:"בלעי הכול והפכי לחור ע�
  drag:"גרור כדי לזוז 👆",keys:"חצים / WASD כדי לזוז ⌨️",
  items:{yarn:"כדורי צמר",milk:"בקבוקי חלב",fish:"דגים",cupcake:"קאפקייקס",present:"מתנות",shell:"צדפים"},
  maps0:["גינת הפרחים","רחוב החתולים","שוק הדגים","עיר הממתקים","כפר השלג","חוף המסיבות"],zones:["הערוגה","הכיכר","הרציף","הקונדיטוריה","הגבעה","הגלים"]},
-fr:{title:"Le Gouffre Gourmand",sub:"Avale tout et deviens un trou géant ! 🐾",play:"Jouer ▶",d0:"🐣 Facile",d1:"🐯 Normal",d2:"🦁 Défi",pickMap:"Choisis une carte",pickStage:"Choisis un niveau",endless:"⏱️ Jeu libre (2 min)",back:"Retour",
+fr:{title:"Le Gouffre Gourmand",sub:"Avale tout et deviens un trou géant ! 🐾",play:"Jouer ▶",d0:"🐣 Facile",d1:"🐯 Normal",d2:"🦁 Défi",d3:"💀 Expert",xLock:"Gagne un niveau en Défi 🦁 pour débloquer Expert",xUnlocked:"💀 Mode Expert débloqué !",top5:"🏆 Top 5 des scores",pickMap:"Choisis une carte",pickStage:"Choisis un niveau",endless:"⏱️ Jeu libre (2 min)",back:"Retour",
  rules:"Glisse le doigt pour bouger. Tu avales ce qui est plus petit que ton trou – et tu grandis ! 🐱",
  goSize:"Atteins la taille {n}",goCollect:"Avale {n} {item}",goGold:"Trouve {n} pelotes dorées ✨",goRescue:"Sauve {n} chatons des bulles 🐱",goZone:"Avale tout dans la zone {zone} !",goCombo:"Avale {n} choses d'affilée !",goRace:"Atteins la taille {n} avant {rival} !",goEndless:"Avale le plus possible en 2 minutes !",
  stage:"Niveau",go:"Allons-y ! 🐾",next:"Niveau suivant ▶",again:"Encore 🔁",maps:"Cartes",resume:"Continuer ▶",paused:"Pause",
@@ -135,7 +138,7 @@ fr:{title:"Le Gouffre Gourmand",sub:"Avale tout et deviens un trou géant ! 🐾
  drag:"Glisse pour bouger 👆",keys:"Flèches / WASD pour bouger ⌨️",
  items:{yarn:"pelotes de laine",milk:"bouteilles de lait",fish:"poissons",cupcake:"cupcakes",present:"cadeaux",shell:"coquillages"},
  maps0:["Jardin fleuri","Rue des chats","Marché aux poissons","Ville bonbon","Village de neige","Plage en fête"],zones:["le parterre","la place","le quai","la pâtisserie","la colline","les vagues"]},
-en:{title:"Hungry Hole",sub:"Swallow everything and grow into a giant hole! 🐾",play:"Play ▶",d0:"🐣 Easy & funny",d1:"🐯 Normal",d2:"🦁 Challenge",pickMap:"Pick a map",pickStage:"Pick a stage",endless:"⏱️ Free play (2 min)",back:"Back",
+en:{title:"Hungry Hole",sub:"Swallow everything and grow into a giant hole! 🐾",play:"Play ▶",d0:"🐣 Easy & funny",d1:"🐯 Normal",d2:"🦁 Challenge",d3:"💀 Expert",xLock:"Win one stage on Challenge 🦁 to unlock Expert",xUnlocked:"💀 Expert mode unlocked!",top5:"🏆 Top 5 scores",pickMap:"Pick a map",pickStage:"Pick a stage",endless:"⏱️ Free play (2 min)",back:"Back",
  rules:"Drag your finger to move. You can swallow things smaller than your hole – and you grow! 🐱",
  goSize:"Reach size {n}",goCollect:"Swallow {n} {item}",goGold:"Find {n} golden yarn balls ✨",goRescue:"Rescue {n} kittens from bubbles 🐱",goZone:"Swallow everything in the {zone} zone!",goCombo:"Swallow {n} things in a row!",goRace:"Reach size {n} before {rival}!",goEndless:"Swallow as much as you can in 2 minutes!",
  stage:"Stage",go:"Let's go! 🐾",next:"Next stage ▶",again:"Again 🔁",maps:"Maps",resume:"Resume ▶",paused:"Paused",
@@ -186,7 +189,10 @@ const dailyDone=()=>!!(SV.dd&&SV.dd.day===dayKey());
 const save=()=>ls.set(KEY,JSON.stringify(SV));
 const stars=(m,s)=>SV.s[m+"-"+s]||0,mapStars=m=>[0,1,2,3].reduce((a,s)=>a+stars(m,s),0);
 const stageOpen=(m,s)=>mapOpen(m)&&(s===0||stars(m,s-1)>0),mapOpen=m=>m===0||stars(m-1,1)>0;
-let diff=+(ls.get("annabelle-hole-diff")||1);if(!(diff>=0&&diff<=2))diff=1;
+let X={c2:0,xs:{},top:{}};try{const q=JSON.parse(ls.get("annabelle-hole-v2")||"{}");if(q&&typeof q==="object"){X.c2=q.c2?1:0;if(q.xs&&typeof q.xs==="object")X.xs=q.xs;if(q.top&&typeof q.top==="object")X.top=q.top}}catch(e){}
+const saveX=()=>ls.set("annabelle-hole-v2",JSON.stringify(X)),xOK=()=>!!X.c2,xstars=(m,s)=>X.xs[m+"-"+s]||0;
+function addTop(m,sc,df){if(!(sc>0))return -1;const L=Array.isArray(X.top[m])?X.top[m]:[],e={s:sc,df:df,d:Date.now()};L.push(e);L.sort((a,b)=>b.s-a.s);const i=L.indexOf(e);L.length=Math.min(5,L.length);X.top[m]=L;saveX();return i<5?i:-1}
+let diff=+(ls.get("annabelle-hole-diff")||1);if(!(diff>=0&&diff<=3))diff=1;if(diff===3&&!xOK())diff=1;
 /* ================= sprites ================= */
 const OBJ={ // r = world radius, d = how it is drawn
  yarn:{r:12,e:"🧶"},milk:{r:12,e:"🥛"},fish:{r:14,e:"🐟"},mouse:{r:11,e:"🐭"},flower:{r:10,e:"🌸"},cupcake:{r:14,e:"🧁"},lolli:{r:14,e:"🍭"},present:{r:14,e:"🎁"},shell:{r:11,e:"🐚"},icecube:{r:12,e:"🧊"},bowl:{r:17,e:"🐠"},
@@ -262,7 +268,7 @@ function overlapFree(objs,x,y,r){for(let i=0;i<objs.length;i++){const o=objs[i],
 function placeObj(objs,ty,col,extra,zone){const r=OBJ[ty].r;for(let k=0;k<50;k++){let x=120+rnd()*(WS-240),y=120+rnd()*(WS-240);if(zone){x=zone.x+r+rnd()*(zone.w-2*r);y=zone.y+r+rnd()*(zone.h-2*r)}const M=G.M;if(M.water==="left"&&x<260)continue;if(M.water==="bottom"&&y>WS-260)continue;if(!zone&&Math.hypot(x-WS/2,y-WS/2)<170)continue;if(M.road&&!zone&&Math.abs(y-WS/2)<90&&ty!=="car")continue;if(overlapFree(objs,x,y,r)){const o=Object.assign({ty:ty,col:col,x:x,y:y,r:r,sw:0,by:null,wob:0,sh:rnd()*6,alive:true},extra||{});objs.push(o);return o}}return null}
 function startStage(m,s,df){ac();mapSel=m;G={m:m,s:s,endless:s===-1,daily:s===-2,shk:0,df:df,M:MAPS[m],t:0,over:false,paused:true,started:false,combo:0,comboT:0,maxCombo:0,score:0,prog:0,eaten:0,free:0,magnet:0,speed:0,floats:[],fx:[],pups:[],pupT:6,hint:0,hintT:0,cap:"",capT:0,tier:0,hz:[],objs:[],riv:[],zone:null,zoneLeft:0,goalTxt:"",lastEat:0};
  const M=G.M,st=s>=0?stagesFor(m)[s]:s===-2?dailyStage(m):{goal:{type:"endless"},time:120,riv:1,hz:2};G.st=st;
- const tmul=[1.5,1,.8][df],gmul=[.85,1,1.1][df];G.goal=Object.assign({},st.goal);if(G.goal.v)G.goal.v=Math.round(G.goal.v*gmul);if(G.goal.n&&G.goal.type!=="rescue"&&G.goal.type!=="gold")G.goal.n=Math.max(3,Math.round(G.goal.n*gmul));
+ const tmul=[1.5,1,.8,.55][df],gmul=[.85,1,1.1,1.15][df];G.goal=Object.assign({},st.goal);if(G.goal.v)G.goal.v=Math.round(G.goal.v*gmul);if(G.goal.n&&G.goal.type!=="rescue"&&G.goal.type!=="gold")G.goal.n=Math.max(3,Math.round(G.goal.n*gmul));
  G.left=st.time*tmul;G.time0=G.left;
  const R0=26;G.me=mkHole(WS/2,WS/2,R0,false);G.R0=R0;
  if(G.goal.type==="zone"){const zw=520,zh=420,zx=100+rnd()*(WS-zw-200),zy=(M.road?WS/2+120:260+rnd()*(WS-zh-520));G.zone={x:zx,y:zy,w:zw,h:zh};}
@@ -276,10 +282,10 @@ function startStage(m,s,df){ac();mapSel=m;G={m:m,s:s,endless:s===-1,daily:s===-2
 
  // keep the start area free of the big stuff so the cub can breathe
  // rivals
- const nriv=s<0?(df>0?1:0):(st.riv?(df===2?2:1):(s>=1&&df===2?1:0));
- for(let i=0;i<nriv;i++){const a=rnd()*TAU,h=mkHole(WS/2+Math.cos(a)*700,WS/2+Math.sin(a)*700,R0,true);h.col=RIV[i%2];h.aiSp=[.6,.75,.95][df];G.riv.push(h)}
+ const nriv=s<0?(df===3?2:df>0?1:0):(st.riv?(df>=2?2:1):df===3?(s>=1?2:1):(s>=1&&df===2?1:0));
+ for(let i=0;i<nriv;i++){const a=rnd()*TAU,h=mkHole(WS/2+Math.cos(a)*700,WS/2+Math.sin(a)*700,R0,true);h.col=RIV[i%2];h.aiSp=[.6,.75,.95,1.12][df];G.riv.push(h)}
  // hazards
- const nh=Math.round((s<0?2:st.hz)*[.5,1,1.5][df]);for(let i=0;i<nh;i++){const ty=M.hz[i%3],x=300+rnd()*(WS-600),y=300+rnd()*(WS-600);{const bx=clamp(x+(rnd()<.5?-1:1)*(300+rnd()*250),200,WS-200),by=clamp(y+(rnd()-.5)*300,200,WS-200),pp=rnd(),k=.5-.5*Math.cos(pp*TAU);G.hz.push({ty:ty,x:ty==="sprink"?x:x+(bx-x)*k,y:ty==="sprink"?y:y+(by-y)*k,ax:x,ay:y,bx:bx,by:by,p:pp,r:ty==="sprink"?64:ty==="vac"?34:24,cd:0})}}
+ const nh=Math.round((s<0?2:st.hz)*[.5,1,1.5,2.2][df]);for(let i=0;i<nh;i++){const ty=M.hz[i%3],x=300+rnd()*(WS-600),y=300+rnd()*(WS-600);{const bx=clamp(x+(rnd()<.5?-1:1)*(300+rnd()*250),200,WS-200),by=clamp(y+(rnd()-.5)*300,200,WS-200),pp=rnd(),k=.5-.5*Math.cos(pp*TAU);G.hz.push({ty:ty,x:ty==="sprink"?x:x+(bx-x)*k,y:ty==="sprink"?y:y+(by-y)*k,ax:x,ay:y,bx:bx,by:by,p:pp,r:ty==="sprink"?64:ty==="vac"?34:24,cd:0})}}
  G.cam={x:G.me.x,y:G.me.y,span:380+R0*6};
  G.goalTxt=goalText();
  document.body.classList.add("play");$("menu").classList.remove("show");$("picker").classList.remove("show");$("over").classList.remove("show");$("pause").classList.remove("show");
@@ -294,7 +300,7 @@ function showHint(s){$("hint").textContent=s}
 function floatTxt(x,y,s,c){G.floats.push({x:x,y:y,s:s,c:c||"#fff",t:0})}
 function burst(x,y,n,col){for(let i=0;i<n;i++){const a=rnd()*TAU,v=60+rnd()*160;G.fx.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,l:.5+rnd()*.4,c:col||pick(["#ffd23f","#ff7aa8","#5ac8ff","#fff"]),r:3+rnd()*4})}}
 function growBy(h,gain){h.R2+=gain}
-function eatObj(H,o){o.sw=.001;o.by=H;H.mouth=.25;const gain=.42*o.r*o.r*(H.rival?[.45,.6,.8][G.df]:1);growBy(H,gain);
+function eatObj(H,o){o.sw=.001;o.by=H;H.mouth=.25;const gain=.42*o.r*o.r*(H.rival?[.45,.6,.8,.95][G.df]:1);growBy(H,gain);
  if(H.rival)return;
  const now=G.t;G.combo=(now-G.lastEat<(G.df===0?2.2:1.6)&&G.combo>0)?G.combo+1:1;G.lastEat=now;G.comboT=1;G.maxCombo=Math.max(G.maxCombo,G.combo);
  G.eaten++;G.score+=Math.round(o.r*(1+G.combo*.1));SFX.gulp(G.combo);
@@ -309,7 +315,7 @@ function aiMove(h,dt){h.aiT-=dt;if(h.aiT<=0){h.aiT=.5+rnd()*.4;let best=null,bs=
   for(const o of G.objs){if(!o.alive||o.sw||o.r>h.R*.88||o.gold||o.rescue||o.zone)continue;const d=Math.hypot(o.x-h.x,o.y-h.y);if(d>900)continue;const sc=(o.r*o.r+60)/(d+60);if(sc>bs){bs=sc;best=o}}
   let tx=best?best.x:WS/2,ty=best?best.y:WS/2;
   const others=[G.me].concat(G.riv.filter(r=>r!==h));
-  for(const q of others){const d=Math.hypot(q.x-h.x,q.y-h.y);if(q.R>h.R*1.15&&d<420){tx=h.x-(q.x-h.x);ty=h.y-(q.y-h.y);break}if(G.df===2&&h.R>q.R*1.3&&d<500){tx=q.x;ty=q.y;break}}
+  for(const q of others){const d=Math.hypot(q.x-h.x,q.y-h.y);if(q.R>h.R*1.15&&d<420){tx=h.x-(q.x-h.x);ty=h.y-(q.y-h.y);break}if(G.df>=2&&h.R>q.R*1.3&&d<(G.df===3?650:500)){tx=q.x;ty=q.y;break}}
   h.tx=clamp(tx,60,WS-60);h.ty=clamp(ty,60,WS-60)}
  const dx=h.tx-h.x,dy=h.ty-h.y,d=Math.hypot(dx,dy)||1,sp=(144+2.3*h.R)*h.aiSp;
  const f=G.freeze>0?0:1;h.vx+=((dx/d)*sp*f-h.vx)*Math.min(1,dt*3);h.vy+=((dy/d)*sp*f-h.vy)*Math.min(1,dt*3);h.x=clamp(h.x+h.vx*dt,20,WS-20);h.y=clamp(h.y+h.vy*dt,20,WS-20)}
@@ -318,16 +324,19 @@ function win(){if(G.over)return;G.over=true;finish(true)}
 function lose(why){if(G.over)return;G.over=true;finish(false,why)}
 function finish(ok,why){document.body.classList.remove("play");$("joy").style.display="none";J.on=false;
  const ratio=G.endless?0:G.left/G.time0;let st=ok?(ratio>=.55?3:ratio>=.3?2:1):0;G.stars=st;G.ok=ok;let newStars=0,firstDaily=false;
- if(G.endless){const b=SV.e[G.m]||0;G.newBest=G.score>b;if(G.newBest){SV.e[G.m]=G.score;save()}}
+ if(G.endless){const b=SV.e[G.m]||0;G.newBest=G.score>b;if(G.newBest){SV.e[G.m]=G.score;save()}G.topIdx=addTop(G.m,G.score,G.df)}
  else if(ok&&G.daily){const same=SV.dd&&SV.dd.day===dayKey();firstDaily=!same;newStars=Math.max(0,st-(same?SV.dd.stars:0));SV.dd={day:dayKey(),stars:Math.max(st,same?SV.dd.stars:0)};save()}
  else if(ok){newStars=Math.max(0,st-stars(G.m,G.s));if(st>stars(G.m,G.s)){SV.s[G.m+"-"+G.s]=st;save()}}
+ G.xNew=false;if(ok&&G.df>=2&&!X.c2){X.c2=1;G.xNew=true;saveX()}
+ if(ok&&G.df===3&&G.s>=0){const k=G.m+"-"+G.s,pv=xstars(G.m,G.s);newStars=Math.max(newStars,st-pv);if(st>pv){X.xs[k]=st;saveX()}}
  {const R_=RW();if(R_){if(ok&&G.s>=0)R_.award({game:"hole",event:"levelClear",level:G.m*4+G.s+1,score:G.score});if(newStars>0)R_.award({game:"hole",event:"star",stars:newStars});if(G.maxCombo>=3)R_.award({game:"hole",event:"combo",score:G.maxCombo});R_.award({game:"hole",event:"score",score:G.score});if(ok&&(G.s===3||firstDaily))R_.award(firstDaily?{game:"hole",event:"win",coins:8}:{game:"hole",event:"win"})}}
  G.firstDaily=firstDaily;
  $("oM").textContent=G.endless?"😸":ok?"😻":"😿";$("oM").classList.toggle("joy",ok||G.endless);$("oT").textContent=G.endless?T("endDone"):ok?T("win"):(why==="rival"?T("rivalWon"):why==="time"?T("timeUp"):T("lose"));
- $("oSt").innerHTML=G.endless?"":[0,1,2].map(i=>'<span class="'+(i<st?"on":"")+'" style="animation-delay:'+(.65+i*.32)+'s">'+(i<st?"★":"☆")+"</span>").join("");$("oS").textContent=T("score")+": "+G.score;$("oB").innerHTML=G.endless?(G.newBest?T("newBest"):T("best")+": "+(SV.e[G.m]||0)):G.firstDaily?'<span class="chipd">'+T("dailyBonus")+"</span>":"";
+ $("oSt").innerHTML=G.endless?"":[0,1,2].map(i=>'<span class="'+(i<st?"on":"")+'" style="animation-delay:'+(.65+i*.32)+'s">'+(i<st?"★":"☆")+"</span>").join("");$("oS").textContent=T("score")+": "+G.score;$("oB").innerHTML=(G.endless?(G.newBest?T("newBest"):T("best")+": "+(SV.e[G.m]||0)):G.firstDaily?'<span class="chipd">'+T("dailyBonus")+"</span>":"")+(G.xNew?' <span class="chipd">'+T("xUnlocked")+"</span>":"");
+ $("oTop").innerHTML=G.endless&&X.top[G.m]&&X.top[G.m].length?'<div class="th">'+T("top5")+"</div>"+X.top[G.m].map((e,i)=>'<div class="'+(i===G.topIdx?"me":"")+'">'+(i+1)+". "+["🐣","🐯","🦁","💀"][e.df||0]+" "+e.s+"</div>").join(""):"";
  const hasNext=ok&&G.s>=0&&G.s<3;$("nextBtn").style.display=hasNext?"":"none";$("nextBtn").textContent=T("next");$("againBtn").textContent=T("again");$("oMenu").textContent=T("maps");
- const nst=st,endl=G.endless;
- setTimeout(()=>{$("over").classList.add("show");if(ok||endl){confetti();SFX.win();SFX.meow();for(let i=0;i<nst;i++)setTimeout(()=>SFX.star(i),650+i*320);if(nst===3||G.firstDaily)setTimeout(()=>SFX.fan(),1500)}else SFX.lose();RW()&&RW().flush()},550)}
+ const nst=st,endl=G.endless,g0=G;
+ setTimeout(()=>{if(G!==g0){RW()&&RW().flush();return}$("over").classList.add("show");if(ok||endl){confetti();SFX.win();SFX.meow();for(let i=0;i<nst;i++)setTimeout(()=>SFX.star(i),650+i*320);if(nst===3||G.firstDaily)setTimeout(()=>SFX.fan(),1500)}else SFX.lose();RW()&&RW().flush()},550)}
 function update(dt){const g=G;if(!g||g.over||g.paused)return;g.t+=dt;
  if(g.freeze>0)g.freeze-=dt;else if(g.s>=0||true)g.left-=dt;
  if(g.hintT>0){g.hintT-=dt;if(g.hintT<=0)showHint("")}
@@ -367,12 +376,12 @@ function update(dt){const g=G;if(!g||g.over||g.paused)return;g.t+=dt;
  // keep the map stocked: small things grow back (a few at a time, away from the cub)
  g.refT=(g.refT||0)-dt;if(g.refT<=0){g.refT=1.2;let n=0;for(const o of g.objs)if(o.alive)n++;if(n<110){const ty=pick(g.M.mix.filter(e=>OBJ[e[0]].r<=Math.max(30,me.R*.8)))[0],o=placeObj(g.objs,ty,null);if(o&&Math.hypot(o.x-me.x,o.y-me.y)<260)o.alive=false;if(g.objs.length>700)g.objs=g.objs.filter(q=>q.alive)}}
  // power-ups
- g.pupT-=dt;if(g.pupT<=0&&g.pups.length<2){g.pupT=10+rnd()*6;g.pups.push({ty:pick(["magnet","speed","fish","clock"]),x:160+rnd()*(WS-320),y:160+rnd()*(WS-320),t:0})}
+ g.pupT-=dt;if(g.pupT<=0&&g.pups.length<2){g.pupT=(10+rnd()*6)*(g.df===3?1.5:1);g.pups.push({ty:pick(["magnet","speed","fish","clock"]),x:160+rnd()*(WS-320),y:160+rnd()*(WS-320),t:0})}
  for(let i=g.pups.length-1;i>=0;i--){const p=g.pups[i];p.t+=dt;if(Math.hypot(p.x-me.x,p.y-me.y)<me.R+22){g.pups.splice(i,1);SFX.power();burst(p.x,p.y,18);
    if(p.ty==="magnet"){g.magnet=8;showCap(T("pMagnet"))}else if(p.ty==="speed"){g.speed=8;showCap(T("pSpeed"))}else if(p.ty==="fish"){me.R2*=1.28;showCap(T("pFish"));me.squash=.4}else{g.freeze=6;showCap(T("pClock"))}}}
  // hazards
  for(const h of g.hz){if(h.ty!=="sprink"&&!(g.freeze>0)){h.p+=dt*(h.ty==="vac"?.12:.16);const k=.5-.5*Math.cos(h.p*TAU);h.x=h.ax+(h.bx-h.ax)*k;h.y=h.ay+(h.by-h.ay)*k}
-  if(h.cd>0)h.cd-=dt;else if(me.inv<=0&&Math.hypot(h.x-me.x,h.y-me.y)<h.r+me.R*.55){h.cd=1.6;me.R2=Math.max(g.R0*g.R0,me.R2*.88);SFX.achoo();showCap(pick(T("oops")),1.6);burst(me.x,me.y,14,"#ff9fbf");me.squash=.35}}
+  if(h.cd>0)h.cd-=dt;else if(me.inv<=0&&Math.hypot(h.x-me.x,h.y-me.y)<h.r+me.R*.55){h.cd=1.6;me.R2=Math.max(g.R0*g.R0,me.R2*(g.df===3?.8:.88));SFX.achoo();showCap(pick(T("oops")),1.6);burst(me.x,me.y,14,"#ff9fbf");me.squash=.35}}
  // goal
  const gl=g.goal;
  if(gl.type==="size"&&me.R>=gl.v)return win();
@@ -484,7 +493,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden&&G&&!G.over
 /* ================= UI ================= */
 function updMute(){$("muteBtn").textContent=muted?"🔇":"🔊"}
 $("muteBtn").onclick=()=>{muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(!muted){ac();SFX.click()}};
-function doPause(on){if(!G||G.over||!G.started)return;G.paused=on;J.on=false;if(on){$("pT").textContent=T("paused");$("resBtn").textContent=T("resume");$("pMenu").textContent=T("maps");$("pause").classList.add("show")}else $("pause").classList.remove("show")}
+function doPause(on){if(!G||G.over||!G.started)return;G.paused=on;J.on=false;if(on){$("pT").textContent=T("paused");$("resBtn").textContent=T("resume");$("pRestart").textContent=T("again");$("pMenu").textContent=T("maps");$("pause").classList.add("show")}else $("pause").classList.remove("show")}
 $("pauseBtn").onclick=()=>{ac();SFX.click();doPause(true)};$("resBtn").onclick=()=>{SFX.click();doPause(false)};
 $("pMenu").onclick=()=>{SFX.click();$("pause").classList.remove("show");openPicker(G?G.m:null)};
 function toMenu(){document.body.classList.remove("play");G=null;["mission","over","pause","picker"].forEach(i=>$(i).classList.remove("show"));$("menu").classList.add("show");J.on=false;$("hint").textContent="";$("cap").textContent="";drawTexts()}
@@ -498,24 +507,26 @@ function buildMaps(){$("pkT").textContent=T("pickMap");$("pkBack").textContent=T
  $("mapTiles").querySelectorAll(".st").forEach(s=>s.style.fontSize="12px")}
 function buildStages(m){mapSel=m;$("pkT").textContent=T("maps0")[m];$("mapTiles").style.display="none";const el=$("stgTiles");el.style.display="";el.innerHTML="";const sts=stagesFor(m);
  sts.forEach((st,s)=>{const b=document.createElement("button");const open=stageOpen(m,s);b.className="tile"+(open?"":" lock");const icon={size:"🕳️",collect:MAPS[m].coll?{yarn:"🧶",milk:"🥛",fish:"🐟",cupcake:"🧁",present:"🎁",shell:"🐚"}[MAPS[m].coll]:"🕳️",gold:"✨",rescue:"🐱",zone:"📍",combo:"🔥",race:"🏁"}[st.goal.type];
-  b.innerHTML='<span class="ic">'+icon+'</span><span>'+T("stage")+" "+(s+1)+'</span><span class="st">'+"★".repeat(stars(m,s))+"☆".repeat(3-stars(m,s))+'</span>';b.onclick=()=>{if(!open){SFX.hint();return}SFX.click();startStage(m,s,diff)};el.appendChild(b)});
+  b.innerHTML='<span class="ic">'+icon+'</span><span>'+T("stage")+" "+(s+1)+'</span><span class="st">'+(diff===3?"💀 "+"★".repeat(xstars(m,s))+"☆".repeat(3-xstars(m,s)):"★".repeat(stars(m,s))+"☆".repeat(3-stars(m,s)))+'</span>';b.onclick=()=>{if(!open){SFX.hint();return}SFX.click();startStage(m,s,diff)};el.appendChild(b)});
  const e=document.createElement("button");e.className="tile endl"+(stars(m,0)>0?"":" lock");e.innerHTML='<span>'+T("endless")+'</span><span class="tl">'+T("best")+": "+(SV.e[m]||0)+'</span>';e.onclick=()=>{if(stars(m,0)<=0){SFX.hint();return}SFX.click();startStage(m,-1,diff)};el.appendChild(e);$("pkBack").textContent=T("back")}
 $("playBtn").onclick=()=>openPicker();
 $("dailyBtn").onclick=()=>{ac();SFX.click();startStage(dailyMap(),-2,diff)};
 $("musBtn").onclick=()=>{ac();musicSet(!musicOn);SFX.click()};musicSet(musicOn);
-document.querySelectorAll("#dRow .big").forEach(b=>b.onclick=()=>{diff=+b.dataset.d;ls.set("annabelle-hole-diff",String(diff));SFX.click();drawTexts()});
+let dHT=0;document.querySelectorAll("#dRow .big").forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(d===3&&!xOK()){SFX.hint();const h=$("dHint");h.textContent=T("xLock");h.style.display="";clearTimeout(dHT);dHT=setTimeout(()=>{h.style.display="none"},4500);return}$("dHint").style.display="none";diff=d;ls.set("annabelle-hole-diff",String(diff));SFX.click();drawTexts()});
 $("goBtn").onclick=begin;
-$("nextBtn").onclick=()=>{SFX.click();if(G&&G.s>=0&&G.s<3)startStage(G.m,G.s+1,G.df)};$("againBtn").onclick=()=>{SFX.click();if(G)startStage(G.m,G.s,G.df)};$("oMenu").onclick=()=>{SFX.click();openPicker(G?G.m:null)};
+function quick(m,s,df){cancelAnimationFrame(cf);{const c=$("conf");c.getContext("2d").clearRect(0,0,c.width,c.height)}startStage(m,s,df);begin();showHint("");showCap(G.goalTxt,2.6)}
+$("nextBtn").onclick=()=>{SFX.click();if(G&&G.s>=0&&G.s<3)quick(G.m,G.s+1,G.df)};$("againBtn").onclick=()=>{SFX.click();if(G)quick(G.m,G.s,G.df)};
+$("pRestart").onclick=()=>{SFX.click();if(G){$("pause").classList.remove("show");quick(G.m,G.s,G.df)}};$("oMenu").onclick=()=>{SFX.click();openPicker(G?G.m:null)};
 document.addEventListener("click",e=>{const L=e.target.closest&&e.target.closest("[data-lang]");if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawTexts();if($("picker").classList.contains("show"))($("stgTiles").style.display!=="none"?buildStages(mapSel):buildMaps())}});
 function drawTexts(){document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";document.title=T("title");$("mT").textContent=T("title");$("mS").textContent=T("sub");$("playBtn").textContent=T("play");$("rules").textContent=T("rules");$("dailyBtn").textContent=dailyDone()?T("dailyDone")+" "+"★".repeat(SV.dd.stars||0):T("daily");
- document.querySelectorAll("#dRow .big").forEach(b=>{b.textContent=T("d"+b.dataset.d);b.classList.toggle("sel",+b.dataset.d===diff);b.classList.toggle("off",+b.dataset.d!==diff)});
+ document.querySelectorAll("#dRow .big").forEach(b=>{b.textContent=+b.dataset.d===3&&!xOK()?"🔒 "+T("d3").replace("💀 ",""):T("d"+b.dataset.d);b.classList.toggle("sel",+b.dataset.d===diff);b.classList.toggle("off",+b.dataset.d!==diff)});
  $("flags").innerHTML=[["he","עברית"],["fr","Français"],["en","English"]].map(a=>'<button class="lang '+(a[0]===lang?"sel":"")+'" data-lang="'+a[0]+'">'+a[1]+"</button>").join("");$("nglT").textContent=T("title")}
 /* ================= boot ================= */
 (function(){try{const t=document.createElement("canvas").getContext("2d");if(!t)throw 0}catch(e){glOK=false;$("nogl").classList.add("show")}})();
 updMute();drawTexts();requestAnimationFrame(frame);
 /* test hooks */
 window.__hole={start:(m,s,d)=>{startStage(m,s,d==null?1:d);begin()},begin:begin,step(sec){const n=Math.ceil(sec*60);for(let i=0;i<n;i++)update(1/60);if(G)render()},get G(){return G},info(){return G&&{m:G.m,s:G.s,R:G.me.R,prog:G.prog,goal:G.goal,left:G.left,over:G.over,ok:G.ok,stars:G.stars,score:G.score,objs:G.objs.filter(o=>o.alive).length,riv:G.riv.map(r=>r.R),hz:G.hz.length,combo:G.maxCombo,paused:G.paused,zoneLeft:G.zoneLeft,tier:G.tier}},
- tp(x,y){G.me.x=x;G.me.y=y},setR(R){G.me.R2=R*R;G.me.R=R},eat(f){for(const o of G.objs)if(o.alive&&!o.sw&&(!f||f(o))){G.me.x=o.x;G.me.y=o.y;G.me.R2=Math.max(G.me.R2,(o.r+8)*(o.r+8)/.81);G.me.R=Math.sqrt(G.me.R2);update(1/60);}},SV:()=>SV,saveKey:KEY,OBJ,MAPS,stagesFor,openPicker,toMenu,pickBack};
+ tp(x,y){G.me.x=x;G.me.y=y},setR(R){G.me.R2=R*R;G.me.R=R},eat(f){for(const o of G.objs)if(o.alive&&!o.sw&&(!f||f(o))){G.me.x=o.x;G.me.y=o.y;G.me.R2=Math.max(G.me.R2,(o.r+8)*(o.r+8)/.81);G.me.R=Math.sqrt(G.me.R2);update(1/60);}},SV:()=>SV,saveKey:KEY,X:()=>X,xKey:"annabelle-hole-v2",OBJ,MAPS,stagesFor,openPicker,toMenu,pickBack};
 })();
 </script>
 </body>
