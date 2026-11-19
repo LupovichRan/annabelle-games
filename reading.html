@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="reading"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3aa0e8">
+<title>סולם הקריאה</title><script src="safe.js"></script>
+<style>
+:root{--ink:#2b2350;--pk:#e0457b;--or:#ffb347;--cream:#fffaf0;--gr:#7fe08a;--bl:#7ad7ff;--ye:#ffe14d;--wood:#b9772f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#8fd8ff;font-family:"Rubik","Varela Round","IBM Plex Sans Hebrew",Arial,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action:manipulation;background:none;padding:0;text-decoration:none}
+#sky{position:fixed;inset:0;background:linear-gradient(#5cc0ff,#a8e4ff 55%,#d9f6ff 78%,#9be28a 78%,#6fcf6a);overflow:hidden;pointer-events:none}
+#sky i{position:absolute;font-style:normal;font-size:44px;opacity:.85;animation:cl linear infinite}
+#sky i:nth-child(1){top:7%;animation-duration:70s}#sky i:nth-child(2){top:22%;font-size:30px;animation-duration:95s;animation-delay:-40s}#sky i:nth-child(3){top:40%;font-size:36px;animation-duration:120s;animation-delay:-80s}
+@keyframes cl{from{left:-70px}to{left:105%}}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:780px;margin:0 auto;padding:max(6px,env(safe-area-inset-top)) 8px var(--sab,8px)}
+#top{display:flex;align-items:center;gap:6px;flex:none;direction:ltr;min-height:50px}
+#tMid{flex:1;min-width:0;display:flex;align-items:center;gap:6px;justify-content:center}
+.ib{width:46px;height:46px;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 4px 0 #0003;font-size:21px;display:flex;align-items:center;justify-content:center;flex:none;transition:transform .06s}
+.ib:active{transform:translateY(3px) scale(.92);box-shadow:0 1px 0 #0003}.ib.off{opacity:.5}
+.pill{background:#fff;border-radius:999px;padding:4px 11px;font-weight:900;font-size:clamp(14px,4vw,18px);box-shadow:0 3px 0 #0003;white-space:nowrap;min-height:34px;display:flex;align-items:center;gap:4px;direction:ltr}
+.pill.pop{animation:pillPop .45s}@keyframes pillPop{40%{transform:scale(1.35) rotate(-5deg)}}
+#prog{flex:1;height:18px;background:#fff;border-radius:999px;box-shadow:0 3px 0 #0003;overflow:hidden;min-width:40px;direction:ltr}
+#prog b{display:block;height:100%;width:0;background:linear-gradient(90deg,#7fe08a,#ffe14d);border-radius:999px;transition:width .35s}
+.sc{flex:1;min-height:0;display:none;flex-direction:column}
+.sc.on{display:flex}
+.scroll{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+.card{position:relative;background:var(--cream);color:var(--ink);border:4px solid var(--ink);box-shadow:0 7px 0 var(--ink);border-radius:26px;padding:12px;width:100%;text-align:center}
+h1{margin:0;font-size:clamp(28px,8.4vw,44px);color:var(--pk);text-shadow:2px 3px 0 #fff,3px 5px 0 #2b235033;line-height:1.1}
+h2{margin:0 0 6px;font-size:clamp(21px,6vw,28px)}
+p{margin:5px 0;font-size:clamp(14px,4vw,18px);line-height:1.35;font-weight:700}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;margin:8px 0;background:var(--or);color:var(--ink);border:3px solid var(--ink);box-shadow:0 5px 0 var(--ink);border-radius:18px;font-size:clamp(18px,5vw,22px);font-weight:900;padding:6px 12px;transition:transform .06s}
+.btn:active,.opt:active,.tile:active,.mode:active,.rg:active,.lvch:active{transform:translateY(4px) scale(.96);box-shadow:0 1px 0 var(--ink)}
+.btn.g{background:var(--gr)}.btn.b{background:var(--bl)}.btn.w{background:#fff}
+/* menu */
+#scMenu{justify-content:safe center;align-items:center}
+#cMenu{max-width:520px;max-height:100%}
+#masc{font-size:58px;line-height:1;display:inline-block;animation:bob .8s infinite alternate ease-in-out;filter:drop-shadow(0 5px 0 #0002);direction:ltr}
+@keyframes bob{to{transform:translateY(-8px) rotate(4deg)}}
+#hello{font-size:clamp(15px,4.3vw,19px);font-weight:800;margin:2px 0}
+#sumRow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+#sumRow .pill{border:2px solid var(--ink);box-shadow:none;background:#e6f7ff}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.mode{min-height:82px;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:var(--or);font-weight:900;font-size:clamp(16px,4.6vw,20px);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;padding:4px;transition:transform .06s}
+.mode b{font-size:30px;font-weight:400;line-height:1.1}.mode small{font-size:.68em;font-weight:700;opacity:.85;unicode-bidi:isolate}
+.mode.m1{background:#ffcf5c;grid-column:1/-1;flex-direction:row;gap:10px;min-height:70px;font-size:clamp(19px,5.6vw,24px)}.mode.m1 span{display:flex;flex-direction:column}.mode.m2{background:var(--gr)}.mode.m3{background:#ff9ec4}
+#langs{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:6px}
+#flags{display:flex;gap:6px}
+#flags button{min-width:48px;min-height:44px;border-radius:999px;background:#fff;border:2px solid var(--ink);font-weight:900;font-size:15px;padding:2px 10px}
+#flags button.sel{background:var(--ye)}
+/* ladder */
+#scMap{align-items:center}
+#mapHead{flex:none;width:100%;max-width:560px;text-align:center;font-weight:900;background:#fffaf0e6;border-radius:14px;padding:5px 8px;margin:2px auto 0;font-size:clamp(15px,4.4vw,19px)}
+#lvRow{display:flex;gap:6px;justify-content:center;margin-top:4px;direction:ltr}
+.lvch{flex:1;max-width:120px;min-height:46px;border-radius:14px;border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);background:#fff;font-weight:900;font-size:16px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .06s}
+.lvch small{font-size:11px;font-weight:700;direction:ltr}.lvch.sel{background:var(--ye)}.lvch.lock{background:#e4e1ea;opacity:.75}
+#ladWrap{flex:1;min-height:0;width:100%}
+#lad{width:100%;max-width:560px;border-inline:10px solid var(--wood);border-radius:14px;background:#fffaf0cc;padding:7px 6px 9px;display:flex;flex-direction:column;gap:7px;margin:6px auto 12px}
+.rg{display:flex;align-items:center;gap:8px;min-height:52px;border:3px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--wood);padding:2px 10px;font-weight:900;font-size:clamp(15px,4.4vw,19px);text-align:start;width:100%;transition:transform .06s;line-height:1.15}
+.rg .no{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
+.rg b{font-size:25px;font-weight:400;flex:none}
+.rg .nm{flex:1;min-width:0}
+.rg i{font-style:normal;color:#f5a400;letter-spacing:1px;direction:ltr;flex:none;font-size:17px}.rg i u{text-decoration:none;color:#cfc8de}
+.rg .cat{font-size:26px;flex:none;animation:bob .7s infinite alternate ease-in-out;display:inline-block}
+.rg.lock{background:#e4e1ea;opacity:.7}.rg.lock b{filter:grayscale(1)}.rg.done{background:#dff7e2}.rg.cur{background:#fff3c4}
+/* play */
+#stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding-top:6px}
+.ask{font-weight:900;font-size:clamp(16px,4.6vw,21px);text-align:center;background:#ffffffd9;border-radius:14px;padding:5px 10px;align-self:center;max-width:100%;flex:none}
+.prompt{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--cream);border:4px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink);padding:8px;position:relative;overflow:hidden}
+.prompt.st{justify-content:flex-start;align-items:stretch;gap:6px}
+.pic{font-size:clamp(72px,28vmin,140px);line-height:1.15;animation:picIn .35s cubic-bezier(.3,1.7,.5,1);direction:ltr}
+.pic.sm{font-size:clamp(54px,18vmin,96px)}
+@keyframes picIn{from{transform:scale(.3) rotate(-15deg);opacity:0}to{transform:none;opacity:1}}
+.bigw{font-size:clamp(36px,11vw,60px);font-weight:900;line-height:1.5;max-width:100%;overflow-wrap:anywhere;text-align:center;unicode-bidi:isolate}
+.bigw.let{font-size:clamp(70px,24vw,120px);line-height:1.25;color:var(--pk)}
+.bigw.hid{color:#b9b0d6}
+.bigw u,.sent u{text-decoration:none;display:inline-block;min-width:.9em;border-bottom:6px solid var(--pk);color:var(--pk);margin:0 4px;text-align:center;background:#fff3c4;border-radius:8px 8px 0 0;line-height:1.1}
+.sent{font-size:clamp(22px,6.4vw,34px);font-weight:900;line-height:1.7;text-align:center;max-width:100%;overflow-wrap:anywhere}
+.sent u{min-width:64px}.nw{white-space:nowrap}
+.story{flex:1;min-height:0;font-size:clamp(17px,5vw,23px);font-weight:700;line-height:1.6;text-align:start;padding:2px 46px 2px 6px;padding-inline:6px 46px}
+html[lang=he] .story{line-height:1.75}
+.quest{flex:none;font-size:clamp(17px,4.8vw,22px);font-weight:900;color:var(--pk);text-align:start;border-top:3px dashed #d9cfee;padding:6px 6px 0;line-height:1.5}
+.spk{width:64px;height:64px;border-radius:50%;background:var(--bl);border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink);font-size:30px;display:flex;align-items:center;justify-content:center;transition:transform .06s;flex:none}
+.spk.sm{width:46px;height:46px;font-size:21px;position:absolute;top:8px;inset-inline-end:8px;z-index:2}
+.spk:active{transform:translateY(3px) scale(.94);box-shadow:0 1px 0 var(--ink)}
+.spk[hidden]{display:none}
+.lookb{background:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:16px;min-height:46px;padding:4px 16px;flex:none}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:none}
+.opts.n4{grid-template-columns:repeat(4,1fr)}.opts.n3{grid-template-columns:repeat(3,1fr)}
+.opts.col{grid-template-columns:1fr}
+.opts.wait{opacity:.35;pointer-events:none}
+.opt{min-height:62px;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:#fff;font-weight:900;font-size:clamp(20px,5.8vw,27px);padding:4px 6px;transition:transform .06s;line-height:1.35;min-width:0;overflow-wrap:anywhere;unicode-bidi:isolate}
+.opts.emo .opt{font-size:clamp(40px,12vw,54px);min-height:84px;font-weight:400;line-height:1.1}
+.opts.let .opt{font-size:clamp(28px,8.4vw,40px);min-height:72px}
+.opts.col .opt{min-height:50px;font-size:clamp(17px,4.8vw,22px);padding:4px 10px}
+.opt.ok{background:var(--gr);animation:yes .5s}.opt.no{background:#ffc3a8;animation:shk .35s}.opt[disabled]{pointer-events:none}
+.opt.dim{opacity:.45}
+@keyframes yes{30%{transform:scale(1.1) rotate(-2deg)}}
+@keyframes shk{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.slots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;min-height:52px;align-items:center;max-width:100%}
+.slot{min-width:38px;min-height:52px;border-bottom:5px solid var(--ink);border-radius:8px 8px 0 0;background:#fff;font-size:30px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;line-height:1.4}
+.slot.w{min-width:50px;font-size:clamp(18px,5.2vw,25px);min-height:44px;border-radius:10px;border:3px dashed #b9b0d6;background:#fff8;padding:0 7px}
+.slot.fill{background:#e3fbe6;border-color:var(--ink);border-style:solid;animation:yes .3s}.slot.next{background:#fff3c4}
+.slot.rev{background:#ffe3d6;border-color:var(--ink);border-style:solid}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;flex:none;min-height:62px;align-content:center}
+.tile{min-width:52px;min-height:56px;border:3px solid var(--ink);border-radius:14px;box-shadow:0 5px 0 var(--ink);background:#ffe9a8;font-weight:900;font-size:28px;padding:2px 12px;transition:transform .06s;line-height:1.4}
+.tile.wd{font-size:clamp(18px,5.2vw,25px);background:#d9ecff;min-height:50px}
+.tile.used{visibility:hidden}.tile.bad{animation:shk .35s;background:#ffc3a8}.tile.hintT{background:var(--gr);animation:pls .5s infinite alternate}
+@keyframes pls{to{transform:scale(1.07)}}
+/* overlays */
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:safe center;flex-direction:column;background:#1a1035a6;z-index:50;padding:12px;overflow-y:auto}
+.ov.on{display:flex}
+.ov .card{max-width:480px;flex:none;animation:cardIn .4s cubic-bezier(.3,1.6,.5,1)}@keyframes cardIn{from{transform:scale(.6) translateY(40px);opacity:0}to{transform:none;opacity:1}}
+#ovTeach{background:#1a103577}
+.exp{font-size:clamp(24px,7vw,36px);font-weight:900;line-height:1.5;margin:6px 0;overflow-wrap:anywhere;unicode-bidi:isolate}
+.exp.long{font-size:clamp(18px,5vw,24px)}
+.teachw{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.stars{font-size:clamp(40px,11vw,54px);letter-spacing:4px;min-height:58px;direction:ltr}
+.stars span{display:inline-block;animation:starPop .5s cubic-bezier(.3,1.8,.5,1) both}@keyframes starPop{from{transform:scale(0) rotate(-90deg)}to{transform:none}}
+.stars span.off{filter:grayscale(1) opacity(.35)}
+.huge{font-size:clamp(64px,20vw,100px);line-height:1.1;animation:rev .9s cubic-bezier(.2,1.4,.4,1);display:inline-block}
+@keyframes rev{0%{transform:scale(0) rotate(-200deg)}70%{transform:scale(1.2) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+#banner{position:fixed;left:0;right:0;top:calc(max(6px,env(safe-area-inset-top)) + 54px);z-index:40;text-align:center;pointer-events:none;font-weight:900;font-size:clamp(18px,5.4vw,28px);color:#fff;background:var(--pk);padding:8px 8px;border-block:4px solid var(--ink);transform:translateX(-110%);opacity:0}
+#banner.on{animation:ban 1.6s both}@keyframes ban{0%{transform:translateX(-110%);opacity:1}18%,80%{transform:none;opacity:1}100%{transform:translateX(110%);opacity:1}}
+#pop{position:fixed;left:0;right:0;top:24%;z-index:41;text-align:center;pointer-events:none;font-weight:900;font-size:clamp(30px,9vw,48px);color:var(--ye);text-shadow:0 3px 0 var(--ink),0 0 12px #fff;opacity:0}
+#pop.on{animation:popA .9s both}@keyframes popA{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.25) rotate(-4deg);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:translateY(-40px);opacity:0}}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+#fx i{position:absolute;font-style:normal;font-size:24px;will-change:transform}
+/* desktop */
+.desk #cMenu{max-width:760px;display:grid;grid-template-columns:1fr 1fr;gap:0 18px;align-items:center}
+@media (min-width:700px){.opts.col{grid-template-columns:1fr 1fr 1fr}.opts.col.w4{grid-template-columns:1fr 1fr}}
+@media (max-height:700px){.card{padding:8px 12px}.btn{min-height:46px;margin:5px 0}#masc{font-size:42px}.mode{min-height:64px}.mode.m1{min-height:58px}.mode b{font-size:24px}.opt{min-height:52px}.opts.emo .opt{min-height:64px;font-size:clamp(34px,10vw,46px)}.opts.let .opt{min-height:58px}.opts.col .opt{min-height:46px}.tile{min-height:48px;font-size:25px}.tile.wd{min-height:46px}.rg{min-height:46px}.pic{font-size:clamp(56px,17vmin,96px)}.pic.sm{font-size:clamp(44px,13vmin,72px)}.bigw{font-size:clamp(32px,9.5vw,50px)}.bigw.let{font-size:clamp(56px,18vmin,96px)}.slot{min-height:46px;font-size:26px}.story{font-size:clamp(16px,4.6vw,20px)}}
+@media (max-width:360px){.tile{min-width:44px;padding:2px 8px}.slot{min-width:32px}.opts.let.n4 .opt{font-size:26px}}
+@media (prefers-reduced-motion:reduce){#masc,#sky i,.rg .cat,.tile.hintT{animation:none}}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/reading.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/reading-192.png"><meta name="apple-mobile-web-app-title" content="סולם הקריאה"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/reading-apple-180.png"><script src="pwa.js" data-app="reading" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#navSlot" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
+</head>
+<body>
+<div id="sky"><i>☁️</i><i>☁️</i><i>☁️</i></div>
+<div id="app">
+ <div id="top"><button class="ib" id="bBack" aria-label="back">◀</button><div id="tMid"></div><button class="ib" id="bMute" aria-label="sound">🔊</button></div>
+ <div class="sc on" id="scMenu"><div class="card scroll" id="cMenu"></div></div>
+ <div class="sc" id="scMap"><div id="mapHead"></div><div class="scroll" id="ladWrap"><div id="lad"></div></div></div>
+ <div class="sc" id="scPlay"><div id="stage"></div></div>
+</div>
+<div id="banner"></div><div id="pop"></div>
+<div class="ov" id="ovTeach"><div class="card" id="cTeach"></div></div>
+<div class="ov" id="ovPause"><div class="card" id="cPause"></div></div>
+<div class="ov" id="ovRes"><div class="card" id="cRes"></div></div>
+<div id="fx"></div>
+<script id="core">
+/* ============ READING LADDER – content + generators (no DOM in this block) ============
+   Words: one block per category, one line per level (1..4); entries "syl·la·bles|picture|plain spelling|flag" separated by ";".
+   Hebrew: levels 1-2 are written with nikud (shown with nikud at levels 1-2, stripped from level 3 on; the 3rd field is the
+   full spelling when it differs from the stripped one); levels 3-4 are written without nikud. Flag * = not used in "odd one out".
+   Sentences: "level|text with {right/wrong/wrong/wrong}" – a leading ~ means "word order is free, do not use for ordering".
+   Emoji 12 or older only. */
+window.ReadCore=(function(){'use strict';
+const RAW={
+he:{
+abc:'אבגדהוזחטיכלמנסעפצקרשת',
+cats:{an:'בעלי חיים',fo:'אוכל',bo:'הגוף',cl:'בגדים',tr:'כלי תחבורה',na:'טבע',ho:'בבית',mi:'משחקים ודברים'},
+W:{
+an:`דָּג|🐟||*;סוּס|🐴;פִּיל|🐘;דֹּב|🐻|דוב;צָב|🐢;קוֹף|🐵
+חָ·תוּל|🐱;כֶּ·לֶב|🐶;פָּ·רָה|🐮;אַרְ·יֵה|🦁;נָ·חָשׁ|🐍;אַרְ·נָב|🐰;בַּרְ·וָז|🦆|ברווז;זְאֵב|🐺
+צי·פור|🐦;עכ·בר|🐭;ג·מל|🐫;כב·שה|🐑;שו·על|🦊;דבו·רה|🐝;נמ·לה|🐜;ינ·שוף|🦉
+פר·פר|🦋;צפר·דע|🐸;תרנ·גול|🐓;קי·פוד|🦔;לוויי·תן|🐳;ת·נין|🐊;ע·כ·ביש|🕷️;חיל·זון|🐌;תמ·נון|🐙;פינ·גווין|🐧;דול·פין|🐬;קנ·גו·רו|🦘;זב·רה|🦓`,
+fo:`לֶ·חֶם|🍞;חָ·לָב|🥛;תּוּת|🍓;דְּבַשׁ|🍯;מֶ·לַח|🧂;גֶּ·זֶר|🥕
+עוּ·גָה|🎂;בֵּי·צָה|🥚;פִּי·צָה|🍕;בָּ·נָ·נָה|🍌;לִי·מוֹן|🍋;מָ·רָק|🍲;תִּי·רָס|🌽;אֹ·רֶז|🍚|אורז
+ת·פוח|🍎;גבי·נה|🧀;ע·נ·בים|🍇;גלי·דה|🍦;א·גס|🍐;ב·צל|🧅;עו·גי·יה|🍪;חמ·אה|🧈;ס·לט|🥗
+א·ב·טיח|🍉;שו·קו·לד|🍫;עג·ב·נייה|🍅;מל·פ·פון|🥒;פט·רי·יה|🍄;דוב·ד·בן|🍒;א·פר·סק|🍑;א·נ·נס|🍍;פופ·קו·רן|🍿;א·בו·ק·דו|🥑`,
+bo:`יָד|✋;אַף|👃;פֶּה|👄;שֵׁן|🦷;לֵב|❤️
+עַ·יִן|👁️;רֶ·גֶל|🦵;אֹ·זֶן|👂|אוזן
+ל·שון|👅;ע·צם|🦴;מוח|🧠
+אצ·בע|☝️;ש·ריר|💪`,
+cl:`תִּיק|🎒
+כּוֹ·בַע|🧢;נַ·עַל|👟;גֶּ·רֶב|🧦;כֶּ·תֶר|👑
+שמ·לה|👗;חול·צה|👕;מ·עיל|🧥;ט·ב·עת|💍;מ·גף|👢
+מש·ק·פיים|👓;מכ·נ·סיים|👖;כפ·פות|🧤;צ·עיף|🧣`,
+tr:`טִיל|🚀
+מָ·טוֹס|✈️;סִי·רָה|⛵
+ר·כ·בת|🚂;מכו·נית|🚗;או·ני·יה|🚢;מ·ש·אית|🚚;מו·נית|🚕
+או·פ·ניים|🚲;או·טו·בוס|🚌;מ·סוק|🚁;טרק·טור|🚜;אמ·בו·לנס|🚑;קט·נוע|🛵`,
+na:`עֵץ|🌳;הַר|⛰️;יָם|🌊;אֵשׁ|🔥;אִי|🏝️
+שֶׁ·מֶשׁ|☀️;יָ·רֵחַ|🌙;פֶּ·רַח|🌸;גֶּ·שֶׁם|🌧️;כּוֹ·כָב|⭐;עָ·נָן|☁️;שֶׁ·לֶג|❄️
+ק·שת|🌈;ע·לה|🍃;ב·רק|⚡;קק·טוס|🌵;ד·קל|🌴;טי·פה|💧;שו·ש·נה|🌹
+חמ·ני·יה|🌻;מד·בר|🏜️;צב·עו·ני|🌷;תל·תן|🍀`,
+ho:`נֵר|🕯️;כַּף|🥄;כּוֹס|🥤
+בַּ·יִת|🏠;סֵ·פֶר|📖;דֶּ·לֶת|🚪;מִ·טָּה|🛏️|מיטה;כִּ·סֵּא|🪑|כיסא;שָׁ·עוֹן|⏰;סַ·בּוֹן|🧼
+מפ·תח|🔑;מנו·רה|💡;ט·ל·פון|📱;מז·לג|🍴;ס·כין|🔪;צ·ל·חת|🍽️;מ·ת·נה|🎁;קע·רה|🥣;מ·ט·א·טא|🧹
+מח·שב|💻;ט·ל·ווי·זיה|📺;מס·פ·ריים|✂️;מט·רי·יה|☂️;מצ·ל·מה|📷;אמ·בט·יה|🛁`,
+mi:`תֹּף|🥁|תוף
+כַּ·דּוּר|⚽;בָּ·לוֹן|🎈;דֶּ·גֶל|🚩;מֶ·לֶךְ|🤴;תִּי·נוֹק|👶;דֻּ·בִּי|🧸|דובי
+גי·ט·רה|🎸;עי·פ·רון|✏️;מכ·תב|✉️;פ·ע·מון|🔔;צ·בע|🎨;קו·בי·יה|🎲;רו·בוט|🤖;מל·כה|👸;לי·צן|🤡
+ח·צו·צ·רה|🎺;מיק·רו·ס·קופ|🔬;ט·ל·ס·קופ|🔭;מג·נט|🧲;פ·סנ·תר|🎹;כי·נור|🎻;י·ה·לום|💎;ג·ביע|🏆;ע·פי·פון|🪁`},
+RH:`1|l1|חָתוּל,טִיּוּל=טיול,גְּבוּל,בִּלְבּוּל,מַבּוּל
+3|l1|גָּדוֹל,כָּחֹל=כחול,חוֹל,סָגֹל=סגול,אֶתְמוֹל,עָגֹל=עגול
+1|on|בָּלוֹן,חַלּוֹן,אָרוֹן,שָׁעוֹן,לִימוֹן,עִפָּרוֹן=עיפרון,מָלוֹן
+3|r1|צִפּוֹר=ציפור,חֲמוֹר,אוֹר,כִּנּוֹר=כינור,שָׁחֹר=שחור,מָקוֹר
+3|r1|תַּנּוּר,כַּדּוּר,סִפּוּר=סיפור,צִיּוּר=ציור,שִׁעוּר=שיעור,בָּרוּר
+1|ir|עִיר,שִׁיר,קִיר,סִיר,גִּיר,צָעִיר
+1|m|יָם,דָּם,חַם,עוֹלָם,סֻלָּם=סולם,שָׁם
+1|al|גַּל,טַל,סַל,גָּמָל,נָמָל,מַזָּל
+1|ar|הַר,קַר,מַר,כְּפָר,נָהָר,סֻכָּר=סוכר
+1|ov|טוֹב,רְחוֹב,צָהֹב=צהוב,קָרוֹב,דֹּב=דוב
+3|ets|עֵץ,חֵץ,נֵץ
+3|t1|חָבִית,כַּפִּית,מַפִּית,זְכוּכִית,מְכוֹנִית,תָּכְנִית=תוכנית
+3|eret|מַחְבֶּרֶת,מִסְגֶּרֶת,גְּבֶרֶת,כַּוֶּרֶת=כוורת,שַׁרְשֶׁרֶת,עֲטֶרֶת
+3|ara|פָּרָה,קְעָרָה,מְעָרָה,צָרָה,נַעֲרָה,סְעָרָה
+3|ev|לֵב,זְאֵב,כְּאֵב
+1|ad|יָד,צַד,לְבַד,אֶחָד,גַּמָּד,מְיֻחָד=מיוחד
+1|an|גַּן,עָנָן,קָטָן,שֻׁלְחָן=שולחן,לָבָן,זְמַן
+1|af|אַף,כַּף,דַּף,עָף
+3|each|שָׂמֵחַ,יָרֵחַ,מַפְתֵּחַ,אוֹרֵחַ,רֵיחַ
+3|m|מַיִם,שָׁמַיִם=שמיים,אוֹפַנַּיִם=אופניים,מִשְׁקָפַיִם=משקפיים,נַעֲלַיִם=נעליים,יָדַיִם=ידיים
+3|t1|חֲנוּת,טָעוּת,יַלְדוּת,חֵרוּת
+1|il|פִּיל,מְעִיל,שְׁבִיל,חָלִיל
+3|ik|תִּיק,עַתִּיק,מַצְחִיק,מַסְפִּיק,צַדִּיק
+3|f1|גּוּף,יַנְשׁוּף,צָפוּף
+1|f1|קוֹף,חוֹף,סוֹף,עוֹף,תֹּף=תוף`,
+OPP:`גָּדוֹל-קָטָן,חַם-קַר,יוֹם-לַיְלָה,לְמַעְלָה-לְמַטָּה,שָׂמֵחַ-עָצוּב,מָהִיר-אִטִּי=איטי,פָּתוּחַ-סָגוּר,כָּבֵד-קַל,רָטֹב=רטוב-יָבֵשׁ,מָלֵא-רֵיק,חָדָשׁ-יָשָׁן,קָרוֹב-רָחוֹק,חָזָק-חַלָּשׁ,נָקִי-מְלֻכְלָךְ=מלוכלך,גָּבוֹהַּ-נָמוּךְ,אָרֹךְ=ארוך-קָצָר,רִאשׁוֹן=ראשון-אַחֲרוֹן,לִפְנֵי-אַחֲרֵי,מָתוֹק-מַר,בֹּקֶר=בוקר-עֶרֶב,קַיִץ-חֹרֶף=חורף,אוֹר-חֹשֶׁךְ=חושך,שֶׁקֶט-רַעַשׁ,עָשִׁיר-עָנִי,רָחָב-צַר,עָבֶה-דַּק,בִּפְנִים-בַּחוּץ,מֻקְדָּם=מוקדם-מְאֻחָר=מאוחר,הַרְבֵּה-מְעַט`,
+SIM:['קטן,נמוך,קצר,דק,צר,מעט','גדול,גבוה,ארוך,עבה,רחב,הרבה','לילה,ערב,חושך','יום,בוקר,אור','אחרון,אחרי,מאוחר','ראשון,לפני,מוקדם','קר,חורף','חם,קיץ'],
+SYN:'שמח-עליז,יפה-נאה,חבר-ידיד,חכם-נבון,מהיר-זריז,קטן-זעיר,גדול-ענקי,סוף-סיום,מתנה-שי,עזרה-סיוע,ירח-לבנה,כעס-זעם,פחד-אימה,התחלה-פתיחה,שקט-דממה,מיד-תכף,להביט-להסתכל,לדבר-לשוחח',
+FAM:'כתב:מכתב,כתיבה,כתובת,כותב|למד:תלמיד,לימוד,למידה,מלמד|ספר:ספרייה,סיפור,ספרן,ספרות|אכל:אוכל,מאכל,אכילה,אוכלת|שמר:שומר,משמר,שמירה,שמור|צחק:צחוק,מצחיק,צוחק,הצחיק|גדל:גדול,מגדל,גידול,גדילה|משחק:שחקן,משחקת,שיחק,משחקייה|רקד:ריקוד,רקדן,רוקדת,רקדנית|צבע:צבעוני,צובע,צבעים,צביעה|בישל:בישול,מבשל,תבשיל,מבושל|זכר:זיכרון,זוכר,מזכרת,הזכיר|דיבר:דיבור,דברן,מדברת,דיבורים|חשב:מחשב,חשבון,מחשבה,חושב|טס:מטוס,טיסה,טייס,טסה|צייר:ציור,מצייר,ציורים,ציירת',
+SPELL:'חתול|חטול|כתול|🐱;תפוח|טפוח|תפוך|🍎;מכונית|מחונית|מקונית|🚗;כדור|קדור|חדור|⚽;שעון|שאון|סעון|⏰;עיפרון|איפרון|עיפרונ|✏️;טלפון|תלפון|טלפונ|📱;קוף|כוף|קופ|🐵;ארנב|ערנב|ארנו|🐰;עכבר|אכבר|עחבר|🐭;שמש|סמס|שמס|☀️;כוכב|קוכב|כוחב|⭐;מטוס|מתוס|מטוש|✈️;אבטיח|אבתיח|עבטיח|🍉;מפתח|מפטח|מפתך|🔑;צפרדע|צפרדא|ספרדע|🐸;קשת|כשת|קשט|🌈;מחשב|מכשב|מחשו|💻;גבינה|גבינא|גוינה|🧀;תינוק|טינוק|תינוכ|👶;מלך|מלכ|מלק|🤴;רכבת|רקבת|רכבט|🚂;שוקולד|שוקולט|שוכולד|🍫;עוגה|אוגה|עוגא|🎂;יהלום|יהלומ|יעלום|💎;חצוצרה|חצוצרא|כצוצרה|🎺;דבורה|דבורא|דוורה|🐝;תרנגול|טרנגול|תרנגור|🐓',
+S:`1|הֶחָתוּל שׁוֹתֶה {חָלָב/סֵפֶר/כּוֹבַע/שֶׁמֶשׁ}.
+1|הַכֶּלֶב אוֹכֵל {עֶצֶם/עָנָן/דֶּלֶת/גֶּשֶׁם}.
+1|הַדָּג שׂוֹחֶה {בַּמַּיִם/בַּחוֹל/בָּעֵץ/בַּסֵּפֶר}.
+1|הַצִּפּוֹר עָפָה {בַּשָּׁמַיִם/בַּמִּטָּה/בַּכּוֹס/בַּנַּעַל}.
+1|הַשֶּׁמֶשׁ {חַמָּה/רְטֻבָּה/יְרֻקָּה/מְתוּקָה}.
+1|הַגּוּר יָשֵׁן {בַּסַּל/בַּשָּׁמַיִם/בַּיָּם/בַּכּוֹס}.
+1|הַפָּרָה נוֹתֶנֶת {חָלָב/מִיץ/דְּבַשׁ/מָרָק}.
+1|הַיָּרֵחַ מֵאִיר {בַּלַּיְלָה/בַּצָּהֳרַיִם/בַּמְּקָרֵר/בַּתִּיק}.
+1|הַדְּבוֹרָה עוֹשָׂה {דְּבַשׁ/חָלָב/לֶחֶם/מֶלַח}.
+1|הַסּוּס רָץ {מַהֵר/מָתוֹק/כָּחֹל/עָגֹל}.
+1|לַפִּיל יֵשׁ {חֵדֶק/כְּנָפַיִם/גַּלְגַּלִּים/נוֹצוֹת}.
+1|הַתִּינוֹק {בּוֹכֶה/נוֹבֵחַ/מְצַיֵּץ/עָף}.
+2|הַקּוֹף מְטַפֵּס עַל {הָעֵץ/הַמָּרָק/הֶעָנָן/הַגֶּשֶׁם}.
+2|הָאַרְנָב אוֹהֵב לֶאֱכֹל {גֶּזֶר/אֲבָנִים/נַעֲלַיִם/סְפָרִים}.
+2|~בַּחֹרֶף יוֹרֵד הַרְבֵּה {גֶּשֶׁם/חוֹל/לֶחֶם/דְּבַשׁ}.
+2|הַחֲתַלְתּוּל מְשַׂחֵק עִם כַּדּוּר {צֶמֶר/אֵשׁ/מָרָק/גֶּשֶׁם}.
+2|~הַצָּב הוֹלֵךְ לְאַט וְהָאַרְנָב רָץ {מַהֵר/יָרֹק/מָתוֹק/אֶתְמוֹל}.
+2|הַתַּרְנְגוֹל קוֹרֵא {בַּבֹּקֶר/בַּמָּרָק/בַּכִּיס/בַּנַּעַל}.
+2|הַצְּפַרְדֵּעַ קוֹפֶצֶת לְתוֹךְ {הַבְּרֵכָה/הַשֶּׁמֶשׁ/הַסֵּפֶר/הָעִפָּרוֹן}.
+2|הֶחָתוּל רוֹדֵף אַחֲרֵי {הָעַכְבָּר/הָהָר/הַיָּרֵחַ/הַשֻּׁלְחָן}.
+2|הַכֶּלֶב מְכַשְׁכֵּשׁ {בַּזָּנָב/בָּאֹזֶן/בַּשֵּׁן/בַּכּוֹבַע}.
+2|הַצִּפּוֹר בּוֹנָה קֵן עַל {הָעֵץ/הַיָּם/הַגֶּשֶׁם/הַמָּרָק}.
+2|הָעַכְבָּר הַקָּטָן אוֹהֵב {גְּבִינָה/אֲרָיוֹת/מַפְתְּחוֹת/עֲנָנִים}.
+2|הַדֹּב יָשֵׁן כָּל {הַחֹרֶף/הַכִּסֵּא/הַדֶּלֶת/הַגֶּזֶר}.
+3|הגורים הקטנים ישנים יחד בתוך {הסל/הענן/הירח/המרק}.
+3|כשיורד גשם אנחנו פותחים {מטרייה/מקרר/מחברת/ארנק}.
+3|הדבורים עפות מפרח לפרח ואוספות {צוף/אבנים/גשם/נוצות}.
+3|הינשוף ער בלילה וישן {ביום/בגשם/בים/בריצה}.
+3|החתלתול רעב ומחפש את {הקערה/המטרייה/הסולם/הירח} שלו.
+3|~בסתיו העלים {נושרים/שרים/שוחים/צוחקים} מהעצים.
+3|הגמל יכול ללכת ימים רבים בלי {מים/חול/דבשת/רגליים}.
+3|הנמלים סוחבות גרגירים אל {הקן/הענן/הים/הירח}.
+3|הספרנית מסדרת את {הספרים/הגלים/הכוכבים/העננים} על המדף.
+3|הפרפר יצא מתוך {הגולם/הנעל/הים/הסיר}.
+3|~אחרי הגשם הופיעה בשמיים {קשת/מיטה/דלת/מחברת}.
+3|הכלב שומר על הבית {ונובח/ומצייץ/וגועה/ומקרקר} כשמישהו מתקרב.
+4|הדולפינים מתקשרים זה עם זה בעזרת {שריקות/מכתבים/טלפונים/דגלים}.
+4|הלטאה התחממה על הסלע משום שהיא זקוקה {לחום/לשלג/לקרח/לגשם}.
+4|~למרות הגשם החזק, הציפורים המשיכו {לעוף/להתייבש/להישרף/לקפוא} אל הדרום.
+4|~הסנאי אוגר אגוזים בסתיו כדי שיהיה לו מה לאכול {בחורף/אתמול/בצלחת/בשמיים}.
+4|העטלף מוצא את דרכו בחושך בעזרת {הד/פנס/מפה/משקפיים}.
+4|~כדי לראות כוכבים רחוקים, המדענים משתמשים {בטלסקופ/במיקרוסקופ/במטרייה/במסרק}.
+4|הזיקית מחליפה {צבעים/נעליים/שיניים/כנפיים} כדי להסתתר.
+4|הנהר זורם מן ההרים ונשפך אל {הים/השמיים/היער/הגג}.
+4|~הצב מכניס את ראשו לתוך השריון כאשר הוא {מפחד/שר/עף/מצייר}.
+4|הפינגווינים חיים במקומות קרים ואינם יודעים {לעוף/לשחות/לאכול/ללכת}.
+4|~הקיפוד מתכדרר לכדור קוצני כשהוא מרגיש {סכנה/שמחה/רעב/עייפות}.`,
+T:[
+[1,'לְמִיצִי יֵשׁ כַּדּוּר אָדֹם. מִיצִי רָצָה אַחֲרֵי הַכַּדּוּר. הַכַּדּוּר נָפַל לַמַּיִם.',[['מָה הַצֶּבַע שֶׁל הַכַּדּוּר?','אָדֹם','כָּחֹל','יָרֹק'],['לְאָן נָפַל הַכַּדּוּר?','לַמַּיִם','לַסַּל','לַמִּטָּה']]],
+[1,'הַגּוּר פּוּף קָטָן וְלָבָן. הוּא אוֹהֵב לִשְׁתּוֹת חָלָב. בַּלַּיְלָה הוּא יָשֵׁן בַּסַּל.',[['מָה פּוּף אוֹהֵב לִשְׁתּוֹת?','חָלָב','מִיץ','תֵּה'],['אֵיפֹה פּוּף יָשֵׁן?','בַּסַּל','בַּגַּן','עַל הָעֵץ']]],
+[1,'הַדָּג שָׂט בַּיָּם. בָּא גַּל גָּדוֹל. הַדָּג קָפַץ מֵעַל הַגַּל.',[['אֵיפֹה שָׂט הַדָּג?','בַּיָּם','בַּנָּהָר','בַּכּוֹס'],['מִי קָפַץ מֵעַל הַגַּל?','הַדָּג','הַצָּב','הַסּוּס']]],
+[2,'הַחֲתוּלָה שׁוֹשִׁי טִפְּסָה עַל עֵץ גָּבוֹהַּ. הִיא רָאֲתָה שָׁם קֵן שֶׁל צִפּוֹר. בַּקֵּן הָיוּ שָׁלוֹשׁ בֵּיצִים קְטַנּוֹת. שׁוֹשִׁי יָרְדָה בְּשֶׁקֶט כְּדֵי לֹא לְהַפְרִיעַ.',[['עַל מָה טִפְּסָה שׁוֹשִׁי?','עַל עֵץ','עַל גַּג','עַל הַר'],['כַּמָּה בֵּיצִים הָיוּ בַּקֵּן?','שָׁלוֹשׁ','שְׁתַּיִם','חָמֵשׁ']]],
+[2,'הַכֶּלֶב בּוֹבִּי מָצָא עֶצֶם בַּגִּנָּה. הוּא חָפַר בּוֹר וְשָׂם בּוֹ אֶת הָעֶצֶם. לְמָחֳרָת הוּא שָׁכַח אֵיפֹה הַבּוֹר. בּוֹבִּי חִפֵּשׂ וְחִפֵּשׂ עַד שֶׁמָּצָא.',[['מָה מָצָא בּוֹבִּי בַּגִּנָּה?','עֶצֶם','כַּדּוּר','נַעַל'],['מָה שָׁכַח בּוֹבִּי?','אֵיפֹה הַבּוֹר','אֵיפֹה הַבַּיִת','אֵיפֹה הַמַּיִם']]],
+[2,'יָרַד גֶּשֶׁם חָזָק. הָאַרְנָב רָץ מַהֵר לַמְּחִלָּה שֶׁלּוֹ. בַּמְּחִלָּה הָיָה חַם וְיָבֵשׁ. הָאַרְנָב אָכַל גֶּזֶר וְנִרְדַּם.',[['לָמָּה רָץ הָאַרְנָב לַמְּחִלָּה?','כִּי יָרַד גֶּשֶׁם','כִּי הָיָה לַיְלָה','כִּי בָּא שׁוּעָל'],['מָה אָכַל הָאַרְנָב?','גֶּזֶר','תַּפּוּחַ','לֶחֶם']]],
+[3,'שלושה גורי חתולים נולדו באביב. לגור הראשון קראו שלג, כי הפרווה שלו לבנה. לשני קראו פחם, כי הוא שחור כולו. השלישי היה ג\'ינג\'י, ולכן קראו לו גזר. אמא חתולה ליקקה את שלושתם באהבה.',[['כמה גורים נולדו?','שלושה','שניים','ארבעה'],['למה קראו לגור השחור פחם?','כי הוא שחור כולו','כי הוא אוהב חום','כי הוא נולד בלילה'],['מה הצבע של גזר?','ג\'ינג\'י','לבן','אפור']]],
+[3,'הצב והחילזון החליטו לערוך תחרות ריצה. שניהם הלכו לאט מאוד. אחרי שעה הם התקדמו רק מטר אחד. בסוף הם צחקו, התיישבו יחד ואכלו חסה.',[['מי השתתף בתחרות?','הצב והחילזון','הצב והארנב','החילזון והנמלה'],['מה עשו השניים בסוף?','אכלו חסה יחד','הלכו לישון','רבו זה עם זה']]],
+[3,'הינשוף הצעיר פחד לעוף בלילה. אמו אמרה לו שהעיניים שלו רואות היטב בחושך. הוא פרש כנפיים וניסה. פתאום ראה את כל היער מלמעלה, והפחד נעלם.',[['ממה פחד הינשוף הצעיר?','לעוף בלילה','לאכול לבד','לשחות בנהר'],['מה ראה הינשוף מלמעלה?','את כל היער','את הים','את העיר']]],
+[3,'כל בוקר החתול מוקה מחכה ליד החלון. כשהשמש מגיעה לשטיח, הוא נשכב בדיוק במקום החם. כשהשמש זזה, גם מוקה זז איתה. כך הוא מטייל בבית כל היום בלי להתאמץ.',[['היכן מחכה מוקה בבוקר?','ליד החלון','ליד הדלת','מתחת למיטה'],['מדוע מוקה זז ממקום למקום?','כי הוא עוקב אחרי השמש','כי הוא מחפש אוכל','כי מפריעים לו']]],
+[4,'הנמלים גילו פירור עוגה ענקי ליד הספסל. נמלה אחת לא הצליחה להרים אותו לבדה. היא קראה לחברותיה, ויחד הן סחבו את הפירור עד הקן. מאז הן יודעות: מה שקשה לאחת, קל לרבות.',[['מה מצאו הנמלים?','פירור עוגה','גרגיר חיטה','עלה ירוק'],['מה אפשר ללמוד מהסיפור?','שיחד מצליחים יותר','שעוגה היא לא בריאה','שנמלים אוהבות לישון']]],
+[4,'השועל ראה אשכול ענבים גבוה על הגפן. הוא קפץ שוב ושוב, אך לא הצליח להגיע אליו. בסוף הלך משם ואמר: ממילא הענבים האלה חמוצים. האמת היא שהוא פשוט התבייש להודות שלא הצליח.',[['מה רצה השועל?','ענבים','תפוחים','דבש'],['מדוע אמר השועל שהענבים חמוצים?','כי התבייש שלא הצליח','כי טעם אותם','כי הוא לא אוהב פירות']]],
+[4,'בסתיו הסנוניות עפות לארצות חמות. הן עוברות אלפי קילומטרים בלי מפה ובלי מצפן. המדענים חושבים שהן מתמצאות בעזרת השמש, הכוכבים והשדה המגנטי של כדור הארץ. באביב הן חוזרות, לעיתים בדיוק לאותו הקן.',[['לאן עפות הסנוניות בסתיו?','לארצות חמות','לקוטב הצפוני','להרים המושלגים'],['מה עוזר לסנוניות למצוא את הדרך?','השמש והכוכבים','מפה ומצפן','ציפורים אחרות']]],
+[4,'החתלתולה לונה נתקעה על ענף גבוה ולא העזה לרדת. הגורים האחרים ייללו מלמטה, אבל זה לא עזר. אז טיפסה אמא, והראתה ללונה איך יורדים לאחור, צעד אחר צעד. לונה חיקתה אותה והגיעה בשלום לקרקע.',[['מה הייתה הבעיה של לונה?','היא לא העזה לרדת מהענף','היא הלכה לאיבוד ביער','היא הייתה רעבה'],['איך ירדה לונה בסוף?','לאחור, צעד אחר צעד','בקפיצה אחת גדולה','על הגב של אמא']]]
+]},
+fr:{
+abc:'abcdefghijklmnopqrstuvwxyz',
+cats:{an:'les animaux',fo:'la nourriture',bo:'le corps',cl:'les vêtements',tr:'les transports',na:'la nature',ho:'la maison',mi:'jeux et objets'},
+DIG:['ch','ou','oi','on','eau','ai','an','gn','ill','eu','qu','in','ph','au'],
+W:{
+an:`chat|🐱;chien|🐶;lion|🦁;ours|🐻;loup|🐺;coq|🐓
+va·che|🐮;la·pin|🐰;ca·nard|🦆;sou·ris|🐭;mou·ton|🐑;che·val|🐴;pou·le|🐔;sin·ge|🐵;co·chon|🐷
+oi·seau|🐦;pois·son|🐟||*;tor·tue|🐢;re·nard|🦊;a·beil·le|🐝;ser·pent|🐍;four·mi|🐜;hi·bou|🦉;gi·ra·fe|🦒;cha·meau|🐫;dau·phin|🐬;ti·gre|🐯;zè·bre|🦓
+pa·pil·lon|🦋;gre·nouil·le|🐸;é·lé·phant|🐘;cro·co·di·le|🐊;a·rai·gnée|🕷️;es·car·got|🐌;ba·lei·ne|🐳;hé·ris·son|🦔;é·cu·reuil|🐿️;pieu·vre|🐙;kan·gou·rou|🦘;per·ro·quet|🦜`,
+fo:`pain|🍞;lait|🥛;œuf|🥚;riz|🍚;miel|🍯;sel|🧂
+pom·me|🍎;ba·na·ne|🍌;gâ·teau|🎂;piz·za|🍕;ci·tron|🍋;frai·se|🍓;poi·re|🍐;sou·pe|🍲;ma·ïs|🌽
+fro·ma·ge|🧀;ca·rot·te|🥕;to·ma·te|🍅;rai·sin|🍇;gla·ce|🍦;bis·cuit|🍪;ce·ri·se|🍒;oi·gnon|🧅;beur·re|🧈;sa·la·de|🥗;pê·che|🍑
+cho·co·lat|🍫;pas·tè·que|🍉;con·com·bre|🥒;cham·pi·gnon|🍄;a·na·nas|🍍;crois·sant|🥐;sand·wich|🥪;a·vo·cat|🥑`,
+bo:`main|✋;nez|👃;œil|👁️;dent|🦷;pied|🦶;bras|💪;os|🦴;cœur|❤️
+bou·che|👄;jam·be|🦵;lan·gue|👅
+o·reil·le|👂;cer·veau|🧠;doigt|☝️
+`,
+cl:`gant|🧤
+ro·be|👗;bot·te|👢;ba·gue|💍
+cha·peau|🎩;chaus·set·te|🧦;man·teau|🧥;é·char·pe|🧣;chaus·su·re|👟;cou·ron·ne|👑;lu·net·tes|👓;cas·quet·te|🧢
+pan·ta·lon|👖;che·mi·se|👔`,
+tr:`bus|🚌;train|🚂
+vé·lo|🚲;ba·teau|🚢;a·vion|✈️;fu·sée|🚀;mo·to|🏍️;ca·mion|🚚;ta·xi|🚕
+voi·tu·re|🚗;trac·teur|🚜;voi·lier|⛵
+hé·li·cop·tè·re|🚁;am·bu·lan·ce|🚑;trot·ti·net·te|🛴`,
+na:`mer|🌊;feu|🔥;fleur|🌸
+so·leil|☀️;lu·ne|🌙;ar·bre|🌳;pluie|🌧️;nei·ge|❄️;ro·se|🌹;î·le|🏝️
+é·toi·le|⭐;nu·a·ge|☁️;feuil·le|🍃;mon·ta·gne|⛰️;cac·tus|🌵;é·clair|⚡;pal·mier|🌴;gout·te|💧;vol·can|🌋
+tour·ne·sol|🌻;dé·sert|🏜️;tu·li·pe|🌷;trè·fle|🍀`,
+ho:`lit|🛏️;clé|🔑;sac|🎒;bol|🥣
+mai·son|🏠;li·vre|📖;por·te|🚪;chai·se|🪑;bou·gie|🕯️;ca·deau|🎁;sa·von|🧼;ba·lai|🧹
+ré·veil|⏰;cuil·lè·re|🥄;four·chet·te|🍴;cou·teau|🔪;am·pou·le|💡;as·siet·te|🍽️;ci·seaux|✂️;bai·gnoi·re|🛁
+té·lé·pho·ne|📱;or·di·na·teur|💻;pa·ra·pluie|☂️;té·lé·vi·sion|📺`,
+mi:`roi|🤴;dé|🎲
+bal·lon|🎈;bé·bé|👶;rei·ne|👸;clo·che|🔔;ro·bot|🤖;tam·bour|🥁;dra·peau|🚩;clown|🤡
+gui·ta·re|🎸;cra·yon|✏️;let·tre|✉️;pein·tu·re|🎨;pia·no|🎹;vio·lon|🎻;tro·phée|🏆;ai·mant|🧲;dia·mant|💎;nou·nours|🧸
+trom·pet·te|🎺;mi·cros·co·pe|🔬;té·les·co·pe|🔭;fan·tô·me|👻`},
+RH:`1|o|bateau,chapeau,gâteau,château,oiseau,vélo,stylo,moto,cadeau
+1|on|ballon,mouton,bonbon,garçon,poisson,lion,citron,savon
+1|in|lapin,sapin,matin,jardin,pain,main,train,requin
+1|ou|hibou,genou,chou,loup,cou,bijou,caillou
+3|ette|chaussette,fourchette,trompette,lunettes,bicyclette,assiette
+1|ar|soir,noir,miroir,tiroir,poire,armoire,histoire
+1|eur|fleur,cœur,peur,couleur,docteur,chanteur
+3|age|fromage,nuage,plage,visage,village,orage
+1|i|souris,fourmi,ami,lit,nid,tapis,riz
+1|e|clé,bébé,café,nez,fée,poupée,dîner
+3|i|fille,famille,chenille,coquille,myrtille
+3|ange|orange,ange,mésange,losange,mélange
+3|ine|cuisine,piscine,farine,tartine,voisine
+3|elle|poubelle,échelle,coccinelle,hirondelle,ficelle,belle
+1|ane|banane,cabane,âne,canne,savane
+3|ure|voiture,chaussure,confiture,peinture,ceinture
+3|e|cahier,panier,pompier,escalier,papier
+1|an|maman,enfant,éléphant,gant,dent,vent,blanc,serpent
+3|ar|canard,renard,guitare,phare,gare,bizarre,foulard
+1|ol|école,colle,sol,bol,vol
+1|u|tortue,rue,tutu,menu,jus,bossu`,
+OPP:'grand-petit,chaud-froid,jour-nuit,haut-bas,content-triste,rapide-lent,ouvert-fermé,lourd-léger,mouillé-sec,plein-vide,jeune-vieux,près-loin,fort-faible,propre-sale,long-court,premier-dernier,avant-après,sucré-salé,matin-soir,été-hiver,silence-bruit,riche-pauvre,large-étroit,épais-mince,tôt-tard,dedans-dehors,monter-descendre,gentil-méchant,facile-difficile',
+SIM:['petit,court,bas,mince,étroit','grand,long,haut,épais,large','nuit,soir','jour,matin','dernier,tard,après','premier,tôt,avant','froid,hiver','chaud,été'],
+SYN:'content-joyeux,beau-joli,ami-copain,malin-rusé,petit-minuscule,grand-immense,terminer-finir,cadeau-présent,aide-secours,colère-rage,peur-crainte,calme-tranquille,regarder-observer,parler-discuter,livre-bouquin,docteur-médecin,bateau-navire,casser-briser,laver-nettoyer,drôle-amusant',
+FAM:'dent:dentiste,dentifrice,dentier|lait:laitier,laitage,laiterie|fleur:fleuriste,fleurir,fleuri|chant:chanter,chanteur,chanson|jardin:jardinier,jardinage,jardiner|terre:terrain,terrier,atterrir|mer:marin,marée,maritime|vent:venteux,ventilateur,éventail|cuisine:cuisinier,cuisiner,cuisinière|pluie:pleuvoir,parapluie,pluvieux|neige:neiger,enneigé,déneiger|jour:journée,journal,bonjour|long:longueur,allonger,longtemps|grand:grandir,grandeur,agrandir|froid:froideur,refroidir,froidement|dormir:dortoir,endormi,dormeur|lire:lecture,lecteur,lisible|école:écolier,scolaire,écolière|sable:sablier,sablé,ensablé|poisson:poissonnier,poissonnerie,poissonneux',
+SPELL:'éléphant|éléfant|élephant|éléphan|🐘;gâteau|gâto|gatteau|gâtau|🎂;oiseau|oiso|oisau|oizeau|🐦;maison|maizon|méson|maisson|🏠;chapeau|chapo|chapau|shapeau|🎩;poisson|pwasson|poiçon|poissont|🐟;fromage|fromaje|fraumage|fromagge|🧀;grenouille|grenouye|grenouile|grenoulle|🐸;papillon|papiyon|papilon|pappillon|🦋;chaussure|chosure|chaussurre|chaussur|👟;montagne|montagnie|montanie|montaigne|⛰️;soleil|soleille|solail|solleil|☀️;fleur|fleure|flœur|fleurre|🌸;étoile|étoille|étoil|étwale|⭐;écureuil|écureuille|écureil|écurœuil|🐿️;hérisson|érisson|hérison|hérisont|🦔;chocolat|chocola|choccolat|chaucolat|🍫;parapluie|parapluit|paraplui|parrapluie|☂️;téléphone|téléfone|télephone|téléphonne|📱;champignon|champinion|chanpignon|champignion|🍄;cœur|keur|cœure|cueur|❤️;cheval|chevale|cheuval|chevall|🐴;lapin|lapain|lappin|lapein|🐰;mouton|mouthon|moutton|mouttont|🐑;fourchette|fourchète|fourchete|fourchaite|🍴;girafe|giraffe|jirafe|girrafe|🦒;bateau|bato|batteau|batau|🚢;lune|lunne|lhune|lun|🌙;crayon|créyon|craillon|crayont|✏️',
+S:`1|Le chat boit du {lait/sable/vent/bois}.
+1|Le chien ronge un {os/nuage/livre/lit}.
+1|Le poisson nage dans {l'eau/le ciel/l'arbre/le sac}.
+1|L'oiseau vole dans le {ciel/bol/lit/sac}.
+1|La poule pond un {œuf/vélo/pain/gant}.
+1|La vache mange de {l'herbe/la pluie/la lune/la colle}.
+1|Le soleil est {chaud/mouillé/carré/triste}.
+1|Le bébé dort dans son {lit/bol/nez/gant}.
+1|Le lapin a de longues {oreilles/ailes/roues/plumes}.
+1|La lune brille pendant la {nuit/soupe/table/pomme}.
+1|Le chaton joue avec une {balle/maison/montagne/rivière}.
+1|L'abeille fait du {miel/lait/pain/sel}.
+2|Le singe grimpe dans {l'arbre/la soupe/le nuage/la pluie}.
+2|En hiver, il tombe de la {neige/farine/salade/musique}.
+2|Le coq chante tôt le {matin/gâteau/jardin/sapin}.
+2|La grenouille saute dans la {mare/lune/poche/tasse}.
+2|Le chat court après la {souris/montagne/maison/forêt}.
+2|Le petit chien remue la {queue/table/porte/lampe}.
+2|L'écureuil cache des noisettes pour {l'hiver/la plage/la musique/la lune}.
+2|Les oiseaux font leur nid dans les {arbres/chaussures/rivières/nuages}.
+2|La tortue avance très {lentement/sucré/bleu/hier}.
+2|Le hérisson se met en {boule/carré/chemise/voiture} quand il a peur.
+2|La maman chat lèche ses {chatons/poissons/cailloux/chaussons}.
+2|Quand il pleut, on ouvre son {parapluie/cartable/frigo/cahier}.
+3|~Les chatons dorment serrés les uns contre les autres dans leur {panier/nuage/verre/cartable}.
+3|En automne, les feuilles {tombent/chantent/nagent/rient} des arbres.
+3|Le hibou chasse la nuit et dort pendant la {journée/récré/pluie/course}.
+3|Les fourmis portent des graines jusqu'à la {fourmilière/ruche/niche/bibliothèque}.
+3|~Après la pluie, un bel {arc-en-ciel/escalier/éléphant/aspirateur} est apparu dans le ciel.
+3|Le chameau peut marcher longtemps sans {boire/voler/chanter/lire}.
+3|Le papillon sort de sa {chrysalide/coquille/tanière/ruche}.
+3|Les abeilles butinent les fleurs pour fabriquer du {miel/lait/beurre/sirop}.
+3|Le chien de garde {aboie/miaule/hennit/coasse} quand quelqu'un approche.
+3|La chatte porte ses petits par la peau du {cou/dos/nez/pied}.
+3|Le renard rentre dans son {terrier/nid/aquarium/bocal} avant le lever du jour.
+4|Les dauphins communiquent entre eux grâce à des {sifflements/lettres/panneaux/drapeaux}.
+4|Le lézard se réchauffe sur la pierre parce qu'il a besoin de {chaleur/neige/glace/pluie}.
+4|~Malgré la pluie battante, les oies ont poursuivi leur {voyage/sieste/dessin/goûter} vers le sud.
+4|La chauve-souris se repère dans le noir grâce à {l'écho/la lampe/la carte/ses lunettes}.
+4|~Pour observer les étoiles lointaines, les astronomes utilisent un {télescope/microscope/parapluie/peigne}.
+4|Le caméléon change de {couleur/chaussures/dents/plumes} pour se cacher.
+4|La rivière descend de la montagne et se jette dans la {mer/forêt/grotte/cheminée}.
+4|~La tortue rentre la tête dans sa carapace dès qu'elle se sent {menacée/joyeuse/affamée/légère}.
+4|Les manchots vivent dans le froid et ne savent pas {voler/nager/marcher/manger}.
+4|~L'écureuil fait des provisions en automne afin d'avoir de quoi manger en {hiver/classe/voiture/ville}.
+4|Le chat retombe presque toujours sur ses {pattes/moustaches/oreilles/griffes}.`,
+T:[
+[1,'Mimi a une balle rouge. Mimi court après la balle. La balle tombe dans l\'eau.',[['De quelle couleur est la balle ?','rouge','bleue','verte'],['Où tombe la balle ?','dans l\'eau','dans le panier','sous le lit']]],
+[1,'Le chaton Flocon est petit et blanc. Il aime boire du lait. La nuit, il dort dans un panier.',[['Que boit Flocon ?','du lait','du jus','du thé'],['Où dort Flocon ?','dans un panier','dans le jardin','sur le toit']]],
+[1,'Le petit poisson nage dans la mer. Une grosse vague arrive. Le poisson saute par-dessus la vague.',[['Où nage le poisson ?','dans la mer','dans un bol','dans la rivière'],['Qui saute par-dessus la vague ?','le poisson','la tortue','le canard']]],
+[2,'La chatte Noisette grimpe dans un grand arbre. Là-haut, elle découvre un nid. Dans le nid, il y a trois petits œufs. Noisette redescend sans bruit pour ne pas déranger.',[['Où grimpe Noisette ?','dans un arbre','sur un toit','sur un mur'],['Combien d\'œufs y a-t-il dans le nid ?','trois','deux','cinq']]],
+[2,'Le chien Biscuit trouve un os dans le jardin. Il creuse un trou et cache son os dedans. Le lendemain, il ne sait plus où est le trou. Biscuit cherche partout et finit par le retrouver.',[['Que trouve Biscuit ?','un os','une balle','une chaussure'],['Qu\'a oublié Biscuit ?','où est le trou','où est sa niche','où est sa gamelle']]],
+[2,'Il pleut très fort. Le lapin file dans son terrier. Là, il fait chaud et sec. Le lapin croque une carotte et s\'endort.',[['Pourquoi le lapin file-t-il dans son terrier ?','parce qu\'il pleut','parce qu\'il fait nuit','parce qu\'un renard arrive'],['Que mange le lapin ?','une carotte','une pomme','du pain']]],
+[3,'Trois chatons sont nés au printemps. Le premier s\'appelle Neige, car son pelage est tout blanc. Le deuxième s\'appelle Charbon, parce qu\'il est noir de la tête aux pattes. Le troisième est roux : on l\'a appelé Carotte. Leur maman les lèche tous les trois avec tendresse.',[['Combien de chatons sont nés ?','trois','deux','quatre'],['Pourquoi le chaton noir s\'appelle-t-il Charbon ?','à cause de sa couleur','parce qu\'il aime la chaleur','parce qu\'il est né la nuit'],['De quelle couleur est Carotte ?','roux','blanc','gris']]],
+[3,'La tortue et l\'escargot décident de faire la course. Tous deux avancent tout doucement. Au bout d\'une heure, ils n\'ont parcouru qu\'un mètre. Finalement, ils éclatent de rire et partagent une feuille de salade.',[['Qui fait la course ?','la tortue et l\'escargot','la tortue et le lièvre','l\'escargot et la fourmi'],['Que font-ils à la fin ?','ils partagent une salade','ils vont dormir','ils se disputent']]],
+[3,'Le jeune hibou avait peur de voler la nuit. Sa mère lui a expliqué que ses yeux voient très bien dans le noir. Alors il a ouvert ses ailes et s\'est lancé. D\'en haut, il a découvert toute la forêt, et sa peur s\'est envolée.',[['De quoi le jeune hibou avait-il peur ?','de voler la nuit','de manger seul','de nager'],['Qu\'a-t-il découvert d\'en haut ?','toute la forêt','la mer','la ville']]],
+[3,'Chaque matin, le chat Moka attend près de la fenêtre. Dès que le soleil touche le tapis, il s\'allonge pile à l\'endroit chaud. Quand le soleil se déplace, Moka se déplace aussi. C\'est ainsi qu\'il fait le tour de la maison sans se fatiguer.',[['Où Moka attend-il le matin ?','près de la fenêtre','près de la porte','sous le lit'],['Pourquoi Moka change-t-il de place ?','il suit le soleil','il cherche à manger','on le dérange']]],
+[4,'Les fourmis ont trouvé une énorme miette de gâteau près du banc. Une fourmi seule n\'arrivait pas à la soulever. Elle a appelé ses compagnes et, ensemble, elles l\'ont portée jusqu\'à la fourmilière. Depuis, elles le savent : ce qui est lourd pour une seule est léger pour plusieurs.',[['Qu\'ont trouvé les fourmis ?','une miette de gâteau','un grain de blé','une feuille verte'],['Quelle est la leçon de l\'histoire ?','ensemble, on est plus fort','le gâteau est mauvais pour la santé','les fourmis aiment dormir']]],
+[4,'Un renard aperçoit une belle grappe de raisin, tout en haut de la vigne. Il saute encore et encore, sans jamais l\'atteindre. Il finit par s\'éloigner en grognant : « De toute façon, ces raisins sont trop verts. » En vérité, il avait surtout honte d\'avoir échoué.',[['Que voulait le renard ?','du raisin','des pommes','du miel'],['Pourquoi dit-il que les raisins sont trop verts ?','il a honte d\'avoir échoué','il les a goûtés','il n\'aime pas les fruits']]],
+[4,'En automne, les hirondelles s\'envolent vers les pays chauds. Elles parcourent des milliers de kilomètres sans carte ni boussole. Les scientifiques pensent qu\'elles se guident grâce au soleil, aux étoiles et au champ magnétique de la Terre. Au printemps, elles reviennent, parfois exactement dans le même nid.',[['Où vont les hirondelles en automne ?','vers les pays chauds','vers le pôle Nord','vers les montagnes enneigées'],['Qu\'est-ce qui aide les hirondelles à s\'orienter ?','le soleil et les étoiles','une carte et une boussole','les autres oiseaux']]],
+[4,'La petite chatte Luna est coincée sur une haute branche et n\'ose plus descendre. Les autres chatons miaulent d\'en bas, mais cela ne l\'aide pas. Alors sa mère grimpe et lui montre comment descendre à reculons, une patte après l\'autre. Luna l\'imite et retrouve la terre ferme, saine et sauve.',[['Quel est le problème de Luna ?','elle n\'ose pas descendre','elle s\'est perdue dans la forêt','elle a faim'],['Comment Luna descend-elle ?','à reculons, pas à pas','d\'un grand bond','sur le dos de sa mère']]]
+]},
+en:{
+abc:'abcdefghijklmnopqrstuvwxyz',
+cats:{an:'animals',fo:'food',bo:'the body',cl:'clothes',tr:'transport',na:'nature',ho:'home',mi:'toys & things'},
+DIG:['sh','ch','th','ee','oo','ck','ou','ai','ea','ow','ar','ng','wh','ll','or','er'],
+W:{
+an:`cat|🐱;dog|🐶;pig|🐷;hen|🐔;fox|🦊;bee|🐝;cow|🐮;bat|🦇;ant|🐜
+fish|🐟||*;duck|🦆;frog|🐸;bird|🐦;bear|🐻;horse|🐴;sheep|🐑;snake|🐍;mouse|🐭;goat|🐐;wolf|🐺;owl|🦉
+li·on|🦁;rab·bit|🐰;mon·key|🐵;tur·tle|🐢;ti·ger|🐯;spi·der|🕷️;ze·bra|🦓;dol·phin|🐬;pen·guin|🐧;whale|🐳;snail|🐌;cam·el|🐫
+el·e·phant|🐘;but·ter·fly|🦋;croc·o·dile|🐊;oc·to·pus|🐙;kan·ga·roo|🦘;gi·raffe|🦒;squir·rel|🐿️;hedge·hog|🦔;par·rot|🦜`,
+fo:`egg|🥚;milk|🥛;corn|🌽;rice|🍚;salt|🧂
+cake|🎂;bread|🍞;cheese|🧀;grapes|🍇;soup|🍲;pear|🍐;peach|🍑
+ap·ple|🍎;piz·za|🍕;lem·on|🍋;car·rot|🥕;cook·ie|🍪;hon·ey|🍯;on·ion|🧅;but·ter|🧈;cher·ry|🍒;sal·ad|🥗
+ba·nan·a|🍌;to·ma·to|🍅;straw·ber·ry|🍓;choc·o·late|🍫;cu·cum·ber|🥒;mush·room|🍄;pine·ap·ple|🍍;wa·ter·mel·on|🍉;sand·wich|🥪;pan·cakes|🥞;av·o·ca·do|🥑`,
+bo:`leg|🦵;hand|✋;nose|👃;foot|🦶;ear|👂;eye|👁️;arm|💪
+mouth|👄;tooth|🦷;heart|❤️;bone|🦴;brain|🧠
+tongue|👅;fin·ger|☝️
+`,
+cl:`hat|🎩;cap|🧢;sock|🧦
+dress|👗;shirt|👕;shoe|👟;coat|🧥;boot|👢;ring|💍;crown|👑;scarf|🧣;gloves|🧤;jeans|👖
+glass·es|👓
+`,
+tr:`bus|🚌;car|🚗;van|🚐
+train|🚂;bike|🚲;boat|⛵;ship|🚢;plane|✈️;truck|🚚
+rock·et|🚀;tax·i|🚕;trac·tor|🚜;scoot·er|🛴
+hel·i·cop·ter|🚁;am·bu·lance|🚑;mo·tor·bike|🏍️`,
+na:`sun|☀️;sea|🌊
+moon|🌙;star|⭐;tree|🌳;rain|🌧️;snow|❄️;cloud|☁️;fire|🔥;leaf|🍃;rose|🌹;drop|💧
+flow·er|🌸;rain·bow|🌈;moun·tain|⛰️;cac·tus|🌵;is·land|🏝️;light·ning|⚡;des·ert|🏜️;tu·lip|🌷;clo·ver|🍀
+vol·ca·no|🌋;sun·flow·er|🌻;tor·na·do|🌪️`,
+ho:`bed|🛏️;key|🔑;cup|🥤;bag|🎒;pen|🖊️;box|📦
+house|🏠;door|🚪;book|📖;chair|🪑;clock|⏰;spoon|🥄;knife|🔪;fork|🍴;soap|🧼;gift|🎁;plate|🍽️;bath|🛁;bowl|🥣;broom|🧹
+can·dle|🕯️;pen·cil|✏️;scis·sors|✂️
+um·brel·la|☂️;cam·er·a|📷;com·pu·ter|💻;tel·e·phone|📱;tel·e·vi·sion|📺`,
+mi:`
+ball|⚽;drum|🥁;bell|🔔;flag|🚩;king|🤴;queen|👸;kite|🪁;dice|🎲;clown|🤡;ghost|👻
+ba·by|👶;bal·loon|🎈;ro·bot|🤖;gui·tar|🎸;let·ter|✉️;tro·phy|🏆;mag·net|🧲;dia·mond|💎;ted·dy|🧸;trum·pet|🎺
+pi·an·o|🎹;vi·o·lin|🎻;mi·cro·scope|🔬;tel·e·scope|🔭`},
+RH:`1|at|cat,hat,bat,mat,rat
+1|og|dog,frog,log,fog
+1|ee|bee,tree,sea,key,tea,knee,three
+1|ar|car,star,jar,far
+1|ake|cake,snake,lake,rake
+3|ite|night,light,kite,bite,white,knight
+1|oon|moon,spoon,balloon,raccoon
+1|ing|ring,king,wing,swing,sing
+1|ock|sock,clock,rock,lock,block
+3|ain|train,rain,plane,chain,brain
+3|air|bear,chair,pear,hair,square
+3|ock|fox,box,socks,clocks
+1|all|ball,wall,tall,fall,small
+3|ed|bed,red,bread,head,said
+1|un|sun,run,one,bun,fun
+1|oat|boat,goat,coat,note
+3|oo|blue,shoe,two,zoo,glue
+1|eep|sheep,sleep,jeep,deep
+1|ell|bell,shell,well,smell
+1|ish|fish,dish,wish
+1|ook|book,cook,hook,look
+3|ate|eight,plate,gate,skate
+3|ice|mice,rice,ice,dice
+3|o|nose,rose,toes,hose
+3|o|snow,toe,go,crow
+3|ow|cow,now,how,wow
+1|ick|chick,stick,brick,kick
+1|ug|bug,mug,rug,hug
+1|en|pen,ten,hen,men
+1|ig|pig,wig,big,dig
+3|ail|snail,whale,tail,mail,sail
+3|ore|door,four,floor,more,store
+3|eet|feet,meat,seat,street,sweet`,
+OPP:'big-small,hot-cold,day-night,up-down,happy-sad,fast-slow,open-closed,heavy-light,wet-dry,full-empty,new-old,near-far,strong-weak,clean-dirty,long-short,high-low,first-last,before-after,sweet-sour,morning-evening,summer-winter,quiet-loud,rich-poor,wide-narrow,thick-thin,hard-soft,early-late,inside-outside,awake-asleep,top-bottom',
+SIM:['small,short,low,thin,narrow','big,long,high,thick,wide','night,evening','day,morning','down,bottom,low','up,top,high','last,late,after','first,early,before','cold,winter','hot,summer'],
+SYN:'happy-glad,pretty-beautiful,smart-clever,fast-quick,small-tiny,big-huge,begin-start,end-finish,gift-present,angry-mad,scared-afraid,quiet-silent,talk-speak,shout-yell,sick-ill,jump-leap,tidy-neat,cry-weep,stone-rock',
+FAM:'play:player,playful,playground|teach:teacher,teaching,taught|sun:sunny,sunshine,sunlight|rain:rainy,raincoat,raindrop|snow:snowy,snowman,snowball|help:helper,helpful,helpless|friend:friendly,friendship,unfriendly|paint:painter,painting,repaint|sing:singer,song,singing|farm:farmer,farmyard,farming|bake:baker,bakery,baking|care:careful,caring,careless|color:colorful,coloring,colorless|build:builder,building,rebuild|read:reader,reading,reread|happy:happiness,unhappy,happily|quick:quickly,quickness,quicker|kind:kindness,unkind,kindly|write:writer,writing,rewrite',
+SPELL:'elephant|elefant|eliphant|elephent|🐘;giraffe|girafe|jiraffe|girraffe|🦒;penguin|pengwin|penguine|pengin|🐧;monkey|munkey|monky|monkee|🐵;rabbit|rabit|rabbet|rabbitt|🐰;butterfly|buterfly|butterflie|butterfli|🦋;cheese|cheeze|chese|cheez|🧀;bread|bred|braed|breade|🍞;chocolate|choclate|chocolat|chocklate|🍫;banana|bananna|bannana|banena|🍌;scissors|sissors|scisors|scizzors|✂️;umbrella|umbrela|umberella|umbrellah|☂️;rainbow|rainbo|raynbow|rainbowe|🌈;mountain|mountin|mountan|mowntain|⛰️;flower|flowr|flouer|flowwer|🌸;house|howse|hause|housse|🏠;knife|nife|knif|knive|🔪;tongue|tounge|tung|tonge|👅;guitar|gitar|guitarr|guiter|🎸;pencil|pensil|pencel|pencill|✏️;balloon|baloon|ballon|balloone|🎈;queen|qween|kween|queene|👸;whale|whail|whael|wehale|🐳;snail|snale|snayl|snaill|🐌;ghost|gost|ghoast|goast|👻;island|iland|izland|islend|🏝️;honey|hunny|honee|hony|🍯;turtle|turtel|tertle|turtl|🐢;tiger|tigger|tyger|tigar|🐯;carrot|carot|carret|karrot|🥕;lemon|lemmon|lemun|leman|🍋',
+S:`1|The cat drinks {milk/sand/rocks/socks}.
+1|The dog chews a {bone/cloud/door/moon}.
+1|A fish swims in the {water/sky/tree/bag}.
+1|The bird flies in the {sky/cup/bed/sock}.
+1|The hen lays an {egg/ant/owl/arm}.
+1|The sun is {hot/wet/green/sad}.
+1|The baby sleeps in a {crib/cup/shoe/pond}.
+1|A rabbit has long {ears/wings/wheels/horns}.
+1|The moon shines at {night/lunch/school/soup}.
+1|The kitten plays with a {ball/hill/roof/lake}.
+1|Bees make {honey/milk/bread/salt}.
+1|The cow eats {grass/glass/cars/stars}.
+2|The monkey climbs up the {tree/soup/cloud/rain}.
+2|In winter, snow falls from the {sky/floor/sea/oven}.
+2|The rooster crows early in the {morning/pocket/blanket/sandwich}.
+2|The frog jumps into the {pond/moon/sock/book}.
+2|The cat runs after the {mouse/mountain/house/window}.
+2|The puppy wags its {tail/nose/tooth/bowl}.
+2|Squirrels hide nuts for the {winter/beach/circus/moon}.
+2|Birds build their nests in {trees/shoes/rivers/clouds}.
+2|The turtle walks very {slowly/sweetly/purple/yesterday}.
+2|The mother cat licks her {kittens/mittens/buttons/ribbons}.
+2|When it rains, we open an {umbrella/oven/envelope/orange}.
+2|The little mouse loves {cheese/lions/keys/clouds}.
+3|The kittens sleep curled up together in their {basket/cloud/kettle/puddle}.
+3|In autumn, the leaves {fall/sing/swim/laugh} from the trees.
+3|The owl hunts at night and sleeps during the {day/dinner/rain/race}.
+3|Ants carry seeds back to their {nest/hive/kennel/library}.
+3|~After the rain, a bright {rainbow/staircase/elephant/toaster} appeared in the sky.
+3|A camel can walk for days without {drinking/flying/singing/reading}.
+3|The butterfly comes out of its {cocoon/shell/den/hive}.
+3|Bees visit flowers to make {honey/butter/syrup/jam}.
+3|The guard dog {barks/meows/quacks/moos} when someone comes near.
+3|The fox slips back into its {den/nest/tank/bowl} before sunrise.
+3|A hedgehog rolls into a {ball/square/shirt/truck} when it is scared.
+4|Dolphins talk to each other using clicks and {whistles/letters/signs/flags}.
+4|The lizard lies on the warm rock because it needs {heat/snow/ice/rain}.
+4|~Despite the heavy rain, the geese continued their {journey/nap/drawing/snack} south.
+4|A bat finds its way in the dark by using {echoes/torches/maps/glasses}.
+4|~To study faraway stars, astronomers use a {telescope/microscope/stethoscope/comb}.
+4|A chameleon changes {color/shoes/teeth/feathers} to hide from danger.
+4|~The river flows down from the mountains and empties into the {sea/forest/cave/chimney}.
+4|~A tortoise pulls its head into its shell whenever it feels {threatened/cheerful/hungry/weightless}.
+4|Penguins live in the cold and are unable to {fly/swim/walk/eat}.
+4|~Squirrels store food in autumn so that they have enough to eat in {winter/class/traffic/town}.
+4|A cat almost always lands on its {feet/whiskers/ears/claws}.`,
+T:[
+[1,'Mimi has a red ball. Mimi runs after the ball. The ball falls in the pond.',[['What color is the ball?','red','blue','green'],['Where does the ball fall?','in the pond','in the basket','under the bed']]],
+[1,'Puff is a small white kitten. He likes to drink milk. At night he sleeps in a basket.',[['What does Puff like to drink?','milk','juice','tea'],['Where does Puff sleep?','in a basket','in the garden','on the roof']]],
+[1,'A little fish swims in the sea. A big wave comes. The fish jumps over the wave.',[['Where does the fish swim?','in the sea','in a bowl','in a river'],['Who jumps over the wave?','the fish','the turtle','the duck']]],
+[2,'Hazel the cat climbs a tall tree. Up there she finds a nest. In the nest there are three tiny eggs. Hazel climbs down quietly so she won\'t bother them.',[['Where does Hazel climb?','up a tree','onto a roof','over a wall'],['How many eggs are in the nest?','three','two','five']]],
+[2,'Biscuit the dog finds a bone in the garden. He digs a hole and hides the bone inside. The next day he cannot remember where the hole is. Biscuit looks everywhere until he finds it.',[['What does Biscuit find?','a bone','a ball','a shoe'],['What does Biscuit forget?','where the hole is','where his bed is','where his bowl is']]],
+[2,'It is raining hard. The rabbit dashes into its burrow. Inside, it is warm and dry. The rabbit nibbles a carrot and falls asleep.',[['Why does the rabbit run to its burrow?','because it is raining','because it is dark','because a fox is coming'],['What does the rabbit eat?','a carrot','an apple','some bread']]],
+[3,'Three kittens were born in the spring. The first was named Snow because her fur was pure white. The second was called Coal because he was black from nose to tail. The third was ginger, so everyone called him Carrot. Their mother washed all three with her rough tongue.',[['How many kittens were born?','three','two','four'],['Why was the black kitten called Coal?','because of his color','because he liked warm places','because he was born at night'],['What color is Carrot?','ginger','white','gray']]],
+[3,'A tortoise and a snail decided to have a race. Both of them moved very slowly. After a whole hour they had only gone one meter. In the end they burst out laughing and shared a lettuce leaf.',[['Who was in the race?','a tortoise and a snail','a tortoise and a hare','a snail and an ant'],['What did they do in the end?','shared a lettuce leaf','went to sleep','had an argument']]],
+[3,'The young owl was afraid to fly at night. His mother told him that his eyes could see very well in the dark. So he spread his wings and tried. From above he saw the whole forest, and his fear melted away.',[['What was the young owl afraid of?','flying at night','eating alone','swimming'],['What did he see from above?','the whole forest','the sea','the city']]],
+[3,'Every morning Mocha the cat waits by the window. As soon as the sun reaches the rug, he lies down right on the warm spot. When the sun moves, Mocha moves too. That is how he travels around the house without getting tired.',[['Where does Mocha wait in the morning?','by the window','by the door','under the bed'],['Why does Mocha keep moving?','he follows the sun','he is looking for food','someone bothers him']]],
+[4,'The ants found a huge cake crumb near the bench. One ant could not lift it on her own. She called her sisters, and together they carried it all the way to the nest. Now they know: what is heavy for one is light for many.',[['What did the ants find?','a cake crumb','a grain of wheat','a green leaf'],['What is the lesson of the story?','working together makes us stronger','cake is bad for you','ants like to sleep']]],
+[4,'A fox spotted a bunch of juicy grapes high up on a vine. He jumped again and again but could never reach them. At last he walked away, muttering, "Those grapes are sour anyway." The truth is, he was simply ashamed that he had failed.',[['What did the fox want?','grapes','apples','honey'],['Why did the fox say the grapes were sour?','he was ashamed that he failed','he had tasted them','he does not like fruit']]],
+[4,'In autumn, swallows fly off to warmer lands. They travel thousands of miles without a map or a compass. Scientists think they find their way using the sun, the stars and the Earth\'s magnetic field. In spring they return, sometimes to the very same nest.',[['Where do swallows go in autumn?','to warmer lands','to the North Pole','to snowy mountains'],['What helps swallows find their way?','the sun and the stars','a map and a compass','other birds']]],
+[4,'Luna the kitten was stuck on a high branch and did not dare to come down. The other kittens meowed from below, but that did not help. Then her mother climbed up and showed her how to go down backwards, one paw at a time. Luna copied her and reached the ground safe and sound.',[['What was Luna\'s problem?','she did not dare to climb down','she was lost in the forest','she was hungry'],['How did Luna get down?','backwards, one paw at a time','with one big jump','on her mother\'s back']]]
+]}};
+/* pictures that a child could name with another word of the list: never offered together */
+const CONFUSE=['⛵🚢','🐓🐔','🥤🥛','🍴🍽️🔪','🌧️☁️💧','🌸🌹🌷🌻','🌳🌴','🧸🐻','👟👢','🎩🧢','🚗🚕','🚲🏍️🛵🛴','🐟🐳🐬','🐦🦉🦜🦆🐓🐔🐧','🥣🍲🍚','💍💎','👑🤴👸','🔥🕯️','🌊🏝️','⛰️🌋','🏜️🌵','🖊️✏️','🚐🚌🚚🚑','🧀🧈','🐶🐺🦊','🐱🐯🦁','🐑🐐','🎁📦','🍃🍀','✋☝️','🦵🦶','🐭🐿️','🌙⭐','⚡🌪️','🍞🥐🥪','🎂🍪🥞','📱📷','💻📺'];
+const LNAME={'א':'אָלֶף','ב':'בֵּית','ג':'גִּימֶל','ד':'דָּלֶת','ה':'הֵא','ו':'וָו','ז':'זַיִן','ח':'חֵית','ט':'טֵית','י':'יוֹד','כ':'כַּף','ל':'לָמֶד','מ':'מֵם','נ':'נוּן','ס':'סָמֶךְ','ע':'עַיִן','פ':'פֵּא','צ':'צָדִי','ק':'קוֹף','ר':'רֵישׁ','ש':'שִׁין','ת':'תָּו'};
+const LOOK=['בכפ','דרך','וזן','חהת','סםט','עצ','גנ'];
+const SOUND=['אעה','כקח','תט','סש','בו','צז'];
+const FIN={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+const LOOKL={b:'dpq',d:'bpq',p:'qbd',q:'pbd',m:'nwu',n:'mhu',u:'nvw',v:'uwy',w:'mvu',i:'ljt',l:'itj',j:'ilg',t:'lfi',f:'tlk',a:'eoc',e:'aoc',o:'aec',c:'eos',h:'nkb',k:'hxf',g:'qjy',y:'gvj',s:'zcx',z:'sxn',x:'kzv',r:'nvi'};
+const CONF={c:'ksq',k:'cq',q:'ck',s:'cz',z:'s',g:'j',j:'g',f:'v',v:'fw',w:'v',m:'n',n:'m',b:'dp',d:'bt',p:'b',t:'d'};
+const ACC={e:'éèê',a:'àâ',i:'îï',o:'ô',u:'ùû',c:'ç','é':'eèê','è':'eéê','ê':'eéè','à':'aâ','â':'aà','î':'iï','ï':'iî','ô':'o','ù':'uû','û':'uù','ç':'cs'};
+const RUNGS=['letters','build','picture','missing','rhyme','cloze','order','story','flash','relate'];
+const CRISP=['an','fo','bo','cl','tr'];
+const NIK=/[֑-ׇ]/g;
+const strip=s=>String(s).replace(NIK,'');
+const norm=s=>strip(s).toLowerCase().replace(/\s+/g,' ').trim();
+const rnd=n=>Math.random()*n|0,pick=a=>a[rnd(a.length)];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1),x=a[i];a[i]=a[j];a[j]=x}return a}
+const NIK1=/[\u0591-\u05C7]/;
+function clusters(w){const o=[];for(const ch of w){if(NIK1.test(ch)&&o.length)o[o.length-1]+=ch;else o.push(ch)}return o}
+function lev(a,b){const m=a.length,n=b.length;let p=[];for(let j=0;j<=n;j++)p[j]=j;for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const grp=(G,x)=>{for(const g of G)if(g.indexOf(x)>=0)return g;return x};
+const pairForm=s=>{const i=s.indexOf('=');return i<0?{w:s,p:strip(s)}:{w:s.slice(0,i),p:s.slice(i+1)}};
+
+/* ---- parse ---- */
+const D={};
+Object.keys(RAW).forEach(lang=>{const r=RAW[lang],d=D[lang]={lang:lang,abc:Array.from(r.abc),cats:r.cats,W:[],DIG:r.DIG||[]};
+ Object.keys(r.W).forEach(c=>{r.W[c].split('\n').forEach((line,li)=>{line.split(';').forEach(s=>{const f=s.split('|');if(f.length<2||!f[0])return;const syl=f[0].split('·'),w=syl.join('');d.W.push({s:syl,w:w,p:f[2]||strip(w),e:f[1],c:c,l:li+1,x:f[3]==='*'})})})});
+ d.byE={};d.W.forEach(x=>{d.byE[x.e]=x});
+ d.RH=r.RH.split('\n').map(line=>{const f=line.split('|');return{l:+f[0],fam:f[1],w:f[2].split(',').map(pairForm)}});
+ d.OPP=r.OPP.split(',').map(s=>{const i=s.indexOf('-',1);return[pairForm(s.slice(0,i)),pairForm(s.slice(i+1))]});
+ d.SIM=r.SIM.map(s=>s.split(','));
+ d.SYN=r.SYN.split(',').map(s=>s.split('-').map(pairForm));
+ d.FAM=r.FAM.split('|').map(s=>{const i=s.indexOf(':');return{b:s.slice(0,i),w:s.slice(i+1).split(',')}});
+ d.SPELL=r.SPELL.split(';').map(s=>{const f=s.split('|');return{ok:f[0],bad:f.slice(1,-1),e:f[f.length-1]}});
+ d.S=r.S.split('\n').map(line=>{const i=line.indexOf('|');let tx=line.slice(i+1),ord=true;if(tx[0]==='~'){ord=false;tx=tx.slice(1)}const m=tx.match(/\{([^}]+)\}/),o=m[1].split('/');const full=tx.replace(m[0],o[0]);return{l:+line.slice(0,i),pre:tx.slice(0,m.index),post:tx.slice(m.index+m[0].length),opts:o,full:full,tok:full.split(' '),ord:ord}});
+ d.T=r.T.map(a=>({l:a[0],t:a[1],q:a[2]}))});
+
+/* ---- helpers ---- */
+const disp=(lang,x,L)=>lang==='he'&&L>=3?x.p:x.w;
+const pform=(lang,o,L)=>lang==='he'&&L>=3?o.p:o.w;
+function words(lang,L,f){const all=D[lang].W,ok=x=>!f||f(x);let a=all.filter(x=>x.l===L&&ok(x));const b=all.filter(x=>x.l===L-1&&ok(x));if(b.length&&(!a.length||Math.random()<.3))a=b;if(!a.length)a=all.filter(x=>x.l<=L&&ok(x));if(!a.length)a=all.filter(ok);return a}
+const poolOf=(lang,L)=>D[lang].W.filter(x=>x.l<=Math.max(2,L));
+function confused(a,b){if(a===b)return true;for(const g of CONFUSE)if(g.indexOf(a)>=0&&g.indexOf(b)>=0)return true;return false}
+function near(lang,x,pool,L,n){const k=norm(x.p);return shuffle(pool.filter(y=>y!==x).map(y=>[y,lev(k,norm(y.p))+(y.p[0]===x.p[0]?-.6:0)+Math.random()*.9]).sort((a,b)=>a[1]-b[1]).slice(0,n+2).map(a=>a[0])).slice(0,n)}
+function mk(q,correct,ds,n){n=n||4;const o=[correct],seen={};seen[norm(correct)]=1;for(const d of ds){if(o.length>=n)break;if(d==null||d==='')continue;const k=norm(d);if(seen[k])continue;seen[k]=1;o.push(d)}if(o.length<Math.min(n,3))return null;const s=shuffle(o);q.kind='choice';q.opts=s;q.correct=s.indexOf(correct);return q}
+function mkTiles(q,units,extra,join){let t=units.concat(extra),s=shuffle(t),g=0;while(t.length>1&&s.slice(0,units.length).join('\u0001')===units.join('\u0001')&&g++<8)s=shuffle(t);q.kind='tiles';q.units=units;q.tiles=s;q.join=join;return q}
+const sameSound=(a,b)=>a===b||grp(SOUND,a)===grp(SOUND,b)||(FIN[a]||a)===(FIN[b]||b);
+
+/* ---- rung 1: letters & sounds ---- */
+const LV={
+ same(lang){const A=D.he.abc.concat(Object.keys(FIN)),x=pick(A),g=grp(LOOK,x),look=g===x?[]:Array.from(g).filter(y=>y!==x);
+  return mk({ask:'same',big:x,optT:'let',explain:x+(LNAME[x]?' – '+LNAME[x]:''),say:LNAME[x]||null},x,shuffle(look).concat(shuffle(A.filter(y=>y!==x))))},
+ 'case'(lang){const A=D[lang].abc,x=pick(A),up=Math.random()<.5,f=y=>up?y:y.toUpperCase();
+  return mk({ask:'case',big:up?x.toUpperCase():x,optT:'let',explain:x.toUpperCase()+' '+x,say:null},f(x),shuffle(Array.from(LOOKL[x]||'')).concat(shuffle(A.filter(y=>y!==x))).map(f))},
+ firstw(lang,L){return LV.first(lang,L,true)},
+ first(lang,L,show){const d=D[lang],A=d.abc;
+  const ok=x=>{const p=x.p.toLowerCase(),f=p[0];if(A.indexOf(f)<0)return false;if(show)return true;if(lang==='he')return 'אעה'.indexOf(f)<0;
+   if(/^(ch|sh|th|ph|kn|wr|wh|gn|ps)/.test(p))return false;if(/^[cg]/.test(p))return /^[cg][aoulr]/.test(p);return (lang==='en'?/^[bdfhjklmnprstvwz]/:/^[bdfjlmnprstvz]/).test(p)};
+  const x=pick(words(lang,L,ok)),f=x.p.toLowerCase()[0],form=disp(lang,x,L);
+  const bad={};d.W.forEach(y=>{if(y!==x&&confused(x.e,y.e))bad[y.p.toLowerCase()[0]]=1});
+  const ds=shuffle(A.filter(y=>y!==f&&!bad[y]&&(lang==='he'?!sameSound(y,f):(CONF[f]||'').indexOf(y)<0&&'hxyq'.indexOf(y)<0)));
+  return mk({ask:'first',emoji:x.e,text:show?form:null,optT:'let',explain:form+' '+x.e,say:form},f,ds)},
+ syl(lang,L){const d=D.he,P=d.W.filter(x=>x.l<=2&&x.s.length>=2),x=pick(P),a=x.s[0],f=strip(a)[0];
+  const ds=shuffle(P).filter(y=>!sameSound(strip(y.s[0])[0],f)&&!confused(x.e,y.e)).map(y=>y.s[0]);
+  return mk({ask:'syl',emoji:x.e,optT:'let',explain:x.s.join('־')+' '+x.e,say:x.w},a,ds)},
+ final(lang,L){const d=D.he,P=d.W.filter(x=>x.l<=Math.min(4,L+1)&&FIN[x.p.slice(-1)]),x=pick(P),form=disp('he',x,L),cl=clusters(form),a=x.p.slice(-1);
+  return mk({ask:'final',emoji:x.e,pre:cl.slice(0,-1).join(''),post:'',optT:'let',explain:form+' '+x.e,say:form},a,[FIN[a]].concat(shuffle(Object.keys(FIN).filter(y=>y!==a))))},
+ name(lang){const A=D.he.abc,x=pick(A),g=grp(LOOK,x),look=g===x?[]:Array.from(g).filter(y=>y!==x&&A.indexOf(y)>=0);
+  return mk({ask:'name',big:LNAME[x],bigT:'word',optT:'let',explain:x+' – '+LNAME[x],say:LNAME[x]},x,shuffle(look).concat(shuffle(A.filter(y=>y!==x))))},
+ order(lang,L){const A=D[lang].abc,up=y=>lang==='he'?y:y.toUpperCase(),i=1+rnd(A.length-2),before=L>=4&&Math.random()<.6,a=A[before?i-1:i+1];
+  const ds=[A[before?i+1:i-1],A[before?i-2:i+2],A[before?i+2:i-2]].filter(Boolean).concat(shuffle(A.filter(y=>y!==A[i]&&y!==a)));
+  return mk({ask:before?'before':'after',big:up(A[i]),optT:'let',explain:A.slice(i-1,i+2).map(up).join(' '),say:null},up(a),ds.map(up))},
+ spell(lang){const r=pick(D[lang].SPELL);return mk({ask:'spell',emoji:r.e,optT:'word',explain:r.ok+' '+r.e,say:r.ok},r.ok,shuffle(r.bad))},
+ digraph(lang,L){const d=D[lang],p=pick(d.DIG),P=d.W.filter(x=>x.l<=L+1),C=P.filter(x=>x.p.indexOf(p)>=0);if(!C.length)return null;const x=pick(C);
+  return mk({ask:'digraph',big:p,optT:'word',explain:x.p+' '+x.e,say:x.p},x.p,shuffle(P.filter(y=>y.p.indexOf(p)<0)).map(y=>y.p))}};
+function gLetters(lang,L){const V=lang==='he'?[['same','firstw'],['first','syl','final'],['name','order','final','first'],['spell','order','name']]:[['case','firstw'],['first','digraph','case'],['order','digraph','spell'],['spell','order','digraph']];
+ const v=pick(V[L-1]),q=LV[v](lang,L);if(q)q.variant=v;return q}
+
+/* ---- rung 2: build the word from tiles ---- */
+function gBuild(lang,L){const d=D[lang],nd=[0,1,2,3][L-1],maxLen=[4,5,7,14][L-1];let x,units=null,mode='let',extra=[];
+ const sylU=y=>lang==='he'&&L>=3?y.s.map(strip):y.s.slice();
+ if(L>=2&&Math.random()<(L===2?.6:.5)){x=pick(words(lang,L,w=>w.s.length>=2));const u=sylU(x);if(u.join('')===disp(lang,x,L)){units=u;mode='syl';
+   const seen={};units.forEach(u=>seen[norm(u)]=1);for(const y of shuffle(d.W)){if(extra.length>=nd)break;if(y===x||y.s.length<2)continue;const u2=pick(sylU(y));if(u2.length<2&&lang!=='he')continue;if(seen[norm(u2)])continue;seen[norm(u2)]=1;extra.push(u2)}}}
+ if(!units){x=pick(words(lang,L,w=>Array.from(w.p).length<=maxLen&&/^[^ '\-]+$/.test(w.p)));const form=disp(lang,x,L);units=lang==='he'&&L<=2?clusters(form):Array.from(form);
+  const has={};Array.from(x.p.toLowerCase()).forEach(c=>has[FIN[c]||c]=1);let cand=d.abc.filter(c=>!has[c]);
+  if(lang==='he'){const pri=[];Array.from(x.p).forEach(c=>{Array.from(grp(SOUND,c)).concat(Array.from(grp(LOOK,c))).forEach(y=>{if(!has[FIN[y]||y]&&!FIN[y]&&pri.indexOf(y)<0)pri.push(y)})});cand=shuffle(pri).concat(shuffle(cand.filter(c=>pri.indexOf(c)<0)))}else cand=shuffle(cand);
+  extra=cand.slice(0,nd)}
+ const form=disp(lang,x,L);
+ return mkTiles({ask:mode==='syl'?'buildSyl':'build',mode:mode,emoji:x.e,answer:form,explain:form+' '+x.e,say:form},units,extra,'')}
+
+/* ---- rung 3: word <-> picture ---- */
+function gPic(lang,L){const x=pick(words(lang,L)),form=disp(lang,x,L),P=poolOf(lang,L).filter(y=>y!==x&&!confused(x.e,y.e));
+ if(Math.random()<[.7,.5,.4,.4][L-1]){const ds=(L>=3?shuffle(P.filter(y=>y.c===x.c)).concat(shuffle(P)):shuffle(P.filter(y=>y.c!==x.c)).concat(shuffle(P))).map(y=>y.e);
+  const q=mk({ask:'w2p',big:form,bigT:'word',optT:'emo',explain:form+' '+x.e,say:form},x.e,ds);if(q)q.variant='w2p';return q}
+ const ds=(L>=3?near(lang,x,P,L,3):L===2?shuffle(P.filter(y=>y.p[0]===x.p[0])).concat(shuffle(P)):shuffle(P)).map(y=>disp(lang,y,L));
+ const q=mk({ask:'p2w',emoji:x.e,optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,ds);if(q)q.variant='p2w';return q}
+
+/* ---- rung 4: missing letter ---- */
+function gMissing(lang,L){const d=D[lang],x=pick(words(lang,L,w=>/^[^ '\-]+$/.test(w.p)));let pre,post,a,ds;const form=disp(lang,x,L);
+ if(lang==='he'){
+  if(L<=2){const cl=clusters(form),cand=[];cl.forEach((c,i)=>{const b=c[0];if('אהעוי'.indexOf(b)<0&&!FIN[b]&&d.abc.indexOf(b)>=0)cand.push(i)});if(!cand.length)return null;
+   const i=L===1&&cand[0]===0&&Math.random()<.6?0:pick(cand);a=cl[i][0];pre=cl.slice(0,i).join('');post=cl.slice(i+1).join('');ds=shuffle(d.abc.filter(y=>!sameSound(y,a)))}
+  else{const ch=Array.from(form),i=rnd(ch.length);a=ch[i];pre=ch.slice(0,i).join('');post=ch.slice(i+1).join('');
+   if(FIN[a])ds=[FIN[a]].concat(shuffle(Object.keys(FIN).filter(y=>y!==a)));
+   else{const pri=Array.from(grp(SOUND,a)).concat(Array.from(grp(LOOK,a))).filter(y=>y!==a&&!FIN[y]);ds=shuffle(pri).slice(0,2).concat(shuffle(d.abc.filter(y=>y!==a)))}}}
+ else{const ch=Array.from(form),V='aeiouyàâéèêëîïôùûœ',isV=c=>V.indexOf(c)>=0,isL=c=>d.abc.indexOf(c)>=0||ACC[c];let cand=[];
+  ch.forEach((c,i)=>{if(!isL(c))return;if(L===1?i===0:L===2?!isV(c):L===3?isV(c):true)cand.push(i)});if(!cand.length)ch.forEach((c,i)=>{if(isL(c))cand.push(i)});if(!cand.length)return null;
+  const i=pick(cand);a=ch[i];pre=ch.slice(0,i).join('');post=ch.slice(i+1).join('');
+  const acc=lang==='fr'&&L>=3?Array.from(ACC[a]||''):[];const cls=d.abc.filter(y=>y!==a&&isV(y)===isV(a)&&(CONF[a]||'').indexOf(y)<0);
+  ds=shuffle(acc).slice(0,2).concat(shuffle(cls),shuffle(d.abc.filter(y=>y!==a)))}
+ return mk({ask:'missing',emoji:x.e,pre:pre,post:post,optT:'let',explain:form+' '+x.e,say:form},a,ds)}
+
+/* ---- rung 5: rhymes ---- */
+function gRhyme(lang,L){const d=D[lang],G=d.RH.filter(g=>L>=3||g.l===1),g=pick(G),f=o=>pform(lang,o,L),O=G.filter(h=>h.fam!==g.fam);
+ if(L>=3&&g.w.length>=3&&Math.random()<.35){const three=shuffle(g.w).slice(0,3).map(f),odd=f(pick(pick(O).w));const o=shuffle(three.concat([odd]));if(new Set(o.map(norm)).size<4)return null;
+  return{kind:'choice',ask:'rhymeOdd',variant:'odd',optT:'word',opts:o,correct:o.indexOf(odd),explain:three.join(' · '),say:three.join(', ')}}
+ const two=shuffle(g.w).slice(0,2).map(f),ds=shuffle(O).map(h=>f(pick(h.w))).filter(w=>g.w.every(o=>norm(o.p)!==norm(w)));
+ const q=mk({ask:'rhyme',big:two[0],bigT:'word',optT:'word',explain:two[0]+' – '+two[1],say:two[0]},two[1],ds);if(q)q.variant='rhyme';return q}
+
+/* ---- rung 6: sentence with a missing word ---- */
+function sents(lang,L,f){const S=D[lang].S,ok=s=>!f||f(s);let a=S.filter(s=>s.l===L&&ok(s));const b=S.filter(s=>s.l===L-1&&ok(s));if(b.length&&(!a.length||Math.random()<.25))a=b;if(!a.length)a=S.filter(s=>s.l<=L&&ok(s));return a}
+function gCloze(lang,L){const s=pick(sents(lang,L));return mk({ask:'cloze',pre:s.pre,post:s.post,sent:true,optT:'word',explain:s.full,say:s.pre+' … '+s.post,key:'c'+s.full},s.opts[0],shuffle(s.opts.slice(1)))}
+
+/* ---- rung 7: scrambled sentence ---- */
+function gOrder(lang,L){const mx=[5,7,9,11][L-1],P=sents(lang,L,s=>s.ord&&s.tok.length>=3&&s.tok.length<=mx);if(!P.length)return null;const s=pick(P);
+ return mkTiles({ask:'order',mode:'word',answer:s.full,explain:s.full,say:null,sayAfter:s.full,key:'o'+s.full},s.tok.slice(),[],' ')}
+
+/* ---- rung 8: short story + questions ---- */
+function storyIds(lang,L){const T=D[lang].T,a=[];T.forEach((s,i)=>{if(s.l===L)a.push(i)});const b=[];T.forEach((s,i)=>{if(s.l===L-1||(L===1&&s.l===2))b.push(i)});return shuffle(a).concat(shuffle(b))}
+function gStory(lang,L,h){const T=D[lang].T;let si=h&&h.story!=null?h.story:storyIds(lang,L)[0];const s=T[si],qi=h&&h.qi!=null?h.qi%s.q.length:rnd(s.q.length),r=s.q[qi];
+ const q=mk({ask:'story',story:s.t,question:r[0],optT:'text',explain:r[1],say:s.t,key:'s'+si+'.'+qi,si:si,qi:qi},r[1],shuffle(r.slice(2)),3);return q}
+
+/* ---- rung 9: flash reading ---- */
+function gFlash(lang,L){const x=pick(words(lang,L)),form=disp(lang,x,L),P=D[lang].W.filter(y=>y.l<=L+1&&y!==x);
+ return mk({ask:'flash',big:form,bigT:'word',flash:[1700,1200,850,550][L-1],optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,near(lang,x,P,L,3).map(y=>disp(lang,y,L)))}
+
+/* ---- rung 10: opposites, synonyms, word families ---- */
+const RV={
+ opp(lang,L){const d=D[lang],P=L<=2?d.OPP.slice(0,14):d.OPP,pr=pick(P),sw=Math.random()<.5,a=pr[sw?1:0],b=pr[sw?0:1],f=o=>pform(lang,o,L);
+  const sim=d.SIM.filter(g=>g.indexOf(b.p)>=0||g.indexOf(a.p)>=0).reduce((s,g)=>s.concat(g),[]);
+  const ds=[];P.forEach(q=>{if(q!==pr)q.forEach(o=>{if(sim.indexOf(o.p)<0)ds.push(f(o))})});
+  return mk({ask:'opp',big:f(a),bigT:'word',optT:'word',explain:f(a)+' ↔ '+f(b),say:f(a)},f(b),shuffle(ds))},
+ syn(lang,L){const d=D[lang],pr=pick(d.SYN),sw=Math.random()<.5,a=pr[sw?1:0].p,b=pr[sw?0:1].p;const ds=[];d.SYN.forEach(q=>{if(q!==pr)ds.push(pick(q).p)});
+  return mk({ask:'syn',big:a,bigT:'word',optT:'word',explain:a+' = '+b,say:a},b,shuffle(ds))},
+ fam(lang,L){const d=D[lang],f=pick(d.FAM),a=pick(f.w);const ds=shuffle(d.FAM.filter(g=>g!==f)).map(g=>pick(g.w));
+  return mk({ask:'fam',big:f.b,bigT:'word',optT:'word',explain:f.b+': '+f.w.join(', '),say:f.b},a,ds)},
+ oddcat(lang,L){const d=D[lang],ok=x=>!x.x&&x.l<=Math.max(2,L),cs=shuffle(CRISP),A=d.W.filter(x=>x.c===cs[0]&&ok(x)),B=d.W.filter(x=>x.c===cs[1]&&ok(x));if(A.length<3||!B.length)return null;
+  const three=shuffle(A).slice(0,3),odd=pick(B),f=x=>disp(lang,x,L),o=shuffle(three.concat([odd])).map(f);if(new Set(o.map(norm)).size<4)return null;
+  return{kind:'choice',ask:'oddcat',optT:'word',opts:o,correct:o.indexOf(f(odd)),explain:three.map(x=>f(x)+' '+x.e).join('  ')+'  ➜ '+d.cats[cs[0]],say:null,cat:cs[0]}}};
+function gRelate(lang,L){const v=pick([['opp','oddcat'],['opp','opp','oddcat'],['opp','syn','fam'],['syn','fam','opp','oddcat']][L-1]),q=RV[v](lang,L);if(q)q.variant=q.variant||v;return q}
+
+const GEN={letters:gLetters,build:gBuild,picture:gPic,missing:gMissing,rhyme:gRhyme,cloze:gCloze,order:gOrder,story:gStory,flash:gFlash,relate:gRelate};
+function gen(rung,level,lang,hint){const id=typeof rung==='number'?RUNGS[rung-1]:rung,n=RUNGS.indexOf(id)+1;if(!n||!D[lang])return null;const L=Math.max(1,Math.min(4,Math.round(+level)||1));
+ for(let g=0;g<60;g++){let q=null;try{q=GEN[id](lang,L,hint)}catch(e){q=null}if(!q)continue;q.rung=id;q.n=n;q.skill='read_'+id;q.level=L;q.lang=lang;
+  if(!q.key)q.key=id+'|'+(q.variant||'')+'|'+(q.big||'')+'|'+(q.emoji||'')+'|'+(q.answer||(q.opts?q.opts[q.correct]:''));return q}
+ return null}
+function counts(lang){const d=D[lang];return{words:d.W.length,sentences:d.S.length,stories:d.T.length,questions:d.T.reduce((a,s)=>a+s.q.length,0),rhymeGroups:d.RH.length,rhymeWords:d.RH.reduce((a,g)=>a+g.w.length,0),opposites:d.OPP.length,synonyms:d.SYN.length,families:d.FAM.length,spell:d.SPELL.length}}
+return{D:D,RUNGS:RUNGS,gen:gen,storyIds:storyIds,counts:counts,strip:strip,norm:norm,clusters:clusters,confused:confused,LNAME:LNAME,SOUND:SOUND,FIN:FIN};
+})();
+</script>
+<script>
+/* ============ READING LADDER – engine ============ */
+(function(){'use strict';
+const C=window.ReadCore,$=id=>document.getElementById(id);
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const KEY='annabelle-reading',NR=10;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=n=>Math.random()*n|0;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1),x=a[i];a[i]=a[j];a[j]=x}return a}
+function h(tag,a,kids){const e=document.createElement(tag);if(a)for(const k in a){const v=a[k];if(v==null||v===false)continue;if(k==='cls')e.className=v;else if(k==='text')e.textContent=v;else if(k==='click')e.addEventListener('click',v);else e.setAttribute(k,v)}if(kids!=null)(Array.isArray(kids)?kids:[kids]).forEach(c=>{if(c==null||c===false)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c)});return e}
+
+/* ---- texts ---- */
+const RI=[['🔤','אותיות וצלילים','Lettres et sons','Letters & sounds'],['🧩','בונים מילים','Syllabes et mots','Word builder'],['🖼️','מילה ותמונה','Mots et images','Words & pictures'],['🔍','האות החסרה','La lettre perdue','Missing letter'],['🎵','חרוזים','Rimes','Rhymes'],['✏️','המילה החסרה','Le mot qui manque','Missing word'],['🔀','משפט מבולבל','Phrases mêlées','Mixed-up sentences'],['📖','סיפור קצר','Petite histoire','Short story'],['⚡','קריאת בזק','Lecture éclair','Flash reading'],['🔁','הפכים ומשפחות','Contraires et familles','Opposites & families']];
+const TX={
+he:{title:'סולם הקריאה',sub:'מטפסים שלב אחרי שלב – וקוראים כמו גדולים!',hi:'שלום {n}!',mLadder:'הסולם',mDaily:'10 יומי',mFree:'אימון חופשי',mFreeS:'בלי כוכבים, בלי לחץ',doneT:'הושלם היום',mix:'תערובת מכל השלבים',lvl:'רמה',rung:'שלב',
+ locked:['קודם סיימי את השלב שמתחת','קודם סיים את השלב שמתחת','קודם מסיימים את השלב שמתחת'],lockedLv:'הרמה הזאת עוד נעולה – ממשיכים לטפס!',freeT:['בחרי מה לתרגל','בחר מה לתרגל','בחרו מה לתרגל'],ladT:'מטפסים מלמטה למעלה',
+ q_same:['מצאי את אותה האות','מצא את אותה האות','מצאו את אותה האות'],q_first:'באיזו אות המילה מתחילה?',q_syl:'באיזו הברה המילה מתחילה?',q_final:'איזו אות חסרה בסוף המילה?',q_name:'איזו אות זו?',q_after:'איזו אות באה מיד אחרי האות הזאת?',q_before:'איזו אות באה מיד לפני האות הזאת?',q_spell:'איזו מילה כתובה נכון?',
+ q_build:['בני את המילה','בנה את המילה','בנו את המילה'],q_buildSyl:['בני את המילה מההברות','בנה את המילה מההברות','בנו את המילה מההברות'],q_w2p:'איזו תמונה מתאימה למילה?',q_p2w:'איזו מילה מתאימה לתמונה?',q_missing:'איזו אות חסרה?',q_rhyme:'איזו מילה מתחרזת עם המילה הזאת?',q_rhymeOdd:'איזו מילה לא מתחרזת עם האחרות?',q_cloze:'איזו מילה חסרה במשפט?',
+ q_order:['סדרי את המילים למשפט','סדר את המילים למשפט','סדרו את המילים למשפט'],q_story:['קראי את הסיפור ועני','קרא את הסיפור וענה','קראו את הסיפור וענו'],q_flash:['הסתכלי טוב! איזו מילה הופיעה?','הסתכל טוב! איזו מילה הופיעה?','הסתכלו טוב! איזו מילה הופיעה?'],q_opp:'מה ההפך?',q_syn:'איזו מילה דומה במשמעות?',q_fam:'איזו מילה שייכת לאותה משפחת מילים?',q_oddcat:'איזו מילה לא שייכת לקבוצה?',
+ teach:'כמעט! זו התשובה:',gotit:'הבנתי ➜',praise:['יפה!','מעולה!','וואו!','מדהים!',['אלופה!','אלוף!','אלופים!']],again:'שוב',next:'לשלב הבא ➜',ladder:'לסולם',menu:'לתפריט',r3:'מושלם!',r2:'כל הכבוד!',r1:'יפה מאוד!',r0:'כמעט! עוד ניסיון קטן?',of:'{a} מתוך {b}',dailyDone:'10 יומי הושלם!',streak:'{n} ימים ברצף',paused:'הפסקה',resume:'להמשיך',quit:'לצאת לתפריט',lvUp:'רמה {n} נפתחה!',lvDown:'נתרגל קצת ברמה {n} ונחזור',look:'להציץ שוב',listen:'הקראה',top:['הגעת לראש הסולם!','הגעת לראש הסולם!','הגעתם לראש הסולם!'],go:'יאללה!'},
+fr:{title:'L’échelle de lecture',sub:['Grimpe barreau après barreau et lis comme une grande !','Grimpe barreau après barreau et lis comme un grand !','Grimpe barreau après barreau : lire, c’est gagné !'],hi:'Salut {n} !',mLadder:'L’échelle',mDaily:'10 du jour',mFree:'Entraînement libre',mFreeS:'sans étoiles, sans pression',doneT:'fait aujourd’hui',mix:'un peu de tout',lvl:'Niveau',rung:'Barreau',
+ locked:'Termine d’abord le barreau du dessous',lockedLv:'Ce niveau est encore fermé : continue de grimper !',freeT:'Choisis ce que tu veux travailler',ladT:'On grimpe de bas en haut',
+ q_case:'Trouve la même lettre',q_first:'Par quelle lettre commence le mot ?',q_after:'Quelle lettre vient juste après ?',q_before:'Quelle lettre vient juste avant ?',q_spell:'Quel mot est bien écrit ?',q_digraph:'Dans quel mot vois-tu ces lettres ?',
+ q_build:'Écris le mot avec les lettres',q_buildSyl:'Forme le mot avec les syllabes',q_w2p:'Quelle image va avec le mot ?',q_p2w:'Quel mot va avec l’image ?',q_missing:'Quelle lettre manque ?',q_rhyme:'Quel mot rime avec celui-ci ?',q_rhymeOdd:'Quel mot ne rime pas avec les autres ?',q_cloze:'Quel mot manque dans la phrase ?',
+ q_order:'Remets les mots dans l’ordre',q_story:'Lis l’histoire et réponds',q_flash:'Regarde bien ! Quel mot as-tu vu ?',q_opp:'Quel est le contraire ?',q_syn:'Quel mot veut dire la même chose ?',q_fam:'Quel mot est de la même famille ?',q_oddcat:'Quel est l’intrus ?',
+ teach:'Presque ! Voici la réponse :',gotit:'Compris ➜',praise:['Bien !','Super !','Waouh !','Génial !','Bravo !'],again:'Rejouer',next:'Barreau suivant ➜',ladder:'L’échelle',menu:'Menu',r3:'Parfait !',r2:'Bravo !',r1:'Bien joué !',r0:'Presque ! On réessaie ?',of:'{a} sur {b}',dailyDone:'10 du jour terminé !',streak:'{n} jours de suite',paused:'Pause',resume:'Continuer',quit:'Quitter',lvUp:'Niveau {n} débloqué !',lvDown:'On s’entraîne un peu au niveau {n}',look:'Revoir',listen:'Écouter',top:'Tu es tout en haut de l’échelle !',go:'C’est parti !'},
+en:{title:'Reading Ladder',sub:'Climb rung by rung and read like a pro!',hi:'Hi {n}!',mLadder:'Ladder',mDaily:'Daily 10',mFree:'Free practice',mFreeS:'no stars, no pressure',doneT:'done today',mix:'a bit of everything',lvl:'Level',rung:'Rung',
+ locked:'Finish the rung below first',lockedLv:'This level is still locked – keep climbing!',freeT:'Pick what you want to practice',ladT:'Climb from the bottom to the top',
+ q_case:'Find the matching letter',q_first:'Which letter does the word start with?',q_after:'Which letter comes right after this one?',q_before:'Which letter comes right before this one?',q_spell:'Which one is spelled correctly?',q_digraph:'Which word has these letters in it?',
+ q_build:'Spell the word',q_buildSyl:'Build the word from its parts',q_w2p:'Which picture matches the word?',q_p2w:'Which word matches the picture?',q_missing:'Which letter is missing?',q_rhyme:'Which word rhymes with this one?',q_rhymeOdd:'Which word does NOT rhyme with the others?',q_cloze:'Which word is missing?',
+ q_order:'Put the words in order',q_story:'Read the story and answer',q_flash:'Look closely! Which word did you see?',q_opp:'What is the opposite?',q_syn:'Which word means the same?',q_fam:'Which word is from the same word family?',q_oddcat:'Which one does not belong?',
+ teach:'Almost! Here is the answer:',gotit:'Got it ➜',praise:['Nice!','Great!','Wow!','Amazing!','Super reader!'],again:'Again',next:'Next rung ➜',ladder:'Ladder',menu:'Menu',r3:'Perfect!',r2:'Well done!',r1:'Good job!',r0:'Almost! One more try?',of:'{a} out of {b}',dailyDone:'Daily 10 complete!',streak:'{n} days in a row',paused:'Paused',resume:'Resume',quit:'Quit to menu',lvUp:'Level {n} unlocked!',lvDown:'Let’s practice level {n} for a bit',look:'Look again',listen:'Read aloud',top:'You reached the top of the ladder!',go:'Let’s go!'}};
+let lang=ls.get('annabelle-lang')||'he';if(!TX[lang])lang='he';
+const LI={he:1,fr:2,en:3},VOICE={he:['he-IL',/^(he|iw)([-_]|$)/i],fr:['fr-FR',/^fr([-_]|$)/i],en:['en-US',/^en([-_]|$)/i]};
+const CFG={prof:null,desk:null,tts:null,fast:false};
+function prof(){
+ if(CFG.prof)return CFG.prof;
+ try{if(window.KidApp&&KidApp.kid){const k=KidApp.kid()||{};let lv=0;try{lv=KidApp.level?+KidApp.level():0}catch(e){}return{name:k.name||'',age:+k.age||0,gender:k.gender||'',lv:lv||+k.skill||0}}}catch(e){}
+ try{const P=JSON.parse(ls.get('annabelle-profiles')||'null');if(P&&Array.isArray(P.list)){const k=P.list.filter(x=>x&&x.id===P.cur)[0]||P.list[0];if(k)return{name:typeof k.name==='string'?k.name:'',age:+k.age||0,gender:k.gender||'',lv:+k.skill||0}}}catch(e){}
+ return{name:'',age:0,gender:'',lv:0}}
+function gen3(f,m,x){try{if(!CFG.prof&&window.KidApp&&KidApp.g)return KidApp.g(f,m,x)}catch(e){}const g=prof().gender;return g==='f'?f:g==='m'?m:(x!=null?x:f+'/'+m)}
+const fx=s=>lang==='fr'?String(s).replace(/ ([!?:;»])/g,' $1').replace(/« /g,'« ').replace(/'/g,'’'):String(s);
+function t(k,o){let s=TX[lang][k];if(s==null)s=TX.en[k];if(s==null)return'';if(Array.isArray(s)&&k!=='praise')s=gen3(s[0],s[1],s[2]);if(o)for(const a in o)s=s.replace('{'+a+'}',o[a]);if(lang==='fr')s=s.replace(/ ([!?:])/g,' $1');return s}
+function setLang(l){lang=TX[l]?l:'he';ls.set('annabelle-lang',lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';document.title=t('title');TTS.scan()}
+const rname=r=>RI[r-1][LI[lang]];
+
+/* ---- save: {v, L:{he|fr|en:{st:{'rung.level':stars}, lv, mx, ad}}, streak:[n,day]} ---- */
+function load(){let s=null;try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}if(!s||typeof s!=='object'||Array.isArray(s))s={};s.v=1;if(!s.L||typeof s.L!=='object'||Array.isArray(s.L))s.L={};if(!Array.isArray(s.streak)||s.streak.length<2)s.streak=[0,0];s.streak=[+s.streak[0]||0,+s.streak[1]||0];return s}
+let SV=load();
+function save(){ls.set(KEY,JSON.stringify(SV))}
+const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)-20000};
+function startLevel(){const p=prof(),sk=p.lv>=1&&p.lv<=4?Math.round(p.lv):0;let L;if(p.age>=3){L=p.age<=6?1:p.age<=8?2:3;if(p.age>6){if(sk===1)L--;if(sk===4&&p.age>=10)L++}}else L=sk?Math.min(3,sk):2;return clamp(L,1,4)}
+function P(){let p=SV.L[lang];if(!p||typeof p!=='object'||Array.isArray(p))p=SV.L[lang]={};if(!p.st||typeof p.st!=='object'||Array.isArray(p.st))p.st={};
+ p.lv=clamp(Math.round(+p.lv)||0,0,4);if(!p.lv){p.lv=startLevel();p.mx=p.lv}p.mx=clamp(Math.max(Math.round(+p.mx)||0,p.lv),1,4);p.ad=clamp(+p.ad||0,-1.5,1.5);return p}
+const star=(r,k)=>clamp(Math.round(+P().st[r+'.'+k])||0,0,3);
+function starsAll(){let s=0;for(let k=1;k<=4;k++)for(let r=1;r<=NR;r++)s+=star(r,k);return s}
+const lvStars=k=>{let s=0;for(let r=1;r<=NR;r++)s+=star(r,k);return s};
+const rungOpen=(r,k)=>r<=1||star(r-1,k)>0||k<P().mx;
+const streakNow=()=>SV.streak[1]>=today()-1?SV.streak[0]:0;
+const dailyDone=()=>SV.streak[1]===today();
+const baseLevel=()=>clamp(Math.round(P().lv+P().ad),1,4);
+
+/* ---- audio ---- */
+let R=null,Q=null,cur='scMenu',gest=false,teachOpen=false,pendT=0,flT=0,selLv=0,mapFree=false;
+let AC=null,muted=ls.get('annabelle-muted')==='1';
+function ac(){if(!gest)return null;if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended'){try{AC.resume()}catch(e){}}return AC}
+function tone(f,d,type,vol,when){if(muted)return;const a=ac();if(!a)return;try{const s=a.currentTime+(when||0),o=a.createOscillator(),g=a.createGain();o.type=type||'triangle';o.frequency.setValueAtTime(f,s);g.gain.setValueAtTime(.0001,s);g.gain.linearRampToValueAtTime(vol||.12,s+.012);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+d+.03)}catch(e){}}
+const SFX={click(){tone(520,.06,'square',.05)},tick(){tone(700,.07,'triangle',.1)},good(){tone(660,.1);tone(880,.12,'triangle',.12,.08);tone(1320,.18,'triangle',.1,.16)},bad(){tone(300,.16,'sine',.1);tone(240,.22,'sine',.09,.12)},win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.24,'triangle',.13,i*.11))},star(i){tone(880+i*220,.22,'triangle',.13)}};
+/* read-aloud: only when the device has a voice for the reading language, and never while muted */
+const TTS={v:null,ok:false,log:0,
+ scan(){let vs=[];try{vs=(window.speechSynthesis&&speechSynthesis.getVoices&&speechSynthesis.getVoices())||[]}catch(e){}const re=VOICE[lang][1],was=this.ok;this.v=[].filter.call(vs,v=>re.test(v.lang||''))[0]||null;
+  this.ok=CFG.tts===true||(!!this.v&&!!window.SpeechSynthesisUtterance&&CFG.tts!==false);return was!==this.ok},
+ on(){return this.ok&&!muted},
+ say(txt){if(!txt||!this.on()||!gest)return false;this.log++;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(txt).replace(/[_…]/g,' '));if(this.v)u.voice=this.v;u.lang=(this.v&&this.v.lang)||VOICE[lang][0];u.rate=(Q&&Q.level<=2)?.8:.92;speechSynthesis.speak(u);return true}catch(e){return false}},
+ stop(){try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}};
+TTS.scan();
+function refreshSpk(){[].forEach.call(document.querySelectorAll('.spk'),b=>{b.hidden=!TTS.on()})}
+try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{if(TTS.scan())refreshSpk()})}catch(e){}
+function spkBtn(txt,cls){const b=h('button',{cls:'spk '+(cls||'sm'),'aria-label':t('listen'),title:t('listen'),text:'🔊',click:e=>{e.stopPropagation();gest=true;TTS.say(txt)}});b.hidden=!TTS.on();return b}
+function track(ty,d){try{window.KidApp&&KidApp.track&&KidApp.track(ty,d)}catch(e){}}
+function award(o){try{const A=window.AnnabelleRewards;if(!A||!A.award)return;o.game='reading';A.award(o)}catch(e){}}
+function flushR(){try{const A=window.AnnabelleRewards;A&&A.flush&&A.flush()}catch(e){}}
+
+/* ---- juice ---- */
+function burst(x,y,n,chars){const f=$('fx');if(!f||!f.animate)return;for(let i=0;i<n;i++){const e=document.createElement('i');e.textContent=chars[i%chars.length];e.style.left=x+'px';e.style.top=y+'px';f.appendChild(e);const a=Math.random()*6.28,d=50+Math.random()*150,dx=Math.cos(a)*d,dy=Math.sin(a)*d;const an=e.animate([{transform:'translate(-50%,-50%) scale(.4)',opacity:1},{transform:'translate('+(dx-12)+'px,'+(dy-40)+'px) scale(1.1) rotate('+rnd(360)+'deg)',opacity:1,offset:.7},{transform:'translate('+(dx*1.1-12)+'px,'+(dy+70)+'px) scale(.8)',opacity:0}],{duration:800+Math.random()*500,easing:'cubic-bezier(.2,.7,.4,1)'});an.onfinish=()=>e.remove();setTimeout(()=>e.remove(),1500)}}
+function confetti(){const w=innerWidth;for(let i=0;i<5;i++)setTimeout(()=>burst(w*(.15+Math.random()*.7),innerHeight*(.2+Math.random()*.3),10,['🎉','⭐','✨','🎊','💛','🐾']),i*160)}
+function pop(txt){const p=$('pop');p.textContent=txt;p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}
+function banner(txt){const b=$('banner');b.textContent=txt;b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}
+
+/* ---- round ---- */
+function show(id){cur=id;['scMenu','scMap','scPlay'].forEach(s=>$(s).classList.toggle('on',s===id));hud()}
+function closeTeach(){teachOpen=false;$('ovTeach').classList.remove('on')}
+function closeAll(){closeTeach();$('ovPause').classList.remove('on');$('ovRes').classList.remove('on')}
+function hud(){const m=$('tMid');m.textContent='';
+ if(cur==='scPlay'&&R){const pr=h('div',{id:'prog'},h('b'));pr.firstChild.style.width=Math.round(100*R.i/Math.max(1,R.plan.length))+'%';m.appendChild(pr);
+  m.appendChild(h('div',{cls:'pill',id:'pOk',text:'⭐ '+R.ok}));m.appendChild(h('div',{cls:'pill',id:'pLv',text:(R.mode==='ladder'?RI[R.rung-1][0]+' ':'')+t('lvl')+' '+(Q?Q.level:R.level)}))}
+ else m.appendChild(h('div',{cls:'pill',text:'📚 '+t('title')}))}
+function buildPlan(mode,r,L){const a=[];
+ if(mode==='daily')shuffle([1,2,3,4,5,6,7,8,9,10]).forEach(n=>a.push({r:n}));
+ else if(r===8)C.storyIds(lang,L).slice(0,4).forEach(si=>{const n=C.D[lang].T[si].q.length,qs=shuffle(Array.from({length:n},(x,i)=>i)).slice(0,2).sort();qs.forEach(qi=>a.push({r:8,h:{story:si,qi:qi}}))});
+ else for(let i=0;i<8;i++)a.push({r:r});return a}
+function startRound(mode,r,L){clearTimeout(pendT);clearTimeout(flT);closeAll();TTS.stop();$('fx').textContent='';const p=P();
+ mode=mode==='daily'||mode==='free'?mode:'ladder';r=clamp(Math.round(+r)||1,1,NR);
+ L=mode==='ladder'?clamp(Math.round(+L)||selLv||p.lv,1,4):baseLevel();
+ R={mode:mode,rung:mode==='daily'?0:r,level:L,plan:buildPlan(mode,r,L),i:0,ok:0,combo:0,maxC:0,dif:0,run:0,miss:0,keys:{},t0:Date.now(),done:false,paused:false,res:null};
+ award({event:'play'});track('game_start',{mode:mode,rung:R.rung,level:L});show('scPlay');nextQ()}
+const itemLevel=()=>R.mode==='ladder'?R.level:clamp(R.level+R.dif,1,4);
+function nextQ(){clearTimeout(pendT);pendT=0;clearTimeout(flT);closeTeach();if(!R||R.done)return;if(R.i>=R.plan.length){finish();return}
+ const e=R.plan[R.i],L=itemLevel();let q=null;for(let g=0;g<10;g++){q=C.gen(e.r,L,lang,e.h);if(!q||!R.keys[q.key])break}
+ if(!q){R.plan.splice(R.i,1);nextQ();return}
+ R.keys[q.key]=1;Q=q;Q.t0=performance.now();Q.pos=0;Q.slips=0;Q.done=false;renderQ();hud()}
+function renderQ(){const s=$('stage'),q=Q;s.textContent='';s.setAttribute('data-rung',q.rung);
+ s.appendChild(h('div',{cls:'ask',id:'ask',text:t('q_'+q.ask)}));
+ const pr=h('div',{cls:'prompt'+(q.story?' st':''),id:'prompt'});
+ if(q.story){pr.appendChild(h('div',{cls:'story scroll',id:'story',text:fx(q.story)}));pr.appendChild(h('div',{cls:'quest',id:'quest',text:fx(q.question)}))}
+ else{const small=q.kind==='tiles'||q.pre!=null||q.text;
+  if(q.emoji)pr.appendChild(h('div',{cls:'pic'+(small?' sm':''),id:'pic',text:q.emoji}));
+  if(q.text)pr.appendChild(h('div',{cls:'bigw',id:'bigw',text:q.text}));
+  if(q.big)pr.appendChild(h('div',{cls:'bigw'+(q.bigT==='word'?'':' let'),id:'bigw',text:q.big}));
+  if(q.pre!=null){const po=fx(q.post),sp=q.sent?(po+' ').indexOf(' '):0;pr.appendChild(h('div',{cls:q.sent?'sent':'bigw',id:'gapw'},[fx(q.pre),h('span',{cls:'nw'},[h('u',{id:'gap',text:q.sent?'\u00a0?\u00a0':'\u00a0'}),po.slice(0,sp)]),po.slice(sp)]))}
+  if(q.kind==='tiles'){const wd=q.mode==='word';q.slotEls=q.units.map((u,i)=>h('div',{cls:'slot'+(wd?' w':'')+(i===0?' next':''),text:' '}));pr.appendChild(h('div',{cls:'slots',id:'slots'},q.slotEls))}}
+ if(q.say)pr.appendChild(spkBtn(q.say));
+ s.appendChild(pr);
+ if(q.kind==='choice'){const n=q.opts.length,len=Math.max.apply(null,q.opts.map(x=>Array.from(C.strip(x)).length)),col=q.optT==='text'||(q.optT==='word'&&(len>10||n===3));
+  const cls='opts'+(q.optT==='emo'?' emo':q.optT==='let'?' let n'+n:col?' col'+(n===4?' w4':''):'');
+  q.optEls=q.opts.map((o,i)=>h('button',{cls:'opt','data-i':i,text:fx(o),click:()=>{gest=true;choose(i)}}));
+  s.appendChild(h('div',{cls:cls,id:'opts'},q.optEls));
+  if(q.flash)startFlash()}
+ else{const wd=q.mode==='word';q.tileEls=q.tiles.map((x,i)=>{const b=h('button',{cls:'tile'+(wd||q.mode==='syl'?' wd':''),'data-i':i,text:fx(x),click:()=>{gest=true;tapTile(b)}});b._tx=x;return b});
+  s.appendChild(h('div',{cls:'tiles',id:'tiles'},q.tileEls))}}
+function startFlash(){Q.hidden=false;$('opts').classList.add('wait');const lb=$('lookb');if(lb)lb.remove();clearTimeout(flT);flT=setTimeout(hideFlash,CFG.fast?30:Q.flash)}
+function hideFlash(){clearTimeout(flT);if(!Q||!Q.flash||Q.hidden)return;Q.hidden=true;const b=$('bigw');if(b){b.textContent='👀';b.classList.add('hid')}const o=$('opts');if(o)o.classList.remove('wait');Q.t0=performance.now();
+ if(!Q.looked&&!Q.done){const pr=$('prompt');if(pr)pr.appendChild(h('button',{cls:'lookb',id:'lookb',text:'👀 '+t('look'),click:()=>{gest=true;if(!Q||Q.done||Q.looked)return;Q.looked=true;const w=$('bigw');w.textContent=Q.big;w.classList.remove('hid');SFX.click();startFlash()}}))}}
+function choose(i){if(!Q||Q.done||!R||R.done||R.paused||Q.kind!=='choice'||teachOpen)return;if(Q.flash&&!Q.hidden)return;i=+i;if(!(i>=0&&i<Q.opts.length))return;const ok=i===Q.correct;
+ Q.optEls.forEach((b,j)=>{b.disabled=true;if(j===Q.correct)b.classList.add('ok');else if(j===i)b.classList.add('no');else b.classList.add('dim')});
+ if(Q.flash){const b=$('bigw');if(b){b.textContent=Q.big;b.classList.remove('hid')}const lb=$('lookb');if(lb)lb.remove()}
+ if(Q.pre!=null){const g=$('gap');if(g)g.textContent=fx(Q.opts[Q.correct])}
+ resolve(ok,Q.optEls[i])}
+function tapTile(b){if(!Q||Q.done||!R||R.done||R.paused||Q.kind!=='tiles'||teachOpen||!b||b.classList.contains('used'))return;const want=Q.units[Q.pos];
+ Q.tileEls.forEach(x=>x.classList.remove('hintT'));
+ if(b._tx===want){b.classList.add('used');const sl=Q.slotEls[Q.pos];sl.textContent=fx(want);sl.classList.remove('next');sl.classList.add('fill');Q.pos++;if(Q.slotEls[Q.pos])Q.slotEls[Q.pos].classList.add('next');SFX.tick();if(Q.pos>=Q.units.length)resolve(true,sl)}
+ else{Q.slips++;b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');
+  if(Q.slips>=2){for(let i=Q.pos;i<Q.units.length;i++){const sl=Q.slotEls[i];sl.textContent=fx(Q.units[i]);sl.classList.remove('next');sl.classList.add('rev')}Q.tileEls.forEach(x=>x.disabled=true);resolve(false)}
+  else{SFX.bad();const hb=Q.tileEls.filter(x=>!x.classList.contains('used')&&x._tx===want)[0];if(hb)hb.classList.add('hintT')}}}
+function resolve(ok,el){if(!Q||Q.done)return;Q.done=true;ok=!!ok;
+ track('answer',{skill:Q.skill,ok:ok,ms:Math.min(6e5,Math.round(performance.now()-Q.t0)),level:Q.level});
+ if(ok){R.ok++;R.combo++;R.maxC=Math.max(R.maxC,R.combo);R.run++;R.miss=0;if(R.run>=3&&R.dif<1){R.dif++;R.run=0}}else{R.combo=0;R.run=0;R.miss++;if(R.miss>=2&&R.dif>-1){R.dif--;R.miss=0}}
+ R.i++;hud();const pk=$('pOk');if(ok&&pk)pk.classList.add('pop');
+ if(ok){SFX.good();const pr=TX[lang].praise,w=pr[Math.min(pr.length-1,rnd(3)+(R.combo>=5?2:R.combo>=3?1:0))];pop(Array.isArray(w)?gen3(w[0],w[1],w[2]):w);
+  if(el&&el.getBoundingClientRect){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,8,['⭐','✨','💛','🐾'])}
+  if(Q.sayAfter)TTS.say(Q.sayAfter);pendT=setTimeout(nextQ,CFG.fast?20:(Q.story||Q.kind==='tiles'?1100:850))}
+ else{SFX.bad();pendT=setTimeout(openTeach,CFG.fast?20:700)}}
+function openTeach(){pendT=0;if(!Q||!R||R.done)return;teachOpen=true;const c=$('cTeach'),q=Q,long=Array.from(q.explain).length>26;c.textContent='';
+ c.appendChild(h('p',{text:'🐱 '+t('teach')}));
+ const say=q.sayAfter||(q.story?null:q.say);
+ c.appendChild(h('div',{cls:'teachw'},[h('div',{cls:'exp'+(long?' long':''),id:'exp',text:fx(q.explain)}),say?spkBtn(q.rung==='cloze'||q.rung==='order'?q.explain:say,'tw'):null]));
+ c.appendChild(h('button',{cls:'btn g',id:'tOk',text:t('gotit'),click:()=>{gest=true;SFX.click();nextQ()}}));
+ $('ovTeach').classList.add('on')}
+function finish(){if(!R||R.done)return;R.done=true;Q=null;clearTimeout(pendT);clearTimeout(flT);closeTeach();const n=R.plan.length,pct=R.ok/Math.max(1,n),st=pct>=.85?3:pct>=.6?2:pct>=.35?1:0,p=P(),res={mode:R.mode,st:st,ok:R.ok,n:n,rung:R.rung,level:R.level};
+ if(R.maxC>=3)award({event:'combo',score:R.maxC});
+ if(R.mode==='ladder'){const k=R.rung+'.'+R.level,old=star(R.rung,R.level);if(st>old){p.st[k]=st;res.gain=st-old}
+  if(st>0){award({event:'levelClear',level:R.rung});if(res.gain)award({event:'star',stars:res.gain,level:R.rung});if(st===3)award({event:'win',level:R.rung});track('level',{level:R.level,rung:R.rung,stars:st})}
+  if(R.level===p.mx&&p.mx<4){let c=0;for(let r=1;r<=NR;r++)if(star(r,R.level)>0)c++;if(c>=6){p.mx++;p.lv=p.mx;res.lvUp=p.mx}}
+  if(st===0&&R.level>1&&R.level===p.lv){p.lv=R.level-1;res.lvDown=p.lv}
+  res.top=st>0&&R.rung===NR}
+ else{if(pct>=.9)p.ad=clamp(p.ad+.5,-1.5,1.5);else if(pct<.5)p.ad=clamp(p.ad-.5,-1.5,1.5);
+  if(R.mode==='daily'&&st>0){const td=today();if(SV.streak[1]!==td){SV.streak=[SV.streak[1]===td-1?SV.streak[0]+1:1,td];res.streakUp=true}award({event:'star',stars:st});award({event:'win'})}
+  else if(st>0)award({event:'levelClear'})}
+ save();track('game_end',{sec:Math.round((Date.now()-R.t0)/1000),score:R.ok,win:st>0,mode:R.mode,rung:R.rung,level:R.level});
+ R.res=res;renderRes(res);flushR()}
+
+/* ---- screens ---- */
+function renderMenu(){const c=$('cMenu'),p=P();c.textContent='';const L=h('div'),Rr=h('div');
+ L.appendChild(h('div',{id:'masc',text:'🐱📚'}));L.appendChild(h('h1',{id:'ttl',text:t('title')}));
+ const nm=prof().name;if(nm)L.appendChild(h('p',{id:'hello',text:t('hi',{n:nm})}));
+ L.appendChild(h('p',{id:'sub',text:t('sub')}));
+ const sr=h('div',{id:'sumRow'},[h('div',{cls:'pill',id:'sStars',text:'⭐ '+starsAll()+'/'+(NR*12)}),h('div',{cls:'pill',id:'sLv',text:'🐾 '+t('lvl')+' '+p.lv})]);if(streakNow()>0)sr.appendChild(h('div',{cls:'pill',id:'sStreak',text:'🔥 '+streakNow()}));L.appendChild(sr);
+ const md=h('div',{cls:'modes'});
+ md.appendChild(h('button',{cls:'mode m1',id:'bLadder','data-mode':'ladder',click:()=>{gest=true;SFX.click();openMap(false)}},[h('b',{text:'🧗'}),h('span',null,[t('mLadder'),h('small',{text:t('ladT')})])]));
+ md.appendChild(h('button',{cls:'mode m2',id:'bDaily','data-mode':'daily',click:()=>{gest=true;SFX.click();startRound('daily')}},[h('b',{text:'📅'}),h('span',{text:t('mDaily')}),h('small',{text:dailyDone()?'✅ '+t('doneT'):t('mix')})]));
+ md.appendChild(h('button',{cls:'mode m3',id:'bFree','data-mode':'free',click:()=>{gest=true;SFX.click();openMap(true)}},[h('b',{text:'🎯'}),h('span',{text:t('mFree')}),h('small',{text:t('mFreeS')})]));
+ Rr.appendChild(md);
+ Rr.appendChild(h('div',{id:'langs'},h('span',{id:'flags'},['he','fr','en'].map(l=>h('button',{cls:l===lang?'sel':'','data-lang':l,text:l==='he'?'עב':l.toUpperCase(),click:()=>{gest=true;setLang(l);SFX.click();renderMenu();hud()}})))));
+ c.appendChild(L);c.appendChild(Rr)}
+function toMenu(){clearTimeout(pendT);clearTimeout(flT);if(R)R.done=true;Q=null;TTS.stop();closeAll();$('banner').classList.remove('on');$('fx').textContent='';renderMenu();show('scMenu')}
+window.toMenu=toMenu;
+function openMap(free){mapFree=!!free;const p=P(),hd=$('mapHead'),g=$('lad');hd.textContent='';g.textContent='';if(!selLv||selLv>p.mx)selLv=p.lv;
+ if(free)hd.appendChild(h('div',{text:'🎯 '+t('freeT')}));
+ else{hd.appendChild(h('div',{text:'🧗 '+t('ladT')}));
+  hd.appendChild(h('div',{id:'lvRow'},[1,2,3,4].map(k=>{const un=k<=p.mx;return h('button',{cls:'lvch'+(k===selLv?' sel':'')+(un?'':' lock'),'data-lv':k,'aria-label':t('lvl')+' '+k,click:()=>{gest=true;if(!un){SFX.bad();pop('🔒');banner(t('lockedLv'));return}SFX.click();selLv=k;openMap(false)}},[h('span',{text:t('lvl')+' '+k}),h('small',{text:un?'⭐ '+lvStars(k)+'/'+NR*3:'🔒'})])})))}
+ let top=0;for(let r=1;r<=NR;r++)if(rungOpen(r,selLv))top=r;else break;let curEl=null;
+ for(let r=NR;r>=1;r--){const un=free||rungOpen(r,selLv),st=free?0:star(r,selLv),isCur=!free&&r===top;
+  const kids=[h('span',{cls:'no',text:String(r)}),h('b',{text:RI[r-1][0]}),h('span',{cls:'nm',text:rname(r)})];
+  if(isCur)kids.push(h('span',{cls:'cat',text:'🐱'}));
+  if(!free)kids.push(h('i',null,un?['★'.repeat(st),h('u',{text:'★'.repeat(3-st)})]:['🔒']));
+  const b=h('button',{cls:'rg'+(!un?' lock':st?' done':'')+(isCur?' cur':''),'data-rung':r,'aria-label':t('rung')+' '+r+': '+rname(r),click:()=>{gest=true;if(!un){SFX.bad();pop('🔒');banner(t('locked'));return}SFX.click();startRound(free?'free':'ladder',r,selLv)}},kids);
+  if(isCur)curEl=b;g.appendChild(b)}
+ show('scMap');const w=$('ladWrap');w.scrollTop=0;if(curEl){const a=curEl.offsetTop-w.offsetTop-(w.clientHeight-curEl.offsetHeight)/2;w.scrollTop=Math.max(0,a)}}
+function renderRes(res){const c=$('cRes'),st=res.st,lad=res.mode==='ladder';c.textContent='';let next=0;
+ c.appendChild(h('div',{cls:'huge',text:st<=0?'💪':res.top?'🏆':res.mode==='daily'?'📅':lad?RI[res.rung-1][0]:'🎯'}));
+ c.appendChild(h('h2',{id:'rT',text:t('r'+Math.max(0,st))}));
+ const sr=h('div',{cls:'stars',id:'rStars'});for(let i=0;i<3;i++){const s=h('span',{cls:i<st?'':'off',text:'⭐'});s.style.animationDelay=(.25+i*.3)+'s';sr.appendChild(s);if(i<st)setTimeout(()=>SFX.star(i),250+i*300)}c.appendChild(sr);
+ c.appendChild(h('p',{id:'rOf',text:t('of',{a:res.ok,b:res.n})+(lad?' · '+t('lvl')+' '+res.level:'')}));
+ if(res.mode==='daily'&&st>0){c.appendChild(h('p',{text:t('dailyDone')}));c.appendChild(h('p',{text:'🔥 '+(streakNow()>1?t('streak',{n:streakNow()}):'1')}))}
+ if(res.lvUp)c.appendChild(h('p',{id:'rUp',text:'🎉 '+t('lvUp',{n:res.lvUp})}));
+ else if(res.top)c.appendChild(h('p',{text:'🐱 '+t('top')}));
+ if(res.lvDown)c.appendChild(h('p',{id:'rDown',text:'🐾 '+t('lvDown',{n:res.lvDown})}));
+ if(st>0)setTimeout(()=>{SFX.win();confetti()},350);
+ if(lad&&st>0&&res.rung<NR)next=res.rung+1;
+ if(next)c.appendChild(h('button',{cls:'btn g',id:'rNext',text:t('next'),click:()=>{SFX.click();startRound('ladder',next,res.level)}}));
+ c.appendChild(h('button',{cls:'btn'+(next?' w':' g'),id:'rAgain',text:'↻ '+t('again'),click:()=>{SFX.click();startRound(res.mode,res.rung||1,res.lvDown||res.level)}}));
+ if(res.mode!=='daily')c.appendChild(h('button',{cls:'btn w',id:'rMap',text:(lad?'🧗 ':'🎯 ')+(lad?t('ladder'):t('mFree')),click:()=>{SFX.click();closeAll();selLv=lad?(res.lvUp||res.lvDown||res.level):selLv;openMap(!lad)}}));
+ c.appendChild(h('button',{cls:'btn w',id:'rMenu',text:'☰ '+t('menu'),click:()=>{SFX.click();toMenu()}}));
+ $('ovRes').classList.add('on')}
+function pause(){if(!R||R.done||R.paused||cur!=='scPlay')return;R.paused=true;TTS.stop();const c=$('cPause');c.textContent='';c.appendChild(h('h2',{text:'⏸ '+t('paused')}));
+ c.appendChild(h('button',{cls:'btn g',id:'pRes',text:'▶ '+t('resume'),click:()=>{SFX.click();resume()}}));c.appendChild(h('button',{cls:'btn w',id:'pQuit',text:'☰ '+t('quit'),click:()=>{SFX.click();toMenu()}}));c.appendChild(h('div',{id:'navSlot'}));$('ovPause').classList.add('on')}
+function resume(){if(R)R.paused=false;$('ovPause').classList.remove('on')}
+
+/* ---- input ---- */
+$('bBack').onclick=()=>{gest=true;SFX.click();if(cur==='scPlay')pause();else toMenu()};
+function applyMute(){$('bMute').textContent=muted?'🔇':'🔊';$('bMute').classList.toggle('off',muted);refreshSpk()}
+$('bMute').onclick=()=>{gest=true;muted=!muted;ls.set('annabelle-muted',muted?'1':'0');if(muted)TTS.stop();applyMute();SFX.click()};
+['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>{gest=true},true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){TTS.stop();pause()}});
+addEventListener('pagehide',()=>TTS.stop());
+addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
+ if(k==='Escape'){if(R&&R.paused)resume();else if(cur==='scPlay')pause();return}
+ if($('ovRes').classList.contains('on')||$('ovPause').classList.contains('on'))return;
+ if(teachOpen){if(k==='Enter'||k===' '){e.preventDefault();nextQ()}return}
+ if(cur!=='scPlay'||!Q||Q.done)return;
+ if(Q.kind==='choice'){const n=+k;if(n>=1&&n<=Q.opts.length){e.preventDefault();choose(n-1)}}
+ else if(Q.kind==='tiles'){const n=+k;if(n>=1&&n<=Q.tileEls.length){e.preventDefault();tapTile(Q.tileEls[n-1])}}});
+
+/* ---- test hook ---- */
+function flushPend(){if(teachOpen||pendT)nextQ()}
+function pub(q){if(!q)return null;const o={};['rung','n','skill','variant','level','lang','kind','ask','emoji','big','text','pre','post','story','question','opts','correct','units','tiles','join','answer','explain','say','flash','key'].forEach(k=>{if(q[k]!==undefined)o[k]=Array.isArray(q[k])?q[k].slice():q[k]});
+ if(q.kind==='tiles'&&q.tileEls){const used={};o.order=q.units.map(u=>{for(let i=0;i<q.tiles.length;i++)if(!used[i]&&q.tiles[i]===u){used[i]=1;return i}return -1});o.pos=q.pos}o.done=!!q.done;return o}
+window.__reading={
+ state(){const p=P();return{screen:cur,lang:lang,mode:R?R.mode:null,rung:R?R.rung:0,level:R?R.level:0,itemLevel:R&&!R.done?itemLevel():0,i:R?R.i:0,total:R?R.plan.length:0,ok:R?R.ok:0,done:R?R.done:true,paused:R?R.paused:false,teach:teachOpen,res:R?R.res||null:null,
+  lv:p.lv,mx:p.mx,ad:p.ad,start:startLevel(),stars:JSON.parse(JSON.stringify(p.st)),starsAll:starsAll(),streak:SV.streak.slice(),dailyDone:dailyDone(),tts:TTS.ok,ttsOn:TTS.on(),said:TTS.log,muted:muted}},
+ gen(rung,level,lang2,hint){return pub(C.gen(rung,level,lang2||lang,hint))},
+ item(){return pub(Q)},
+ answer(i){flushPend();if(!Q||Q.done||!R||R.done)return false;if(Q.kind==='choice'){if(Q.flash&&!Q.hidden)hideFlash();choose(i==null?Q.correct:i)}else{tapTile(Q.tileEls[i==null?pub(Q).order[Q.pos]:i])}return true},
+ start(mode,rung,level){gest=true;startRound(mode,rung,level);return true},
+ next(){flushPend()},
+ win(){let g=0;while(R&&!R.done&&g++<400){flushPend();if(!R||R.done)break;this.answer()}flushPend();return R?R.res:null},
+ pause:pause,resume:resume,toMenu:toMenu,openMap:openMap,setLang(l){setLang(l);renderMenu();hud()},
+ cfg(o){for(const k in o)CFG[k]=o[k];TTS.scan();refreshSpk();return CFG},
+ save(){return SV},reload(){SV=load();selLv=0;renderMenu()},core:C};
+
+/* ---- boot ---- */
+setLang(lang);applyMute();renderMenu();show('scMenu');
+addEventListener('load',()=>{if(TTS.scan())refreshSpk();if(cur==='scMenu')renderMenu()});
+})();
+</script>
+</body>
+</html>
