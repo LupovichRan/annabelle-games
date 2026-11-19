@@ -12,15 +12,24 @@
    earn, no level-up screen; the chip only comes with a banner and shows avatar + pet + stars. "teen" 11-18 = a cleaner chip (level, coins, streak), fewer particles,
    a quieter level-up card. "kid" (8-10 and unknown age) = the classic behaviour.
    Parents' play-time limits always win: nothing is shown while the play-time lock is up.  prefers-reduced-motion: no particles, no confetti.
-   API: window.Juice = { sfx(name), buzz(pattern), levelUp(level), confetti(n), burst(x, y), chip() }   sfx names: earn boost level quest badge chest pet tap */
+   CALM MODE (docs/CALM-UI.md; localStorage 'annabelle-calm' !== '0', the default for everybody): the layer is reduced to quiet feedback.
+     · calm() is true (like reduced motion): no flying coins, no particles, no confetti, no player chip, no haptic patterns, no pulses on the background;
+     · the only sound left is the soft "tap" tick (every other sfx name plays that tick), and routine coin / XP gains make no sound at all;
+     · the level-up screen does not pop over a game: the level is acknowledged and the HOME page shows it as one quiet line (a tap opens a plain card);
+     · new stickers / badges are counted in 'annabelle-news' {b, s}: the home page shows ONE "something new" line (Juice.news() / Juice.newsClear()).
+     · the banners themselves belong to rewards.js; when it offers  AnnabelleRewards.quiet(bool)  it is told about calm mode here (see boot()).
+     The window event 'annabelle-calm' is followed without a reload.
+   API: window.Juice = { sfx(name), buzz(pattern), levelUp(level), confetti(n), burst(x, y), chip(), calm(), quiet(), news(), newsClear() }   sfx names: earn boost level quest badge chest pet tap */
 (function () {
   'use strict';
   var W = window, D = document;
   if (W.Juice) return;
   var R = null, page = location.pathname.split('/').pop() || 'index.html', HOME = page === 'index.html', ALBUM = page === 'album.html';
   var rmq = null; try { rmq = W.matchMedia('(prefers-reduced-motion: reduce)'); } catch (e) {}
-  function calm() { return !!(rmq && rmq.matches); }
   function ls(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  /* quiet() = the site's calm mode (default ON: only the value '0' means lively).  calm() = no motion effects: reduced motion OR calm mode. */
+  function quiet() { return ls('annabelle-calm') !== '0'; }
+  function calm() { return !!(rmq && rmq.matches) || quiet(); }
   function muted() { return ls('annabelle-muted') === '1'; }
   function lang() { var l = ls('annabelle-lang'); return l === 'fr' || l === 'en' ? l : 'he'; }
   function locked() { try { return !!(W.AnnabellePlaytime && W.AnnabellePlaytime.isLocked()); } catch (e) { return false; } }
@@ -61,6 +70,7 @@
   var lastS = {};
   function sfx(name) {
     try {
+      if (quiet() && SFX[name]) name = 'tap'; // calm mode: one soft tick is the only sound of this layer
       var def = SFX[name]; if (!def || muted() || !gest || D.hidden) return;
       var now = Date.now(); if (now - (lastS[name] || 0) < (name === 'earn' ? 700 : 250)) return; lastS[name] = now;
       var AC = W.AudioContext || W.webkitAudioContext; if (!AC) return;
@@ -73,8 +83,9 @@
       });
     } catch (e) {}
   }
-  function buzz(p) { try { if (gest && !muted() && navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function buzz(p) { try { if (quiet()) p = 8; if (gest && !muted() && navigator.vibrate) navigator.vibrate(p); } catch (e) {} } // calm mode: one short tick, no patterns
   function vibe(strength, color, x, y) {
+    if (quiet()) return; // calm mode: the background layer is off anyway
     try { var V = W.Vibe; if (!V) return; if (V.pulse) V.pulse(strength, color); if (x != null && V.burst) V.burst(x, y, color); } catch (e) {}
   }
 
@@ -163,7 +174,7 @@
     return best;
   }
   function showChip(delta, ms) {
-    if (!D.body || locked()) return null;
+    if (!D.body || locked() || quiet()) return null; // calm mode: no floating chip
     buildChip(); fillChip(delta);
     if (!chip.classList.contains('on')) place();
     void chip.offsetWidth; chip.classList.add('on'); shown = Date.now();
@@ -204,6 +215,7 @@
   function showEarn() {
     var a = acc; acc = {c: 0, x: 0, b: false};
     if ((a.c <= 0 && a.x <= 0) || locked() || !D.body) return;
+    if (quiet()) return; // calm mode: routine coin / XP gains are dropped (they still count): nothing flies, nothing rings
     var bd = band(); if (bd === 'little') return; // play first: nothing flies and nothing rings on every earn (the coins still count)
     var delta = (a.c > 0 ? '+' + a.c + ' 💰' : '') + (a.x > a.c ? (a.c > 0 ? ' · ' : '') + '+' + a.x + ' XP' + (a.b ? ' 🧠' : '') : '');
     var target = HOME ? D.getElementById('pco') : ALBUM ? D.getElementById('coins') : null, n = Math.max(1, Math.min(bd === 'teen' ? 3 : 6, Math.ceil(Math.max(a.c, a.x / 2) / 3)));
@@ -229,6 +241,12 @@
     })(last);
   }
 
+  /* ---------- calm mode: news for the home page instead of things popping over a game ---------- */
+  var NEWS = 'annabelle-news';
+  function news() { try { var o = JSON.parse(ls(NEWS) || 'null'), b = o ? Math.floor(+o.b) || 0 : 0, s = o ? Math.floor(+o.s) || 0 : 0; return b > 0 || s > 0 ? {b: Math.max(0, b), s: Math.max(0, s)} : null; } catch (e) { return null; } }
+  function newsAdd(b, s) { try { var o = news() || {b: 0, s: 0}; o.b = Math.min(99, o.b + (b || 0)); o.s = Math.min(99, o.s + (s || 0)); if (o.b || o.s) localStorage.setItem(NEWS, JSON.stringify(o)); } catch (e) {} }
+  function newsClear() { try { localStorage.removeItem(NEWS); } catch (e) {} }
+
   /* ---------- level-up celebration ---------- */
   var lvEl = null, lvShown = 0, lvT = 0;
   function homeState() { try { var o = JSON.parse(ls('annabelle-home') || 'null'); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
@@ -245,6 +263,7 @@
       if (lvEl || n <= lvShown || locked()) return false;
       var bd = band();
       if (bd === 'little') { lvShown = n; R.ackLevel && R.ackLevel(); homeSet('lv', n); return false; } // the little ones see their pet grow instead
+      if (quiet()) { lvShown = n; R.ackLevel && R.ackLevel(); return false; } // calm mode: nothing pops over the game. 'lv' of the home state is left alone, so the home page shows the new level as one quiet line
       lvShown = n; R.ackLevel && R.ackLevel();
       var seen = homeState().lv, from = typeof seen === 'number' && seen < n ? seen : n - 1;
       if (!(typeof seen === 'number' && seen >= n)) homeSet('lv', n); // the home page will not celebrate the same level again
@@ -281,6 +300,11 @@
   /* ---------- banners of rewards.js: sound, haptics, background reaction ---------- */
   function onFlush(ev) {
     if (locked()) return;
+    if (quiet()) { // calm mode: one soft tick for the banner of rewards.js, and the news that matter are kept for the home page
+      if (!HOME && !ALBUM && ev.band !== 'little') newsAdd(+ev.badges || 0, +ev.stickers || 0);
+      if (ev.toasts && (ev.badges || ev.milestone || ev.qall || ev.quests || ev.stickers || ev.pet >= 0 || ev.road || ev.back)) sfx('tap');
+      return;
+    }
     var x = W.innerWidth / 2, y = 60;
     if (ev.band === 'little') { // one soft sound, no confetti, no rumble; the chip (avatar, pet, stars) keeps the banner company
       if (ev.toasts) { sfx(ev.pet >= 0 || ev.back ? 'pet' : 'quest'); if (!HOME && !ALBUM) showChip('', 3600); setTimeout(function () { try { if (chip && chip.classList.contains('on')) place(); } catch (e) {} }, 520); }
@@ -319,9 +343,16 @@
 
   /* ---------- boot ---------- */
   var tries = 0;
+  /* rewards.js owns the banners (.ar-toast). If it offers quiet(bool) it is told about calm mode: expected = at most one small banner at a time,
+     low-value ones (coin gains, routine XP) dropped. Without that hook nothing is forced here. */
+  function tellRewards() { try { if (R && typeof R.quiet === 'function') R.quiet(quiet()); } catch (e) {} }
+  W.addEventListener('annabelle-calm', function () { // the switch was flipped: follow it without a reload
+    try { tellRewards(); if (quiet()) { if (chip) { clearTimeout(hideT); chip.classList.remove('on'); } closeLv(); } } catch (e) {}
+  });
   function boot() {
     R = W.AnnabelleRewards;
     if (!R || typeof R.on !== 'function') { if (++tries < 12) setTimeout(boot, 400); return; }
+    tellRewards();
     R.on(function (ev) { try { if (ev.t === 'earn') onEarn(ev); else if (ev.t === 'flush') onFlush(ev); } catch (e) {} });
     if (!HOME) setTimeout(function () { // a level reached on the page before: celebrate it now, before the kid starts a round
       try { var p = R.pending('level'); if (p.length) levelUp(p.reduce(function (m, q) { return Math.max(m, +q.n || 0); }, 0)); } catch (e) {}
@@ -329,6 +360,6 @@
   }
   watchOnline();
   W.Juice = {sfx: sfx, buzz: buzz, levelUp: levelUp, confetti: function (n) { try { confetti(Math.max(1, Math.min(240, n || 80))); } catch (e) {} },
-    burst: function (x, y, color) { vibe(.6, color || '#ffd24d', x, y); }, chip: function (ms) { try { return R ? showChip('', ms) : null; } catch (e) { return null; } }, calm: calm};
+    burst: function (x, y, color) { vibe(.6, color || '#ffd24d', x, y); }, chip: function (ms) { try { return R ? showChip('', ms) : null; } catch (e) { return null; } }, calm: calm, quiet: quiet, news: news, newsClear: newsClear};
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', boot); else boot();
 })();

@@ -17,6 +17,8 @@
    API:  window.Vibe = { set(opts), pulse(strength, color), burst(x, y, color), pause(), resume(), off(), on(), quality, mode }
          set({colors:['#..','#..','#..'], dark:bool, intensity:0..1.5, fps:30|60, quality:'high'|'mid'|'low'|'static'|'auto', mode:'auto'|...})
    Owner switch:  localStorage 'annabelle-vibe' = '0' (off) | 'low' (force low quality)
+   Calm mode (docs/CALM-UI.md, the site default): while localStorage 'annabelle-calm' is not '0' this layer does NOT boot at all (no canvas, no GL
+                  context, no frame loop); the API stays as harmless no-ops. The window event 'annabelle-calm' switches it on / off without a reload.
 */
 (function () {
   'use strict';
@@ -570,8 +572,10 @@
 
   /* ---------------- lifecycle ---------------- */
   function reduced() { try { return !!(mq && mq.matches); } catch (e) { return false; } }
+  /* calm mode (default ON): no ambient motion anywhere. Read straight from the key, catalog.js is not on every page. */
+  function calmOn() { try { return W.localStorage.getItem('annabelle-calm') !== '0'; } catch (e) { return true; } }
   var boot = safe(function () {
-    if (S.on) return;
+    if (S.on || calmOn()) return; // calm: never boot (also refuses Vibe.on() from a page)
     S.on = true; S.paused = false;
     S.isStatic = reduced();
     if (!t0) t0 = now() - 4000;
@@ -653,6 +657,8 @@
       };
       arm();
     }
+    /* the calm switch (store / home "more") was flipped: stop and remove everything, or start, without a reload */
+    W.addEventListener('annabelle-calm', safe(function () { if (calmOn()) { if (S.on) off(); } else { boot(); if (S.on) { retheme(false); evaluate(); hookRewards(); } } }));
     var go = function () { boot(); setTimeout(safe(function () { if (S.on) { retheme(false); evaluate(); hookRewards(); } }), 900); };
     if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', go); else go();
   } catch (e) { fail(e); }
