@@ -1,7 +1,7 @@
 /* Kids platform – the KID PROFILE (name, age, gender, skill) shared by every page.
    Loaded on every page by playtime.js; index.html and welcome.html also load it directly (loading twice is safe).
    Storage: localStorage 'annabelle-profiles' = {cur:"p1", list:[{id, name, emo, age, gender, kid, skill, sk, ob}]}
-     age 4..16 · gender "f" | "m" | "x" · kid = random UUID v4 (anonymous id; THE NAME NEVER LEAVES THE DEVICE)
+     age 4..18 · gender "f" | "m" | "x" · kid = random UUID v4 (anonymous id; THE NAME NEVER LEAVES THE DEVICE)
      skill 1..4 overall · sk = {react, memory, math, english, device} each 1..4 · ob = ISO date when onboarding finished
    Old profiles without the new fields stay valid (age unknown, gender "f", skill 2, onboarding offered).
    API (window.KidApp):
@@ -68,7 +68,7 @@
   function agePrior(age) { return age == null ? 2 : age <= 5 ? 1 : age <= 9 ? 2 : 3; }
   function view(p, bare) {
     p = p || {};
-    var age = int(p.age, 4, 16), sk = {}, raw = p.sk && typeof p.sk === 'object' ? p.sk : {};
+    var age = int(p.age, 4, 18), sk = {}, raw = p.sk && typeof p.sk === 'object' ? p.sk : {};
     var skill = int(p.skill, 1, 4) || 2;
     SUBJ.forEach(function (s) { var v = int(raw[s], 1, 4); if (v) sk[s] = v; });
     return {
@@ -97,7 +97,7 @@
     if (!patch || typeof patch !== 'object') return o;
     if ('name' in patch) o.name = cleanName(patch.name);
     if ('emo' in patch) o.emo = cleanEmo(patch.emo);
-    if ('age' in patch) { var a = int(patch.age, 4, 16); if (a) o.age = a; else delete o.age; }
+    if ('age' in patch) { var a = int(patch.age, 4, 18); if (a) o.age = a; else delete o.age; }
     if ('gender' in patch && /^[fmx]$/.test(patch.gender)) o.gender = patch.gender;
     if ('skill' in patch) { var s = int(patch.skill, 1, 4); if (s) o.skill = s; }
     if ('sk' in patch && patch.sk && typeof patch.sk === 'object') {
