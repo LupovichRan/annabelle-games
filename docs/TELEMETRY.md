@@ -136,3 +136,12 @@ To hide a device after the fact (for example a family phone that was used for te
 ```sql
 insert into public.test_devices (device, note) values ('<device id>', 'dad''s phone');
 ```
+
+## Family hub (family.html)
+Everything about the family (family name, member names, crest, kudos, challenges, talk cards) stays in localStorage on the device
+(`annabelle-family`, mirrored in `annabelle-profdata-_family`). Only anonymous counts are sent:
+- event `family` with data `{act, n}`: `act` = `switch` | `add` | `challenge` | `kudos` | `card` | `mission`; `n` = a count (members on the device,
+  kudos / missions / cards so far, challenges stored). No names, no preset ids, no game ids.
+- audit `profile_add`, `profile_remove`, `profile_switch` (target `family`, detail `{role: 'kid' | 'adult'}`) and `family_created` (detail `{n}` = members).
+  Actor is `parent` when the current member is a grown-up or the parent PIN was used, otherwise `kid`.
+- A grown-up profile (`role: 'adult'` in `annabelle-profiles`) has no age: its rows carry `age: null`.

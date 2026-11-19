@@ -87,7 +87,10 @@ var K=window.KidApp,Q=new URLSearchParams(location.search);
 var MODE=Q.get('new')?'new':Q.get('edit')?'edit':Q.get('test')?'test':'first';
 var cur=K.kid(),L=K.lang();
 // what we know so far (a new player starts empty; the gender of an old profile was never asked, so it is asked now)
-var P=MODE==='new'?{name:'',emo:'🐱',age:null,gender:null}:{name:cur.name,emo:cur.emo,age:cur.age,gender:(cur.ob||MODE==='test'||MODE==='edit')?cur.gender:null};
+// a kid welcomed from the family hub (family.html): the name and avatar chosen there are prefilled; the hub removes the key and shows its welcome moment
+var JOIN=null;try{JOIN=JSON.parse(localStorage.getItem('annabelle-family-join')||'null');if(!JOIN||typeof JOIN!=='object'||!(Date.now()-JOIN.t<45*60000))JOIN=null}catch(e){JOIN=null}
+if(MODE!=='new')JOIN=null;
+var P=MODE==='new'?{name:JOIN?K.cleanName(JOIN.name):'',emo:(JOIN&&typeof JOIN.emo==='string'&&JOIN.emo.replace(/[\u0000-\u007F<>&"'`]/g,'').slice(0,8))||'🐱',age:null,gender:null}:{name:cur.name,emo:cur.emo,age:cur.age,gender:(cur.ob||MODE==='test'||MODE==='edit')?cur.gender:null};
 var scr=document.getElementById('scr'),bk=document.getElementById('bk'),skb=document.getElementById('sk'),sp=document.getElementById('sp');
 
 /* ---------- texts: he values may be [girl, boy, neutral] (used once the gender is known; before that everything is neutral) ---------- */
@@ -112,7 +115,7 @@ he:{brand:'ארץ המשחקים',hello:'שלום! 👋',langQ:'באיזו שפ�
  a_device:'🖐️ אצבעות זריזות',a_react:'⚡ מהירות',a_memory:'🧠 זיכרון',a_math:'🧮 חשבון',a_english:'🔤 אנגלית',
  resS:['המשחקים מותאמים עכשיו בדיוק לך. תמיד אפשר לשנות רמה בכל משחק.','המשחקים מותאמים עכשיו בדיוק לך. תמיד אפשר לשנות רמה בכל משחק.','המשחקים מותאמים עכשיו. תמיד אפשר לשנות רמה בכל משחק.'],
  resSkip:'אין בעיה! אפשר לעשות את החימום מתי שרוצים — דרך הפרופיל בדף הבית.',
- play:'יאללה לשחק! 🎮',full:'אפשר עד 6 שחקנים במכשיר הזה 🙂',noroom:'אין מספיק מקום במכשיר כדי להוסיף שחקן',toHome:'🏠 לדף הבית',
+ play:'יאללה לשחק! 🎮',full:'אפשר עד 8 שחקנים במכשיר הזה 🙂',famGo:'🏡 מקימים משפחה',noroom:'אין מספיק מקום במכשיר כדי להוסיף שחקן',toHome:'🏠 לדף הבית',
  edT:'✏️ עריכת הפרופיל',newT:'➕ שחקן חדש'},
 fr:{brand:'Le pays des jeux',hello:'Bonjour ! 👋',langQ:'On joue en quelle langue ?',
  nameQ:'Comment tu t’appelles ?',nameP:'Mon prénom',avQ:'Et ton personnage ?',next:'Suivant ▶',back:'◀ Retour',skip:'Passer ⏭',close:'✕ Fermer',save:'Enregistrer ✔',
@@ -133,7 +136,7 @@ fr:{brand:'Le pays des jeux',hello:'Bonjour ! 👋',langQ:'On joue en quelle lan
  a_device:'🖐️ Doigts agiles',a_react:'⚡ Vitesse',a_memory:'🧠 Mémoire',a_math:'🧮 Calcul',a_english:'🔤 Anglais',
  resS:'Les jeux sont maintenant réglés juste pour toi. Tu peux toujours changer le niveau dans chaque jeu.',
  resSkip:'Pas de souci ! Tu pourras faire l’échauffement quand tu veux, depuis ton profil sur la page d’accueil.',
- play:'Allez, on joue ! 🎮',full:'6 joueurs maximum sur cet appareil 🙂',noroom:'Pas assez de place sur l’appareil pour ajouter un joueur',toHome:'🏠 Accueil',
+ play:'Allez, on joue ! 🎮',full:'8 joueurs maximum sur cet appareil 🙂',famGo:'🏡 Créer notre famille',noroom:'Pas assez de place sur l’appareil pour ajouter un joueur',toHome:'🏠 Accueil',
  edT:'✏️ Modifier le profil',newT:'➕ Nouveau joueur'},
 en:{brand:'Game Land',hello:'Hello! 👋',langQ:'Which language shall we play in?',
  nameQ:'What’s your name?',nameP:'My name',avQ:'And your character?',next:'Next ▶',back:'◀ Back',skip:'Skip ⏭',close:'✕ Close',save:'Save ✔',
@@ -154,7 +157,7 @@ en:{brand:'Game Land',hello:'Hello! 👋',langQ:'Which language shall we play in
  a_device:'🖐️ Quick fingers',a_react:'⚡ Speed',a_memory:'🧠 Memory',a_math:'🧮 Maths',a_english:'🔤 Words',
  resS:'The games are now set just right for you. You can always change the level inside each game.',
  resSkip:'No problem! You can do the warm-up whenever you like, from your profile on the home page.',
- play:'Let’s play! 🎮',full:'Up to 6 players on this device 🙂',noroom:'Not enough room on this device to add a player',toHome:'🏠 Home',
+ play:'Let’s play! 🎮',full:'Up to 8 players on this device 🙂',famGo:'🏡 Set up your family',noroom:'Not enough room on this device to add a player',toHome:'🏠 Home',
  edT:'✏️ Edit profile',newT:'➕ New player'}};
 function gi(){return {f:0,m:1,x:2}[P.gender||'x']}
 function gp(v){if(Array.isArray(v))v=v[gi()];if(typeof v==='string'&&v.indexOf('|')>0){var a=v.split('|');v=a[Math.min(gi(),a.length-1)]}return v}
@@ -179,7 +182,7 @@ function show(nodes,o){o=o||{};stopAll();scr.textContent='';scr.classList.remove
  try{scr.scrollTop=0;window.scrollTo(0,0)}catch(e){}}
 skb.addEventListener('click',function(){var f=onSkip;if(f){onSkip=null;f()}});
 bk.addEventListener('click',function(){var f=onBack;if(f){onBack=null;f()}});
-function home(){stopAll();location.replace('index.html')}
+function home(){stopAll();location.replace(JOIN?'family.html':'index.html')}
 function cancelFn(){return MODE==='first'?null:home}
 /* sounds (respect the shared mute) */
 var AC=null;function tone(f,d){try{if(localStorage.getItem('annabelle-muted')==='1')return;AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,AC.currentTime);g.gain.exponentialRampToValueAtTime(.16,AC.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+(d||.22));o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+(d||.22)+.03)}catch(e){}}
@@ -345,10 +348,13 @@ function result(){stopAll();var measured=RN.filter(function(id){return SK[id]}),
   measured.forEach(function(id){var r=el('div','r');r.appendChild(el('span',null,t('a_'+id)));var s=el('span'),k=sk[id]+1;s.appendChild(document.createTextNode(new Array(k+1).join('⭐')));if(k<5)s.appendChild(el('i',null,new Array(6-k).join('⭐')));r.appendChild(s);c.appendChild(r)});
   nodes.push(c);nodes.push(el('p','small',t('resS')))}
  nodes.push(btn('cta',t('play'),home));
+ // first kid on this device: offer the family hub (name, crest, more members). Skipped when a family already exists.
+ var hasFam=false;try{hasFam=!!(JSON.parse(localStorage.getItem('annabelle-family')||localStorage.getItem('annabelle-profdata-_family')||'null')||{}).fam}catch(e){}
+ if(MODE==='first'&&!NEWP&&!JOIN&&!hasFam){var fb=btn('cta sec',t('famGo'),function(){stopAll();location.replace('family.html?setup=1')});fb.id='famGo';nodes.push(fb)}
  show(nodes,{});if(measured.length)yay()}
 
 /* ---------- start ---------- */
-if(MODE==='new'&&K.count()>=6){show([el('div','big','👥'),el('h2',null,t('full')),btn('cta',t('toHome'),home)])}
+if(MODE==='new'&&K.count()>=8){show([el('div','big','👥'),el('h2',null,t('full')),btn('cta',t('toHome'),home)])}
 else if(MODE==='test')sIntro();
 else if(MODE==='first')sLang();
 else sName();

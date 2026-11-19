@@ -351,7 +351,7 @@
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
     ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/],
     ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/],['bagrut','🎓','מסלול הבגרות',/^annabelle-bagrut/],['reading','📖','סולם הקריאה',/^annabelle-reading/],['thinking','🧩','חידות חשיבה',/^annabelle-thinking/],['city','🏙️','עיר החתולים',/^annabelle-city/]];
-  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
+  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry|say|saytest|family.*)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
     var ks = allKeys(), rw = rd('annabelle-rewards', null);

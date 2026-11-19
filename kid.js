@@ -1,11 +1,12 @@
 /* Kids platform – the KID PROFILE (name, age, gender, skill) shared by every page.
    Loaded on every page by playtime.js; index.html and welcome.html also load it directly (loading twice is safe).
-   Storage: localStorage 'annabelle-profiles' = {cur:"p1", list:[{id, name, emo, age, gender, kid, skill, sk, ob}]}
+   Storage: localStorage 'annabelle-profiles' = {cur:"p1", list:[{id, name, emo, age, gender, kid, skill, sk, ob, role}]}
      age 4..18 · gender "f" | "m" | "x" · kid = random UUID v4 (anonymous id; THE NAME NEVER LEAVES THE DEVICE)
      skill 1..4 overall · sk = {react, memory, math, english, device} each 1..4 · ob = ISO date when onboarding finished
+     role (optional) 'adult' = a grown-up of the family (family.html): no age, no onboarding, skill 4 by default; absent = 'kid'
    Old profiles without the new fields stay valid (age unknown, gender "f", skill 2, onboarding offered).
    API (window.KidApp):
-     kid() -> {id,name,emo,age,gender,kid,skill,sk,ob}      g(f, m, x) -> string for the kid's gender
+     kid() -> {id,name,emo,age,gender,kid,skill,sk,ob,role}      g(f, m, x) -> string for the kid's gender
      he(text) -> Hebrew text written in the feminine, turned masculine / neutral for the kid (word table, used by shared modules)
      gt(text) -> the same for a text in any of the three languages (rewards.js / pwa.js / album use it)
      save(patch)   needsOnboarding()   level(subject)   applySkill() -> [keys written]   hasLegacy()
@@ -18,7 +19,7 @@
   K._kid = 1;
   var MK = 'annabelle-profiles', DK = 'annabelle-profdata-';
   // device-level keys: never part of a profile snapshot (same list as album.html)
-  var KEEP = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry)$/;
+  var KEEP = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|family.*)$/;
   var SUBJ = ['react', 'memory', 'math', 'english', 'device'];
   var listeners = [];
 
@@ -69,14 +70,14 @@
   function view(p, bare) {
     p = p || {};
     var age = int(p.age, 4, 18), sk = {}, raw = p.sk && typeof p.sk === 'object' ? p.sk : {};
-    var skill = int(p.skill, 1, 4) || 2;
+    var adult = p.role === 'adult', skill = int(p.skill, 1, 4) || (adult ? 4 : 2);
     SUBJ.forEach(function (s) { var v = int(raw[s], 1, 4); if (v) sk[s] = v; });
     return {
-      id: typeof p.id === 'string' ? p.id : 'p1',
+      id: typeof p.id === 'string' ? p.id : 'p1', role: adult ? 'adult' : 'kid',
       name: typeof p.name === 'string' ? cleanName(p.name) : '',
-      emo: cleanEmo(p.emo), age: age,
+      emo: cleanEmo(p.emo), age: adult ? null : age,
       // an existing (old) profile is feminine, as every legacy text was; somebody who never had a profile is addressed neutrally
-      gender: p.gender === 'f' || p.gender === 'm' || p.gender === 'x' ? p.gender : (bare ? 'x' : 'f'),
+      gender: p.gender === 'f' || p.gender === 'm' || p.gender === 'x' ? p.gender : (bare || adult ? 'x' : 'f'),
       kid: typeof p.kid === 'string' && UUID.test(p.kid) ? p.kid : '',
       skill: skill, sk: sk, ob: typeof p.ob === 'string' ? p.ob.slice(0, 30) : ''
     };
@@ -104,6 +105,7 @@
       var sk = {}; SUBJ.forEach(function (k) { var v = int(patch.sk[k], 1, 4); if (v) sk[k] = v; });
       o.sk = sk;
     }
+    if ('role' in patch) { if (patch.role === 'adult') { o.role = 'adult'; delete o.age; } else delete o.role; }
     if ('ob' in patch) { if (typeof patch.ob === 'string' && patch.ob) o.ob = patch.ob.slice(0, 30); else delete o.ob; }
     return o;
   }
@@ -118,7 +120,7 @@
     fire();
     return ok;
   }
-  function needsOnboarding() { var m = readMeta(), p = m ? curOf(m) : null; return !(p && typeof p.ob === 'string' && p.ob); }
+  function needsOnboarding() { var m = readMeta(), p = m ? curOf(m) : null; return !(p && (p.role === 'adult' || (typeof p.ob === 'string' && p.ob))); }
   function level(subject) {
     var k = kid(), v;
     if (!subject) return k.skill;
@@ -229,7 +231,7 @@
   ];
   function applySkill() {
     var k = kid(), out = [];
-    if (!k.ob) return out; // nothing measured yet: the games keep their own defaults
+    if (!k.ob && k.role !== 'adult') return out; // nothing measured yet: the games keep their own defaults
     var cap = k.age != null && k.age <= 5 ? 2 : 4; // the very youngest never start above "easy / normal"
     DIFF_TABLE.forEach(function (d) {
       var lv = d.s === 'motor' ? level('motor') : d.s === 'mind' ? Math.round(((k.sk.memory || k.skill) + k.skill) / 2) : k.skill;
@@ -250,7 +252,7 @@
   function newProfile(fields) {
     kid(); // makes sure the current player has a profile entry to come back to
     var m = readMeta();
-    if (!m || m.list.length >= 6) return null;
+    if (!m || m.list.length >= 8) return null;
     var snap = {};
     profKeys().forEach(function (k) { snap[k] = lsGet(k); });
     if (!lsSet(DK + m.cur, JSON.stringify(snap))) return null; // no room: keep everything as it is

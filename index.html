@@ -218,7 +218,7 @@ html[data-th=gold]{--bg:linear-gradient(#2e241a,#0d0a07);--line:#ffd24daa;--plan
 <script src="desktop.js"></script>
 <script src="rewards.js" defer></script>
 </head><body>
-<div class="tools"><a id="gift" class="albbtn" href="album.html" aria-label="האלבום והמתנה היומית" title="האלבום">🎁</a><button id="ed">✏️ סידור</button></div>
+<div class="tools"><a id="famBtn" class="albbtn" href="family.html" aria-label="המשפחה שלנו" title="המשפחה שלנו">🏡</a><a id="gift" class="albbtn" href="album.html" aria-label="האלבום והמתנה היומית" title="האלבום">🎁</a><button id="ed">✏️ סידור</button></div>
 <h1 class="vh" id="h1">ארץ המשחקים</h1>
 <button id="pb" class="pb" type="button" aria-label="הפרופיל שלי"><span class="pav" id="pav"></span><span class="pin"><span class="pnr"><b id="pnm">ארץ המשחקים</b><em id="pti" class="pti" hidden></em><em id="pbo" class="pbo" hidden>🧠 ×2</em></span><span class="plv"><i id="plv">🐱 רמה 1</i><span class="xp"><u id="pxp"></u></span></span></span><span class="pst"><span id="pfi">🔥 0</span><span id="pco">💰 0</span></span></button>
 <div class="nav"><button id="nr" aria-label="הקודם">▶</button><div class="sign" id="sg"></div><button id="nl" aria-label="הבא">◀</button></div>
@@ -485,7 +485,7 @@ function hset(k,v){var o=hs();o[k]=v;try{localStorage.setItem('annabelle-home',J
 function theme(){var t=hs().th;return THEMES.some(function(x){return x[0]===t})?t:'neon'}
 function applyTheme(){var t=theme();if(t==='classic')HE.removeAttribute('data-th');else HE.setAttribute('data-th',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content={classic:'#ffd6b8',neon:'#1d1450',ocean:'#0a3d6b',jungle:'#17603a',sunset:'#d9487e',galaxy:'#07051a',gold:'#0d0a07'}[t]}
 function pname(){try{return KA.kid().name||''}catch(e){return ''}}
-function statics(){document.title=KA.title();$('h1').textContent=KA.title();var gf=$('gift');gf.setAttribute('aria-label',TX.gift);gf.title=TX.gift;if(!edit)ed.textContent=TX.ed;$('pb').setAttribute('aria-label',TX.prof);
+function statics(){document.title=KA.title();$('h1').textContent=KA.title();var gf=$('gift');gf.setAttribute('aria-label',TX.gift);gf.title=TX.gift;var fbn=$('famBtn');if(fbn){var ftl=({he:'המשפחה שלנו',fr:'Notre famille',en:'Our Family'})[KA.lang()]||'המשפחה שלנו';fbn.setAttribute('aria-label',ftl);fbn.title=ftl;try{var ffm=(JSON.parse(localStorage.getItem('annabelle-family')||localStorage.getItem('annabelle-profdata-_family')||'null')||{}).fam;if(ffm&&ffm.crest&&typeof ffm.crest.a==='string'&&ffm.crest.a)fbn.textContent=ffm.crest.a.slice(0,8)}catch(e){}}if(!edit)ed.textContent=TX.ed;$('pb').setAttribute('aria-label',TX.prof);
  nr.setAttribute('aria-label',TX.prev);nl.setAttribute('aria-label',TX.next);nr.textContent=RTL?'▶':'◀';nl.textContent=RTL?'◀':'▶';
  var kh=$('kh');kh.textContent='';function kb(x){kh.appendChild(el('kbd',null,x))}function tx(x){kh.appendChild(document.createTextNode(x))}
  kb('←↑↓→');tx(' '+TX.kh[0]+' · ');kb('Enter');tx(' '+TX.kh[1]+' · ');kb('PageUp');tx('/');kb('PageDown');tx(' '+TX.kh[2]+' ');kb('1');tx('–');kb('7');tx(' '+TX.kh[3]+' · ');kb('F');tx(' '+TX.kh[4]+' · ');kb('E');tx(' '+TX.kh[5])}
@@ -629,7 +629,7 @@ function profSheet(keep){var R=window.AnnabelleRewards;if(!R)return;var L=R.leve
  var played=Object.keys(st.plays).filter(function(g){return R.GAMES[g]&&st.plays[g]>0}).length,total=Object.keys(R.GAMES).length,stk=R.stickers(),got=stk.filter(function(s){return s.earned}).length;
  var g=el('div','sgrid');[['⭐ '+st.starsTotal,TX.stats[0]],['🏆 '+st.winsTotal,TX.stats[1]],['🔥 '+d.streak,TX.stats[2]],['🎮 '+played+'/'+total,TX.stats[3]],['📒 '+got+'/'+stk.length,TX.stats[4]],['✅ '+(st.quests||0),TX.stats[5]]].forEach(function(x){var c=el('div',null,x[0]);c.appendChild(el('small',null,x[1]));g.appendChild(c)});w.appendChild(g);
  if(R.road){var jr=el('button','sbtn g',TX.jr);jr.type='button';jr.id='jrBtn';jr.style.cssText='margin-top:10px;width:100%';jr.onclick=function(){journeySheet()};w.appendChild(jr)}
- var row=el('div','srow'),a=el('a','sbtn o',TX.album);a.href='album.html';row.appendChild(a);var b=el('button','sbtn',TX.chalBtn);b.type='button';b.onclick=function(){chalSheet()};row.appendChild(b);w.appendChild(row);
+ var row=el('div','srow'),a=el('a','sbtn o',TX.album);a.href='album.html';row.appendChild(a);var fa=el('a','sbtn o','🏡 '+({he:'המשפחה שלנו',fr:'Notre famille',en:'Our Family'})[KA.lang()]||'🏡');fa.href='family.html';fa.id='famRow';row.appendChild(fa);var b=el('button','sbtn',TX.chalBtn);b.type='button';b.onclick=function(){chalSheet()};row.appendChild(b);w.appendChild(row);
  w.appendChild(el('h3',null,TX.themeH));var ths=el('div','ths');
  THEMES.forEach(function(t){var lock=L.level<t[2],bt=el('button','th'+(theme()===t[0]?' sel':'')+(lock?' lock':''));bt.type='button';bt.style.background=t[3];bt.appendChild(el('span',null,t[1]));if(lock)bt.appendChild(el('small',null,F(TX.lock,{n:t[2]})));bt.onclick=function(){if(lock)return;hset('th',t[0]);applyTheme();profSheet(true)};ths.appendChild(bt)});w.appendChild(ths);
  w.appendChild(el('h3',null,TX.famH));var FM=fam();FM.forEach(function(p,i){var r=el('div','lb'+(p.me?' me':''));r.appendChild(el('i',null,['🥇','🥈','🥉'][i]||(i+1)+'.'));r.appendChild(el('span',null,p.name));r.appendChild(el('em',null,F(TX.famRow,{a:p.level,b:p.xp})));w.appendChild(r)});

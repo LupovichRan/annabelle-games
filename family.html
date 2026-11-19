@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="family"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffe9c9">
+<title>המשפחה שלנו</title><script src="safe.js"></script>
+<style>
+/* FAMILY HUB – the family profile, who is playing, family board, challenges, kudos, talk time.
+   Everything stays on this device. Storage: 'annabelle-family' (device level, mirrored in 'annabelle-profdata-_family'
+   so that a profile switch made by an older page can never lose it). Profiles: 'annabelle-profiles' (kid.js). */
+:root{--ink:#3a2459;--pu:#7c5cff;--gr:#27ae60;--pk:#ff6fa5;--go:#ffb84d;--card:#fff;--soft:#f6f1ff;--line:#e6dcf7}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+html{overflow-x:hidden}
+body{font-family:"Rubik","Varela Round","Arial Rounded MT Bold","Segoe UI",Arial,sans-serif;color:var(--ink);background:linear-gradient(160deg,#fff1d9,#ffe3f1 50%,#e1ecff);background-attachment:fixed;
+ padding:max(8px,env(safe-area-inset-top)) 0 calc(84px + env(safe-area-inset-bottom));overflow-x:hidden;line-height:1.35;font-size:16px}
+button,a{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button{border:0;background:none;padding:0;font-size:inherit}
+a{text-decoration:none}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 12px}
+header{display:flex;align-items:center;gap:10px}
+.ib{width:48px;height:48px;border-radius:50%;background:#fff;box-shadow:0 3px 0 #0002;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none;font-weight:800}
+.ib:active,.btn:active,.mc:active,.chip:active{transform:translateY(2px)}
+#lg{font-size:14px}
+#crestB{flex:none;width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center}
+#crestB svg{width:60px;height:60px;display:block}
+.ht{flex:1;min-width:0}
+.ht h1{font-size:clamp(20px,5.6vw,30px);line-height:1.1;overflow-wrap:anywhere}
+#sub{font-size:14px;font-weight:700;opacity:.85;margin-top:2px}
+#avs{display:flex;gap:6px;margin:10px 0 4px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+#avs::-webkit-scrollbar{display:none}
+.av{flex:none;min-width:48px;height:48px;border-radius:24px;background:#fff;box-shadow:0 2px 0 #0002;display:flex;align-items:center;justify-content:center;gap:5px;font-size:24px;padding:0 8px;border:3px solid transparent}
+.av.cur{border-color:var(--gr);background:#eafaf0}
+.av small{font-size:13px;font-weight:800;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av.plus{font-size:22px;color:var(--gr);font-weight:900}
+#tabs{position:fixed;inset-inline:0;bottom:0;z-index:40;display:flex;background:#fff;box-shadow:0 -3px 14px #0002;padding:4px 4px calc(4px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0}
+#tabs button{flex:1;min-height:58px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-weight:800;font-size:13px;color:#7a6a96;position:relative}
+#tabs button i{font-style:normal;font-size:24px;line-height:1}
+#tabs button.on{background:var(--soft);color:var(--pu)}
+#tabs button b.dot{position:absolute;top:5px;inset-inline-end:22%;min-width:18px;height:18px;border-radius:9px;background:#e74c3c;color:#fff;font-size:12px;line-height:18px;padding:0 4px}
+#notes{display:flex;flex-direction:column;gap:8px;margin:6px 0}
+.note{background:#fff8dc;border:2px solid #f5c542;border-radius:18px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.note.inv{background:linear-gradient(120deg,#efe7ff,#ffe6f2);border-color:#c9b5ff}
+.note.ch{background:#e8f6ff;border-color:#7cc4f5}
+.note .e{font-size:30px;flex:none}
+.note .tx{flex:1;min-width:150px;font-weight:700}
+.note .tx small{display:block;font-weight:500;opacity:.85}
+.note .acts{display:flex;gap:6px;flex-wrap:wrap}
+#pg{display:block}
+.cd{background:var(--card);border-radius:22px;padding:14px;margin:0 0 12px;box-shadow:0 3px 0 #0001,0 8px 24px #5a3b9a14;break-inside:avoid}
+.cd h2{font-size:19px;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cd h2 small{font-size:13px;font-weight:600;opacity:.75}
+.cd p.s{font-size:14px;opacity:.85;margin-bottom:8px}
+.btn{min-height:48px;border-radius:16px;padding:8px 16px;font-weight:800;font-size:16px;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 0 #0002;text-align:center}
+.btn.p{background:var(--pu);color:#fff}.btn.g{background:var(--gr);color:#fff}.btn.y{background:var(--go);color:#4a2c00}.btn.r{background:#e74c3c;color:#fff}.btn.w{background:#fff;border:2px solid var(--line)}
+.btn.sm{min-height:44px;min-width:44px;font-size:14px;padding:6px 12px;border-radius:14px}
+.btn.big{min-height:58px;font-size:19px;width:100%}
+.btn[disabled]{opacity:.45;box-shadow:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.c{justify-content:center}
+.mem{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mc{position:relative;background:var(--soft);border-radius:20px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;border:3px solid transparent;min-height:150px;width:100%}
+.mc.cur{border-color:var(--gr);background:#eafaf0}
+.mc .a{font-size:46px;line-height:1.1}
+.mc .n{font-weight:900;font-size:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc .r{font-size:12px;font-weight:700;background:#fff;border-radius:999px;padding:1px 8px}
+.mc .l{font-size:13px;font-weight:700}
+.mc .x{font-size:13px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.mc .now{position:absolute;top:-10px;inset-inline-start:8px;background:var(--gr);color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px}
+.mc.add{border:3px dashed #b9a4ea;background:#fff;justify-content:center;color:var(--pu);font-weight:900;font-size:16px}
+.mc.add .a{font-size:38px}
+.bar{height:14px;border-radius:7px;background:#eee6fb;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--pk),var(--pu));width:0}
+.fam{display:flex;gap:12px;align-items:center}
+.fam svg{width:92px;height:92px;flex:none}
+.fam .t{flex:1;min-width:0}
+.fam .t b{font-size:20px;display:block;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.stat{background:var(--soft);border-radius:14px;padding:8px 4px;text-align:center}
+.stat b{display:block;font-size:20px}.stat span{font-size:12px;font-weight:700}
+.shelf{display:flex;flex-wrap:wrap;gap:8px}
+.tro{width:64px;text-align:center;font-size:11px;font-weight:700;line-height:1.15}
+.tro i{font-style:normal;display:flex;width:52px;height:52px;margin:0 auto 2px;border-radius:50%;align-items:center;justify-content:center;font-size:28px;background:#fff3cf;box-shadow:inset 0 -3px 0 #f0c85a}
+.tro.off{opacity:.38}.tro.off i{background:#eee;box-shadow:none;filter:grayscale(1)}
+.tl{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.tli{flex:none;width:150px;background:var(--soft);border-radius:16px;padding:10px;font-size:13px;font-weight:600}
+.tli i{font-style:normal;font-size:26px;display:block}
+.tli small{display:block;opacity:.7;font-weight:500;margin-top:2px}
+.tb{display:flex;flex-direction:column;gap:8px}
+.tr{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:16px;padding:8px 10px}
+.tr.cur{outline:3px solid #bfe9cf}
+.tr .a{font-size:30px;flex:none}
+.tr .m{flex:1;min-width:0}
+.tr .m b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr .m span{font-size:13px;font-weight:700;display:flex;gap:8px;flex-wrap:wrap}
+.tr .m .st{direction:ltr;unicode-bidi:isolate}
+.tr .pt{flex:none;text-align:center;font-weight:900;font-size:18px;min-width:52px}
+.tr .pt small{display:block;font-size:11px;font-weight:700;opacity:.75}
+.crowns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.crown{background:linear-gradient(140deg,#fff6d6,#ffe9f3);border-radius:16px;padding:10px;text-align:center;font-size:13px;font-weight:700}
+.crown i{font-style:normal;font-size:28px;display:block}
+.crown b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec{border-top:1px solid var(--line);padding:8px 0}
+.rec:first-of-type{border-top:0}
+.rec h3{font-size:15px;margin-bottom:4px}
+.rec .ps{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);border-radius:999px;padding:3px 10px;font-size:13px;font-weight:700;display:inline-flex;gap:4px;align-items:center;max-width:100%}
+.pill.top{background:#fff3cf}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{min-height:44px;border-radius:22px;padding:4px 12px;background:var(--soft);font-weight:800;font-size:15px;display:inline-flex;align-items:center;gap:5px;border:3px solid transparent;max-width:100%}
+.chip.on{border-color:var(--pu);background:#fff}
+.chip.e{font-size:24px;min-width:48px;justify-content:center;padding:4px 6px}
+.lbl{font-size:14px;font-weight:800;margin-top:8px}
+.msgs{display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0}
+.msg{min-height:48px;text-align:start;background:var(--soft);border-radius:14px;padding:8px 12px;font-weight:700;font-size:15px;border:3px solid transparent;width:100%}
+.msg.on{border-color:var(--pk);background:#fff}
+.wall{display:flex;flex-direction:column;gap:6px}
+.wi{background:var(--soft);border-radius:14px;padding:8px 10px;font-size:14px}
+.wi b{font-weight:800}.wi .q{display:block;font-weight:700;font-size:15px;margin-top:2px}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lk{min-height:56px;background:var(--soft);border-radius:16px;padding:8px 10px;display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;box-shadow:0 3px 0 #0001}
+.lk i{font-style:normal;font-size:26px;flex:none}
+.lk span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tcard{background:linear-gradient(150deg,#7c5cff,#ff6fa5);color:#fff;border-radius:22px;padding:18px 16px;min-height:170px;display:flex;flex-direction:column;gap:8px;justify-content:center;text-align:center}
+.tcard .c{font-size:13px;font-weight:800;background:#fff3;border-radius:999px;padding:2px 10px;align-self:center}
+.tcard .q{font-size:clamp(19px,5.2vw,24px);font-weight:800;line-height:1.3}
+.ringw{display:flex;gap:12px;align-items:center}
+.ringw svg{width:96px;height:96px;flex:none}
+.ringw .t{flex:1;min-width:0}
+.plan ol{margin:4px 0 8px;padding-inline-start:22px}
+.plan li{margin:4px 0;font-weight:600}
+.empty{font-size:14px;opacity:.8;padding:6px 0}
+.ov{position:fixed;inset:0;z-index:80;background:#2a1a4a99;display:none;align-items:flex-end;justify-content:center;padding:0}
+.ov.on{display:flex}
+.sh{background:#fff;border-radius:26px 26px 0 0;width:100%;max-width:520px;max-height:92vh;max-height:92dvh;overflow-y:auto;padding:16px 16px calc(18px + env(safe-area-inset-bottom));position:relative;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sh h2{font-size:22px;text-align:center;margin:4px 40px 6px}
+.sh p{margin:6px 0}
+.sh div.big{font-size:60px;text-align:center;line-height:1.1}
+.sh .x{position:absolute;top:10px;inset-inline-end:10px;width:44px;height:44px;border-radius:50%;background:var(--soft);font-size:18px;font-weight:900}
+.sh .steps{display:flex;gap:6px;justify-content:center;margin:2px 0 8px}
+.sh .steps i{width:26px;height:6px;border-radius:3px;background:var(--line)}.sh .steps i.on{background:var(--pu)}
+.sh input[type=text]{width:100%;min-height:54px;border-radius:16px;border:3px solid var(--go);font:800 22px inherit;font-family:inherit;text-align:center;padding:6px 10px;color:var(--ink);background:#fffdf5}
+.sh .col{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0}
+.pick button{min-height:48px;border-radius:14px;background:var(--soft);font-size:26px;border:3px solid transparent}
+.pick button.on{border-color:var(--pu);background:#fff}
+.sw{display:flex;gap:3px;flex-wrap:wrap;margin:6px 0}
+.sw button{width:44px;height:44px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px var(--line)}
+.sw button.on{box-shadow:0 0 0 3px var(--ink)}
+.crestP{display:flex;justify-content:center}.crestP svg{width:120px;height:120px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;margin:10px auto;direction:ltr}
+.pad button{min-height:56px;border-radius:16px;background:var(--soft);font-weight:900;font-size:22px}
+.dots{display:flex;gap:10px;justify-content:center;direction:ltr}.dots i{width:16px;height:16px;border-radius:50%;border:3px solid var(--pu)}.dots i.f{background:var(--pu)}
+.ibx{background:var(--soft);border-radius:16px;padding:10px 12px;margin:6px 0;font-weight:700}
+.ibx i{font-style:normal;font-size:26px;margin-inline-end:6px}
+.wel{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.welr{background:var(--soft);border-radius:16px;padding:8px}
+.welr b{display:block;margin-bottom:4px}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#3a2459;color:#fff;border-radius:999px;padding:10px 18px;font-weight:800;z-index:120;display:none;max-width:90vw;text-align:center}
+#toast.on{display:block}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:130;overflow:hidden}
+#fx span{position:absolute;top:-40px;font-size:28px;animation:fall 1.7s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(300deg);opacity:.7}}
+@media (prefers-reduced-motion:reduce){#fx span,.sh{animation:none}#fx{display:none}}
+#printArea{display:none}
+@media (max-width:374px){.mc .a{font-size:40px}.mc .n{font-size:16px}.pick{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (min-width:900px){
+ body{padding-bottom:16px}
+ #tabs{position:static;box-shadow:0 3px 0 #0001;border-radius:18px;margin:6px 0 10px;padding:4px}
+ #tabs button{flex-direction:row;gap:8px;min-height:48px;font-size:16px}
+ #tabs button b.dot{position:static}
+ #pg{column-count:2;column-gap:14px}
+ .mem{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .ov{align-items:center;padding:16px}.sh{border-radius:26px;max-height:calc(100vh - 32px)}
+ #toast{bottom:24px}
+ .msgs{grid-template-columns:1fr 1fr}
+}
+@media print{
+ body{background:#fff;padding:0}body>*{display:none!important}
+ #printArea{display:block!important;font-size:16pt;padding:10mm}
+ #printArea h2{font-size:22pt;margin-bottom:6mm}#printArea li{margin:3mm 0}
+}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/family.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/family-192.png"><meta name="apple-mobile-web-app-title" content="המשפחה שלנו"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/family-apple-180.png"><script src="pwa.js" data-app="family" data-slots='[]' defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+<script src="kid.js"></script>
+<script src="rewards.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header><a class="ib" id="home" href="index.html" aria-label="Home">🏠</a><button type="button" id="crestB"></button><div class="ht"><h1 id="ttl">המשפחה שלנו</h1><div id="sub"></div></div><button type="button" class="ib" id="lg"></button></header>
+<div id="avs"></div>
+<nav id="tabs"></nav>
+<div id="notes"></div>
+<main id="pg"></main>
+</div>
+<div class="ov" id="ov"><div class="sh" id="sh"></div></div>
+<div id="toast" role="status"></div>
+<div id="fx"></div>
+<div id="printArea"></div>
+<script>
+(function(){'use strict';
+/* ================= texts: [he, fr, en] =================
+   {M:f|m|x} = form for the member looking at the screen · {S:f|m|x} = the sender / subject · {R:f|m|x} = the receiver
+   {n} {s} = names (always inserted as text) · {g} = game · {k} {f} = numbers */
+var TX={
+ title:['המשפחה שלנו','Notre famille','Our Family'],
+ famOf:['משפחת {n}','Famille {n}','The {n} family'],
+ dN:['{k} ימים','{k} jours','{k} days'],d1:['יום אחד','1 jour','1 day'],
+ sub:['רמה משפחתית {k} · 🔥 {s} יחד','Niveau famille {k} · 🔥 {s} ensemble','Family level {k} · 🔥 {s} together'],
+ sub0:['כל המשפחה במקום אחד','Toute la famille au même endroit','The whole family in one place'],
+ tFam:['משפחה','Famille','Family'],tBoard:['לוח','Tableau','Board'],tTog:['יחד','Ensemble','Together'],tTalk:['מדברים','Parlons','Talk'],
+ player:['שחקן','Joueur','Player'],
+ who:['מי משחק עכשיו?','Qui joue maintenant ?','Who’s playing now?'],
+ whoS:['{M:לחצי|לחץ|לחצו} על כרטיס כדי להחליף שחקן – כל ההתקדמות נשמרת','Touchez une carte pour changer de joueur : toute la progression est gardée','Tap a card to switch player – all progress is kept'],
+ now:['משחק עכשיו ✓','Joue maintenant ✓','Playing now ✓'],
+ nowF:['משחקת עכשיו ✓','Joue maintenant ✓','Playing now ✓'],
+ lvl:['רמה {k}','Niveau {k}','Level {k}'],age:['גיל {k}','{k} ans','Age {k}'],
+ addM:['מצרפים עוד מישהו','Accueillir quelqu’un','Welcome someone new'],
+ maxM:['המשפחה מלאה: עד 8 חברים','La famille est complète : 8 membres au plus','The family is full: up to 8 members'],
+ playAs:['▶ לשחק בתור {n}','▶ Jouer en tant que {n}','▶ Play as {n}'],
+ edit:['✏️ עריכה','✏️ Modifier','✏️ Edit'],remove:['🗑️ הסרה','🗑️ Retirer','🗑️ Remove'],
+ test:['🧠 גיל וחימום מוח','🧠 Âge et échauffement','🧠 Age & brain warm-up'],
+ swQ:['מחליפים שחקן?','On change de joueur ?','Switch player?'],
+ swS:['ההתקדמות של {s} נשמרת ומחכה לפעם הבאה','La progression de {s} est gardée pour la prochaine fois','{s}’s progress is saved and waiting for next time'],
+ itsMe:['זה הכרטיס שלך 🙂','C’est ta carte 🙂','This is your card 🙂'],
+ noroom:['אין מספיק מקום במכשיר לשמירה','Pas assez de place sur l’appareil pour enregistrer','Not enough room on the device to save'],
+ close:['סגירה','Fermer','Close'],next:['הלאה ▶','Suivant ▶','Next ▶'],back:['חזרה','Retour','Back'],save:['שמירה ✔','Enregistrer ✔','Save ✔'],done:['סיום ✔','Terminer ✔','Done ✔'],skip:['אחר כך','Plus tard','Later'],
+ /* invitation + family wizard */
+ invT:['רוצים להפוך את זה למשפחה?','On en fait une famille ?','Make this a family?'],
+ invS:['שם משפחתי, סמל שמעצבים יחד ומשימה משותפת. שום דבר קיים לא משתנה','Un nom, un blason dessiné ensemble et une mission commune. Rien de ce qui existe ne change','A family name, a crest you design together and a shared mission. Nothing existing changes'],
+ invB:['🏠 יוצרים משפחה','🏠 Créer la famille','🏠 Create the family'],
+ w1T:['איך קוראים למשפחה?','Comment s’appelle la famille ?','What is the family called?'],
+ w1S:['אפשר שם משפחה, כינוי, או שם שהמצאתם יחד','Un nom de famille, un surnom ou un nom inventé ensemble','A surname, a nickname, or a name you made up together'],
+ w1P:['השם שלנו','Notre nom','Our name'],
+ priv:['🔒 השם נשאר רק במכשיר הזה','🔒 Le nom reste uniquement sur cet appareil','🔒 The name stays on this device only'],
+ w2T:['מעצבים יחד סמל משפחתי','Dessinons le blason de la famille','Design the family crest together'],
+ w2A:['חיה','Animal','Animal'],w2S:['צורה','Forme','Shape'],w2C:['צבעים','Couleurs','Colours'],w2M:['מוטו (לא חובה)','Devise (facultatif)','Motto (optional)'],
+ noMotto:['בלי מוטו','Sans devise','No motto'],
+ w3T:['מי במשפחה?','Qui fait partie de la famille ?','Who is in the family?'],
+ w3S:['מי שכבר משחק כאן מופיע. אפשר לצרף עוד אנשים מיד אחר כך','Ceux qui jouent déjà ici sont là. Vous pourrez accueillir d’autres personnes juste après','Everyone who already plays here is listed. You can welcome more people right after'],
+ w4T:['המשימה המשפחתית הראשונה','La première mission de la famille','The first family mission'],
+ w4S:['בחרו משימה אחת לשבוע הזה. צריך לפחות שניים כדי להשלים אותה','Choisissez une mission pour cette semaine. Il faut être au moins deux pour la réussir','Pick one mission for this week. It takes at least two to complete it'],
+ wGo:['🎉 יוצאים לדרך','🎉 C’est parti','🎉 Let’s go'],
+ famMade:['נולדה משפחה! 🎉','Une famille est née ! 🎉','A family is born! 🎉'],
+ famCard:['המשפחה שלנו','Notre famille','Our family'],
+ famEdit:['✏️ שם וסמל','✏️ Nom et blason','✏️ Name & crest'],
+ famLv:['רמה משפחתית {k}','Niveau famille {k}','Family level {k}'],
+ famXp:['עוד {k} נקודות משותפות לרמה הבאה – כל משחק של כל אחד מוסיף','Encore {k} points communs avant le niveau suivant : chaque partie de chacun compte','{k} more shared points to the next level – every game anyone plays adds up'],
+ masc:['הקמע המשפחתי','La mascotte de la famille','The family mascot'],
+ ms0:['ביצה מסתורית','Œuf mystère','Mystery egg'],ms1:['בוקע','Tout juste éclos','Just hatched'],ms2:['גור משפחתי','Petit de la famille','Family cub'],ms3:['חבר נאמן','Ami fidèle','Loyal friend'],ms4:['שומר המשפחה','Gardien de la famille','Family guardian'],
+ stk:['🔥 {s} יחד','🔥 {s} ensemble','🔥 {s} together'],
+ stk0:['🔥 משחק קצר היום מדליק את המדורה המשפחתית','🔥 Une petite partie aujourd’hui allume le feu de camp familial','🔥 A short game today lights the family campfire'],
+ stkB:['השיא שלנו: {s}','Notre record : {s}','Our best: {s}'],
+ nums:['המשפחה במספרים','La famille en chiffres','Our family in numbers'],
+ nGames:['משחקים','parties','games played'],nKud:['פרגונים','bravos','kudos given'],nMis:['משימות','missions','missions done'],nCh:['אתגרים','défis','challenges'],nCard:['קלפי שיחה','cartes','talk cards'],nMem:['חברים','membres','members'],
+ shelf:['מדף הגביעים','L’étagère des trophées','Trophy shelf'],
+ album:['האלבום המשפחתי','L’album de famille','Family album'],
+ albumE:['הרגעים הגדולים שלכם יופיעו כאן: ניצחון ראשון, שיאים, פרגונים ומשימות','Vos grands moments apparaîtront ici : première victoire, records, bravos et missions','Your big moments will appear here: first win, records, kudos and missions'],
+ removed:['הוסרו לאחרונה','Retirés récemment','Recently removed'],
+ remLeft:['נשמר עוד {s}','gardé encore {s}','kept for {s} more'],
+ restore:['↩️ החזרה','↩️ Restaurer','↩️ Restore'],
+ restored:['{n} שוב איתנו 🎉','{n} est de retour 🎉','{n} is back with us 🎉'],
+ /* add member */
+ a1T:['מי מצטרף אלינו?','Qui nous rejoint ?','Who is joining us?'],
+ aKid:['🧒 ילד או ילדה','🧒 Un enfant','🧒 A kid'],aKidS:['עם היכרות קצרה וחימום מוח','Avec une petite rencontre et un échauffement','With a short hello and a brain warm-up'],
+ aAd:['🧑 מבוגר','🧑 Un adulte','🧑 A grown-up'],aAdS:['הורה, סבא או סבתא, דודים… בלי גיל ובלי מבחן','Parent, grand-parent, oncle, tante… sans âge ni test','Parent, grandparent, aunt, uncle… no age, no test'],
+ aRole:['מה הקשר למשפחה?','Quel est le lien avec la famille ?','How are they part of the family?'],
+ rl_parent:['הורה','Parent','Parent'],rl_grand:['סבא / סבתא','Grand-parent','Grandparent'],rl_sibling:['אח / אחות','Frère / sœur','Sibling'],rl_cousin:['בן / בת דוד','Cousin / cousine','Cousin'],rl_friend:['חבר של המשפחה','Ami de la famille','Friend of the family'],rl_other:['אחר','Autre','Other'],
+ a2T:['שם ודמות','Prénom et avatar','Name and avatar'],a2P:['השם','Le prénom','Name'],
+ a2N:['צריך שם קצר 🙂','Il faut un petit prénom 🙂','A short name is needed 🙂'],
+ a3G:['איך לפנות בעברית? (לא חובה)','Comment s’adresser à cette personne ? (facultatif)','How should we address them? (optional)'],
+ gF:['👩 בלשון נקבה','👩 Au féminin','👩 She / her'],gM:['👨 בלשון זכר','👨 Au masculin','👨 He / him'],gX:['🙂 בלי לציין','🙂 Sans préciser','🙂 Rather not say'],
+ gKF:['👧 בת','👧 Fille','👧 Girl'],gKM:['👦 בן','👦 Garçon','👦 Boy'],
+ a3K:['עכשיו נעבור להיכרות קצרה עם {n}: גיל וחימום מוח של דקה וחצי','Maintenant, une petite rencontre avec {n} : l’âge et un échauffement d’une minute et demie','Now a short hello with {n}: age and a 90-second brain warm-up'],
+ a3KB:['▶ מתחילים','▶ On commence','▶ Let’s start'],
+ aJoin:['✔ מצרפים למשפחה','✔ Rejoindre la famille','✔ Join the family'],
+ welT:['{R:ברוכה הבאה|ברוך הבא|ברוכים הבאים}, {n}! 🎉','Bienvenue, {n} ! 🎉','Welcome, {n}! 🎉'],
+ welS:['כל אחד מהמשפחה יכול לשלוח ברכה – היא תחכה ל{n} בתיבה','Chacun peut envoyer un mot de bienvenue : il attendra {n} dans sa boîte','Everyone can send a welcome note – it will be waiting in {n}’s inbox'],
+ sent:['נשלח ✓','Envoyé ✓','Sent ✓'],
+ edT:['עריכת הכרטיס של {n}','Modifier la carte de {n}','Edit {n}’s card'],
+ /* remove */
+ rmT:['להסיר את {n} מהמשפחה?','Retirer {n} de la famille ?','Remove {n} from the family?'],
+ rmS:['ההתקדמות נשמרת עוד 7 ימים ב"הוסרו לאחרונה" ואפשר להחזיר אותה','La progression est gardée 7 jours dans « Retirés récemment » et peut être restaurée','Their progress is kept for 7 days under “Recently removed” and can be restored'],
+ rm1:['כן, להסיר','Oui, retirer','Yes, remove'],rm2:['בטוח – להסיר את {n}','Sûr : retirer {n}','I’m sure – remove {n}'],
+ rmD:['{n} {R:הוסרה|הוסר|הוסר/ה}. אפשר להחזיר במשך 7 ימים','{n} a été retiré. Restauration possible pendant 7 jours','{n} was removed. You can restore them for 7 days'],
+ pinT:['🔐 קוד ההורים','🔐 Code parental','🔐 Parent code'],pinS:['כדי להסיר חבר משפחה צריך את קוד ההורים','Le code parental est nécessaire pour retirer un membre','The parent code is needed to remove a member'],
+ pinBad:['הקוד לא נכון, נסו שוב','Code incorrect, réessayez','Wrong code, try again'],
+ /* board */
+ wk:['השבוע שלנו','Notre semaine','Our week'],
+ wkS:['הנקודות הוגנות: לצעירים יש רוח גבית, ומי שעובר את השבוע הקודם של עצמו מקבל בונוס','Les points sont équitables : les plus jeunes ont un coup de pouce, et battre sa propre semaine passée donne un bonus','Points are fair: younger players get a tailwind, and beating your own last week earns a bonus'],
+ pts:['נק׳','pts','pts'],
+ up:['⬆️ יותר מהשבוע שעבר!','⬆️ Mieux que la semaine dernière !','⬆️ Better than last week!'],first:['🌱 שבוע ראשון','🌱 Première semaine','🌱 First week'],
+ wkE:['השבוע רק מתחיל – כל כוכב נספר 🌟','La semaine commence : chaque étoile compte 🌟','The week is just starting – every star counts 🌟'],
+ legend:['⭐ כוכבים · 🏆 ניצחונות · 📚 סבבי למידה · 📅 ימי משחק','⭐ étoiles · 🏆 victoires · 📚 manches d’apprentissage · 📅 jours de jeu','⭐ stars · 🏆 wins · 📚 learning rounds · 📅 days played'],
+ crowns:['כתרים שמתחלפים','Les couronnes tournantes','Rotating crowns'],
+ crS:['כל שבוע הכתרים עוברים הלאה – לכל אחד יש במה הוא מאיר','Chaque semaine les couronnes changent de tête : chacun brille à sa façon','Every week the crowns move on – everyone shines at something'],
+ cr_imp:['הכי השתפר/ה','Plus beau progrès','Most improved'],cr_help:['הכי מפרגן/ת','Le plus encourageant','Most encouraging'],cr_brave:['הניסיון הכי אמיץ','L’essai le plus courageux','Bravest try'],cr_steady:['הכי מתמיד/ה','Le plus régulier','Most steady'],
+ crNone:['מחכה למישהו…','En attente…','Waiting for someone…'],
+ recs:['שיאי המשפחה','Les records de la famille','Family records'],
+ recsS:['השיא הכי טוב של כל אחד בכל משחק','Le meilleur score de chacun dans chaque jeu','Everyone’s best score in each game'],
+ recsE:['עוד אין שיאים. משחק אחד – והשיא הראשון שלכם כאן!','Pas encore de record. Une partie, et votre premier record sera ici !','No records yet. One game – and your first record is here!'],
+ more:['עוד משחקים ▼','Plus de jeux ▼','More games ▼'],
+ /* challenges */
+ chT:['{M:אני מאתגרת אותך|אני מאתגר אותך|מאתגרים אותך}','Je te lance un défi','I challenge you'],
+ chS:['בוחרים מישהו, משחק ושיא – והאתגר יחכה לו בתיבה','Choisissez quelqu’un, un jeu et un score : le défi l’attendra dans sa boîte','Pick someone, a game and a score – the challenge will wait in their inbox'],
+ chWho:['את מי?','Qui ?','Who?'],chGame:['באיזה משחק?','Quel jeu ?','Which game?'],chScore:['כמה צריך לעבור?','Quel score battre ?','Score to beat?'],
+ chFull:['השיא שלי: {k}','Mon record : {k}','My best: {k}'],chFair:['יעד הוגן: {k}','Objectif équitable : {k}','Fair target: {k}'],
+ chSend:['🎯 שולחים אתגר','🎯 Envoyer le défi','🎯 Send the challenge'],
+ chNoG:['קודם משחקים משחק אחד ושומרים שיא – ואז אפשר לאתגר 🙂','Jouez d’abord une partie pour avoir un score, puis lancez un défi 🙂','Play a game first to set a score – then you can challenge 🙂'],
+ chNoM:['כדי לאתגר צריך עוד חבר משפחה','Il faut un autre membre pour lancer un défi','You need another family member to challenge'],
+ chHas:['ל{n} כבר יש {k} במשחק הזה – אולי {R:היא תאתגר|הוא יאתגר|יאתגרו} אותך? 😉','{n} a déjà {k} dans ce jeu : c’est peut-être à {n} de te défier 😉','{n} already has {k} in this game – maybe they should challenge you 😉'],
+ chSent:['האתגר נשלח ל{n} 🎯','Défi envoyé à {n} 🎯','Challenge sent to {n} 🎯'],
+ chIn:['{s} {S:מאתגרת|מאתגר|מאתגר/ת} אותך: לעבור {k} ב{g}','{s} te lance un défi : dépasser {k} à {g}','{s} challenges you: beat {k} in {g}'],
+ chGo:['▶ לשחק','▶ Jouer','▶ Play'],
+ chOut:['אתגרת את {n}: {k} ב{g}','Tu as défié {n} : {k} à {g}','You challenged {n}: {k} in {g}'],
+ chWait:['⏳ מחכה','⏳ en attente','⏳ waiting'],chWon:['✅ הושלם','✅ réussi','✅ done'],chTried:['💪 ניסיון יפה','💪 bel essai','💪 great try'],
+ chList:['האתגרים שלנו','Nos défis','Our challenges'],
+ chWonMe:['עברת את האתגר של {s} ב{g} עם {k}! 🏆','Tu as réussi le défi de {s} à {g} avec {k} ! 🏆','You beat {s}’s challenge in {g} with {k}! 🏆'],
+ chWonS:['{n} {R:עברה|עבר|עבר/ה} את האתגר שלך ב{g} – {k}! כיף שדחפת קדימה 👏','{n} a réussi ton défi à {g} : {k} ! Merci d’avoir motivé 👏','{n} beat your challenge in {g} – {k}! Thanks for the push 👏'],
+ chTryMe:['ניסיון אמיץ באתגר של {s} ב{g} 💪 מנסים שוב מתי שרוצים','Bel essai pour le défi de {s} à {g} 💪 On réessaie quand on veut','A brave try at {s}’s challenge in {g} 💪 Try again any time'],
+ chTryS:['{n} {R:ניסתה|ניסה|ניסה/תה} את האתגר שלך ב{g} 💪 שווה פרגון','{n} a tenté ton défi à {g} 💪 Ça mérite un bravo','{n} had a go at your challenge in {g} 💪 That deserves a cheer'],
+ /* together */
+ nowT:['משחקים יחד עכשיו','Jouer ensemble maintenant','Play together now'],
+ nowS:['משחקים לשניים על אותו מכשיר – מעבירים את הטלפון או משחקים זה מול זה','Des jeux à deux sur le même appareil : on se passe le téléphone ou on joue face à face','Two-player games on one device – pass the phone or play face to face'],
+ netT:['משחקים משני מכשירים','Jouer avec deux appareils','Play from two devices'],
+ netS:['פותחים את המשחק, בוחרים "משחק ברשת" ושולחים את הקישור או את 6 הספרות. במכשיר השני: לוחצים על הקישור, או על 🔑 בדף הבית','Ouvrez le jeu, choisissez « en ligne » et envoyez le lien ou les 6 chiffres. Sur l’autre appareil : touchez le lien, ou 🔑 sur la page d’accueil','Open the game, choose “online” and send the link or the 6 digits. On the other device: tap the link, or 🔑 on the home page'],
+ netKey:['🔑 יש לי קוד','🔑 J’ai un code','🔑 I have a code'],
+ /* kudos */
+ kT:['פרגון','Un bravo','Kudos'],
+ kS:['מילה טובה שמחכה בתיבה. בוחרים למי, מה ומדבקה','Un mot gentil qui attend dans la boîte. Choisissez pour qui, quoi et un autocollant','A kind word waiting in the inbox. Pick who, what and a sticker'],
+ kWho:['למי?','Pour qui ?','For whom?'],kWhat:['מה רוצים לומר?','Que voulez-vous dire ?','What would you like to say?'],kMore:['🔄 עוד משפטים','🔄 Autres phrases','🔄 More messages'],
+ kSend:['💌 שולחים פרגון','💌 Envoyer le bravo','💌 Send kudos'],
+ kSent:['הפרגון בדרך אל {n} 💌','Le bravo est en route vers {n} 💌','Kudos on its way to {n} 💌'],
+ kNoM:['כשיצטרף עוד חבר משפחה אפשר יהיה לפרגן לו כאן','Quand un autre membre rejoindra la famille, vous pourrez l’encourager ici','When another family member joins you can cheer for them here'],
+ wall:['קיר הפרגונים','Le mur des bravos','Kudos wall'],
+ wallE:['הקיר מחכה לפרגון הראשון 💖','Le mur attend le premier bravo 💖','The wall is waiting for its first kudos 💖'],
+ wFrom:['{s} ← {n}','{s} → {n}','{s} → {n}'],
+ nudge:['{M:ספרי|ספר|ספרו} ל{n} ששמת לב','Dis à {n} que tu l’as remarqué','Tell {n} you noticed'],
+ inboxT:['📬 יש לך דואר משפחתי!','📬 Tu as du courrier de famille !','📬 You’ve got family mail!'],
+ inK:['{s}: ','{s} : ','{s}: '],
+ thanks:['איזה כיף! 💖','Trop bien ! 💖','Lovely! 💖'],
+ /* events */
+ ev_fam:['נולדה המשפחה שלנו','Notre famille est née','Our family was born'],
+ ev_join:['{n} {R:הצטרפה|הצטרף|הצטרף/ה} למשפחה','{n} a rejoint la famille','{n} joined the family'],
+ ev_lv:['{n} {R:הגיעה|הגיע|הגיע/ה} לרמה {k}','{n} a atteint le niveau {k}','{n} reached level {k}'],
+ ev_win1:['הניצחון הראשון של {n}','Première victoire de {n}','{n}’s first win'],
+ ev_rec:['{n}: שיא משפחתי חדש ב{g} – {k}','{n} : nouveau record familial à {g} – {k}','{n}: new family record in {g} – {k}'],
+ ev_kud:['{n} {R:פרגנה|פרגן|פרגן/ה} ל{s}','{n} a encouragé {s}','{n} cheered for {s}'],
+ ev_mis:['השלמנו משימה משפחתית','Mission familiale accomplie','Family mission completed'],
+ ev_chal:['{n} {R:עברה|עבר|עבר/ה} אתגר ב{g}','{n} a réussi un défi à {g}','{n} beat a challenge in {g}'],
+ ev_tro:['גביע חדש על המדף','Un nouveau trophée sur l’étagère','A new trophy on the shelf'],
+ ev_stk:['{n}: {k} ימים ברצף','{n} : {k} jours de suite','{n}: {k} days in a row'],
+ ev_flv:['המשפחה עלתה לרמה {k}','La famille passe au niveau {k}','The family reached level {k}'],
+ today:['היום','aujourd’hui','today'],yest:['אתמול','hier','yesterday'],dago:['לפני {k} ימים','il y a {k} jours','{k} days ago'],
+ /* talk */
+ talk:['קלפי שיחה','Cartes à discuter','Talk cards'],
+ talkS:['שולפים קלף, מניחים את הטלפון ומדברים','On tire une carte, on pose le téléphone et on parle','Draw a card, put the phone down and talk'],
+ draw:['🃏 קלף חדש','🃏 Nouvelle carte','🃏 New card'],
+ c_all:['הכול','Tout','All'],c_us:['עלינו','Sur nous','About us'],c_cur:['סקרנות','Curiosité','Curious'],c_sil:['שטויות','Rigolo','Silly'],c_tea:['למדו אותי','Apprends-moi','Teach me'],c_rem:['זוכרים?','Tu te souviens ?','Remember when'],c_pla:['מתכננים יחד','On planifie','Plan together'],
+ mis:['המשימה המשפחתית של השבוע','La mission familiale de la semaine','Family mission of the week'],
+ misSw:['🔄 משימה אחרת','🔄 Autre mission','🔄 Another mission'],
+ misDone:['המשימה הושלמה! כל הכבוד לכולם 🎉','Mission accomplie ! Bravo à tous 🎉','Mission complete! Well done everyone 🎉'],
+ misTick:['מי כבר עשה? {M:לחצי|לחץ|לחצו} על השם','Qui l’a déjà fait ? Touchez le prénom','Who has done it? Tap the name'],
+ mis2:['למשימה צריך לפחות שני חברי משפחה','La mission se fait à deux au moins','The mission needs at least two family members'],
+ night:['ערב משפחתי','Soirée en famille','Family night'],
+ nightS:['תוכנית קטנה: 3 משחקים ו־3 שאלות. אפשר להדפיס ולתלות על המקרר','Un petit programme : 3 jeux et 3 questions. À imprimer et à coller sur le frigo','A mini plan: 3 games and 3 questions. Print it and stick it on the fridge'],
+ nG:['משחקים','On joue','We play'],nQ:['מדברים','On parle','We talk'],
+ nNew:['🎲 תוכנית אחרת','🎲 Autre programme','🎲 Another plan'],nPrint:['🖨️ הדפסה','🖨️ Imprimer','🖨️ Print'],
+ /* personalised cards */
+ p_lv:['{n} {R:הגיעה|הגיע|הגיע/ה} לרמה {k}. שאלו מה היה הכי כיף בדרך לשם','{n} a atteint le niveau {k}. Demandez ce qui était le plus amusant en chemin','{n} reached level {k}. Ask what was the most fun on the way'],
+ p_fav:['המשחק ש{n} הכי {R:אוהבת|אוהב|אוהב/ת} הוא {g}. בקשו טריק אחד – ונסו אותו יחד','Le jeu préféré de {n}, c’est {g}. Demandez une astuce et essayez-la ensemble','{n}’s favourite game is {g}. Ask for one trick – and try it together'],
+ p_rec:['השיא המשפחתי ב{g} שייך ל{n}: {k}. מי מנסה לעבור אותו – ו{n} {R:נותנת|נותן|נותן/ת} טיפ?','Le record familial à {g} appartient à {n} : {k}. Qui essaie de le battre, avec un conseil de {n} ?','The family record in {g} belongs to {n}: {k}. Who will try to beat it – with a tip from {n}?'],
+ p_stk:['{n} {R:שיחקה|שיחק|שיחק/ה} {k} ימים ברצף. שאלו מה עוזר להתמיד','{n} a joué {k} jours de suite. Demandez ce qui aide à tenir','{n} has played {k} days in a row. Ask what helps them keep going'],
+ p_learn:['{n} {R:אספה|אסף|אסף/ה} {k} כוכבים ב{g}. שאלו מה הייתה השאלה הכי מסובכת','{n} a gagné {k} étoiles à {g}. Demandez quelle était la question la plus difficile','{n} earned {k} stars in {g}. Ask what the trickiest question was'],
+ p_adult:['שאלו את {n} באיזה משחק {R:היא אהבה|הוא אהב|אהבו} לשחק בגיל שלכם','Demandez à {n} à quel jeu {R:elle|il|il} aimait jouer à votre âge','Ask {n} which game they loved to play at your age'],
+ p_kud:['{n} {R:קיבלה|קיבל|קיבל/ה} פרגון השבוע. ספרו על מה – ואיך זה הרגיש','{n} a reçu un bravo cette semaine. Racontez pourquoi, et ce que ça fait','{n} got kudos this week. Tell what for – and how it felt'],
+ p_pet:['החיה של {n} גדלה! בחרו לה יחד שם משפחתי מצחיק','L’animal de {n} a grandi ! Choisissez-lui ensemble un nom rigolo','{n}’s pet has grown! Pick a funny family name for it together'],
+ p_new:['{n} עוד לא {R:שיחקה|שיחק|שיחק/ה} כאן. בחרו יחד משחק ראשון והראו איך משחקים','{n} n’a pas encore joué ici. Choisissez ensemble un premier jeu et montrez comment on joue','{n} hasn’t played here yet. Choose a first game together and show how to play']
+};
+/* level titles: [from level, emoji, he [f,m,x], fr [f,m], en] */
+var RANKS=[[1,'🌱',['מתחילה נלהבת','מתחיל נלהב','בתחילת הדרך'],['Débutante motivée','Débutant motivé'],'Eager Starter'],
+ [3,'⭐',['אוספת כוכבים','אוסף כוכבים','אוספים כוכבים'],['Collectionneuse d’étoiles','Collectionneur d’étoiles'],'Star Collector'],
+ [5,'🚀',['חוקרת נועזת','חוקר נועז','בדרך למעלה'],['Exploratrice audacieuse','Explorateur audacieux'],'Bold Explorer'],
+ [8,'🐯',['נמרה זריזה','נמר זריז','זריזים כנמר'],['Tigresse agile','Tigre agile'],'Swift Tiger'],
+ [12,'🦁',['לביאה אמיצה','אריה אמיץ','לב אריה'],['Lionne courageuse','Lion courageux'],'Brave Lion'],
+ [16,'👑',['מלכת המשחקים','מלך המשחקים','מלכות המשחקים'],['Reine des jeux','Roi des jeux'],'Game Royalty'],
+ [21,'🐉',['אגדה','אגדה','אגדה'],['Légende','Légende'],'Legend']];
+/* kudos presets (ids are stable: never reorder). Hebrew is written so that it fits every sender and receiver. */
+var KUDOS=[
+ ['k1','ראיתי איך המשכת לנסות ולא ויתרת!','J’ai vu que tu as continué d’essayer sans abandonner !','I saw how you kept trying and didn’t give up!'],
+ ['k2','תודה שלימדת אותי את המשחק הזה','Merci de m’avoir appris ce jeu','Thanks for teaching me that game'],
+ ['k3','כיף גדול לשחק איתך','J’adore jouer avec toi','I love playing with you'],
+ ['k4','אני גאה בך מאוד','Je suis {S:fière|fier} de toi','I’m so proud of you'],
+ ['k5','שמתי לב כמה השתפרת השבוע','J’ai remarqué tes progrès cette semaine','I noticed how much you improved this week'],
+ ['k6','איזה שיא! כל הכבוד','Quel record ! Bravo','What a record! Well done'],
+ ['k7','תודה שחיכית לי בסבלנות','Merci de m’avoir {S:attendue|attendu} avec patience','Thanks for waiting for me so patiently'],
+ ['k8','הצחקת אותי היום, תודה','Tu m’as fait rire aujourd’hui, merci','You made me laugh today, thank you'],
+ ['k9','אהבתי איך חשבת לפני שענית','J’ai aimé ta façon de réfléchir avant de répondre','I liked how you thought before answering'],
+ ['k10','הפסדת בחיוך – זו ספורטיביות אמיתית','Tu as perdu avec le sourire : quel bel esprit sportif','You lost with a smile – that’s real sportsmanship'],
+ ['k11','ניצחת ועדיין פרגנת לי – תודה','Tu as gagné et tu m’as quand même {S:encouragée|encouragé}, merci','You won and still cheered for me – thank you'],
+ ['k12','תודה שעזרת לי כשנתקעתי','Merci de m’avoir {S:aidée|aidé} quand je bloquais','Thanks for helping me when I was stuck'],
+ ['k13','למדתי ממך משהו חדש היום','J’ai appris quelque chose de nouveau grâce à toi','I learned something new from you today'],
+ ['k14','איזה כיף שהצטרפת למשחק','Trop bien que tu aies rejoint la partie','So glad you joined the game'],
+ ['k15','ראיתי שתרגלת כל יום – זה מעורר השראה','Je t’ai {R:vue|vu} t’entraîner chaque jour, ça m’inspire','I saw you practise every day – that’s inspiring'],
+ ['k16','השאלה ששאלת הייתה חכמה מאוד','Ta question était très intelligente','That was a really smart question you asked'],
+ ['k17','תודה שהסברת לי בסבלנות','Merci de m’avoir expliqué avec patience','Thanks for explaining so patiently'],
+ ['k18','אהבתי לשמוע על המשחק שלך','J’ai adoré t’écouter parler de ton jeu','I loved hearing about your game'],
+ ['k19','ניסית משהו חדש – זה אומץ','Tu as essayé quelque chose de nouveau : quel courage','You tried something new – that’s brave'],
+ ['k20','איזה כיף יהיה המשחק הבא שלנו','J’ai hâte de notre prochaine partie','Can’t wait for our next game'],
+ ['k21','הרעיון שלך עזר לכולנו','Ton idée nous a tous aidés','Your idea helped us all'],
+ ['k22','תודה שנתת לי תור','Merci de m’avoir laissé mon tour','Thanks for giving me a turn'],
+ ['k23','קראת יפה מאוד היום','Tu as très bien lu aujourd’hui','You read beautifully today'],
+ ['k24','החשבון שלך מהיר כמו ברק','Tu calcules à la vitesse de l’éclair','Your maths is lightning fast'],
+ ['k25','המילים החדשות שלמדת באנגלית – וואו','Les nouveaux mots d’anglais que tu as appris : waouh','Those new words you learned – wow'],
+ ['k26','עודדת אותי בדיוק ברגע הנכון','Tu m’as {S:encouragée|encouragé} pile au bon moment','You cheered me on at just the right moment'],
+ ['k27','תודה על הזמן שבילינו יחד','Merci pour ce moment passé ensemble','Thank you for the time we spent together'],
+ ['k28','סיימת את מה שהתחלת – כל הכבוד','Tu as fini ce que tu avais commencé, bravo','You finished what you started – well done'],
+ ['k29','שמרת על קור רוח גם כשהיה קשה','Tu as gardé ton calme même quand c’était difficile','You stayed calm even when it was hard'],
+ ['k30','התרגשתי לראות את ההצלחה שלך','J’étais {S:émue|ému} de voir ta réussite','It warmed my heart to see you succeed'],
+ ['w1','{R:ברוכה הבאה|ברוך הבא|ברוכים הבאים} למשפחה! כיף שהצטרפת','Bienvenue dans la famille ! Trop bien que tu sois là','Welcome to the family! So glad you’re here'],
+ ['w2','המשחק הראשון שלנו יחד כבר בדרך','J’ai hâte de jouer avec toi','Can’t wait to play with you'],
+ ['w3','יש לי משחק אהוב להראות לך','Je te montrerai mon jeu préféré','I’ll show you my favourite game']
+];
+var STICK=['🌟','💖','👏','🏆','🌈','🎉','🤗','💪','🦁','🚀'];
+/* talk cards: [category, he, fr, en] – written for the whole family (plural), so they fit every family */
+var CARDS=[
+ ['cur','מה הדבר הכי מעניין שלמדתם השבוע?','Quelle est la chose la plus intéressante que vous avez apprise cette semaine ?','What is the most interesting thing you learned this week?'],
+ ['cur','אם הייתם ממציאים משחק חדש – על מה הוא היה?','Si vous inventiez un nouveau jeu, de quoi parlerait-il ?','If you invented a new game, what would it be about?'],
+ ['cur','איזו חיה הייתם רוצים להיות ליום אחד, ולמה?','Quel animal aimeriez-vous être pendant une journée, et pourquoi ?','Which animal would you like to be for a day, and why?'],
+ ['cur','מה הדבר הכי קשה שהצלחתם לעשות השנה?','Quelle est la chose la plus difficile que vous avez réussie cette année ?','What is the hardest thing you managed to do this year?'],
+ ['cur','על מה הייתם רוצים לדעת יותר?','Sur quoi aimeriez-vous en savoir plus ?','What would you like to know more about?'],
+ ['cur','מה גורם לכם להרגיש גאים בעצמכם?','Qu’est-ce qui vous rend fiers de vous ?','What makes you feel proud of yourself?'],
+ ['cur','אילו הייתה לכם שעה נוספת כל יום – מה הייתם עושים בה?','Si vous aviez une heure de plus chaque jour, qu’en feriez-vous ?','If you had one extra hour every day, what would you do with it?'],
+ ['cur','איזו שאלה הייתם שואלים חתול אילו ידע לדבר?','Quelle question poseriez-vous à un chat s’il savait parler ?','What would you ask a cat if it could talk?'],
+ ['cur','מה היה הרגע הכי טוב שלכם היום?','Quel a été votre meilleur moment aujourd’hui ?','What was the best moment of your day?'],
+ ['cur','במה אתם ממש טובים, ובמה הייתם רוצים להשתפר?','Dans quoi êtes-vous vraiment doués, et que voudriez-vous améliorer ?','What are you really good at, and what would you like to get better at?'],
+ ['cur','איזה מקום בעולם הייתם רוצים לבקר, ומה תעשו שם קודם?','Quel endroit du monde aimeriez-vous visiter, et qu’y feriez-vous en premier ?','Which place in the world would you like to visit, and what would you do there first?'],
+ ['cur','מה עוזר לכם כשמשהו לא מצליח בפעם הראשונה?','Qu’est-ce qui vous aide quand quelque chose ne marche pas du premier coup ?','What helps you when something doesn’t work the first time?'],
+ ['sil','ספרו בדיחה – מי שמצחיק את כולם בוחר את המשחק הבא','Racontez une blague : celui qui fait rire tout le monde choisit le prochain jeu','Tell a joke – whoever makes everyone laugh picks the next game'],
+ ['sil','אילו חתול היה הבוס של הבית – מה היו החוקים?','Si un chat était le chef de la maison, quelles seraient les règles ?','If a cat were the boss of the house, what would the rules be?'],
+ ['sil','המציאו יחד ריקוד ניצחון משפחתי','Inventez ensemble une danse de la victoire familiale','Invent a family victory dance together'],
+ ['sil','איזה כוח־על מצחיק הייתם בוחרים?','Quel super-pouvoir rigolo choisiriez-vous ?','Which silly superpower would you choose?'],
+ ['sil','דברו דקה שלמה רק בקולות של חיות','Parlez une minute entière uniquement avec des cris d’animaux','Talk for a whole minute using only animal sounds'],
+ ['sil','מה המאכל הכי מוזר שהייתם מוכנים לטעום?','Quel est le plat le plus bizarre que vous seriez prêts à goûter ?','What is the strangest food you would be willing to taste?'],
+ ['sil','המציאו שם מצחיק לקבוצה המשפחתית שלכם','Inventez un nom rigolo pour votre équipe familiale','Make up a funny name for your family team'],
+ ['sil','אילו הנעליים שלכם היו מדברות – מה הן היו אומרות?','Si vos chaussures pouvaient parler, que diraient-elles ?','If your shoes could talk, what would they say?'],
+ ['sil','תחרות פרצופים מצחיקים: מי מחזיק הכי הרבה זמן בלי לצחוק?','Concours de grimaces : qui tient le plus longtemps sans rire ?','Funny-face contest: who can last the longest without laughing?'],
+ ['sil','ספרו סיפור יחד – כל אחד מוסיף משפט אחד בתורו','Racontez une histoire ensemble : chacun ajoute une phrase à son tour','Tell a story together – everyone adds one sentence in turn'],
+ ['sil','איך היה נראה יום שבו הילדים הם ההורים?','À quoi ressemblerait une journée où les enfants seraient les parents ?','What would a day look like if the kids were the grown-ups?'],
+ ['sil','איזה שיר מתאים להיות ההמנון של המשפחה?','Quelle chanson pourrait être l’hymne de la famille ?','Which song should be the family anthem?'],
+ ['tea','למדו מישהו מבוגר את המשחק האהוב עליכם – ותנו לו לנסות','Apprenez votre jeu préféré à un adulte, et laissez-le essayer','Teach a grown-up your favourite game and let them try'],
+ ['tea','בקשו ממישהו ללמד אתכם טריק במשחק שהוא טוב בו','Demandez à quelqu’un de vous apprendre une astuce dans un jeu où il est fort','Ask someone to teach you a trick in a game they are good at'],
+ ['tea','למדו את כולם מילה חדשה באנגלית ובחנו אותם בארוחת הערב','Apprenez à tout le monde un nouveau mot d’anglais et interrogez-les au dîner','Teach everyone a new English word and quiz them at dinner'],
+ ['tea','הראו איך פותרים תרגיל חשבון – בדרך שלכם','Montrez comment résoudre un calcul, à votre façon','Show how you solve a maths question – your own way'],
+ ['tea','המבוגרים: למדו את הילדים משחק מהילדות שלכם','Les adultes : apprenez aux enfants un jeu de votre enfance','Grown-ups: teach the kids a game from your childhood'],
+ ['tea','הסבירו חוק אחד במשחק בלי מילים – רק בתנועות','Expliquez une règle d’un jeu sans parler, seulement avec des gestes','Explain one rule of a game without words – only gestures'],
+ ['tea','מי יודע לספור עד עשר בשפה אחרת? למדו את כולם','Qui sait compter jusqu’à dix dans une autre langue ? Apprenez-le à tout le monde','Who can count to ten in another language? Teach everyone'],
+ ['tea','למדו מישהו את הטריק שהכי עוזר לכם לזכור דברים','Apprenez à quelqu’un l’astuce qui vous aide le plus à retenir','Teach someone the trick that helps you remember things best'],
+ ['tea','שחקו סיבוב בזוג: אחד משחק והשני מייעץ, ואז מתחלפים','Jouez une manche à deux : l’un joue, l’autre conseille, puis on échange','Play one round as a pair: one plays, one advises, then swap'],
+ ['tea','ספרו עובדה מדעית מגניבה שגיליתם','Racontez un fait scientifique génial que vous avez découvert','Share a cool science fact you discovered'],
+ ['tea','קראו יחד עמוד אחד בקול רם – כל אחד שורה','Lisez ensemble une page à voix haute, une ligne chacun','Read one page aloud together – one line each'],
+ ['tea','מה הטעות הכי טובה שלמדתם ממנה? ספרו לכולם','Quelle est la meilleure erreur dont vous avez appris ? Racontez-la','What is the best mistake you ever learned from? Tell everyone'],
+ ['rem','זוכרים את הפעם הראשונה ששיחקנו יחד? מה קרה שם?','Vous vous souvenez de la première fois qu’on a joué ensemble ? Que s’est-il passé ?','Remember the first time we played together? What happened?'],
+ ['rem','שאלו את אחד המבוגרים במשפחה במה אהב לשחק בילדותו','Demandez à un adulte de la famille à quoi il aimait jouer enfant','Ask a grown-up in the family what they loved to play as a kid'],
+ ['rem','איזה טיול משפחתי הכי זכור לכם?','Quelle sortie en famille vous a le plus marqués ?','Which family outing do you remember best?'],
+ ['rem','ספרו על פעם שמישהו במשפחה עזר לכם מאוד','Racontez une fois où quelqu’un de la famille vous a beaucoup aidés','Tell about a time someone in the family really helped you'],
+ ['rem','מה הדבר הכי מצחיק שקרה לנו השנה?','Quelle est la chose la plus drôle qui nous soit arrivée cette année ?','What is the funniest thing that happened to us this year?'],
+ ['rem','איזה מאכל מזכיר לכם את הבית?','Quel plat vous rappelle la maison ?','Which food reminds you of home?'],
+ ['rem','המבוגרים: ספרו איך נראה יום רגיל שלכם בגיל שמונה','Les adultes : racontez une journée ordinaire quand vous aviez huit ans','Grown-ups: describe an ordinary day when you were eight'],
+ ['rem','מה למדתם לעשות השנה שלא ידעתם בשנה שעברה?','Qu’avez-vous appris à faire cette année que vous ne saviez pas l’an dernier ?','What did you learn to do this year that you couldn’t do last year?'],
+ ['rem','איזה שיר מזכיר לכם רגע משפחתי טוב?','Quelle chanson vous rappelle un bon moment en famille ?','Which song reminds you of a good family moment?'],
+ ['rem','ספרו על ניצחון קטן שלכם שאף אחד לא שם לב אליו','Racontez une petite victoire que personne n’a remarquée','Tell about a small win of yours that nobody noticed'],
+ ['rem','מה הייתם רוצים שנזכור מהשבוע הזה?','Que voudriez-vous qu’on retienne de cette semaine ?','What would you like us to remember from this week?'],
+ ['rem','איזו מסורת משפחתית אתם הכי אוהבים?','Quelle tradition familiale préférez-vous ?','Which family tradition do you like best?'],
+ ['pla','תכננו יחד ערב משחקים: מי בוחר משחק, ומי מכין כיבוד?','Préparez ensemble une soirée jeux : qui choisit le jeu, qui prépare le goûter ?','Plan a game night together: who picks the game, who makes the snacks?'],
+ ['pla','בחרו יעד משפחתי לשבוע – ואיך נחגוג כשנגיע אליו?','Choisissez un objectif familial pour la semaine : comment le fêterons-nous ?','Pick a family goal for the week – and how will we celebrate?'],
+ ['pla','איזה משחק ננסה יחד בפעם הראשונה השבוע?','Quel jeu allons-nous essayer ensemble pour la première fois cette semaine ?','Which game shall we try together for the first time this week?'],
+ ['pla','תכננו טיול קצר לסוף השבוע – כל אחד מציע רעיון אחד','Préparez une petite sortie pour le week-end : chacun propose une idée','Plan a short weekend outing – everyone suggests one idea'],
+ ['pla','מה נבשל יחד השבוע? חלקו תפקידים','Qu’allons-nous cuisiner ensemble cette semaine ? Répartissez les rôles','What shall we cook together this week? Share out the jobs'],
+ ['pla','קבעו רבע שעה קבועה ביום למשחק משותף','Fixez un quart d’heure par jour pour jouer ensemble','Set a regular fifteen minutes a day to play together'],
+ ['pla','איזה שיא משפחתי ננסה לשבור יחד?','Quel record familial allons-nous essayer de battre ensemble ?','Which family record shall we try to beat together?'],
+ ['pla','מי מאתגר את מי השבוע? קבעו שלושה אתגרים','Qui défie qui cette semaine ? Fixez trois défis','Who challenges whom this week? Set three challenges'],
+ ['pla','בחרו ספר לקרוא יחד לפני השינה','Choisissez un livre à lire ensemble avant de dormir','Choose a book to read together at bedtime'],
+ ['pla','תכננו הפתעה קטנה למישהו במשפחה','Préparez une petite surprise pour quelqu’un de la famille','Plan a small surprise for someone in the family'],
+ ['pla','מה נלמד יחד החודש – שפה, שיר או קסם?','Qu’allons-nous apprendre ensemble ce mois-ci : une langue, une chanson ou un tour de magie ?','What shall we learn together this month – a language, a song or a magic trick?'],
+ ['pla','החליטו יחד על ערב בלי מסכים – ומה נעשה בו?','Décidez ensemble d’une soirée sans écrans : que ferons-nous ?','Agree on a screen-free evening – what will we do?'],
+ ['cur','מה הדבר שהכי הייתם רוצים ללמד את כל העולם?','Quelle chose aimeriez-vous apprendre au monde entier ?','What one thing would you most like to teach the whole world?'],
+ ['sil','אילו המשפחה שלנו הייתה להקה – איזה כלי כל אחד היה מנגן?','Si notre famille était un groupe de musique, de quel instrument chacun jouerait-il ?','If our family were a band, which instrument would each of us play?'],
+ ['tea','כל אחד מלמד את האחרים מילה אחת בשפה שהוא מכיר','Chacun apprend aux autres un mot dans une langue qu’il connaît','Everyone teaches the others one word in a language they know'],
+ ['rem','על איזה רגע מהשבוע הייתם רוצים לומר תודה, ולמי?','Pour quel moment de la semaine aimeriez-vous dire merci, et à qui ?','Which moment this week would you like to say thank you for, and to whom?']
+];
+/* family missions: [id, emoji, type, per-member goal, he, fr, en, link]  type: stars|learn|days|kudos|games = counted alone for the two members who did most ·
+   tick = members tick themselves · record = somebody sets a new family record while two members play */
+var MISSIONS=[
+ ['stars','⭐','stars',5,'שני חברי משפחה אוספים 5 כוכבים כל אחד','Deux membres gagnent 5 étoiles chacun','Two members earn 5 stars each',''],
+ ['learn','📚','learn',3,'שניים משלימים 3 סבבי למידה כל אחד – ומספרים זה לזה מה למדו','Deux membres terminent 3 manches d’apprentissage chacun, puis se racontent ce qu’ils ont appris','Two members finish 3 learning rounds each – then tell each other what they learned',''],
+ ['days','📅','days',3,'שניים משחקים ב־3 ימים שונים השבוע','Deux membres jouent 3 jours différents cette semaine','Two members play on 3 different days this week',''],
+ ['kudos','💌','kudos',2,'שניים שולחים 2 פרגונים כל אחד','Deux membres envoient 2 bravos chacun','Two members send 2 kudos each',''],
+ ['games','🎮','games',5,'שניים משחקים 5 משחקים כל אחד','Deux membres jouent 5 parties chacun','Two members play 5 games each',''],
+ ['online','🌐','tick',1,'משחקים משחק אחד יחד משני מכשירים','Jouer une partie ensemble avec deux appareils','Play one game together from two devices',''],
+ ['words','🔤','tick',1,'כל אחד לומד 3 מילים חדשות באנגלית – ובוחנים זה את זה בארוחת הערב','Chacun apprend 3 nouveaux mots d’anglais, puis on s’interroge au dîner','Each learns 3 new English words – then quiz each other at dinner','wordcity.html'],
+ ['teach','🤝','tick',1,'מלמדים מישהו במשפחה את המשחק האהוב – ונותנים לו לנסות','Apprendre son jeu préféré à quelqu’un de la famille, et le laisser essayer','Teach someone in the family your favourite game – and let them try',''],
+ ['record','🏆','record',1,'שוברים שיא משפחתי באחד המשחקים – כששניים לפחות משחקים השבוע','Battre un record familial dans un jeu, avec au moins deux joueurs cette semaine','Beat a family record in any game – with at least two members playing this week','']
+];
+/* trophies: [id, emoji, he, fr, en] */
+var TROPHIES=[
+ ['fam','🏠','משפחה נולדה','Famille créée','Family created'],['four','👪','ארבעה ביחד','Quatre ensemble','Four together'],
+ ['k1','💌','פרגון ראשון','Premier bravo','First kudos'],['k10','💖','10 פרגונים','10 bravos','10 kudos'],
+ ['m1','🎯','משימה ראשונה','Première mission','First mission'],['m3','🏅','3 משימות','3 missions','3 missions'],
+ ['c1','🤝','אתגר ראשון','Premier défi','First challenge'],['s3','🔥','3 ימים יחד','3 jours ensemble','3 days together'],
+ ['s7','☀️','שבוע יחד','Une semaine ensemble','A week together'],['l3','🌟','רמה משפחתית 3','Niveau famille 3','Family level 3'],
+ ['l5','🚀','רמה משפחתית 5','Niveau famille 5','Family level 5'],['all','🎪','כולם שיחקו השבוע','Tout le monde a joué','Everyone played this week'],
+ ['card','💬','10 קלפי שיחה','10 cartes','10 talk cards']
+];
+var MOTTOS=[['m1','יחד אנחנו חזקים','Ensemble, on est plus forts','Stronger together'],['m2','משחקים, צוחקים, לומדים','Jouer, rire, apprendre','Play, laugh, learn'],
+ ['m3','אף פעם לא מוותרים','On n’abandonne jamais','We never give up'],['m4','כל אחד מאיר בדרכו','Chacun brille à sa façon','Everyone shines their own way'],
+ ['m5','קודם כיף','Le plaisir d’abord','Fun comes first'],['m6','סקרנים תמיד','Toujours curieux','Always curious'],
+ ['m7','מנצחים בחיוך','Gagner avec le sourire','Win with a smile'],['m8','הבית של הצחוק','La maison du rire','The house of laughter']];
+var ANIMALS=['🦁','🐯','🐱','🐶','🦊','🐼','🐨','🦉','🐬','🦄','🐢','🐝'];
+var COLORS=['#7c5cff','#ff6fa5','#ffb84d','#27ae60','#2d9cdb','#e74c3c','#34495e'];
+var SHAPES={shield:'M50 4 L92 16 V48 C92 74 74 90 50 97 C26 90 8 74 8 48 V16 Z',circle:'M50 4 A46 46 0 1 1 49.9 4 Z',
+ star:'M50 3 L63 34 L97 37 L71 59 L79 93 L50 75 L21 93 L29 59 L3 37 L37 34 Z',heart:'M50 94 C10 66 2 44 8 28 C14 10 38 6 50 26 C62 6 86 10 92 28 C98 44 90 66 50 94 Z',
+ house:'M50 4 L96 42 H86 V94 H14 V42 H4 Z'};
+var AVATARS=['🐱','🦁','🐯','🐼','🦊','🐰','🐶','🐨','🐸','🐵','🦄','🐙','🐢','🦉','🐝','🦋','🐬','🐧','👧','👦','👩','👨','👵','👴'];
+var TOGETHER=['tictactoe','checkers','pong','bowling','thunderkittens','simon'];
+var ONLINE=['tictactoe','checkers','football','bowling','pong','cups','cats','funrun','carrace','thunderkittens','simon'];
+window.__famData={TX:TX,RANKS:RANKS,KUDOS:KUDOS,STICK:STICK,CARDS:CARDS,MISSIONS:MISSIONS,TROPHIES:TROPHIES,MOTTOS:MOTTOS,ANIMALS:ANIMALS,COLORS:COLORS,SHAPES:SHAPES,AVATARS:AVATARS,TOGETHER:TOGETHER,ONLINE:ONLINE};
+})();
+</script>
+<script>
+(function(){'use strict';
+var D=window.__famData,TX=D.TX,K=window.KidApp;
+var MK='annabelle-profiles',DK='annabelle-profdata-',FK='annabelle-family',FM='annabelle-profdata-_family',JK='annabelle-family-join',MAXM=8,DAY=864e5;
+var ROLES=['parent','grand','sibling','cousin','friend','other'];
+var LEARN=['mathquest','wordcity','sciencelab','reading','thinking','bagrut'];
+function $(i){return document.getElementById(i)}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function btn(cls,txt,fn){var b=el('button',cls,txt);b.type='button';if(fn)b.onclick=fn;return b}
+function add(p){for(var i=1;i<arguments.length;i++)if(arguments[i])p.appendChild(arguments[i]);return p}
+function O(){return Object.create(null)}
+function num(x,hi){x=+x;return isFinite(x)&&x>0?Math.min(Math.floor(x),hi||1e9):0}
+function intIn(x,lo,hi){x=Math.round(+x);return isFinite(x)&&x>=lo&&x<=hi?x:null}
+function isId(s){return typeof s==='string'&&/^[A-Za-z0-9_-]{1,32}$/.test(s)&&s!=='_family'}
+function rid(){return Math.random().toString(36).slice(2,10)}
+function fmt(n){try{return Number(n).toLocaleString('en-US')}catch(e){return String(n)}}
+function GAMES(){var r=window.AnnabelleRewards;return (r&&r.GAMES)||{}}
+function isGame(g){return typeof g==='string'&&Object.prototype.hasOwnProperty.call(GAMES(),g)}
+var QA=lsGet('kidapp-qa')==='1'||!!navigator.webdriver;
+
+/* ---------- language + texts ---------- */
+var L='he',LI=0;
+function setLang(){L=K&&K.lang?K.lang():'he';LI=L==='fr'?1:L==='en'?2:0;document.documentElement.lang=L;document.documentElement.dir=L==='he'?'rtl':'ltr'}
+function gp(g,f,m,x){return g==='f'?f:g==='m'?m:(x!=null?x:m)}
+function iso(s){return '⁨'+s+'⁩'}
+function tpl(s,c){c=c||{};var me=ME();
+ s=String(s).replace(/\{([MSR]):([^|}]*)\|([^|}]*)(?:\|([^}]*))?\}/g,function(a,w,f,m,x){var who=w==='M'?me:w==='S'?(c.S||me):(c.R||me);return gp(who?who.gender:'x',f,m,x)});
+ return s.replace(/\{(n|s|g|k|f)\}/g,function(a,k){var v=c[k];if(v==null)return '';return k==='k'||k==='f'?fmt(v):k==='g'?gameName(v):iso(v)})}
+function T(k,c){var a=TX[k];return a?tpl(a[LI]||a[0],c):k}
+function days(n){return n===1?TX.d1[LI]:tpl(TX.dN[LI],{k:n})}
+function gameName(g){var G=GAMES()[g];return G?(G[1+LI]||G[1]):String(g)}
+function gameEmo(g){var G=GAMES()[g];return G?G[0]:'🎮'}
+
+/* ---------- days ---------- */
+var dayOff=0;
+try{if(QA)dayOff=parseInt(sessionStorage.getItem('fam-day')||'0',10)||0}catch(e){}
+function now(){return Date.now()+dayOff*DAY}
+function dayKey(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function parseKey(k){var p=String(k).split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function today(){return dayKey(new Date(now()))}
+function addDays(k,n){var d=parseKey(k);d.setDate(d.getDate()+n);return dayKey(d)}
+function dayDiff(a,b){return Math.round((parseKey(b)-parseKey(a))/DAY)}
+function weekId(k){var d=parseKey(k),t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),dn=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-dn);
+ var y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/DAY+1)/7);return y+'-W'+(w<10?'0':'')+w}
+var DAY_RE=/^\d{4}-\d{1,2}-\d{1,2}$/,WK_RE=/^\d{4}-W\d{2}$/;
+
+/* ---------- profiles: the SAME algorithm as album.html (snapshot the current player, clear, load the other one).
+   The only difference is the list of device-level keys, which also contains 'annabelle-family*'. ---------- */
+var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|family.*)$/;
+function saveMeta(m){try{localStorage.setItem(MK,JSON.stringify(m))}catch(e){}}
+function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
+ if(m&&Array.isArray(m.list))m.list=m.list.filter(function(p){return p&&typeof p.id==='string'});
+ if(!m||!Array.isArray(m.list)||!m.list.length||!m.list.some(function(p){return p.id===m.cur})){m={cur:'p1',list:[{id:'p1',name:'',emo:'🐱'}]};saveMeta(m)}return m}
+function keys(){var ks=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if((/^annabelle-/.test(k)||/^soya-/.test(k))&&!KEEP.test(k))ks.push(k)}}catch(e){}return ks}
+function snap(){var o={};keys().forEach(function(k){o[k]=localStorage.getItem(k)});return o}
+function stash(m){try{localStorage.setItem(DK+m.cur,JSON.stringify(snap()))}catch(e){toast(T('noroom'));return false}return true}
+function clearAll(){keys().forEach(function(k){localStorage.removeItem(k)})}
+function load(id){var o=null;try{o=JSON.parse(localStorage.getItem(DK+id)||'null')}catch(e){}if(o)Object.keys(o).forEach(function(k){if(/^(annabelle|soya)-/.test(k)&&!KEEP.test(k))try{localStorage.setItem(k,String(o[k]))}catch(e){}})}
+function sw(id,fresh){var m=meta();if(id===m.cur)return false;if(!m.list.some(function(p){return p.id===id}))return false;if(!stash(m))return false;clearAll();if(!fresh)load(id);m.cur=id;saveMeta(m);freeze();location.reload();return true}
+// The page is about to reload as the other player: a late timer of a shared module (rewards.js, a game) must not write the OLD player's
+// in-memory state over the data that was just loaded. Profile-scoped keys become read-only for the last milliseconds of this page.
+function freeze(){try{var P=Storage.prototype,si=P.setItem,ri=P.removeItem,sc=function(k){k=String(k);return (/^annabelle-/.test(k)||/^soya-/.test(k))&&!KEEP.test(k)};
+ P.setItem=function(k,v){if(this===window.localStorage&&sc(k))return;return si.call(this,k,v)};P.removeItem=function(k){if(this===window.localStorage&&sc(k))return;return ri.call(this,k)}}catch(e){}}
+
+function emoOf(e){e=typeof e==='string'?e.replace(/[\u0000-\u007F<>&"'`]/g,'').slice(0,8):'';return e||'🐱'}
+function cleanFam(n){n=String(n==null?'':n).replace(/[\u0000-\u001F\u007F-\u009F­͏؜ᅟᅠ឴឵᠎​-‏‪-‮⁠-⁯ㅤ﻿ﾠ]/g,'')
+ .replace(/[<>&"'`\\\/{}|]/g,'').replace(/\s+/g,' ').trim().slice(0,24).trim();return n}
+function cleanNm(s){return K&&K.cleanName?K.cleanName(s):cleanFam(s).slice(0,14)}
+function mview(p,i){var adult=p.role==='adult',nm=cleanNm(typeof p.name==='string'?p.name:'');
+ return {id:p.id,name:nm||T('player')+' '+(i+1),named:!!nm,emo:emoOf(p.emo),role:adult?'adult':'kid',rl:ROLES.indexOf(p.rl)>=0?p.rl:'',age:adult?null:intIn(p.age,4,18),
+  gender:/^[fmx]$/.test(p.gender)?p.gender:(adult||!nm?'x':'f'),skill:intIn(p.skill,1,4)||(adult?4:2),ok:isId(p.id)}}
+var M,MEM=[],F,SC=O(),dirty=false;
+function refresh(){try{K&&K.kid&&K.kid()}catch(e){}M=meta();MEM=M.list.slice(0,12).map(mview);SC=O()}
+function ME(){for(var i=0;i<MEM.length;i++)if(MEM[i].id===M.cur)return MEM[i];return MEM[0]||null}
+function byId(id){for(var i=0;i<MEM.length;i++)if(MEM[i].id===id)return MEM[i];return null}
+function who(id){var m=byId(id);if(m)return m;if(F)for(var i=0;i<F.removed.length;i++)if(F.removed[i].p.id===id)return mview(F.removed[i].p,0);return null}
+function actor(){var m=ME();return m&&m.role==='adult'?'parent':'kid'}
+function track(act,n){try{K&&K.track&&K.track('family',{act:act,n:n||0})}catch(e){}}
+function audit(a,d,who_){try{K&&K.audit&&K.audit(a,'family',d||null,who_||actor())}catch(e){}}
+
+/* ---------- read-only statistics of a member (live save of the current one, snapshot of the others) ---------- */
+function rawRewards(id){var raw=null;try{if(id===M.cur)raw=localStorage.getItem('annabelle-rewards');else{var s=JSON.parse(localStorage.getItem(DK+id)||'null');raw=s&&typeof s['annabelle-rewards']==='string'?s['annabelle-rewards']:null}}catch(e){}
+ var o=null;try{o=raw?JSON.parse(raw):null}catch(e){}return o&&typeof o==='object'?o:{}}
+function levelOf(xp){return Math.max(1,Math.floor((1+Math.sqrt(1+0.4*Math.max(0,+xp||0)))/2))}
+function gmap(m){var r=O();if(m&&typeof m==='object')for(var k in m)if(isGame(k)&&num(m[k]))r[k]=num(m[k]);return r}
+function stat(id){if(SC[id])return SC[id];
+ var o=rawRewards(id),s=o.stats&&typeof o.stats==='object'?o.stats:{},td=today(),dates=O(),wg=O(),k,m,wid=weekId(td);
+ if(s.daily&&typeof s.daily==='object')for(k in s.daily){m=/^([a-z0-9_-]{1,40})\|(\d{4}-\d{1,2}-\d{1,2})$/i.exec(k);if(m&&num(s.daily[k])){dates[m[2]]=1;if(weekId(m[2])===wid&&isGame(m[1]))wg[m[1]]=1}}
+ var ps=o.ps&&typeof o.ps==='object'?o.ps:{},streak=0;
+ if(DAY_RE.test(ps.last)){dates[ps.last]=1;var gap=dayDiff(ps.last,td);if(!num(ps.bk)&&gap>=0&&gap<=2)streak=num(ps.n,9999)}
+ if(o.lt&&typeof o.lt==='object'&&DAY_RE.test(o.lt.d)&&num(o.lt.s))dates[o.lt.d]=1;
+ var plays=gmap(s.plays),pn=0;for(k in plays)pn+=plays[k];
+ var xp=num(o.earned,1e7),pk=o.pet&&o.pet.k==='tiger'?'tiger':'cat',pst=0;[0,40,250,800,2000].forEach(function(t,i){if(xp>=t)pst=i});
+ return SC[id]={xp:xp,lv:levelOf(xp),stars:num(s.starsTotal),wins:num(s.winsTotal),lrn:num(s.lrn),onl:num(s.onl),plays:plays,playsN:pn,best:gmap(s.best),starsBy:gmap(s.stars),dates:dates,wgames:Object.keys(wg).length,streak:streak,pet:{k:pk,st:pst}}}
+function rankOf(lv,g){var r=D.RANKS[0];D.RANKS.forEach(function(x){if(lv>=x[0])r=x});return {e:r[1],t:LI===0?gp(g,r[2][0],r[2][1],r[2][2]):LI===1?gp(g,r[3][0],r[3][1]):r[4]}}
+function petEmo(p){return p.st<1?'🥚':p.k==='tiger'?(p.st>=3?'🐅':'🐯'):(p.st>=3?'🐈':'🐱')}
+
+/* ---------- the family save: one device-level key, validated on load, bounded ---------- */
+function freshF(){return {v:1,rev:0,fam:null,inv:0,base:O(),wk:{id:'',base:O(),prev:O(),crP:O(),ms:{i:0,ok:O(),done:0,sw:0},rec0:O(),kd:O(),tr:O()},snap:O(),inbox:O(),wall:[],tl:[],ch:[],removed:[],days:[],bs:0,tro:O(),n:{kud:0,mis:0,ch:0,card:0},cards:[],nud:[],plan:null}}
+function idMap(o,fn,max){var r=O(),n=0;if(o&&typeof o==='object')for(var k in o)if(isId(k)&&n<(max||24)){var v=fn(o[k]);if(v!=null){r[k]=v;n++}}return r}
+function numMap(o,hi){return idMap(o,function(v){return num(v,hi||1e9)||null})}
+function saneCrest(c){c=c&&typeof c==='object'?c:{};return {a:D.ANIMALS.indexOf(c.a)>=0?c.a:D.ANIMALS[0],s:D.SHAPES[c.s]&&Object.prototype.hasOwnProperty.call(D.SHAPES,c.s)?c.s:'shield',
+ c1:D.COLORS.indexOf(c.c1)>=0?c.c1:D.COLORS[0],c2:D.COLORS.indexOf(c.c2)>=0?c.c2:D.COLORS[1],m:D.MOTTOS.some(function(x){return x[0]===c.m})?c.m:''}}
+function kudosDef(p){for(var i=0;i<D.KUDOS.length;i++)if(D.KUDOS[i][0]===p)return D.KUDOS[i];return null}
+function saneItem(x){if(!x||typeof x!=='object')return null;var k=String(x.k||'');if(!/^(kud|chal|won|wonS|try|tryS|mis)$/.test(k))return null;
+ var r={id:/^[a-z0-9]{1,12}$/.test(x.id)?x.id:rid(),k:k,t:num(x.t,1e14),s:x.s?1:0};
+ if(isId(x.f))r.f=x.f;if(kudosDef(x.p))r.p=x.p;if(isGame(x.g))r.g=x.g;if(num(x.n))r.n=num(x.n);r.e=num(x.e,D.STICK.length-1);if(typeof x.c==='string'&&/^[a-z0-9]{1,12}$/.test(x.c))r.c=x.c;
+ if(k==='kud'&&(!r.f||!r.p))return null;return r}
+function saneF(o){var f=freshF();if(!o||typeof o!=='object')return f;
+ try{
+  f.rev=num(o.rev,1e12);f.inv=o.inv?1:0;f.bs=num(o.bs,9999);
+  if(o.fam&&typeof o.fam==='object'&&num(o.fam.t,1e14))f.fam={name:cleanFam(o.fam.name),crest:saneCrest(o.fam.crest),t:num(o.fam.t,1e14),xp:num(o.fam.xp,1e9),bank:num(o.fam.bank,1e9),g:num(o.fam.g,1e9),gb:num(o.fam.gb,1e9),lv:num(o.fam.lv,9999)||1};
+  f.base=idMap(o.base,function(v){return v&&typeof v==='object'?{xp:num(v.xp,1e7),pl:num(v.pl,1e7)}:null});
+  var w=o.wk&&typeof o.wk==='object'?o.wk:{};
+  if(WK_RE.test(w.id)){f.wk.id=w.id;
+   f.wk.base=idMap(w.base,function(v){return v&&typeof v==='object'?{st:num(v.st),wi:num(v.wi),ln:num(v.ln),pl:num(v.pl)}:null});
+   f.wk.prev=idMap(w.prev,function(v){return v&&typeof v==='object'?{st:num(v.st),wi:num(v.wi),ln:num(v.ln),dy:num(v.dy,7),pts:num(v.pts)}:null});
+   var cp=O();if(w.crP&&typeof w.crP==='object')['imp','help','brave','steady'].forEach(function(c){if(isId(w.crP[c]))cp[c]=w.crP[c]});f.wk.crP=cp;
+   var ms=w.ms&&typeof w.ms==='object'?w.ms:{};f.wk.ms={i:num(ms.i,D.MISSIONS.length-1),ok:numMap(ms.ok,1),done:num(ms.done,1e14),sw:ms.sw?1:0};
+   var r0=O();if(w.rec0&&typeof w.rec0==='object')for(var g in w.rec0)if(isGame(g)&&num(w.rec0[g]))r0[g]=num(w.rec0[g]);f.wk.rec0=r0;
+   f.wk.kd=numMap(w.kd,999);f.wk.tr=numMap(w.tr,999)}
+  f.snap=idMap(o.snap,function(v){if(!v||typeof v!=='object')return null;var b=O();if(v.b&&typeof v.b==='object')for(var g in v.b)if(isGame(g)&&num(v.b[g]))b[g]=num(v.b[g]);return {lv:num(v.lv,9999)||1,w:v.w?1:0,sk:num(v.sk,30),b:b}});
+  f.inbox=idMap(o.inbox,function(v){return Array.isArray(v)?v.map(saneItem).filter(Boolean).slice(-50):null});
+  if(Array.isArray(o.wall))f.wall=o.wall.filter(function(x){return x&&isId(x.f)&&isId(x.to)&&kudosDef(x.p)}).slice(0,30).map(function(x){return {f:x.f,to:x.to,p:x.p,e:num(x.e,D.STICK.length-1),t:num(x.t,1e14)}});
+  if(Array.isArray(o.tl))f.tl=o.tl.filter(function(x){return x&&/^(fam|join|lv|win1|rec|kud|mis|chal|tro|stk|flv)$/.test(x.k)}).slice(-100).map(function(x){var r={k:x.k,t:num(x.t,1e14)};if(isId(x.m))r.m=x.m;if(isId(x.o))r.o=x.o;if(isGame(x.g))r.g=x.g;if(num(x.n))r.n=num(x.n);return r});
+  if(Array.isArray(o.ch))f.ch=o.ch.filter(function(c){return c&&isId(c.f)&&isId(c.to)&&isGame(c.g)&&num(c.n)&&/^[a-z0-9]{1,12}$/.test(c.id)}).slice(-40).map(function(c){
+   return {id:c.id,f:c.f,to:c.to,g:c.g,n:num(c.n),t:num(c.t,1e14),b0:num(c.b0),p0:num(c.p0),st:/^(open|won|tried|exp)$/.test(c.st)?c.st:'open',tr:c.tr?1:0,r:num(c.r)}});
+  if(Array.isArray(o.removed))f.removed=o.removed.filter(function(x){return x&&x.p&&typeof x.p==='object'&&isId(x.p.id)&&num(x.t,1e14)}).slice(-MAXM).map(function(x){var p=x.p,q={id:p.id,name:cleanNm(p.name),emo:emoOf(p.emo)};
+   if(p.role==='adult')q.role='adult';if(ROLES.indexOf(p.rl)>=0)q.rl=p.rl;if(/^[fmx]$/.test(p.gender))q.gender=p.gender;if(intIn(p.age,4,18))q.age=intIn(p.age,4,18);if(intIn(p.skill,1,4))q.skill=intIn(p.skill,1,4);
+   if(p.sk&&typeof p.sk==='object'){q.sk={};['react','memory','math','english','device'].forEach(function(s){var v=intIn(p.sk[s],1,4);if(v)q.sk[s]=v})}
+   if(typeof p.ob==='string')q.ob=p.ob.slice(0,30);if(typeof p.kid==='string'&&/^[0-9a-f-]{36}$/.test(p.kid))q.kid=p.kid;return {p:q,t:num(x.t,1e14)}});
+  if(Array.isArray(o.days))f.days=o.days.filter(function(d){return DAY_RE.test(d)}).slice(-90);
+  f.tro=idMap(o.tro,function(v){return num(v,1e14)||null},40);
+  var n=o.n&&typeof o.n==='object'?o.n:{};f.n={kud:num(n.kud),mis:num(n.mis),ch:num(n.ch),card:num(n.card)};
+  if(Array.isArray(o.cards))f.cards=o.cards.filter(function(x){return typeof x==='string'&&x.length<50}).slice(-30);
+  if(Array.isArray(o.nud))f.nud=o.nud.filter(function(x){return typeof x==='string'&&x.length<60}).slice(-60);
+  var pl=o.plan;if(pl&&Array.isArray(pl.g)&&Array.isArray(pl.q))f.plan={g:pl.g.filter(isGame).slice(0,3),q:pl.q.map(function(x){return num(x,D.CARDS.length-1)}).slice(0,3)};
+ }catch(e){return freshF()}
+ return f}
+function parse(k){var raw=lsGet(k);if(!raw)return null;try{var o=JSON.parse(raw);return o&&typeof o==='object'&&o.v===1?o:null}catch(e){return null}}
+function loadF(){var a=parse(FK),b=parse(FM),pick=a;
+ // the mirror wins when the main key is missing, broken or older (an older page may have swapped it with a profile snapshot)
+ if(b&&(!a||num(b.rev,1e12)>num(a.rev,1e12)))pick=b;
+ F=saneF(pick);if(pick!==a||!a)dirty=!!pick;}
+function saveF(){F.rev=num(F.rev,1e12)+1;var s=JSON.stringify(F);var ok=lsSet(FK,s);lsSet(FM,s);dirty=false;return ok}
+function inbox(to,it){if(!isId(to))return;it.id=rid();it.t=now();it.s=0;var a=F.inbox[to]||(F.inbox[to]=[]);a.push(it);if(a.length>50)a.splice(0,a.length-50);dirty=true}
+function tline(k,o){o=o||{};o.k=k;o.t=now();F.tl.push(o);if(F.tl.length>100)F.tl.splice(0,F.tl.length-100);dirty=true}
+
+/* ---------- week table ---------- */
+var HANDI=[1.6,1.3,1.1,1];
+function totals(id){var s=stat(id);return {st:s.stars,wi:s.wins,ln:s.lrn,pl:s.playsN}}
+function wrow(id){var s=stat(id),b=F.wk.base[id]||totals(id),m=byId(id),dy=0,d;for(d in s.dates)if(weekId(d)===F.wk.id)dy++;
+ var r={st:Math.max(0,s.stars-b.st),wi:Math.max(0,s.wins-b.wi),ln:Math.max(0,s.lrn-b.ln),pl:Math.max(0,s.playsN-b.pl),dy:Math.min(7,dy)};
+ var h=HANDI[(m?m.skill:2)-1]||1;if(m&&m.age&&m.age<=6)h=1.6;
+ var raw=r.dy*3+r.st+r.wi*2+r.ln,p=F.wk.prev[id];r.h=h;r.pts=Math.round(raw*h);r.prev=p?p.pts:null;r.up=!!(p&&r.pts>p.pts&&p.pts>0);if(r.up)r.pts+=5;return r}
+function famRecords(){var r=O();MEM.forEach(function(m){var b=stat(m.id).best;for(var g in b)if(!r[g]||b[g]>r[g])r[g]=b[g]});return r}
+var CROWNS=[['imp','🌱'],['help','💖'],['brave','🦁'],['steady','📅']];
+function crowns(){var rows=O(),taken=O(),out=O(),wn=parseInt(F.wk.id.slice(6),10)||0;MEM.forEach(function(m){rows[m.id]=wrow(m.id)});
+ var order=CROWNS.map(function(c){return c[0]});for(var i=0;i<wn%4;i++)order.push(order.shift());
+ order.forEach(function(c){var cand=MEM.filter(function(m){return !taken[m.id]&&m.ok}).map(function(m){var r=rows[m.id],v=c==='imp'?(r.prev==null?r.pts:r.pts-r.prev):c==='help'?(F.wk.kd[m.id]||0):c==='brave'?(F.wk.tr[m.id]||0)*2+stat(m.id).wgames:r.dy;return {m:m,v:v}})
+   .filter(function(x){return x.v>0}).sort(function(a,b){return b.v-a.v});
+  if(!cand.length)return;var pick=cand[0];
+  if(cand[1]&&pick.m.id===F.wk.crP[c]&&cand[1].v>=pick.v*0.7)pick=cand[1];   // the crown moves on when somebody else is close
+  out[c]=pick.m.id;taken[pick.m.id]=1});
+ return out}
+function misState(){var ms=F.wk.ms,Dm=D.MISSIONS[ms.i]||D.MISSIONS[0],type=Dm[2],goal=Dm[3];
+ var vals=MEM.filter(function(m){return m.ok}).map(function(m){var r=wrow(m.id),v=type==='stars'?r.st:type==='learn'?r.ln:type==='days'?r.dy:type==='kudos'?(F.wk.kd[m.id]||0):type==='games'?r.pl:type==='tick'?(ms.ok[m.id]?1:0):(r.dy>0||r.pl>0?1:0);
+  return {m:m,v:Math.min(v,goal)}}).sort(function(a,b){return b.v-a.v});
+ var pct=((vals[0]?vals[0].v:0)+(vals[1]?vals[1].v:0))/(2*goal);
+ if(type==='record'){var beat=false,fr=famRecords();for(var g in fr)if(fr[g]>(F.wk.rec0[g]||0))beat=true;pct=pct*0.5+(beat?0.5:0)}
+ return {D:Dm,type:type,goal:goal,vals:vals,pct:ms.done?1:Math.min(1,pct),done:!!ms.done}}
+
+/* ---------- family level / streak / trophies ---------- */
+function famCalc(){if(!F.fam)return null;var xp=F.fam.bank,g=F.fam.gb,ids=MEM.map(function(m){return m.id}).concat(F.removed.map(function(x){return x.p.id}));
+ ids.forEach(function(id){var b=F.base[id];if(!b)return;var s=stat(id);xp+=Math.max(0,s.xp-b.xp);g+=Math.max(0,s.playsN-b.pl)});
+ xp=Math.max(xp,F.fam.xp);g=Math.max(g,F.fam.g);var lv=1+Math.floor(Math.sqrt(xp/40)),lo=40*(lv-1)*(lv-1),hi=40*lv*lv;
+ return {xp:xp,games:g,lv:lv,need:hi-xp,pct:Math.round((xp-lo)/(hi-lo)*100),stage:lv<2?0:lv<4?1:lv<7?2:lv<11?3:4}}
+function famStreak(){var d=O(),n=0,miss=0,k=today();F.days.forEach(function(x){d[x]=1});
+ for(var i=0;i<90;i++){if(d[k]){n++;miss=0}else{miss++;if(miss>(n?1:2))break}k=addDays(k,-1)}return n}
+function mascot(fc){var a=F.fam.crest.a;return fc.stage===0?'🥚':fc.stage===1?'🐣':fc.stage===2?a:fc.stage===3?a+'✨':a+'👑'}
+
+/* ---------- sync: everything that is derived from the members' saves (read-only for their data) ---------- */
+var pendingWelcome='';
+function sync(){
+ refresh();dirty=false;loadF();var t=now(),td=today();
+ // recently removed: gone for good after 7 days (their shared points stay with the family)
+ F.removed=F.removed.filter(function(x){if(byId(x.p.id))return false;if(t-x.t<=7*DAY)return true;
+  var b=F.base[x.p.id];if(b&&F.fam){var s=stat(x.p.id);F.fam.bank+=Math.max(0,s.xp-b.xp);F.fam.gb+=Math.max(0,s.playsN-b.pl)}
+  delete F.base[x.p.id];delete F.inbox[x.p.id];delete F.snap[x.p.id];lsDel(DK+x.p.id);dirty=true;return false});
+ // a kid who just came back from the onboarding (welcome.html?new=1): the name / avatar chosen here are kept
+ var j=null;try{j=JSON.parse(lsGet(JK)||'null')}catch(e){}
+ if(j&&typeof j==='object'){
+  if(!(Date.now()-num(j.t,1e14)<45*60000)||!Array.isArray(j.known))lsDel(JK);
+  else{var nw=MEM.filter(function(m){return j.known.indexOf(m.id)<0});
+   if(nw.length){var p=M.list.filter(function(x){return x.id===nw[0].id})[0];
+    if(!cleanNm(p.name)&&cleanNm(j.name))p.name=cleanNm(j.name);if(emoOf(p.emo)==='🐱'&&j.emo)p.emo=emoOf(j.emo);if(ROLES.indexOf(j.rl)>=0)p.rl=j.rl;
+    saveMeta(M);lsDel(JK);refresh();pendingWelcome=p.id;tline('join',{m:p.id});track('add',MEM.length);audit('profile_add',{role:'kid'},j.by==='parent'?'parent':'kid')}}}
+ // family points start counting when a member joins the family
+ if(F.fam)MEM.forEach(function(m){if(m.ok&&!F.base[m.id]){var s=stat(m.id);F.base[m.id]={xp:s.xp,pl:s.playsN};dirty=true}});
+ // a new week: last week's rows are kept for "better than my own last week", crowns move on, a new mission
+ var wid=weekId(td);
+ if(F.wk.id!==wid){var prev=O(),crP=O();
+  if(F.wk.id){MEM.forEach(function(m){if(m.ok){var r=wrow(m.id);prev[m.id]={st:r.st,wi:r.wi,ln:r.ln,dy:r.dy,pts:r.pts}}});crP=crowns()}
+  var wn=parseInt(wid.slice(6),10)+parseInt(wid.slice(0,4),10);
+  F.wk={id:wid,base:O(),prev:prev,crP:crP,ms:{i:wn%D.MISSIONS.length,ok:O(),done:0,sw:0},rec0:famRecords(),kd:O(),tr:O()};dirty=true}
+ MEM.forEach(function(m){if(m.ok&&!F.wk.base[m.id]){F.wk.base[m.id]=totals(m.id);dirty=true}});
+ // milestones for the family album
+ var fr=famRecords();
+ MEM.forEach(function(m){if(!m.ok)return;var s=stat(m.id),sn=F.snap[m.id],g,nrec=0;
+  var skm=0;[3,7,14,30].forEach(function(x){if(s.streak>=x)skm=x});
+  if(!sn){var b0=O();for(g in s.best)b0[g]=s.best[g];F.snap[m.id]={lv:s.lv,w:s.wins?1:0,sk:skm,b:b0};dirty=true;return}
+  if(s.lv>sn.lv){tline('lv',{m:m.id,n:s.lv});sn.lv=s.lv}
+  if(s.wins&&!sn.w){tline('win1',{m:m.id});sn.w=1}
+  if(skm>sn.sk)tline('stk',{m:m.id,n:skm});if(skm!==sn.sk){sn.sk=skm;dirty=true}
+  for(g in s.best)if(s.best[g]>(sn.b[g]||0)){if(MEM.length>1&&s.best[g]>=fr[g]&&nrec<2){var others=0;MEM.forEach(function(o){if(o.id!==m.id&&stat(o.id).best[g])others++});if(others){tline('rec',{m:m.id,g:g,n:s.best[g]});nrec++}}sn.b[g]=s.best[g];dirty=true}});
+ // challenges: the receiver's best after the challenge decides; a try is cheered too
+ F.ch.forEach(function(c){if(c.st!=='open')return;if(!byId(c.to)||!byId(c.f)){if(t-c.t>30*DAY){c.st='exp';dirty=true}return}
+  var s=stat(c.to),b=s.best[c.g]||0,tries=(s.plays[c.g]||0)-c.p0;
+  if(b>c.b0&&b>=c.n){c.st='won';c.r=b;inbox(c.to,{k:'won',f:c.f,g:c.g,n:b,c:c.id});inbox(c.f,{k:'wonS',f:c.to,g:c.g,n:b,c:c.id});tline('chal',{m:c.to,o:c.f,g:c.g});F.n.ch++;if(!c.tr){c.tr=1;F.wk.tr[c.to]=(F.wk.tr[c.to]||0)+1}return}
+  if(tries>0&&!c.tr){c.tr=1;F.wk.tr[c.to]=(F.wk.tr[c.to]||0)+1;inbox(c.to,{k:'try',f:c.f,g:c.g,c:c.id});inbox(c.f,{k:'tryS',f:c.to,g:c.g,c:c.id})}
+  if(t-c.t>14*DAY){c.st=c.tr?'tried':'exp';dirty=true}});
+ // family days, level, mission, trophies
+ if(F.fam){var d0=dayKey(new Date(F.fam.t)),have=O();F.days.forEach(function(x){have[x]=1});
+  MEM.forEach(function(m){var ds=stat(m.id).dates;for(var d in ds)if(!have[d]&&dayDiff(d0,d)>=0&&dayDiff(d,td)>=0&&dayDiff(d,td)<90){have[d]=1;F.days.push(d);dirty=true}});
+  F.days.sort(function(a,b){return parseKey(a)-parseKey(b)});if(F.days.length>90)F.days=F.days.slice(-90);
+  var st=famStreak();if(st>F.bs){F.bs=st;dirty=true}}
+ var mi=misState();
+ if(!mi.done&&mi.pct>=1&&MEM.length>1){F.wk.ms.done=t;F.n.mis++;if(F.fam)F.fam.bank+=25;tline('mis',{});MEM.forEach(function(m){inbox(m.id,{k:'mis'})});track('mission',F.n.mis);SC=O()}
+ if(F.fam){var fc=famCalc();if(fc.xp>F.fam.xp){F.fam.xp=fc.xp;dirty=true}if(fc.games>F.fam.g){F.fam.g=fc.games;dirty=true}
+  if(fc.lv>F.fam.lv){F.fam.lv=fc.lv;tline('flv',{n:fc.lv})}
+  var all=MEM.length>1&&MEM.every(function(m){var r=wrow(m.id);return r.dy>0||r.pl>0});
+  var cond={fam:1,four:MEM.length>=4,k1:F.n.kud>=1,k10:F.n.kud>=10,m1:F.n.mis>=1,m3:F.n.mis>=3,c1:F.n.ch>=1,s3:F.bs>=3,s7:F.bs>=7,l3:fc.lv>=3,l5:fc.lv>=5,all:all,card:F.n.card>=10};
+  D.TROPHIES.forEach(function(tr){if(cond[tr[0]]&&!F.tro[tr[0]]){F.tro[tr[0]]=t;if(tr[0]!=='fam')tline('tro',{});dirty=true}})}
+ if(dirty)saveF();
+}
+
+/* ---------- actions ---------- */
+function doSwitch(id){var m=byId(id);if(!m||id===M.cur)return false;track('switch',MEM.length);audit('profile_switch',{role:m.role});if(dirty)saveF();return sw(id)}
+function newId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)}
+function addMember(o){o=o||{};var m=meta();if(m.list.length>=MAXM)return null;var nm=cleanNm(o.name);
+ var p={id:newId(),name:nm,emo:emoOf(o.emo)};if(o.role==='adult')p.role='adult';if(ROLES.indexOf(o.rl)>=0)p.rl=o.rl;if(/^[fmx]$/.test(o.gender))p.gender=o.gender;
+ if(o.role!=='adult'&&intIn(o.age,4,18))p.age=intIn(o.age,4,18);
+ m.list.push(p);saveMeta(m);refresh();
+ if(F.fam){var s=stat(p.id);F.base[p.id]={xp:s.xp,pl:s.playsN}}F.wk.base[p.id]=totals(p.id);
+ tline('join',{m:p.id});saveF();track('add',MEM.length);audit('profile_add',{role:p.role||'kid'});return p.id}
+function editMember(id,o){var m=meta(),p=m.list.filter(function(x){return x.id===id})[0];if(!p)return false;
+ if('name' in o){var nm=cleanNm(o.name);if(nm)p.name=nm}if('emo' in o)p.emo=emoOf(o.emo);if('rl' in o){if(ROLES.indexOf(o.rl)>=0)p.rl=o.rl;else delete p.rl}
+ if('gender' in o&&/^[fmx]$/.test(o.gender))p.gender=o.gender;saveMeta(m);refresh();return true}
+function removeMember(id,byParent){var m=meta();if(id===m.cur||!isId(id))return false;var p=m.list.filter(function(x){return x.id===id})[0];if(!p)return false;
+ m.list=m.list.filter(function(x){return x.id!==id});saveMeta(m);
+ F.removed=F.removed.filter(function(x){return x.p.id!==id});F.removed.push({p:p,t:now()});
+ saveF();audit('profile_remove',{role:p.role==='adult'?'adult':'kid'},byParent?'parent':actor());sync();return true}
+function restoreMember(id){var m=meta(),x=F.removed.filter(function(r){return r.p.id===id})[0];if(!x||m.list.length>=MAXM||m.list.some(function(p){return p.id===id}))return false;
+ m.list.push(x.p);saveMeta(m);F.removed=F.removed.filter(function(r){return r.p.id!==id});saveF();sync();return true}
+function makeFamily(o){o=o||{};var nm=cleanFam(o.name),first=!F.fam;
+ if(first){F.fam={name:nm,crest:saneCrest(o.crest),t:now(),xp:0,bank:0,g:0,gb:0,lv:1};MEM.forEach(function(m){if(m.ok){var s=stat(m.id);F.base[m.id]={xp:s.xp,pl:s.playsN}}});tline('fam',{});
+  if(o.mission!=null&&D.MISSIONS[o.mission]&&!F.wk.ms.done)F.wk.ms={i:o.mission,ok:O(),done:0,sw:0};audit('family_created',{n:MEM.length})}
+ else{F.fam.name=nm;if(o.crest)F.fam.crest=saneCrest(o.crest)}
+ saveF();sync();return true}
+function sendKudos(from,to,p,e){if(from===to||!byId(from)||!byId(to)||!isId(from)||!isId(to)||!kudosDef(p))return false;e=num(e,D.STICK.length-1);
+ inbox(to,{k:'kud',f:from,p:p,e:e});F.wall.unshift({f:from,to:to,p:p,e:e,t:now()});if(F.wall.length>30)F.wall.length=30;
+ F.wk.kd[from]=(F.wk.kd[from]||0)+1;F.n.kud++;tline('kud',{m:from,o:to});saveF();track('kudos',F.n.kud);sync();return true}
+function fairTarget(from,to,n){var a=byId(from),b=byId(to),w=[.5,.65,.8,1];if(!a||!b)return n;var f=Math.min(1,w[b.skill-1]/w[a.skill-1]);return Math.max(1,Math.round(n*f))}
+function sendChallenge(from,to,g,n){if(from===to||!byId(from)||!byId(to)||!isId(from)||!isId(to)||!isGame(g))return null;
+ var mine=stat(from).best[g]||0;n=num(n)||mine;if(!n)return null;var s=stat(to),b0=s.best[g]||0;if(b0>=n)return null;
+ var c={id:rid(),f:from,to:to,g:g,n:n,t:now(),b0:b0,p0:s.plays[g]||0,st:'open',tr:0,r:0};F.ch.push(c);
+ if(F.ch.length>40){var i=F.ch.findIndex(function(x){return x.st!=='open'});F.ch.splice(i<0?0:i,1)}
+ inbox(to,{k:'chal',f:from,g:g,n:n,c:c.id});saveF();track('challenge',F.ch.length);return c.id}
+
+/* ---------- talk cards ---------- */
+function personalCards(){var out=[],fr=famRecords(),wkAgo=now()-7*DAY,me=ME();
+ MEM.forEach(function(m){if(!m.ok)return;var s=stat(m.id),g,top='',tn=0,c={n:m.name,R:m};
+  function push(key,x){var o={id:key+':'+m.id+(x&&x.g?':'+x.g:''),cat:'us',key:key,ctx:Object.assign({},c,x||{})};out.push(o)}
+  if(s.lv>=2)push('p_lv',{k:s.lv});
+  for(g in s.plays)if(s.plays[g]>tn&&g!=='retro'){tn=s.plays[g];top=g}if(top&&tn>=2)push('p_fav',{g:top});
+  var nr=0;for(g in s.best)if(MEM.length>1&&s.best[g]===fr[g]&&nr<2){push('p_rec',{g:g,k:s.best[g]});nr++}
+  if(s.streak>=2)push('p_stk',{k:s.streak});
+  var lg='',ln=0;LEARN.forEach(function(x){if((s.starsBy[x]||0)>ln){ln=s.starsBy[x];lg=x}});if(lg&&ln>=3)push('p_learn',{g:lg,k:ln});
+  if(m.role==='adult'&&MEM.some(function(x){return x.role==='kid'}))push('p_adult');
+  if(F.wall.some(function(w){return w.to===m.id&&w.t>wkAgo}))push('p_kud');
+  if(s.pet.st>=2)push('p_pet');
+  if(!s.playsN&&me&&m.id!==me.id)push('p_new')});
+ return out}
+function cardText(c){return c.key?T(c.key,c.ctx):D.CARDS[c.i][1+LI]}
+var CATS=['all','us','cur','sil','tea','rem','pla'];
+function drawCard(cat){cat=CATS.indexOf(cat)>=0?cat:'all';var pers=personalCards(),deck=D.CARDS.map(function(c,i){return {id:'d'+i,cat:c[0],i:i}});
+ var pool=cat==='us'?pers:cat==='all'?((F.n.card%3===0&&pers.length)?pers:deck):deck.filter(function(c){return c.cat===cat});
+ if(!pool.length)pool=cat==='us'?deck:pers.concat(deck);
+ var fresh=pool.filter(function(c){return F.cards.indexOf(c.id)<0});if(!fresh.length){fresh=pool.filter(function(c){return c.id!==F.cards[F.cards.length-1]});if(!fresh.length)fresh=pool}
+ var c=fresh[Math.floor(Math.random()*fresh.length)];
+ F.cards.push(c.id);if(F.cards.length>30)F.cards.splice(0,F.cards.length-30);F.n.card++;saveF();track('card',F.n.card);
+ c.text=cardText(c);c.personal=!!c.key;return c}
+function makePlan(){var gs=[],pl=O();MEM.forEach(function(m){var p=stat(m.id).plays;for(var g in p)pl[g]=(pl[g]||0)+p[g]});
+ function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+ gs.push(rnd(D.TOGETHER.filter(isGame)));var lr=LEARN.filter(function(g){return isGame(g)&&g!=='bagrut'});gs.push(rnd(lr));
+ var fav=Object.keys(pl).filter(function(g){return gs.indexOf(g)<0&&g!=='retro'&&g!=='city'}).sort(function(a,b){return pl[b]-pl[a]}).slice(0,3);
+ var rest=Object.keys(GAMES()).filter(function(g){return gs.indexOf(g)<0&&g!=='retro'});gs.push(fav.length?rnd(fav):rnd(rest));
+ var cats=['cur','sil','tea','rem','pla'].sort(function(){return Math.random()-.5}).slice(0,3),q=cats.map(function(c){var idx=[];D.CARDS.forEach(function(x,i){if(x[0]===c)idx.push(i)});return rnd(idx)});
+ F.plan={g:gs.filter(Boolean),q:q};saveF();return F.plan}
+
+/* ================= UI ================= */
+var tab='fam',UI={kTo:'',kP:'',kE:0,kPage:0,chTo:'',chG:'',chFair:0,cat:'all',card:null,recAll:0};
+function toast(s){var t=$('toast');if(!t)return;t.textContent=s;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('on')},2600)}
+function party(list){var fx=$('fx');if(!fx)return;list=list||['🎉','⭐','💖','🌈'];for(var i=0;i<16;i++){var s=el('span',null,list[i%list.length]);s.style.left=(Math.random()*94)+'%';s.style.animationDelay=(Math.random()*.5)+'s';fx.appendChild(s)}
+ setTimeout(function(){fx.textContent=''},2600)}
+var NS='http://www.w3.org/2000/svg',crestN=0;
+function svg(tag,at){var e=document.createElementNS(NS,tag);for(var k in at)e.setAttribute(k,at[k]);return e}
+function crestSVG(c){c=c||{a:'💖',s:'house',c1:'#7c5cff',c2:'#ff6fa5'};var id='cg'+(++crestN),s=svg('svg',{viewBox:'0 0 100 100','aria-hidden':'true'}),df=svg('defs',{}),lg=svg('linearGradient',{id:id,x1:'0',y1:'0',x2:'1',y2:'1'});
+ add(lg,svg('stop',{offset:'0','stop-color':c.c1}),svg('stop',{offset:'1','stop-color':c.c2}));add(df,lg);
+ var tx=svg('text',{x:'50',y:c.s==='star'?'66':c.s==='house'?'74':'64','text-anchor':'middle','font-size':c.s==='star'?'32':'40'});tx.textContent=c.a;
+ return add(s,df,svg('path',{d:D.SHAPES[c.s]||D.SHAPES.shield,fill:'url(#'+id+')',stroke:'#fff','stroke-width':'4','stroke-linejoin':'round'}),tx)}
+function ring(p){var s=svg('svg',{viewBox:'0 0 100 100',role:'img','aria-label':Math.round(p*100)+'%'}),c=2*Math.PI*42;
+ add(s,svg('circle',{cx:'50',cy:'50',r:'42',fill:'none',stroke:'#eee6fb','stroke-width':'12'}),
+  svg('circle',{cx:'50',cy:'50',r:'42',fill:'none',stroke:p>=1?'#27ae60':'#7c5cff','stroke-width':'12','stroke-linecap':'round','stroke-dasharray':(c*p).toFixed(1)+' '+c.toFixed(1),transform:'rotate(-90 50 50)'}));
+ var t=svg('text',{x:'50',y:'58','text-anchor':'middle','font-size':'24','font-weight':'900',fill:'#3a2459'});t.textContent=Math.round(p*100)+'%';return add(s,t)}
+function card(title,sub){var c=el('section','cd');if(title)add(c,el('h2',null,title));if(sub)add(c,el('p','s',sub));return c}
+function ago(t){var d=Math.max(0,dayDiff(dayKey(new Date(t)),today()));return d===0?T('today'):d===1?T('yest'):T('dago',{k:d})}
+function roleLabel(m){return m.rl?T('rl_'+m.rl):m.role==='kid'&&m.age?T('age',{k:m.age}):''}
+
+/* ---- sheets ---- */
+function openSheet(build,noClose){var o=$('ov'),s=$('sh');s.textContent='';if(!noClose)add(s,Object.assign(btn('x','✕',closeSheet),{id:'shX'}));s.dataset.lock=noClose?'1':'';build(s);o.classList.add('on');s.scrollTop=0}
+function closeSheet(){$('ov').classList.remove('on');$('sh').textContent='';render()}
+function steps(s,n,cur){var d=el('div','steps');for(var i=1;i<=n;i++)add(d,el('i',i<=cur?'on':''));add(s,d)}
+function picker(list,cur,cls,fn){var d=el('div',cls||'pick');list.forEach(function(x){var b=btn(x===cur?'on':'',x,function(){Array.prototype.forEach.call(d.children,function(c){c.classList.remove('on')});b.classList.add('on');fn(x)});b.dataset.v=x;add(d,b)});return d}
+function chipRow(items,cur,fn,cls){var d=el('div','chips');items.forEach(function(it){var b=btn('chip'+(cls?' '+cls:'')+(it[0]===cur?' on':''),it[1],function(){Array.prototype.forEach.call(d.children,function(c){c.classList.remove('on')});b.classList.add('on');fn(it[0])});b.dataset.v=it[0];add(d,b)});return d}
+
+/* ---- family wizard (create: 4 steps · edit: name + crest) ---- */
+function famWizard(){var edit=!!F.fam,w={step:1,name:edit?F.fam.name:'',crest:edit?Object.assign({},F.fam.crest):{a:D.ANIMALS[Math.floor(Math.random()*D.ANIMALS.length)],s:'shield',c1:D.COLORS[0],c2:D.COLORS[1],m:''},mission:null},N=edit?2:4;
+ function draw(){openSheet(function(s){s.id='sh';steps(s,N,w.step);
+  if(w.step===1){add(s,el('div','big','🏠'),el('h2',null,T('w1T')),el('p',null,T('w1S')));
+   var inp=el('input');inp.type='text';inp.id='famName';inp.maxLength=24;inp.value=w.name;inp.placeholder=T('w1P');inp.autocomplete='off';inp.setAttribute('aria-label',T('w1T'));
+   add(s,inp,el('p','s',T('priv')),add(el('div','col'),Object.assign(btn('btn p big',T('next'),function(){w.name=cleanFam(inp.value);w.step=2;draw()}),{id:'wNext'})))}
+  else if(w.step===2){add(s,el('h2',null,T('w2T')));var pv=el('div','crestP');pv.id='crestPv';function rp(){pv.textContent='';add(pv,crestSVG(w.crest))}rp();add(s,pv);
+   add(s,el('div','lbl',T('w2A')),picker(D.ANIMALS,w.crest.a,'pick',function(x){w.crest.a=x;rp()}));
+   add(s,el('div','lbl',T('w2S')),chipRow([['shield','🛡️'],['circle','⚪'],['star','⭐'],['heart','❤️'],['house','🏠']],w.crest.s,function(x){w.crest.s=x;rp()},'e'));
+   add(s,el('div','lbl',T('w2C')));[['c1'],['c2']].forEach(function(cc){var d=el('div','sw');D.COLORS.forEach(function(col){var b=btn(col===w.crest[cc[0]]?'on':'','',function(){Array.prototype.forEach.call(d.children,function(c){c.classList.remove('on')});b.classList.add('on');w.crest[cc[0]]=col;rp()});b.style.background=col;b.setAttribute('aria-label',col);add(d,b)});add(s,d)});
+   add(s,el('div','lbl',T('w2M')),chipRow([['',T('noMotto')]].concat(D.MOTTOS.map(function(m){return [m[0],m[1+LI]]})),w.crest.m,function(x){w.crest.m=x}));
+   add(s,add(el('div','col'),Object.assign(btn('btn p big',edit?T('save'):T('next'),function(){if(edit){makeFamily({name:w.name,crest:w.crest});closeSheet()}else{w.step=3;draw()}}),{id:'wNext'}),btn('btn w',T('back'),function(){w.step=1;draw()})))}
+  else if(w.step===3){add(s,el('div','big','👪'),el('h2',null,T('w3T')),el('p',null,T('w3S')));var r=el('div','row c');MEM.forEach(function(m){add(r,add(el('span','av'),document.createTextNode(m.emo),el('small',null,m.name)))});add(s,r);
+   add(s,add(el('div','col'),Object.assign(btn('btn p big',T('next'),function(){w.step=4;draw()}),{id:'wNext'}),btn('btn w',T('back'),function(){w.step=2;draw()})))}
+  else{add(s,el('div','big','🎯'),el('h2',null,T('w4T')),el('p',null,T('w4S')));var base=F.wk.ms.i,opts=[base,(base+3)%D.MISSIONS.length,(base+6)%D.MISSIONS.length];if(w.mission==null)w.mission=opts[0];
+   var col=el('div','msgs');opts.forEach(function(i){var Dm=D.MISSIONS[i],b=btn('msg'+(i===w.mission?' on':''),Dm[1]+' '+Dm[4+LI],function(){w.mission=i;Array.prototype.forEach.call(col.children,function(c){c.classList.remove('on')});b.classList.add('on')});add(col,b)});add(s,col);
+   add(s,add(el('div','col'),Object.assign(btn('btn g big',T('wGo'),function(){makeFamily({name:w.name,crest:w.crest,mission:w.mission});closeSheet();party(['🎉','🏠',w.crest.a,'💖']);toast(T('famMade'));if(MEM.length<2)setTimeout(addWizard,900)}),{id:'wNext'}),btn('btn w',T('back'),function(){w.step=3;draw()})))}
+ })}
+ draw()}
+
+/* ---- welcoming a new member ---- */
+function genderChips(kid,cur,fn){return chipRow(kid?[['f',T('gKF')],['m',T('gKM')],['x',T('gX')]]:[['f',T('gF')],['m',T('gM')],['x',T('gX')]],cur,fn)}
+function addWizard(){if(MEM.length>=MAXM){toast(T('maxM'));return}
+ var a={step:1,role:'',rl:'',name:'',emo:'',gender:''};
+ function draw(){openSheet(function(s){steps(s,3,a.step);
+  if(a.step===1){add(s,el('div','big','🤗'),el('h2',null,T('a1T')));var col=el('div','col'),rw=el('div');
+   function roles(){rw.textContent='';if(!a.role)return;add(rw,el('div','lbl',T('aRole')),chipRow((a.role==='adult'?ROLES:['sibling','cousin','friend','other']).map(function(r){return [r,T('rl_'+r)]}),a.rl,function(x){a.rl=x}));
+    add(rw,add(el('div','col'),Object.assign(btn('btn p big',T('next'),function(){a.step=2;if(!a.emo)a.emo=a.role==='adult'?'🦉':'🐱';draw()}),{id:'aNext'})))}
+   [['kid','aKid','aKidS'],['adult','aAd','aAdS']].forEach(function(o){var b=btn('msg'+(a.role===o[0]?' on':''),null,function(){a.role=o[0];a.rl='';Array.prototype.forEach.call(col.children,function(c){c.classList.remove('on')});b.classList.add('on');roles()});b.dataset.v=o[0];
+    add(b,el('b',null,T(o[1])),el('small',null,' – '+T(o[2])));add(col,b)});add(s,col,rw);roles()}
+  else if(a.step===2){add(s,el('h2',null,T('a2T')));var big=el('div','big',a.emo);add(s,big);
+   var inp=el('input');inp.type='text';inp.id='memName';inp.maxLength=14;inp.value=a.name;inp.placeholder=T('a2P');inp.autocomplete='off';inp.setAttribute('aria-label',T('a2P'));
+   var st=el('p','s','');st.style.color='#c0392b';st.style.minHeight='20px';
+   add(s,inp,picker(D.AVATARS,a.emo,'pick',function(x){a.emo=x;big.textContent=x}),el('p','s',T('priv')),st,
+    add(el('div','col'),Object.assign(btn('btn p big',T('next'),function(){a.name=cleanNm(inp.value);if(!a.name){st.textContent=T('a2N');return}a.step=3;draw()}),{id:'aNext'}),btn('btn w',T('back'),function(){a.name=cleanNm(inp.value);a.step=1;draw()})))}
+  else if(a.role==='adult'){add(s,el('div','big',a.emo),el('h2',null,a.name),el('div','lbl',T('a3G')),genderChips(false,a.gender,function(x){a.gender=x}),
+    add(el('div','col'),Object.assign(btn('btn g big',T('aJoin'),function(){var id=addMember({name:a.name,emo:a.emo,role:'adult',rl:a.rl,gender:a.gender||'x'});if(!id){toast(T('maxM'));closeSheet();return}sync();welcomeMoment(id)}),{id:'aNext'}),btn('btn w',T('back'),function(){a.step=2;draw()})))}
+  else{add(s,el('div','big',a.emo),el('h2',null,a.name),el('p',null,T('a3K',{n:a.name})),
+    add(el('div','col'),Object.assign(btn('btn g big',T('a3KB'),function(){lsSet(JK,JSON.stringify({name:a.name,emo:a.emo,rl:a.rl,t:Date.now(),by:actor(),known:meta().list.map(function(p){return p.id})}));if(dirty)saveF();location.href='welcome.html?new=1'}),{id:'aNext'}),btn('btn w',T('back'),function(){a.step=2;draw()})))}
+ })}
+ draw()}
+function welcomeMoment(id){var m=byId(id);if(!m){closeSheet();return}party(['🎉','🤗',m.emo,'💖']);
+ openSheet(function(s){add(s,el('div','big',m.emo),el('h2',null,T('welT',{n:m.name,R:m})));var others=MEM.filter(function(x){return x.id!==id&&x.ok});
+  if(others.length){add(s,el('p',null,T('welS',{n:m.name})));var w=el('div','wel');others.forEach(function(o){var r=el('div','welr');r.dataset.from=o.id;add(r,el('b',null,o.emo+' '+o.name));var c=el('div','msgs');
+    ['w1','w2','w3'].forEach(function(p,i){add(c,btn('msg',D.STICK[[5,6,1][i]]+' '+tpl(kudosDef(p)[1+LI],{S:o,R:m}),function(){if(sendKudos(o.id,id,p,[5,6,1][i])){r.textContent='';add(r,el('b',null,o.emo+' '+o.name+' · '+T('sent')))}}))});add(r,c);add(w,r)});add(s,w)}
+  add(s,add(el('div','col'),Object.assign(btn('btn p big',T('done'),closeSheet),{id:'welDone'})))})}
+function editSheet(id){var m=byId(id);if(!m)return;var e={name:m.named?m.name:'',emo:m.emo,rl:m.rl,gender:m.gender};
+ openSheet(function(s){add(s,el('h2',null,T('edT',{n:m.name})));var big=el('div','big',e.emo);add(s,big);
+  var inp=el('input');inp.type='text';inp.id='memName';inp.maxLength=14;inp.value=e.name;inp.placeholder=T('a2P');inp.autocomplete='off';inp.setAttribute('aria-label',T('a2P'));
+  add(s,inp,picker(D.AVATARS.indexOf(e.emo)<0?[e.emo].concat(D.AVATARS.slice(0,23)):D.AVATARS,e.emo,'pick',function(x){e.emo=x;big.textContent=x}));
+  add(s,el('div','lbl',T('aRole')),chipRow((m.role==='adult'?ROLES:['sibling','cousin','friend','other']).map(function(r){return [r,T('rl_'+r)]}),e.rl,function(x){e.rl=x}));
+  add(s,el('div','lbl',T('a3G')),genderChips(m.role==='kid',e.gender,function(x){e.gender=x}));
+  var col=el('div','col');add(col,Object.assign(btn('btn p big',T('save'),function(){editMember(id,{name:inp.value,emo:e.emo,rl:e.rl,gender:e.gender});closeSheet()}),{id:'edSave'}));
+  if(m.role==='kid'&&id===M.cur){var a=el('a','btn w',T('test'));a.href='welcome.html?edit=1';add(col,a)}
+  add(s,col)})}
+function memberSheet(id){var m=byId(id);if(!m)return;var me=ME(),s0=stat(id),rk=rankOf(s0.lv,m.gender);
+ openSheet(function(s){add(s,el('div','big',m.emo),el('h2',null,m.name),Object.assign(el('p',null,T('lvl',{k:s0.lv})+' · '+rk.e+' '+rk.t),{style:'text-align:center;font-weight:700'}));
+  var col=el('div','col');
+  if(id!==M.cur){add(s,Object.assign(el('p','s',T('swS',{s:me.name})),{style:'text-align:center'}));add(col,Object.assign(btn('btn g big',T('playAs',{n:m.name}),function(){doSwitch(id)}),{id:'swGo'}))}
+  else add(s,Object.assign(el('p','s',T('itsMe')),{style:'text-align:center'}));
+  var r=el('div','row c');add(r,Object.assign(btn('btn w',T('edit'),function(){editSheet(id)}),{id:'mEdit'}));
+  if(id!==M.cur)add(r,Object.assign(btn('btn w',T('remove'),function(){removeSheet(id)}),{id:'mRemove'}));
+  add(col,r);add(s,col)})}
+function hasPin(){try{var p=JSON.parse(lsGet('annabelle-parent')||'null');return p&&p.pin&&typeof p.pin.h==='string'&&typeof p.pin.s==='string'?p.pin:null}catch(e){return null}}
+function fnv(str){var h=0x811c9dc5;for(var r=0;r<5000;r++)for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return ('0000000'+h.toString(16)).slice(-8)}
+function verifyPin(pin){var p=hasPin();if(!p)return Promise.resolve(false);var str='annabelle|'+p.s+'|'+pin;
+ if(p.a==='fnv')return Promise.resolve(fnv(str)===p.h);if(!(window.crypto&&crypto.subtle))return Promise.resolve(false);
+ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2)}).join('')===p.h},function(){return false})}
+function pinSheet(onOk){var v='',busy=false;
+ openSheet(function(s){add(s,el('h2',null,T('pinT')),Object.assign(el('p','s',T('pinS')),{style:'text-align:center'}));var dots=el('div','dots');for(var i=0;i<4;i++)add(dots,el('i'));var msg=el('p','s','');msg.style.cssText='text-align:center;color:#c0392b;min-height:22px';msg.id='pinMsg';
+  function show(){Array.prototype.forEach.call(dots.children,function(d,i){d.classList.toggle('f',i<v.length)})}
+  var pad=el('div','pad');[1,2,3,4,5,6,7,8,9,'⌫',0,'✓'].forEach(function(k){var b=btn('',String(k),function(){if(busy)return;if(k==='⌫')v=v.slice(0,-1);else if(k==='✓'){if(v.length===4)go()}else if(v.length<4){v+=k;if(v.length===4)go()}show()});b.dataset.k=k;add(pad,b)});
+  function go(){busy=true;verifyPin(v).then(function(ok){busy=false;if(ok)onOk();else{v='';show();msg.textContent=T('pinBad')}})}
+  add(s,dots,msg,pad)})}
+function removeSheet(id){var m=byId(id);if(!m||id===M.cur)return;
+ function confirm2(viaPin){openSheet(function(s){add(s,el('div','big',m.emo),el('h2',null,T('rmT',{n:m.name})),Object.assign(el('p',null,T('rmS')),{style:'text-align:center'}));var col=el('div','col');
+   function fin(){removeMember(id,viaPin);closeSheet();toast(T('rmD',{n:m.name,R:m}))}
+   if(viaPin)add(col,Object.assign(btn('btn r big',T('rm2',{n:m.name}),fin),{id:'rm2'}));
+   else{var b1=Object.assign(btn('btn y big',T('rm1'),function(){b1.remove();col.insertBefore(Object.assign(btn('btn r big',T('rm2',{n:m.name}),fin),{id:'rm2'}),col.firstChild)}),{id:'rm1'});add(col,b1)}
+   add(col,btn('btn w',T('close'),closeSheet));add(s,col)})}
+ if(hasPin())pinSheet(function(){confirm2(true)});else confirm2(false)}
+
+/* ---- inbox ---- */
+function itemText(it,me){var s=it.f?who(it.f):null,sn=s?s.name:'?';
+ if(it.k==='kud'){var d=kudosDef(it.p);return {e:D.STICK[it.e]||'💖',t:T('inK',{s:sn})+tpl(d[1+LI],{S:s||me,R:me})}}
+ if(it.k==='chal')return {e:'🎯',t:T('chIn',{s:sn,S:s||me,k:it.n,g:it.g})};
+ if(it.k==='won')return {e:'🏆',t:T('chWonMe',{s:sn,g:it.g,k:it.n})};
+ if(it.k==='wonS')return {e:'👏',t:T('chWonS',{n:sn,R:s||me,g:it.g,k:it.n})};
+ if(it.k==='try')return {e:'💪',t:T('chTryMe',{s:sn,g:it.g})};
+ if(it.k==='tryS')return {e:'💪',t:T('chTryS',{n:sn,R:s||me,g:it.g})};
+ return {e:'🎉',t:T('misDone')}}
+function showMail(){var me=ME();if(!me||!me.ok)return false;var box=(F.inbox[me.id]||[]).filter(function(x){return !x.s});if(!box.length)return false;
+ openSheet(function(s){add(s,el('h2',null,T('inboxT')));box.slice(-8).reverse().forEach(function(it){var x=itemText(it,me),d=el('div','ibx');d.dataset.k=it.k;add(d,el('i',null,x.e),document.createTextNode(x.t));add(s,d)});
+  add(s,add(el('div','col'),Object.assign(btn('btn p big',T('thanks'),closeSheet),{id:'mailOk'})))});
+ box.forEach(function(x){x.s=1});saveF();party(['💌','⭐','💖','🎉']);return true}
+
+/* ---- header / tabs / notes ---- */
+function header(){var fc=F.fam?famCalc():null,cb=$('crestB');cb.textContent='';add(cb,crestSVG(F.fam?F.fam.crest:null));cb.setAttribute('aria-label',T('famCard'));
+ var ttl=F.fam&&F.fam.name?T('famOf',{n:F.fam.name}):T('title');$('ttl').textContent=ttl;document.title=ttl.replace(/[⁨⁩]/g,'');
+ var fs=F.fam?famStreak():0;$('sub').textContent=F.fam?(fs?T('sub',{k:fc.lv,s:days(fs)}):T('famLv',{k:fc.lv})):T('sub0');$('lg').textContent=L.toUpperCase();
+ var av=$('avs');av.textContent='';MEM.forEach(function(m){var b=btn('av'+(m.id===M.cur?' cur':''),null,function(){memberSheet(m.id)});b.dataset.id=m.id;b.setAttribute('aria-label',m.name);add(b,document.createTextNode(m.emo),el('small',null,m.name));add(av,b)});
+ if(MEM.length<MAXM){var p=btn('av plus','＋',addWizard);p.setAttribute('aria-label',T('addM'));add(av,p)}}
+function tabs(){var t=$('tabs');t.textContent='';var me=ME(),open=F.ch.filter(function(c){return c.st==='open'&&me&&c.to===me.id}).length;
+ [['fam','🏡','tFam'],['board','🏆','tBoard'],['tog','🤝','tTog'],['talk','💬','tTalk']].forEach(function(x){var b=btn(tab===x[0]?'on':'',null,function(){tab=x[0];render();window.scrollTo(0,0)});b.dataset.tab=x[0];
+  add(b,el('i',null,x[1]),el('span',null,T(x[2])));if(x[0]==='tog'&&open)add(b,el('b','dot',String(open)));add(t,b)})}
+var NUDGE={lv:['k5','k4','k28'],win1:['k6','k4','k30'],rec:['k6','k1','k30'],stk:['k15','k1','k4']};
+function notes(){var n=$('notes'),me=ME();n.textContent='';if(!me)return;
+ if(!F.fam&&!F.inv){var d=el('div','note inv');d.id='invite';add(d,el('span','e','🏠'),add(el('div','tx'),document.createTextNode(T('invT')),el('small',null,T('invS'))),
+   add(el('div','acts'),Object.assign(btn('btn p sm',T('invB'),famWizard),{id:'invGo'}),Object.assign(btn('btn w sm',T('skip'),function(){F.inv=1;saveF();render()}),{id:'invLater'})));add(n,d)}
+ F.ch.forEach(function(c){if(c.st!=='open'||c.to!==me.id)return;var s=who(c.f);if(!s)return;var d=el('div','note ch');d.dataset.ch=c.id;
+  var a=el('a','btn g sm',T('chGo'));a.href=c.g+'.html';add(d,el('span','e',gameEmo(c.g)),el('div','tx',T('chIn',{s:s.name,S:s,k:c.n,g:c.g})),add(el('div','acts'),a));add(n,d)});
+ var cut=now()-7*DAY,shown=0;
+ F.tl.slice().reverse().forEach(function(ev){if(shown>=2||!NUDGE[ev.k]||ev.t<cut||!ev.m||ev.m===me.id)return;var m=byId(ev.m);if(!m)return;var key=ev.k+ev.m+ev.t;if(F.nud.indexOf(key)>=0)return;
+  if((F.inbox[ev.m]||[]).some(function(x){return x.k==='kud'&&x.f===me.id&&x.t>=ev.t}))return;shown++;
+  var d=el('div','note');d.dataset.nudge=ev.k;var acts=el('div','acts');function gone(){F.nud.push(key);if(F.nud.length>60)F.nud.shift();saveF()}
+  NUDGE[ev.k].forEach(function(p){add(acts,btn('btn w sm',tpl(kudosDef(p)[1+LI],{S:me,R:m}),function(){gone();if(sendKudos(me.id,m.id,p,0)){toast(T('kSent',{n:m.name}));party(['💌','💖'])}render()}))});
+  var xb=btn('btn w sm','✕',function(){gone();render()});xb.setAttribute('aria-label',T('close'));add(acts,xb);
+  add(d,el('span','e','🌟'),add(el('div','tx'),document.createTextNode(evText(ev)),el('small',null,T('nudge',{n:m.name}))),acts);add(n,d)})}
+function evText(ev){var m=ev.m?who(ev.m):null,o=ev.o?who(ev.o):null;if(ev.m&&!m)return '';
+ return T('ev_'+ev.k,{n:m?m.name:'',R:m,s:o?o.name:'',k:ev.n,g:ev.g})}
+var EVE={fam:'🏠',join:'🤗',lv:'⬆️',win1:'🥇',rec:'🏆',kud:'💌',mis:'🎯',chal:'🤝',tro:'🏅',stk:'🔥',flv:'🌟'};
+
+/* ---- tab: family ---- */
+function pgFam(pg){var me=ME();
+ var c=card(T('who'),MEM.length>1?T('whoS'):'');c.id='whoCard';var g=el('div','mem');
+ MEM.forEach(function(m){var s=stat(m.id),rk=rankOf(s.lv,m.gender),b=btn('mc'+(m.id===M.cur?' cur':''),null,function(){memberSheet(m.id)});b.dataset.id=m.id;
+  if(m.id===M.cur)add(b,el('span','now',m.gender==='f'?T('nowF'):T('now')));
+  var nn=el('span','n',m.name);nn.dir='auto';add(b,el('span','a',m.emo),nn);var rl=roleLabel(m);if(rl)add(b,el('span','r',rl));
+  add(b,el('span','l',T('lvl',{k:s.lv})+' · '+rk.e+' '+rk.t));var x=el('span','x');if(s.streak>0)add(x,el('span',null,'🔥'+s.streak));if(s.playsN>0||s.xp>0)add(x,el('span',null,petEmo(s.pet)));add(b,x);add(g,b)});
+ if(MEM.length<MAXM){var ab=btn('mc add',null,addWizard);ab.id='addMem';add(ab,el('span','a','🤗'),el('span',null,T('addM')));add(g,ab)}
+ add(c,g);add(pg,c);
+ if(F.fam){var fc=famCalc(),f=card(T('famCard'));f.id='famCard';var row=el('div','fam'),t=el('div','t');add(row,crestSVG(F.fam.crest),t);
+  add(t,el('b',null,F.fam.name?T('famOf',{n:F.fam.name}):T('title')));var mo=D.MOTTOS.filter(function(x){return x[0]===F.fam.crest.m})[0];if(mo)add(t,el('span',null,'“'+mo[1+LI]+'”'));
+  add(t,Object.assign(el('div',null,T('famLv',{k:fc.lv})),{style:'font-weight:800;margin-top:4px'}));var bar=el('div','bar'),bi=el('i');bi.style.width=Math.max(4,fc.pct)+'%';add(bar,bi);add(t,bar);
+  add(f,row,Object.assign(el('p','s',T('famXp',{k:fc.need})),{style:'margin-top:8px'}));
+  var st=famStreak(),r2=el('div','row');add(r2,el('span','pill top',T('masc')+': '+mascot(fc)+' '+T('ms'+fc.stage)),el('span','pill',st?T('stk',{s:days(st)}):T('stk0')));if(F.bs>1)add(r2,el('span','pill',T('stkB',{s:days(F.bs)})));add(f,r2);
+  var r3=el('div','row');r3.style.marginTop='10px';add(r3,Object.assign(btn('btn w sm',T('famEdit'),famWizard),{id:'famEdit'}));add(f,r3);add(pg,f);
+  var nb=card(T('nums')),sg=el('div','stats');nb.id='numsCard';[[fc.games,'nGames'],[F.n.kud,'nKud'],[F.n.mis,'nMis'],[F.n.ch,'nCh'],[F.n.card,'nCard'],[MEM.length,'nMem']].forEach(function(x){add(sg,add(el('div','stat'),el('b',null,fmt(x[0])),el('span',null,T(x[1]))))});add(nb,sg);add(pg,nb);
+  var sh=card(T('shelf')),sf=el('div','shelf');sh.id='shelfCard';D.TROPHIES.forEach(function(tr){add(sf,add(el('div','tro'+(F.tro[tr[0]]?'':' off')),el('i',null,tr[1]),document.createTextNode(tr[2+LI])))});add(sh,sf);add(pg,sh)}
+ var al=card(T('album'));al.id='albumCard';var evs=F.tl.slice().reverse().map(function(ev){return {ev:ev,t:evText(ev)}}).filter(function(x){return x.t}).slice(0,30);
+ if(!evs.length)add(al,el('p','empty',T('albumE')));else{var tl=el('div','tl');evs.forEach(function(x){add(tl,add(el('div','tli'),el('i',null,EVE[x.ev.k]||'⭐'),document.createTextNode(x.t),el('small',null,ago(x.ev.t))))});add(al,tl)}add(pg,al);
+ if(F.removed.length){var rc=card(T('removed'));rc.id='removedCard';F.removed.forEach(function(x){var v=mview(x.p,0),left=Math.max(1,7-Math.floor((now()-x.t)/DAY)),r=el('div','tr');
+   add(r,el('span','a',v.emo),add(el('div','m'),el('b',null,v.name),el('span',null,T('remLeft',{s:days(left)}))),Object.assign(btn('btn w sm',T('restore'),function(){if(restoreMember(v.id)){toast(T('restored',{n:v.name}));render()}else toast(T('maxM'))}),{}));r.dataset.id=v.id;add(rc,r)});add(pg,rc)}
+ if(!F.fam&&F.inv){var iv=card(T('invT'),T('invS'));add(iv,Object.assign(btn('btn p',T('invB'),famWizard),{id:'invGo2'}));add(pg,iv)}}
+
+/* ---- tab: board ---- */
+function pgBoard(pg){var rows=MEM.map(function(m){return {m:m,r:wrow(m.id)}}).sort(function(a,b){return b.r.pts-a.r.pts}),c=card(T('wk'),T('wkS'));c.id='weekCard';
+ var tb=el('div','tb'),any=false;rows.forEach(function(x,i){var r=x.r,d=el('div','tr'+(x.m.id===M.cur?' cur':''));d.dataset.id=x.m.id;if(r.pts>0)any=true;
+  var sp=el('span');add(sp,el('span','st','⭐'+r.st),el('span','st','🏆'+r.wi),el('span','st','📚'+r.ln),el('span','st','📅'+r.dy));if(r.up)add(sp,el('span',null,T('up')));else if(r.prev==null&&r.pts>0)add(sp,el('span',null,T('first')));
+  add(d,el('span','a',(i===0&&r.pts>0?'🥇':'')+x.m.emo),add(el('div','m'),el('b',null,x.m.name),sp),add(el('div','pt'),document.createTextNode(fmt(r.pts)),el('small',null,T('pts')+(r.h>1?' ×'+r.h:''))));add(tb,d)});
+ add(c,tb,el('p','s',T('legend')));if(!any)add(c,el('p','empty',T('wkE')));c.lastChild.style.marginTop='8px';add(pg,c);
+ var cr=crowns(),cc=card(T('crowns'),T('crS')),cg=el('div','crowns');cc.id='crownCard';CROWNS.forEach(function(x){var m=cr[x[0]]?byId(cr[x[0]]):null,d=el('div','crown');d.dataset.c=x[0];if(m)d.dataset.id=m.id;
+  add(d,el('i',null,x[1]),document.createTextNode(T('cr_'+x[0])),el('b',null,m?m.emo+' '+m.name:T('crNone')));add(cg,d)});add(cc,cg);add(pg,cc);
+ var rc=card(T('recs'),T('recsS'));rc.id='recCard';var games=O();MEM.forEach(function(m){var b=stat(m.id).best;for(var g in b)(games[g]||(games[g]=[])).push({m:m,v:b[g]})});
+ var gl=Object.keys(games).sort(function(a,b){return games[b].length-games[a].length||games[b][0].v-games[a][0].v});
+ if(!gl.length)add(rc,el('p','empty',T('recsE')));
+ (UI.recAll?gl:gl.slice(0,6)).forEach(function(g){var d=el('div','rec');d.dataset.g=g;add(d,el('h3',null,gameEmo(g)+' '+gameName(g)));var ps=el('div','ps');
+  games[g].sort(function(a,b){return b.v-a.v}).forEach(function(x,i){add(ps,el('span','pill'+(i===0?' top':''),(i===0?'👑 ':'')+x.m.emo+' '+x.m.name+' · '+fmt(x.v)))});add(d,ps);add(rc,d)});
+ if(!UI.recAll&&gl.length>6)add(rc,btn('btn w sm',T('more'),function(){UI.recAll=1;render()}));add(pg,rc)}
+
+/* ---- tab: together ---- */
+function memberChips(cur,fn){var me=ME();return chipRow(MEM.filter(function(m){return m.id!==me.id&&m.ok}).map(function(m){return [m.id,m.emo+' '+m.name]}),cur,fn)}
+function pgTog(pg){var me=ME(),others=MEM.filter(function(m){return m.id!==me.id&&m.ok});
+ // challenge
+ var c=card(T('chT'),T('chS'));c.id='chCard';
+ if(!others.length)add(c,el('p','empty',T('chNoM')));
+ else{var my=stat(me.id),gl=Object.keys(my.best).sort(function(a,b){return (my.plays[b]||0)-(my.plays[a]||0)}).slice(0,10);
+  if(!gl.length)add(c,el('p','empty',T('chNoG')));
+  else{if(!byId(UI.chTo)||UI.chTo===me.id)UI.chTo=others[0].id;if(gl.indexOf(UI.chG)<0)UI.chG=gl[0];
+   add(c,el('div','lbl',T('chWho')),memberChips(UI.chTo,function(x){UI.chTo=x;UI.chFair=0;render()}));
+   add(c,el('div','lbl',T('chGame')),chipRow(gl.map(function(g){return [g,gameEmo(g)+' '+gameName(g)]}),UI.chG,function(x){UI.chG=x;UI.chFair=0;render()}));
+   var full=my.best[UI.chG],fair=fairTarget(me.id,UI.chTo,full),to=byId(UI.chTo),theirs=stat(UI.chTo).best[UI.chG]||0,n=UI.chFair&&fair<full?fair:full;
+   add(c,el('div','lbl',T('chScore')));var opts=[[0,T('chFull',{k:full})]];if(fair<full&&fair>theirs)opts.push([1,T('chFair',{k:fair})]);
+   add(c,chipRow(opts,UI.chFair&&opts.length>1?1:0,function(x){UI.chFair=x;render()}));
+   if(theirs>=n)add(c,el('p','empty',T('chHas',{n:to.name,R:to,k:theirs})));
+   var sb=Object.assign(btn('btn p big',T('chSend'),function(){var id=sendChallenge(me.id,UI.chTo,UI.chG,n);if(id){toast(T('chSent',{n:to.name}));party(['🎯','⭐']);sync();render()}}),{id:'chSend'});sb.disabled=theirs>=n;add(c,sb)}}
+ add(pg,c);
+ var mine=F.ch.filter(function(x){return x.f===me.id||x.to===me.id}).slice(-8).reverse();
+ if(mine.length){var cl=card(T('chList'));cl.id='chList';var tb=el('div','tb');mine.forEach(function(x){var f=who(x.f),to=who(x.to);if(!f||!to)return;var d=el('div','tr');d.dataset.st=x.st;
+   var txt=x.to===me.id?T('chIn',{s:f.name,S:f,k:x.n,g:x.g}):T('chOut',{n:to.name,k:x.n,g:x.g});
+   add(d,el('span','a',gameEmo(x.g)),add(el('div','m'),Object.assign(el('span',null,txt),{style:'display:block;font-size:14px'})),el('span','pill'+(x.st==='won'?' top':''),x.st==='won'?T('chWon'):(x.st==='tried'||x.tr)?T('chTried'):T('chWait')));add(tb,d)});add(cl,tb);add(pg,cl)}
+ // kudos
+ var k=card('💌 '+T('kT'),T('kS'));k.id='kCard';
+ if(!others.length)add(k,el('p','empty',T('kNoM')));
+ else{if(!byId(UI.kTo)||UI.kTo===me.id)UI.kTo=others[0].id;var rcv=byId(UI.kTo);
+  add(k,el('div','lbl',T('kWho')),memberChips(UI.kTo,function(x){UI.kTo=x;render()}));
+  add(k,el('div','lbl',T('kWhat')));var base=D.KUDOS.filter(function(x){return x[0].charAt(0)==='k'}),pages=Math.ceil(base.length/6),pgI=UI.kPage%pages,ms=el('div','msgs');
+  base.slice(pgI*6,pgI*6+6).forEach(function(x){var b=btn('msg'+(UI.kP===x[0]?' on':''),tpl(x[1+LI],{S:me,R:rcv}),function(){UI.kP=x[0];render()});b.dataset.p=x[0];add(ms,b)});add(k,ms);
+  add(k,Object.assign(btn('btn w sm',T('kMore'),function(){UI.kPage=(pgI+1)%pages;UI.kP='';render()}),{id:'kMore'}));
+  add(k,chipRow(D.STICK.map(function(e,i){return [i,e]}),UI.kE,function(x){UI.kE=x},'e'));
+  var sb2=Object.assign(btn('btn p big',T('kSend'),function(){if(sendKudos(me.id,UI.kTo,UI.kP,UI.kE)){toast(T('kSent',{n:rcv.name}));party([D.STICK[UI.kE],'💖','💌']);UI.kP='';render()}}),{id:'kSend'});sb2.disabled=!UI.kP;add(k,sb2)}
+ add(pg,k);
+ var w=card(T('wall'));w.id='wallCard';if(!F.wall.length)add(w,el('p','empty',T('wallE')));else{var wl=el('div','wall');F.wall.forEach(function(x){var f=who(x.f),to=who(x.to);if(!f||!to)return;var d=el('div','wi');
+   add(d,el('b',null,f.emo+' '+T('wFrom',{s:f.name,n:to.name})+' '+to.emo),el('span','q',(D.STICK[x.e]||'💖')+' '+tpl(kudosDef(x.p)[1+LI],{S:f,R:to})));add(wl,d)});add(w,wl)}add(pg,w);
+ // play together
+ function links(list){var g=el('div','links');list.filter(isGame).forEach(function(id){var a=el('a','lk');a.href=id+'.html';a.dataset.g=id;add(a,el('i',null,gameEmo(id)),el('span',null,gameName(id)));add(g,a)});return g}
+ var t1=card('🎮 '+T('nowT'),T('nowS'));t1.id='nowCard';add(t1,links(D.TOGETHER));add(pg,t1);
+ var t2=card('🌐 '+T('netT'),T('netS'));t2.id='netCard';add(t2,links(D.ONLINE));add(pg,t2)}
+
+/* ---- tab: talk ---- */
+function pgTalk(pg){var me=ME();
+ var c=card('🃏 '+T('talk'),T('talkS'));c.id='talkCard';
+ add(c,chipRow(CATS.map(function(x){return [x,T('c_'+x)]}),UI.cat,function(x){UI.cat=x;UI.card=drawCard(x);render()}));
+ if(!UI.card)UI.card={id:'',cat:'pla',text:D.CARDS[48][1+LI],i:48};
+ var tc=el('div','tcard');tc.id='tcard';tc.dataset.id=UI.card.id;add(tc,el('span','c',T('c_'+UI.card.cat)),el('div','q',UI.card.key||UI.card.i!=null?cardText(UI.card):UI.card.text));add(c,tc);
+ add(c,Object.assign(btn('btn p big',T('draw'),function(){UI.card=drawCard(UI.cat);render()}),{id:'draw',style:'margin-top:10px'}));add(pg,c);
+ var mi=misState(),m=card('🎯 '+T('mis'));m.id='misCard';var rw=el('div','ringw'),t=el('div','t');add(rw,ring(mi.pct),t);add(t,Object.assign(el('b',null,mi.D[1]+' '+mi.D[4+LI]),{style:'display:block;font-size:16px'}));
+ if(mi.done)add(t,Object.assign(el('span',null,T('misDone')),{style:'font-weight:800;color:#1e8449'}));add(m,rw);
+ if(MEM.length<2)add(m,el('p','empty',T('mis2')));
+ else if(mi.type==='tick'&&!mi.done){add(m,el('div','lbl',T('misTick')));var ch=el('div','chips');MEM.filter(function(x){return x.ok}).forEach(function(x){var b=btn('chip'+(F.wk.ms.ok[x.id]?' on':''),(F.wk.ms.ok[x.id]?'✅ ':'')+x.emo+' '+x.name,function(){if(F.wk.ms.ok[x.id])delete F.wk.ms.ok[x.id];else F.wk.ms.ok[x.id]=1;saveF();var before=F.n.mis;sync();if(F.n.mis>before)party();render()});b.dataset.id=x.id;add(ch,b)});add(m,ch)}
+ else{var ps=el('div','chips');mi.vals.forEach(function(x){add(ps,el('span','pill'+(x.v>=mi.goal?' top':''),x.m.emo+' '+x.m.name+' · '+x.v+'/'+mi.goal))});add(m,ps)}
+ var r=el('div','row');if(mi.D[7]&&!mi.done){var a=el('a','btn g sm','▶ '+gameName(mi.D[7].replace('.html','')));a.href=mi.D[7];add(r,a)}
+ if(!mi.done&&!F.wk.ms.sw)add(r,Object.assign(btn('btn w sm',T('misSw'),function(){F.wk.ms={i:(F.wk.ms.i+1)%D.MISSIONS.length,ok:O(),done:0,sw:1};saveF();sync();render()}),{id:'misSw'}));add(m,r);add(pg,m);
+ var pl=F.plan&&F.plan.g.length?F.plan:makePlan(),n=card('🌙 '+T('night'),T('nightS'));n.id='nightCard';n.classList.add('plan');
+ function fill(box){add(box,el('h3',null,'🎮 '+T('nG')));var o1=el('ol');pl.g.forEach(function(g){var li=el('li');if(box===n){var a=el('a',null,gameEmo(g)+' '+gameName(g));a.href=g+'.html';a.style.textDecoration='underline';add(li,a)}else li.textContent=gameEmo(g)+' '+gameName(g);add(o1,li)});
+  add(box,o1,el('h3',null,'💬 '+T('nQ')));var o2=el('ol');pl.q.forEach(function(i){add(o2,el('li',null,D.CARDS[i][1+LI]))});add(box,o2)}
+ fill(n);add(n,add(el('div','row'),Object.assign(btn('btn w sm',T('nNew'),function(){makePlan();render()}),{id:'planNew'}),Object.assign(btn('btn w sm',T('nPrint'),function(){var pa=$('printArea');pa.textContent='';add(pa,el('h2',null,'🌙 '+T('night')+' – '+$('ttl').textContent));fill(pa);try{window.print()}catch(e){}}),{id:'planPrint'})));add(pg,n)}
+
+function render(){setLang();header();tabs();notes();var pg=$('pg');pg.textContent='';pg.dataset.tab=tab;
+ (tab==='board'?pgBoard:tab==='tog'?pgTog:tab==='talk'?pgTalk:pgFam)(pg)}
+
+/* ---------- start ---------- */
+function start(){setLang();sync();
+ try{var q=new URLSearchParams(location.search).get('tab');if(/^(fam|board|tog|talk)$/.test(q||''))tab=q}catch(e){}
+ render();
+ $('lg').onclick=function(){var nx={he:'fr',fr:'en',en:'he'}[L]||'he';lsSet('annabelle-lang',nx);UI.card=null;render()};
+ $('crestB').onclick=function(){if(F.fam){tab='fam';render()}else famWizard()};
+ $('ov').addEventListener('click',function(e){if(e.target===$('ov')&&!$('sh').dataset.lock)closeSheet()});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('ov').classList.contains('on'))closeSheet()});
+ window.addEventListener('storage',function(e){if(e.key===MK||e.key===FK){if(!$('ov').classList.contains('on')){sync();render()}}});
+ if(pendingWelcome){var id=pendingWelcome;pendingWelcome='';welcomeMoment(id)}
+ else if(!showMail()){try{var qs=new URLSearchParams(location.search);if(qs.get('setup')==='1'&&!F.fam)famWizard();else if(qs.get('add')==='1')addWizard()}catch(e){}}
+}
+window.__family={
+ state:function(){var fc=F.fam?famCalc():null,mi=misState();return JSON.parse(JSON.stringify({F:F,cur:M.cur,members:MEM,week:MEM.map(function(m){return Object.assign({id:m.id},wrow(m.id))}),crowns:crowns(),
+  mission:{id:mi.D[0],pct:mi.pct,done:mi.done},family:fc?Object.assign({streak:famStreak()},fc):null,today:today(),lang:L,tab:tab}))},
+ add:function(o){var id=addMember(o);render();return id},
+ switchTo:function(id){return doSwitch(id)},
+ challenge:function(o){o=o||{};var id=sendChallenge(o.from||M.cur,o.to,o.game,o.score);sync();render();return id},
+ kudos:function(o){o=o||{};var ok=sendKudos(o.from||M.cur,o.to,o.k||'k1',o.e||0);render();return ok},
+ card:function(cat){UI.card=drawCard(cat||UI.cat);if(tab==='talk')render();return {id:UI.card.id,cat:UI.card.cat,text:UI.card.text.replace(/[⁨⁩]/g,''),personal:UI.card.personal}},
+ setDay:function(n){dayOff=Math.round(+n)||0;try{sessionStorage.setItem('fam-day',String(dayOff))}catch(e){}sync();render();return today()},
+ makeFamily:function(o){var r=makeFamily(o);render();return r},remove:function(id){var r=removeMember(id);render();return r},restore:function(id){var r=restoreMember(id);render();return r},
+ mission:function(i){F.wk.ms={i:num(i,D.MISSIONS.length-1),ok:O(),done:0,sw:0};saveF();sync();render()},
+ tab:function(t){tab=t;render()},sync:function(){sync();render()},keys:keys,KEEP:KEEP
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+</body>
+</html>

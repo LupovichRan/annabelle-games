@@ -92,7 +92,7 @@ html[data-th=galaxy]{--abg:radial-gradient(circle at 70% 0%,#3a1f6e,#07051a 60%)
 html[data-th=gold]{--abg:linear-gradient(#2e241a,#0d0a07);--atab:#2e241a}
 html[data-th] body{background:var(--abg) fixed}
 html[data-th] h1{color:#ffe14d;text-shadow:0 3px 0 #0006}
-html[data-th] .gh,html[data-th] #shopNote,html[data-th] #bdgBox>.note,html[data-th] #s-prof h2,html[data-th] #pfSt{color:#f0e9ff}
+html[data-th] .gh,html[data-th] #shopNote,html[data-th] #bdgBox>.note{color:#f0e9ff}
 html[data-th] .tabs{background:linear-gradient(var(--atab),#0000)}
 html[data-th] .stk.lock{background:#ffffffb3}
 </style>
@@ -129,7 +129,7 @@ html[data-th] .stk.lock{background:#ffffffb3}
   <div class="sec" id="s-games"><div class="grid" id="gamesBox"></div></div>
   <div class="sec" id="s-bdg"><div id="bdgBox"></div></div>
 </div>
-<div class="sec on" id="s-prof" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><h2 id="pfH" style="margin:0 0 8px;font-size:20px">👥 שחקנים במכשיר הזה</h2><div id="pfList" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center"></div><div style="margin-top:10px"><button id="pfAdd" style="font-size:16px;min-height:44px;padding:9px 14px;border-radius:12px;border:0;background:#27ae60;color:#fff;cursor:pointer;font-family:inherit">➕ שחקן חדש</button> <button id="pfEdit" style="font-size:16px;min-height:44px;padding:9px 14px;border-radius:12px;border:2px solid #ffb84d;background:#fff;color:#5a3b1a;cursor:pointer;font-family:inherit">✏️</button></div><div id="pfSt" style="min-height:20px;margin-top:6px;font-weight:700"></div></div></div>
+<div class="sec on" id="s-fam" style="display:block;margin-top:18px"><a id="famLink" href="family.html" class="note" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#4a2f6e;min-height:64px;background:#fffffff2;border-radius:18px;padding:10px 14px;box-shadow:0 3px 0 #0002"><span id="famE" style="font-size:36px">🏡</span><span style="flex:1;min-width:0"><b id="famT" style="display:block;font-size:18px">המשפחה שלנו</b><span id="famS" style="font-size:14px"></span></span><span id="famA" aria-hidden="true" style="font-size:22px">←</span></a></div>
 <div class="sec on" id="s-rst" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><button id="rstOpen" style="font-size:16px;padding:10px 16px;border-radius:14px;border:2px solid #ccc;background:#fff;cursor:pointer;font-family:inherit">🗑️ איפוס התקדמות (להורים)</button></div></div>
 <div class="sheet" id="rstSheet"><div class="c"><div class="e">🗑️</div><h3>איפוס התקדמות</h3><p id="rstQ"></p><input id="rstIn" inputmode="numeric" maxlength="3" style="font-size:26px;width:100px;text-align:center;border:3px solid #ffb84d;border-radius:12px;padding:6px;direction:ltr"><p id="rstSt" style="min-height:22px;font-weight:700"></p>
 <button id="rstA" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#e67e22;color:#fff;cursor:pointer;font-family:inherit">🎁 איפוס האלבום (מטבעות, מדבקות, פריטים)</button>
@@ -237,7 +237,7 @@ render();
 window.__album={render:render,setTab:function(t){tab=t;render()}};
 })();
 
-(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
+(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family.*)$/;
 function q(i){return document.getElementById(i)}
 function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
 q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
@@ -249,34 +249,12 @@ function doit(all){if(parseInt(q('rstIn').value,10)!==a+b){ask();q('rstSt').text
 q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true)};
 })();
 
-(function(){var MK='annabelle-profiles',DK='annabelle-profdata-',EM=['🐱','🦁','🐯','🐼','🦊','🐰'];
-var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
-function q(i){return document.getElementById(i)}
-function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
- if(m&&Array.isArray(m.list))m.list=m.list.filter(function(p){return p&&typeof p.id==='string'});
- if(!m||!Array.isArray(m.list)||!m.list.length||!m.list.some(function(p){return p.id===m.cur})){m={cur:'p1',list:[{id:'p1',name:'',emo:'🐱'}]};save(m)}return m}
-function save(m){try{localStorage.setItem(MK,JSON.stringify(m))}catch(e){}}
-function keys(){var ks=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if((/^annabelle-/.test(k)||/^soya-/.test(k))&&!KEEP.test(k))ks.push(k)}}catch(e){}return ks}
-function snap(){var o={};keys().forEach(function(k){o[k]=localStorage.getItem(k)});return o}
-function stash(m){try{localStorage.setItem(DK+m.cur,JSON.stringify(snap()))}catch(e){q('pfSt').textContent=pt().noroom;return false}return true}
-function clearAll(){keys().forEach(function(k){localStorage.removeItem(k)})}
-function load(id){var o=null;try{o=JSON.parse(localStorage.getItem(DK+id)||'null')}catch(e){}if(o)Object.keys(o).forEach(function(k){if(/^(annabelle|soya)-/.test(k)&&!KEEP.test(k))try{localStorage.setItem(k,String(o[k]))}catch(e){}})}
-function sw(id,fresh){var m=meta();if(id===m.cur)return;if(!stash(m))return;clearAll();if(!fresh)load(id);m.cur=id;save(m);location.reload()}
-var PT={he:{h:'👥 שחקנים במכשיר הזה',add:'➕ שחקן חדש',edit:'✏️ שם, גיל ועוד',del:'מחיקת שחקן',delQ:'למחוק את {n} ואת כל ההתקדמות?',max:'אפשר עד 6 שחקנים',noroom:'אין מקום לשמור',me:'שחקן',age:'גיל {n}'},
- fr:{h:'👥 Joueurs sur cet appareil',add:'➕ Nouveau joueur',edit:'✏️ Prénom, âge…',del:'Supprimer le joueur',delQ:'Supprimer {n} et toute sa progression ?',max:'6 joueurs maximum',noroom:'Plus de place pour enregistrer',me:'Joueur',age:'{n} ans'},
- en:{h:'👥 Players on this device',add:'➕ New player',edit:'✏️ Name, age…',del:'Delete player',delQ:'Delete {n} and all their progress?',max:'Up to 6 players',noroom:'No room left to save',me:'Player',age:'Age {n}'}};
-function pt(){var l='he';try{l=localStorage.getItem('annabelle-lang')||'he'}catch(e){}return PT[l]||PT.he}
-function draw(){var m=meta(),box=q('pfList'),t=pt();box.textContent='';q('pfH').textContent=t.h;q('pfAdd').textContent=t.add;q('pfEdit').textContent=t.edit;
- m.list.forEach(function(p,i){var b=document.createElement('button'),nm=(typeof p.name==='string'&&p.name.trim())||t.me+' '+(i+1),ag=+p.age>=4&&+p.age<=16?' · '+t.age.replace('{n}',Math.round(+p.age)):'';b.textContent=(p.emo||'🐱')+' '+nm+ag+(p.id===m.cur?' ✓':'');
- b.style.cssText='font-size:17px;min-height:44px;padding:10px 14px;border-radius:14px;cursor:pointer;font-family:inherit;color:#3a2459;border:3px solid '+(p.id===m.cur?'#27ae60':'#ccc')+';background:'+(p.id===m.cur?'#e8f8ee':'#fff');
- b.onclick=function(){if(p.id!==meta().cur)try{window.KidApp&&KidApp.audit&&KidApp.audit('profile_switch','profile',null,'kid')}catch(e){}sw(p.id)};box.appendChild(b);
- if(p.id!==m.cur){var d=document.createElement('button');d.textContent='🗑️';d.title=t.del;d.setAttribute('aria-label',t.del);d.style.cssText='font-size:14px;min-width:44px;min-height:44px;padding:6px;border-radius:10px;border:1px solid #ccc;background:#fff;cursor:pointer;margin-inline-start:-4px';
-  d.onclick=function(){if(!confirm(t.delQ.replace('{n}',nm)))return;var mm=meta();mm.list=mm.list.filter(function(x){return x.id!==p.id});save(mm);try{localStorage.removeItem(DK+p.id)}catch(e){}try{window.KidApp&&KidApp.audit&&KidApp.audit('profile_deleted','profile',null,'parent')}catch(e){}draw()};box.appendChild(d)}})}
-// a new player says hello first (name, age, gender, brain warm-up): welcome.html?new=1 creates the profile with the same snapshot logic (KidApp.newProfile)
-q('pfAdd').onclick=function(){var m=meta();if(m.list.length>=6){q('pfSt').textContent=pt().max;return}location.href='welcome.html?new=1'};
-q('pfEdit').onclick=function(){location.href='welcome.html?edit=1'};
-draw();
-})();
+// players, family members and switching live in the family hub (family.html); this card only links to it
+(function(){var T={he:['המשפחה שלנו','החלפת שחקן, צירוף בני משפחה, אתגרים ופרגונים'],fr:['Notre famille','Changer de joueur, accueillir quelqu’un, défis et bravos'],en:['Our Family','Switch player, welcome someone, challenges and kudos']};
+var l='he',f=null;try{l=localStorage.getItem('annabelle-lang')||'he';f=(JSON.parse(localStorage.getItem('annabelle-family')||localStorage.getItem('annabelle-profdata-_family')||'null')||{}).fam}catch(e){}
+var t=T[l]||T.he,q=function(i){return document.getElementById(i)},n=f&&typeof f.name==='string'?f.name.slice(0,24):'';
+if(f&&f.crest&&typeof f.crest.a==='string'&&f.crest.a)q('famE').textContent=f.crest.a.slice(0,8);
+q('famT').textContent=n?(l==='fr'?'Famille '+n:l==='en'?'The '+n+' family':'משפחת '+n):t[0];q('famS').textContent=t[1];q('famA').textContent=l==='he'?'←':'→';q('famLink').setAttribute('aria-label',t[0])})();
 </script>
 </body>
 </html>
