@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="store"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f2ec">
+<title>חנות המשחקים</title><script src="safe.js"></script>
+<script>try{var _l=localStorage.getItem('annabelle-lang');if(_l==='fr'||_l==='en'){document.documentElement.lang=_l;document.documentElement.dir='ltr'}}catch(e){}</script>
+<style>
+/* The game shop: pick which games live on the home screen. Everything is free; "getting" a game only adds it to the kid's library
+   (catalog.js, localStorage 'annabelle-library'). This page is also the reference for the calm look – the rules are in docs/CALM-UI.md:
+   one accent colour, flat white cards on a warm paper background, the emoji is the only colour of a tile, no looping motion, one list at a time. */
+:root{--bg:#f5f2ec;--card:#fff;--ink:#2b3140;--soft:#5a6272;--line:#e3ded4;--acc:#34639f;--acc-d:#284f82;--tint:#e8eef7;--ok:#2c6e52;--r:16px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+html{background:var(--bg)}
+body{font-family:"Rubik","Varela Round","Arial Rounded MT Bold","Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45;color:var(--ink);background:var(--bg);
+  padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));overflow-x:hidden;-webkit-user-select:none;user-select:none}
+button,input{font:inherit;color:inherit}
+button,a{cursor:pointer;touch-action:manipulation}
+button{border:0;background:none;padding:0;margin:0}
+h1,h2,p,ul{margin:0;padding:0}ul{list-style:none}
+[hidden]{display:none!important}
+:focus{outline:none}
+:focus-visible{outline:3px solid var(--acc);outline-offset:3px;border-radius:12px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+/* header */
+.top{display:flex;align-items:center;gap:14px}
+.home{display:flex;align-items:center;gap:6px;min-height:48px;padding:0 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;font-size:16px;flex:none}
+.top h1{font-size:24px;line-height:1.2;font-weight:700}
+.top p{color:var(--soft);font-size:15px}
+/* tabs: one view at a time */
+.tabs{display:flex;gap:4px;background:#ebe6dc;border-radius:var(--r);padding:4px}
+.tab{flex:1 1 auto;min-height:48px;border-radius:13px;font-weight:600;font-size:16px;color:var(--soft);padding:4px 8px;line-height:1.2;white-space:nowrap}
+@media (max-width:379px){.tab{font-size:15px;padding:4px 5px}}
+.tab[aria-selected=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px #2b314022}
+/* text blocks */
+.count{font-size:19px;font-weight:700}
+.guide{color:var(--soft);font-size:15px;margin-top:2px}
+h2{font-size:18px;font-weight:700;margin-top:6px}
+.note{color:var(--soft);font-size:15px}
+/* buttons */
+.btn{min-height:52px;border-radius:var(--r);padding:8px 18px;font-weight:700;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center}
+.btn.pri{background:var(--acc);color:#fff}
+.btn.pri:active{background:var(--acc-d)}
+.btn.sec{background:var(--card);border:1.5px solid var(--line);color:var(--ink)}
+.btn.sec:active{background:var(--tint)}
+.btn.sec[aria-pressed=true]{background:var(--tint);border-color:var(--acc)}
+.btn[disabled]{opacity:.6;cursor:default}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.acts .btn{flex:1 1 150px;padding:8px 10px}
+/* lists */
+.list{display:grid;grid-template-columns:1fr;gap:10px}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;text-align:start}
+button.row:active{background:var(--tint)}
+.chip{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none;line-height:1}
+.tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.row.ar{flex-wrap:wrap}.row.ar .tx{flex:1 1 130px}
+.ctl{display:flex;gap:8px;margin-inline-start:auto}
+.nm{font-weight:600;font-size:17px;line-height:1.25;overflow-wrap:break-word}
+.mt{color:var(--soft);font-size:14px;line-height:1.3}
+.st{color:var(--ok);font-size:14px;font-weight:600;flex:none;white-space:nowrap}
+.go{color:var(--soft);font-size:20px;flex:none;line-height:1}
+.leaf{letter-spacing:-2px;white-space:nowrap}.leaf i{font-style:normal;opacity:.22;filter:grayscale(1)}.leaf i.f{opacity:1;filter:none}
+.mini{width:44px;height:44px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:17px;font-weight:700;flex:none;display:flex;align-items:center;justify-content:center}
+.mini.rm{width:auto;padding:0 12px;font-size:15px;font-weight:600}
+.mini:active{background:var(--tint)}
+.mini[disabled]{opacity:.3;cursor:default}
+/* packs */
+.pack{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.pack .hd{display:flex;align-items:center;gap:12px}
+.pack .in{color:var(--soft);font-size:14px}
+.pack .btn{min-height:48px;font-size:16px}
+/* browse */
+.search{display:flex;align-items:center;gap:8px;min-height:52px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:0 14px}
+.search:focus-within{border-color:var(--acc)}
+.search input{flex:1;min-width:0;border:0;background:none;min-height:48px;font-size:17px;-webkit-user-select:text;user-select:text}
+.search input:focus-visible{outline:none}
+.search input::-webkit-search-cancel-button{display:none}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cc{min-height:48px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);font-weight:600;font-size:15px;padding:4px 6px;line-height:1.2;display:flex;align-items:center;justify-content:center;gap:5px}
+.cc[aria-pressed=true],.cc[aria-selected=true]{background:var(--tint);border-color:var(--acc);color:var(--acc-d)}
+.fl{grid-template-columns:repeat(4,1fr)}
+.fl .cc{flex-direction:column;gap:0;font-size:13px;min-height:54px}
+.fl .cc span{font-size:18px;line-height:1.1}
+.lbl{color:var(--soft);font-size:14px;font-weight:600;margin-bottom:-10px}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+/* footer: calm mode */
+.foot{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;display:flex;align-items:center;gap:12px}
+.foot .tx b{font-weight:600}
+.sw{width:64px;height:44px;border-radius:999px;background:#c9c3b7;position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:5px;inset-inline-start:5px;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003}
+.sw[aria-checked=true]{background:var(--ok)}
+.sw[aria-checked=true]::after{inset-inline-start:25px}
+/* undo bar: stays until the next action – no countdown */
+.bar{position:fixed;inset-inline:0;bottom:calc(12px + env(safe-area-inset-bottom));margin:0 auto;width:min(calc(100% - 24px),520px);background:var(--ink);color:#fff;border-radius:var(--r);padding:8px 8px 8px 14px;display:flex;align-items:center;gap:8px;z-index:20;font-size:15px}
+[dir=rtl] .bar{padding:8px 14px 8px 8px}
+.bar span{flex:1;min-width:0}
+.bar button{min-height:44px;min-width:44px;border-radius:12px;padding:0 12px;font-weight:700;color:#fff}
+.bar .un{background:#ffffff22}
+.bar :focus-visible{outline-color:#fff}
+/* detail sheet */
+.back{position:fixed;inset:0;background:#2b314066;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:calc(100dvh - 24px);overflow:auto;border-radius:24px 24px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;position:relative}
+.sheet .x{position:absolute;top:10px;inset-inline-end:10px;width:48px;height:48px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:18px}
+.art{width:112px;height:112px;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:64px;line-height:1;align-self:center;margin-top:6px}
+.sheet h2{font-size:22px;text-align:center;margin:0}
+.sheet .ds{text-align:center}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 4px;text-align:center;font-size:14px;color:var(--soft);display:flex;flex-direction:column;justify-content:center;min-height:62px}
+.fact b{display:block;color:var(--ink);font-size:16px;font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.tag{font-size:14px;color:var(--soft);background:#ebe6dc;border-radius:999px;padding:3px 10px}
+.msg{text-align:center;color:var(--ok);font-weight:600;min-height:24px}
+.sheet .btn{width:100%}
+.prog{height:52px;border-radius:var(--r);background:var(--tint);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--acc-d)}
+.prog i{position:absolute;inset-block:0;inset-inline-start:0;width:0;background:#c5d6ee;transition:width .8s linear}
+.prog.go i{width:100%}
+.prog span{position:relative}
+@media (min-width:760px){
+  body{padding-top:20px}
+  .list{grid-template-columns:1fr 1fr}
+  .chips{grid-template-columns:repeat(6,1fr)}
+  .fl{grid-template-columns:repeat(4,1fr)}
+  .acts .btn{flex:0 1 240px}
+  .back{align-items:center}
+  .sheet{border-radius:24px;max-height:calc(100dvh - 32px)}
+}
+@media (max-height:700px) and (min-width:760px){.art{width:84px;height:84px;font-size:48px;border-radius:22px}.sheet{gap:9px}}
+/* lively mode only (calm off) and only when the system allows motion: one small pop as feedback, never a loop */
+@media (prefers-reduced-motion:no-preference){
+  html[data-calm="0"] .art.pop{animation:pop .35s ease-out 1}
+  .back{animation:fade .12s linear 1}
+}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+html.desk button:hover:not([disabled]),html.desk .home:hover{filter:brightness(.97)}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/store.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/store-192.png"><meta name="apple-mobile-web-app-title" content="חנות המשחקים"><link rel="apple-touch-icon" href="icons/store-apple-180.png"><!--/pwa-->
+<script src="desktop.js"></script>
+<script src="catalog.js"></script>
+<script src="pwa.js" data-app="store" data-slots='[]' defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><a class="home" id="home" href="index.html"><span aria-hidden="true">🏠</span><span id="homeT"></span></a><div><h1 id="ttl"></h1><p id="sub"></p></div></header>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <main id="view" role="tabpanel" style="display:flex;flex-direction:column;gap:18px"></main>
+  <footer class="foot"><button class="sw" id="calm" role="switch" type="button"></button><div class="tx"><b id="calmT"></b><span class="mt" id="calmS"></span></div></footer>
+</div>
+<div class="bar" id="bar" role="status" aria-live="polite" hidden><span id="barT"></span><button class="un" id="barU" type="button"></button><button id="barX" type="button">✕</button></div>
+<div class="back" id="back" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"></div></div>
+<script>
+(function(){
+'use strict';
+var W=window,D=document,C=W.GameCatalog;
+var KA=W.KidApp||{kid:function(){return {age:null,gender:'f'}},g:function(f){return f},he:function(x){return x},lang:function(){var l=null;try{l=localStorage.getItem('annabelle-lang')}catch(e){}return l==='fr'||l==='en'?l:'he'}};
+var LG=KA.lang();if(LG!=='fr'&&LG!=='en')LG='he';
+D.documentElement.lang=LG;D.documentElement.dir=LG==='he'?'rtl':'ltr';
+function G(f,m,x){return KA.g(f,m,x)}
+/* ---------- texts (Hebrew per gender through KidApp.g; fr / en are neutral) ---------- */
+var TX={he:function(){return {
+ title:'חנות המשחקים',sub:'הכול בחינם',home:'הביתה',tabs:{mine:'המשחקים שלי',you:'בשבילך',all:'כל המשחקים'},
+ count:'{n} משחקים במסך הבית שלי',count1:'משחק אחד במסך הבית שלי',count0:'עוד אין משחקים במסך הבית שלי',
+ gOk:'6 עד 9 זה מספר נעים 🙂',gFew:'אפשר להוסיף עוד כמה. 6 עד 9 זה מספר נעים.',gMany:'יש כאן הרבה. אפשר להסיר כמה – ההתקדמות נשמרת.',
+ more:'להוסיף משחקים',arr:'סידור והסרה',arrDone:'סיימתי',up:'להעלות את {g}',down:'להוריד את {g}',rm:'הסרה',rmA:'להסיר את {g}',
+ youH:'אולי יתאים לך',why:{like:G('דומה למשחקים שאת אוהבת','דומה למשחקים שאתה אוהב','דומה למשחקים שאוהבים כאן'),learn:'משחק למידה לגיל שלך',calm:'משחק רגוע ושקט',age:'מתאים לגיל שלך',any:'משחק אהוב'},
+ youNone:'כל מה שמתאים כבר אצלך 👍',packsH:'חבילות',packAdd:'להוסיף הכול',packAddN:'להוסיף {n} משחקים',packAdd1:'להוסיף משחק אחד',packHave:'כבר אצלך ✓',
+ search:'חיפוש משחק',cats:'סוג משחק',filt:'סינון',f:{calm:'רגועים',learn:'למידה',together:'ביחד',short:'קצרים'},
+ res:'{n} משחקים',res1:'משחק אחד',none:'לא מצאנו משחק כזה.',clear:'לנקות חיפוש וסינון',have:'אצלך ✓',
+ age:'גיל',ageV:'\u2066{a}–{b}\u2069',mins:'סיבוב',minsV:'כ־{n} דק׳',pace:'קצב',cl:['','רגוע','בינוני','מהיר'],leafA:'קצב: {t}',
+ tg:{learn:'למידה',online:'אונליין עם חברים',two:'שניים על מסך אחד',isNew:'חדש'},
+ get:'להוסיף – בחינם',getting:'מוסיף…',added:'✓ נוסף למסך הבית',play:'▶ לשחק',remove:'להסיר מהבית',removed:'הוסר. ההתקדמות נשמרת.',keep:'ההתקדמות נשמרת. אפשר להחזיר מתי שרוצים.',close:'סגירה',
+ tAdd:'{g} נוסף למסך הבית.',tRm:'{g} הוסר. ההתקדמות נשמרת.',tPack:'נוספו {n} משחקים.',tPack1:'נוסף משחק אחד.',undo:'ביטול',closeA:'סגירת ההודעה',
+ calm:'🍃 מצב רגוע',calmOn:'פועל – פחות תנועה ופחות רעש בכל האתר.',calmOff:'כבוי – יותר תנועה ואפקטים.'}},
+fr:function(){return {
+ title:'La boutique de jeux',sub:'Tout est gratuit',home:'Accueil',tabs:{mine:'Mes jeux',you:'Pour toi',all:'Tous les jeux'},
+ count:'{n} jeux sur mon écran d’accueil',count1:'1 jeu sur mon écran d’accueil',count0:'Pas encore de jeux sur mon écran d’accueil',
+ gOk:'6 à 9, c’est un nombre agréable 🙂',gFew:'Tu peux en ajouter quelques-uns. 6 à 9, c’est agréable.',gMany:'Il y en a beaucoup. Tu peux en retirer : ta progression est gardée.',
+ more:'Ajouter des jeux',arr:'Ranger et retirer',arrDone:'J’ai fini',up:'Monter {g}',down:'Descendre {g}',rm:'Retirer',rmA:'Retirer {g}',
+ youH:'Ça pourrait te plaire',why:{like:'Ressemble aux jeux que tu aimes',learn:'Un jeu pour apprendre, à ton âge',calm:'Un jeu calme et tranquille',age:'Adapté à ton âge',any:'Un jeu très aimé'},
+ youNone:'Tout ce qui te correspond est déjà chez toi 👍',packsH:'Packs',packAdd:'Tout ajouter',packAddN:'Ajouter {n} jeux',packAdd1:'Ajouter 1 jeu',packHave:'Déjà chez toi ✓',
+ search:'Chercher un jeu',cats:'Type de jeu',filt:'Filtres',f:{calm:'Calmes',learn:'Apprendre',together:'À deux',short:'Courts'},
+ res:'{n} jeux',res1:'1 jeu',none:'Aucun jeu trouvé.',clear:'Effacer la recherche et les filtres',have:'Chez toi ✓',
+ age:'Âge',ageV:'{a}–{b}',mins:'Partie',minsV:'env. {n} min',pace:'Rythme',cl:['','Calme','Moyen','Rapide'],leafA:'Rythme : {t}',
+ tg:{learn:'Apprendre',online:'En ligne avec des amis',two:'À deux sur un écran',isNew:'Nouveau'},
+ get:'Ajouter – gratuit',getting:'Ajout…',added:'✓ Ajouté à ton écran d’accueil',play:'▶ Jouer',remove:'Retirer de l’accueil',removed:'Retiré. Ta progression est gardée.',keep:'Ta progression est gardée. Tu peux le remettre quand tu veux.',close:'Fermer',
+ tAdd:'{g} est ajouté à ton écran d’accueil.',tRm:'{g} est retiré. Ta progression est gardée.',tPack:'{n} jeux ajoutés.',tPack1:'1 jeu ajouté.',undo:'Annuler',closeA:'Fermer le message',
+ calm:'🍃 Mode calme',calmOn:'Activé – moins de mouvement et de bruit sur tout le site.',calmOff:'Désactivé – plus de mouvement et d’effets.'}},
+en:function(){return {
+ title:'Game Shop',sub:'Everything is free',home:'Home',tabs:{mine:'My games',you:'For you',all:'All games'},
+ count:'{n} games on my home screen',count1:'1 game on my home screen',count0:'No games on my home screen yet',
+ gOk:'6 to 9 is a comfy number 🙂',gFew:'You can add a few more. 6 to 9 is a comfy number.',gMany:'That is a lot. You can remove some – your progress is kept.',
+ more:'Add games',arr:'Arrange and remove',arrDone:'Done',up:'Move {g} up',down:'Move {g} down',rm:'Remove',rmA:'Remove {g}',
+ youH:'You might like',why:{like:'Like the games you enjoy',learn:'A learning game for your age',calm:'A calm, quiet game',age:'A good fit for your age',any:'A well-loved game'},
+ youNone:'Everything that fits is already yours 👍',packsH:'Packs',packAdd:'Add all',packAddN:'Add {n} games',packAdd1:'Add 1 game',packHave:'Already yours ✓',
+ search:'Search for a game',cats:'Kind of game',filt:'Filters',f:{calm:'Calm',learn:'Learning',together:'Together',short:'Short'},
+ res:'{n} games',res1:'1 game',none:'No game found.',clear:'Clear search and filters',have:'Yours ✓',
+ age:'Age',ageV:'{a}–{b}',mins:'Round',minsV:'about {n} min',pace:'Pace',cl:['','Calm','Medium','Fast'],leafA:'Pace: {t}',
+ tg:{learn:'Learning',online:'Online with friends',two:'Two on one screen',isNew:'New'},
+ get:'Get – free',getting:'Adding…',added:'✓ Added to your home screen',play:'▶ Play',remove:'Remove from home',removed:'Removed. Your progress is kept.',keep:'Your progress is kept. You can add it back any time.',close:'Close',
+ tAdd:'{g} is on your home screen.',tRm:'{g} was removed. Your progress is kept.',tPack:'{n} games added.',tPack1:'1 game added.',undo:'Undo',closeA:'Close this message',
+ calm:'🍃 Calm mode',calmOn:'On – less motion and noise across the site.',calmOff:'Off – more motion and effects.'}}}[LG]();
+function F(s,o){return String(s).replace(/\{(\w+)\}/g,function(m,k){return o[k]!=null?o[k]:''})}
+function el(tag,cls,text){var e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+function btn(cls,text){var b=el('button',cls,text);b.type='button';return b}
+function track(act,id){try{var d={act:act};if(id)d.id=id;if(KA.track)KA.track('store',d);else if(W.KidApp&&W.KidApp.track)W.KidApp.track('store',d)}catch(e){}}
+function tint(hex){var m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex||'');if(!m)return '#eef1f5';var k=.8;
+ return 'rgb('+[1,2,3].map(function(i){return Math.round(parseInt(m[i],16)*(1-k)+255*k)}).join(',')+')'}
+function reduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
+
+/* ---------- state: the last tab / category / filters are remembered (not the search text) ---------- */
+var UK='annabelle-store-ui',TABS=['mine','you','all'],FILTERS=['calm','learn','together','short'];
+var S={tab:'mine',cat:C.cats[0].id,f:{},q:'',arr:false,sheet:null,undo:null};
+try{var u=JSON.parse(localStorage.getItem(UK)||'null');if(u&&typeof u==='object'){if(TABS.indexOf(u.tab)>=0)S.tab=u.tab;
+ if(C.cats.some(function(c){return c.id===u.cat}))S.cat=u.cat;if(u.f&&typeof u.f==='object')FILTERS.forEach(function(k){if(u.f[k]===1)S.f[k]=1})}}catch(e){}
+function remember(){try{localStorage.setItem(UK,JSON.stringify({tab:S.tab,cat:S.cat,f:S.f}))}catch(e){}}
+C.ensure();
+
+var view=D.getElementById('view'),tabsEl=D.getElementById('tabs'),bar=D.getElementById('bar'),back=D.getElementById('back'),sheet=D.getElementById('sheet');
+D.title=TX.title;D.getElementById('ttl').textContent=TX.title;D.getElementById('sub').textContent=TX.sub;D.getElementById('homeT').textContent=TX.home;
+
+/* ---------- pieces ---------- */
+function chip(g,cls){var c=el('span',cls||'chip',g.emo);c.style.background=tint(g.grad[0]);c.setAttribute('aria-hidden','true');return c}
+function leaves(g){/* more leaves = calmer */var s=el('span','leaf');s.setAttribute('role','img');s.setAttribute('aria-label',F(TX.leafA,{t:TX.cl[g.calm]}));
+ for(var i=0;i<3;i++){var l=el('i',i<4-g.calm?'f':'','🍃');l.setAttribute('aria-hidden','true');s.appendChild(l)}return s}
+function gameRow(g,meta,status){var r=btn('row');r.dataset.id=g.id;r.appendChild(chip(g));var tx=el('span','tx');tx.appendChild(el('span','nm',C.name(g.id,LG)));
+ if(meta){var m=el('span','mt');if(typeof meta==='string')m.textContent=meta;else m.appendChild(meta);tx.appendChild(m)}r.appendChild(tx);
+ if(status)r.appendChild(el('span','st',TX.have));r.onclick=function(){openSheet(g.id,r)};return r}
+function paceMeta(g){var f=D.createDocumentFragment();f.appendChild(leaves(g));f.appendChild(D.createTextNode(' '+TX.cl[g.calm]+' · '+F(TX.minsV,{n:g.mins})));return f}
+
+/* ---------- tabs ---------- */
+function drawTabs(){tabsEl.textContent='';TABS.forEach(function(t){var b=btn('tab',TX.tabs[t]);b.setAttribute('role','tab');b.id='tab-'+t;b.dataset.tab=t;b.setAttribute('aria-selected',S.tab===t?'true':'false');b.tabIndex=S.tab===t?0:-1;
+ b.onclick=function(){setTab(t,true)};tabsEl.appendChild(b)});view.setAttribute('aria-labelledby','tab-'+S.tab)}
+tabsEl.addEventListener('keydown',function(e){var i=TABS.indexOf(S.tab),d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;if(LG==='he')d=-d;e.preventDefault();setTab(TABS[(i+d+TABS.length)%TABS.length],true)});
+function setTab(t,focus){if(TABS.indexOf(t)<0)return;S.tab=t;S.arr=false;remember();draw();if(focus){var b=D.getElementById('tab-'+t);if(b)b.focus()}try{W.scrollTo(0,0)}catch(e){}}
+
+/* ---------- "my games" ---------- */
+function drawMine(){var ids=C.lib(),n=ids.length;
+ var head=el('div');head.appendChild(el('p','count',n===0?TX.count0:n===1?TX.count1:F(TX.count,{n:n})));head.appendChild(el('p','guide',n>9?TX.gMany:n<6?TX.gFew:TX.gOk));view.appendChild(head);
+ var acts=el('div','acts'),more=btn('btn pri','＋ '+TX.more);more.id='more';more.onclick=function(){setTab('you',true)};acts.appendChild(more);
+ if(n>0){var ar=btn('btn sec',S.arr?'✓ '+TX.arrDone:'↕ '+TX.arr);ar.id='arr';ar.setAttribute('aria-pressed',S.arr?'true':'false');ar.onclick=function(){S.arr=!S.arr;draw();var b=D.getElementById('arr');if(b)b.focus()};acts.appendChild(ar)}
+ view.appendChild(acts);
+ var ul=el('ul','list');ul.id='mine';
+ ids.forEach(function(id,i){var g=C.byId(id),li=el('li');
+  if(!S.arr){li.appendChild(gameRow(g))}
+  else{var r=el('div','row ar');r.dataset.id=id;r.appendChild(chip(g));var tx=el('span','tx');tx.appendChild(el('span','nm',C.name(id,LG)));r.appendChild(tx);
+   var nm=C.name(id,LG),up=btn('mini up','▲'),dn=btn('mini dn','▼'),rm=btn('mini rm',TX.rm);
+   up.setAttribute('aria-label',F(TX.up,{g:nm}));dn.setAttribute('aria-label',F(TX.down,{g:nm}));rm.setAttribute('aria-label',F(TX.rmA,{g:nm}));
+   up.disabled=i===0;dn.disabled=i===n-1;
+   up.onclick=function(){moveBy(id,-1,'up')};dn.onclick=function(){moveBy(id,1,'dn')};rm.onclick=function(){doRemove(id)};
+   var ctl=el('span','ctl');ctl.appendChild(up);ctl.appendChild(dn);ctl.appendChild(rm);r.appendChild(ctl);li.appendChild(r)}
+  ul.appendChild(li)});
+ view.appendChild(ul)}
+function moveBy(id,d,cls){var ids=C.lib(),i=ids.indexOf(id);if(i<0)return;C.move(id,i+d);draw();
+ var r=view.querySelector('.row[data-id="'+id+'"]'),b=r&&r.querySelector('.'+cls);if(b&&b.disabled)b=r.querySelector(cls==='up'?'.dn':'.up');if(b)b.focus()}
+
+/* ---------- "for you": at most 3 ideas + the packs ---------- */
+function drawYou(){var sg=C.suggest(3),age=KA.kid().age;
+ view.appendChild(el('h2',null,TX.youH));
+ if(!sg.length)view.appendChild(el('p','note',TX.youNone));
+ else{var ul=el('ul','list');ul.id='sugg';sg.forEach(function(s){var li=el('li');li.appendChild(gameRow(C.byId(s.id),TX.why[s.why==='age'&&age==null?'any':s.why]));ul.appendChild(li)});view.appendChild(ul)}
+ view.appendChild(el('h2',null,TX.packsH));
+ var pl=el('ul','list');pl.id='packs';
+ C.packs.forEach(function(p){var ids=C.packIds(p.id);if(!ids.length)return;var miss=ids.filter(function(id){return !C.has(id)}),li=el('li','pack');li.dataset.pack=p.id;
+  var hd=el('div','hd'),c=el('span','chip',p.emo);c.style.background='#ebe6dc';c.setAttribute('aria-hidden','true');hd.appendChild(c);
+  var tx=el('span','tx');tx.appendChild(el('span','nm',p.n[LG]));tx.appendChild(el('span','mt',p.d[LG]));hd.appendChild(tx);li.appendChild(hd);
+  li.appendChild(el('p','in',ids.map(function(id){return C.byId(id).emo+' '+C.name(id,LG)}).join(' · ')));
+  var b=btn('btn sec',!miss.length?TX.packHave:miss.length===ids.length?TX.packAdd:miss.length===1?TX.packAdd1:F(TX.packAddN,{n:miss.length}));b.disabled=!miss.length;
+  b.setAttribute('aria-label',p.n[LG]+': '+b.textContent);b.onclick=function(){doPack(p.id)};li.appendChild(b);pl.appendChild(li)});
+ view.appendChild(pl)}
+
+/* ---------- "all games": search, one category at a time, four filters ---------- */
+function norm(s){return String(s).toLowerCase().normalize('NFD').replace(/[̀-֑ͯ-ׇ]/g,'').replace(/[־\-'’"״׳]/g,' ').trim()}
+function matches(g){if(S.f.calm&&g.calm!==1)return false;if(S.f.learn&&!g.learn)return false;if(S.f.together&&!(g.two||g.online))return false;if(S.f.short&&g.mins>3)return false;
+ var q=norm(S.q);if(!q)return g.cat===S.cat;
+ var hay=norm([g.n.he,g.n.fr,g.n.en,g.d[LG]].concat(g.tags.map(function(t){return C.tagName(t,LG)})).join(' '));return hay.indexOf(q)>=0}
+var sTimer=0,sSent=false;
+function drawAll(){
+ var sb=el('label','search'),ic=el('span',null,'🔍'),inp=el('input');ic.setAttribute('aria-hidden','true');inp.type='search';inp.id='q';inp.placeholder=TX.search;inp.setAttribute('aria-label',TX.search);inp.autocomplete='off';inp.enterKeyHint='search';inp.maxLength=40;inp.value=S.q;
+ inp.oninput=function(){S.q=inp.value;drawResults();drawCats();if(!sSent&&norm(S.q).length>=2){clearTimeout(sTimer);sTimer=setTimeout(function(){if(!sSent&&norm(S.q).length>=2){sSent=true;track('search')}},1200)}};
+ sb.appendChild(ic);sb.appendChild(inp);view.appendChild(sb);
+ var cw=el('div','chips');cw.id='cats';cw.setAttribute('role','group');cw.setAttribute('aria-label',TX.cats);view.appendChild(cw);
+ var fw=el('div','chips fl');fw.id='filters';fw.setAttribute('role','group');fw.setAttribute('aria-label',TX.filt);
+ [['calm','🍃'],['learn','🎓'],['together','👫'],['short','⏱️']].forEach(function(f){var b=btn('cc');b.dataset.f=f[0];var i=el('span',null,f[1]);i.setAttribute('aria-hidden','true');b.appendChild(i);b.appendChild(D.createTextNode(TX.f[f[0]]));
+  b.setAttribute('aria-pressed',S.f[f[0]]?'true':'false');b.onclick=function(){if(S.f[f[0]])delete S.f[f[0]];else S.f[f[0]]=1;b.setAttribute('aria-pressed',S.f[f[0]]?'true':'false');remember();drawResults()};fw.appendChild(b)});
+ view.appendChild(fw);
+ var res=el('div');res.id='res';res.style.cssText='display:flex;flex-direction:column;gap:10px';view.appendChild(res);
+ drawCats();drawResults()}
+function drawCats(){var cw=D.getElementById('cats');if(!cw)return;var searching=!!norm(S.q),had=D.activeElement&&D.activeElement.dataset?D.activeElement.dataset.cat:null;cw.textContent='';
+ C.cats.forEach(function(c){var b=btn('cc');b.dataset.cat=c.id;var i=el('span',null,c.emo);i.setAttribute('aria-hidden','true');b.appendChild(i);b.appendChild(D.createTextNode(c.n[LG]));
+  b.setAttribute('aria-pressed',!searching&&S.cat===c.id?'true':'false');
+  b.onclick=function(){S.cat=c.id;if(S.q){S.q='';var q=D.getElementById('q');if(q)q.value=''}remember();drawCats();drawResults();var nb=cw.querySelector('[data-cat="'+c.id+'"]');if(nb)nb.focus()};cw.appendChild(b)});
+ if(had){var nb=cw.querySelector('[data-cat="'+had+'"]');if(nb)nb.focus()}}
+function drawResults(){var res=D.getElementById('res');if(!res)return;res.textContent='';
+ var gs=C.visible().filter(matches),n=gs.length,cnt=el('p','lbl',n===1?TX.res1:F(TX.res,{n:n}));cnt.id='resN';cnt.setAttribute('aria-live','polite');cnt.style.marginBottom='0';res.appendChild(cnt);
+ if(!n){var em=el('div','empty');em.appendChild(el('p',null,TX.none));if(S.q||Object.keys(S.f).length){var cb=btn('btn sec',TX.clear);cb.id='clear';cb.onclick=function(){S.q='';S.f={};remember();draw();var q=D.getElementById('q');if(q)q.focus()};em.appendChild(cb)}res.appendChild(em);return}
+ var ul=el('ul','list');ul.id='all';gs.forEach(function(g){var li=el('li');li.appendChild(gameRow(g,paceMeta(g),C.has(g.id)));ul.appendChild(li)});res.appendChild(ul)}
+
+/* ---------- actions: instant, never a confirmation – always an undo ---------- */
+function showBar(text,undo){S.undo=undo||null;D.getElementById('barT').textContent=text;var ub=D.getElementById('barU');ub.textContent=TX.undo;ub.hidden=!undo;D.getElementById('barX').setAttribute('aria-label',TX.closeA);bar.hidden=false}
+function hideBar(){S.undo=null;bar.hidden=true}
+D.getElementById('barU').onclick=function(){var f=S.undo;hideBar();if(f){f();draw()}};
+D.getElementById('barX').onclick=hideBar;
+function doAdd(id,quiet){if(!C.add(id))return false;C.precache([id]);track('add',id);if(!quiet){showBar(F(TX.tAdd,{g:C.name(id,LG)}),function(){C.remove(id)});draw()}return true}
+function doRemove(id,quiet){var at=C.lib().indexOf(id);if(!C.remove(id))return false;track('remove',id);
+ if(!quiet){showBar(F(TX.tRm,{g:C.name(id,LG)}),function(){C.add(id);if(at>=0)C.move(id,at)});draw();var f=view.querySelector('.rm')||D.getElementById('more');if(S.arr&&f)f.focus()}return true}
+function doPack(pid){var ids=C.packIds(pid),done=C.addMany(ids);if(!done.length)return [];C.precache(ids);track('pack',pid);
+ showBar(done.length===1?TX.tPack1:F(TX.tPack,{n:done.length}),function(){C.removeMany(done)});draw();var b=view.querySelector('[data-pack="'+pid+'"] .btn');if(b)b.focus();return done}
+
+/* ---------- the detail sheet ---------- */
+var opener=null,progT=0;
+function openSheet(id,from){var g=C.byId(id);if(!g||!C.available(id)||g.parent)return false;opener=from||D.activeElement;S.sheet=id;hideBar();track('open',id);drawSheet('');back.hidden=false;D.body.style.overflow='hidden';
+ var h=D.getElementById('shT');if(h)h.focus();return true}
+function closeSheet(){if(!S.sheet)return;clearTimeout(progT);S.sheet=null;back.hidden=true;D.body.style.overflow='';draw();
+ var o=opener&&opener.dataset&&opener.dataset.id?view.querySelector('.row[data-id="'+opener.dataset.id+'"]'):null;opener=null;if(o)o.focus()}
+function drawSheet(msg,pop){var g=C.byId(S.sheet);if(!g)return;sheet.textContent='';var has=C.has(g.id);
+ var x=btn('x','✕');x.id='shX';x.setAttribute('aria-label',TX.close);x.onclick=closeSheet;sheet.appendChild(x);
+ var art=chip(g,'art'+(pop?' pop':''));sheet.appendChild(art);
+ var h=el('h2',null,C.name(g.id,LG));h.id='shT';h.tabIndex=-1;sheet.appendChild(h);
+ sheet.appendChild(el('p','ds',C.desc(g.id,LG)));
+ var fa=el('div','facts');
+ [[TX.age,F(TX.ageV,{a:g.ages[0],b:g.ages[1]})],[TX.mins,F(TX.minsV,{n:g.mins})]].forEach(function(f){var d=el('div','fact');d.appendChild(el('b',null,f[1]));d.appendChild(D.createTextNode(f[0]));fa.appendChild(d)});
+ var pc=el('div','fact'),pb=el('b');pb.appendChild(leaves(g));pc.appendChild(pb);pc.appendChild(D.createTextNode(TX.cl[g.calm]));fa.appendChild(pc);sheet.appendChild(fa);
+ var tg=el('div','tags');['isNew','learn','two','online'].forEach(function(k){if(g[k])tg.appendChild(el('span','tag',TX.tg[k]))});
+ g.tags.slice(0,2).forEach(function(t){tg.appendChild(el('span','tag',C.tagName(t,LG)))});sheet.appendChild(tg);
+ var m=el('p','msg',msg||'');m.id='shMsg';m.setAttribute('role','status');sheet.appendChild(m);
+ if(has){var pl=el('a','btn pri',TX.play);pl.id='shPlay';pl.href=C.href(g.id);sheet.appendChild(pl);
+  var rm=btn('btn sec',TX.remove);rm.id='shRm';rm.onclick=function(){if(doRemove(g.id,true)){drawSheet(TX.removed);var b=D.getElementById('shGet');if(b)b.focus()}};sheet.appendChild(rm);
+  sheet.appendChild(el('p','note',TX.keep)).style.textAlign='center'}
+ else{var gt=btn('btn pri',TX.get);gt.id='shGet';gt.onclick=function(){getNow(g.id,gt)};sheet.appendChild(gt)}}
+/* the "download" moment: the game is added at once; the bar is ~0.8 s of feedback (skipped with reduced motion) */
+function getNow(id,b){if(!doAdd(id,true))return;
+ function done(){if(S.sheet!==id)return;drawSheet(TX.added,true);var p=D.getElementById('shPlay');if(p)p.focus()}
+ if(reduced()){done();return}
+ var pr=el('div','prog'),i=el('i'),sp=el('span',null,TX.getting);pr.id='shProg';pr.setAttribute('role','status');pr.appendChild(i);pr.appendChild(sp);b.replaceWith(pr);
+ requestAnimationFrame(function(){requestAnimationFrame(function(){pr.classList.add('go')})});clearTimeout(progT);progT=setTimeout(done,820)}
+back.addEventListener('click',function(e){if(e.target===back)closeSheet()});
+D.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.sheet){e.preventDefault();closeSheet();return}
+ if(e.key==='Tab'&&S.sheet){var f=sheet.querySelectorAll('button:not([disabled]),a[href]');if(!f.length)return;var a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&(D.activeElement===a||!sheet.contains(D.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&D.activeElement===z){e.preventDefault();a.focus()}}});
+
+/* ---------- calm mode ---------- */
+var calmB=D.getElementById('calm');
+function vibe(){try{var V=W.Vibe;if(!V)return;if(C.calm()){if(V.off)V.off()}else if(V.on)V.on()}catch(e){}}
+function drawCalm(){var on=C.calm();calmB.setAttribute('aria-checked',on?'true':'false');calmB.setAttribute('aria-label',TX.calm);D.getElementById('calmT').textContent=TX.calm;D.getElementById('calmS').textContent=on?TX.calmOn:TX.calmOff}
+calmB.onclick=function(){C.setCalm(!C.calm());drawCalm();vibe();track('calm',C.calm()?'on':'off')};
+D.addEventListener('DOMContentLoaded',vibe);W.addEventListener('load',vibe);
+
+function draw(){drawTabs();view.textContent='';if(S.tab==='mine')drawMine();else if(S.tab==='you')drawYou();else drawAll()}
+C.onchange(function(why){if(why==='storage'){if(S.sheet)drawSheet('');else draw()}else if(why==='calm')drawCalm()});
+W.addEventListener('pageshow',function(e){if(e.persisted){if(S.sheet)drawSheet('');else draw()}});
+draw();drawCalm();
+
+/* test hook */
+W.__store={state:function(){return {tab:S.tab,cat:S.cat,filters:Object.keys(S.f),searching:!!norm(S.q),arrange:S.arr,sheet:S.sheet,undo:!!S.undo,lib:C.lib(),count:C.lib().length,calm:C.calm(),lang:LG}},
+ add:function(id){return doAdd(id)},remove:function(id){return doRemove(id)},pack:function(n){return doPack(n)},open:function(id){return openSheet(id)},close:closeSheet,tab:function(t){setTab(t)}};
+})();
+</script>
+</body>
+</html>
