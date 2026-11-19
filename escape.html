@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><!--pt--><script src="playtime.js" data-app="escape"></script><!--/pt-->
+<head><!--pt--><script src="playtime.js" data-app="escape"></script><!--/pt--><script>/* kid profile (kid.js): "[[f|m|x]]" = the Hebrew / French form for a girl | a boy | neutral; "[[@ … ]]" is kept only when the profile has a name (@ = the name; "[[@ … || … ]]" = with a name || without) */
+function kidG(s){var K=window.KidApp,n="";try{n=K&&K.kid?String(K.kid().name||""):""}catch(e){}
+ return String(s).replace(/\[\[([^@|\]][^|\]]*|)\|([^|\]]*)\|([^\]]*)\]\]/g,function(_,f,m,x){try{return K&&K.g?K.g(f,m,x):f}catch(e){return f}})
+  .replace(/\[\[@([^\]]*)\]\]/g,function(_,a){a=a.split("||");return n?a[0].replace(/@/g,function(){return n}):a[1]||""})}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Treehouse Escape · הבריחה מבית העץ</title><script src="safe.js"></script>
@@ -279,60 +283,60 @@ let muted = localStorage.getItem(MKEY)==='1';
 const $ = id=>document.getElementById(id);
 
 const T = {
-he:{dir:'rtl',name:'עברית',sub:'אנאבל וטיגרו',title:'הבריחה מבית העץ',
- intro:'היי אנאבל! אני טיגרו, גור טיגריס 🐯 ננעלנו בבית העץ! תעזרי לנו לברוח? מצאי 3 כוכבים, פתחי את התיבה וקחי את מפתח הזהב 🔑',
- go:'יוצאים לדרך! 🐾',cont:n=>`המשיכי לחדר ${n} 🐾`,again:'מההתחלה 🔁',paws:n=>`🐾 ברחת מ-${n} מתוך 8 חדרים`,
+he:{dir:'rtl',name:'עברית',sub:kidG('[[@@ ו]]טיגרו'),title:'הבריחה מבית העץ',
+ intro:kidG('היי[[@ @]]! אני טיגרו, גור טיגריס 🐯 ננעלנו בבית העץ! [[תעזרי|תעזור|תעזרו]] לנו לברוח? [[מצאי|מצא|מצאו]] 3 כוכבים, [[פתחי|פתח|פתחו]] את התיבה [[וקחי|וקח|וקחו]] את מפתח הזהב 🔑'),
+ go:'יוצאים לדרך! 🐾',cont:n=>kidG(`[[המשיכי|המשך|המשיכו]] לחדר ${n} 🐾`),again:'מההתחלה 🔁',paws:n=>`🐾 ברחת מ-${n} מתוך 8 חדרים`,
  room:(i)=>`חדר ${i} מתוך 8`,
- rooms:['מחבוא בבית העץ','כיתת גן הפרפרים','תצפית ההרים של החוקרת','הצוללת בשונית האלמוגים'],
- sayStart:'אוי אנאבל! ננעלנו! הקישי על דברים בחדר ומצאי 3 כוכבים ⭐',
- welcome:n=>`ברוכה הבאה ל${n}, אנאבל! מצאי 3 כוכבים חדשים ⭐`,
+ rooms:['מחבוא בבית העץ','כיתת גן הפרפרים',kidG('תצפית ההרים של [[החוקרת|החוקר|החוקרים]]'),'הצוללת בשונית האלמוגים'],
+ sayStart:kidG('אוי[[@ @]]! ננעלנו! [[הקישי|הקש|הקישו]] על דברים בחדר [[ומצאי|ומצא|ומצאו]] 3 כוכבים ⭐'),
+ welcome:n=>kidG(`[[ברוכה הבאה|ברוך הבא|ברוכים הבאים]] ל${n}[[@, @]]! [[מצאי|מצא|מצאו]] 3 כוכבים חדשים ⭐`),
  monkey:['🐒 הקוף לוחש: לתוכי, לג׳ירפה ולכוס העפרונות יש כוכבים! הי הי!','🐒 אוי! הקוף גירד לעצמו את הראש עם בננה 🍌 רמז: תוכי, ג׳ירפה, עפרונות!','🐒 הקוף עושה שתי סלטות ואומר: הכוכבים אצל התוכי, הג׳ירפה והעפרונות! 🤸'],
- chestNeed:n=>`התיבה צריכה 3 כוכבים. יש לך ${n}! 🔒`,chestKey:'וואו! מפתח זהב נוצץ! 🔑 עכשיו נסי את הדלת!',chestEmpty:'התיבה ריקה עכשיו. לכי לדלת! 🚪',
- doorLocked:['הדלת נעולה! טיגרו ניסה ללקק אותה. זה לא עבד 😝','הדלת נעולה! טיגרו נתן לה נשיקה. עדיין נעולה 😘','הדלת נעולה! טיגרו דפק עליה בזנב: בום! אבל היא לא נפתחה 🐯'],already:['את הכוכב הזה כבר קיבלת, חמודה! 😄','הכוכב הזה כבר בכיס שלך! טיגרו מחייך 😸'],
- wrong:'אופס! נסי שוב, אנאבל! 🙈',wrongs:["אופס! נסי שוב, אנאבל! 🙈", "טיגרו התעטש על התשובה הלא נכונה! אאאפצ'י! 🤧", "הקוף החליק על בננה! נסי תשובה אחרת 🍌", "כמעט כמעט! אפילו התוכי מתבלבל לפעמים 🦜", "טיגרו עושה פרצוף מצחיק 😜 ננסה שוב?"],hintBtn:'🐯 בקשי רמז מטיגרו',close:'סגירה',
- roomWon:i=>`ברחת מחדר ${i}!`,allWon:'ברחת מכל החדרים, אנאבל!',wonP:n=>`${n} מתוך 8 חדרים! טיגרו נותן לך חיבוק פרוותי ענק 🤗`,
+ chestNeed:n=>`התיבה צריכה 3 כוכבים. יש לך ${n}! 🔒`,chestKey:kidG('וואו! מפתח זהב נוצץ! 🔑 עכשיו [[נסי|נסה|נסו]] את הדלת!'),chestEmpty:kidG('התיבה ריקה עכשיו. [[לכי|לך|לכו]] לדלת! 🚪'),
+ doorLocked:['הדלת נעולה! טיגרו ניסה ללקק אותה. זה לא עבד 😝','הדלת נעולה! טיגרו נתן לה נשיקה. עדיין נעולה 😘','הדלת נעולה! טיגרו דפק עליה בזנב: בום! אבל היא לא נפתחה 🐯'],already:[kidG('את הכוכב הזה כבר [[קיבלת, חמודה|קיבלת, חמוד|קיבלת]]! 😄'),'הכוכב הזה כבר בכיס שלך! טיגרו מחייך 😸'],
+ wrong:kidG('אופס! [[נסי|נסה|נסו]] שוב[[@, @]]! 🙈'),wrongs:[kidG("אופס! [[נסי|נסה|נסו]] שוב[[@, @]]! 🙈"), "טיגרו התעטש על התשובה הלא נכונה! אאאפצ'י! 🤧", kidG("הקוף החליק על בננה! [[נסי|נסה|נסו]] תשובה אחרת 🍌"), "כמעט כמעט! אפילו התוכי מתבלבל לפעמים 🦜", "טיגרו עושה פרצוף מצחיק 😜 ננסה שוב?"],hintBtn:kidG('🐯 [[בקשי|בקש|בקשו]] רמז מטיגרו'),close:'סגירה',
+ roomWon:i=>`ברחת מחדר ${i}!`,allWon:kidG('ברחת מכל החדרים[[@, @]]!'),wonP:n=>`${n} מתוך 8 חדרים! טיגרו נותן לך חיבוק פרוותי ענק 🤗`,
  next:'לחדר הבא 🐾',playAgain:'לשחק שוב 🔁',home:'למסך הפתיחה',
- final:'הצלחת, אנאבל! את החוקרת הכי אמיצה וחכמה בכל הג׳ונגל!',
- paused:'הפסקה ⏸️',resume:'המשיכי לשחק ▶️',restart:'החדר מההתחלה 🔄',soundOn:'צלילים: פועלים 🔊',soundOff:'צלילים: כבויים 🔇',grown:'להורים: עריכת שאלות ✏️',
- customTag:'✏️ שאלה מההורים',customHint:'קראי את השאלה שוב, לאט לאט. את יכולה! 🐯',customWin:'כל הכבוד, אנאבל! הנה כוכב! ⭐',
+ final:kidG('הצלחת[[@, @]]! [[את החוקרת הכי אמיצה וחכמה|אתה החוקר הכי אמיץ וחכם|אתם החוקרים הכי אמיצים וחכמים]] בכל הג׳ונגל!'),
+ paused:'הפסקה ⏸️',resume:kidG('[[המשיכי|המשך|המשיכו]] לשחק ▶️'),restart:'החדר מההתחלה 🔄',soundOn:'צלילים: פועלים 🔊',soundOff:'צלילים: כבויים 🔇',grown:'להורים: עריכת שאלות ✏️',
+ customTag:'✏️ שאלה מההורים',customHint:kidG('[[קראי|קרא|קראו]] את השאלה שוב, לאט לאט. [[את יכולה|אתה יכול|אתם יכולים]]! 🐯'),customWin:kidG('כל הכבוד[[@, @]]! הנה כוכב! ⭐'),
  edT:'להורים ✏️',edIntro:'בחרו חדר וחפץ, כתבו שאלה, מלאו 2–4 תשובות וסמנו את הנכונה.',edRoom:'חדר',slots:['🦜 תוכי','🦒 ג׳ירפה','✏️ עפרונות'],
  edQ:'שאלה, למשל: כמה זה 6 × 7?',edOpt:i=>`תשובה ${i}`+(i>2?' (לא חובה)':''),edErr:'צריך שאלה, לפחות 2 תשובות שונות, ותשובה נכונה מסומנת.',
  edSave:'שמירה',edSaved:'נשמר! ✅',edReset:'חזרה לשאלה המקורית',edNote:'נשמר במכשיר הזה בלבד. שאלה שלכם תופיע בכל השפות (בלי רמז מותאם).'},
-fr:{dir:'ltr',name:'Français',sub:'Annabelle et Tigero',title:"L'évasion de la cabane",
- intro:"Coucou Annabelle ! Je suis Tigero, un bébé tigre 🐯 On est enfermés dans la cabane ! Tu nous aides à nous échapper ? Trouve 3 étoiles, ouvre le coffre et prends la clé d'or 🔑",
+fr:{dir:'ltr',name:'Français',sub:kidG('[[@@ et ]]Tigero'),title:"L'évasion de la cabane",
+ intro:kidG("Coucou[[@ @]] ! Je suis Tigero, un bébé tigre 🐯 On est enfermés dans la cabane ! Tu nous aides à nous échapper ? Trouve 3 étoiles, ouvre le coffre et prends la clé d'or 🔑"),
  go:"C'est parti ! 🐾",cont:n=>`Continuer : salle ${n} 🐾`,again:'Recommencer 🔁',paws:n=>`🐾 ${n} salles sur 8 réussies`,
  room:i=>`Salle ${i} sur 8`,
- rooms:['La cabane cachette','La classe du jardin aux papillons',"Le belvédère de l'exploratrice",'Le sous-marin du récif de corail'],
- sayStart:'Oh non, Annabelle ! On est enfermés ! Touche les objets de la pièce et trouve 3 étoiles ⭐',
- welcome:n=>`Bienvenue dans « ${n} », Annabelle ! Trouve 3 nouvelles étoiles ⭐`,
+ rooms:['La cabane cachette','La classe du jardin aux papillons',kidG("[[Le belvédère de l'exploratrice|Le belvédère de l'explorateur|Le belvédère des explorateurs]]"),'Le sous-marin du récif de corail'],
+ sayStart:kidG('Oh non[[@, @]] ! On est enfermés ! Touche les objets de la pièce et trouve 3 étoiles ⭐'),
+ welcome:n=>kidG(`Bienvenue dans « ${n} »[[@, @]] ! Trouve 3 nouvelles étoiles ⭐`),
  monkey:['🐒 Le singe chuchote : le perroquet, la girafe et le pot à crayons cachent des étoiles ! Hi hi !','🐒 Aïe ! Le singe se gratte la tête avec une banane 🍌 Indice : perroquet, girafe, crayons !','🐒 Le singe fait deux galipettes et dit : les étoiles sont chez le perroquet, la girafe et les crayons ! 🤸'],
  chestNeed:n=>`Le coffre a besoin de 3 étoiles. Tu en as ${n} ! 🔒`,chestKey:"Waouh ! Une clé d'or toute brillante ! 🔑 Essaie la porte !",chestEmpty:'Le coffre est vide maintenant. Va vers la porte ! 🚪',
- doorLocked:["La porte est fermée ! Tigero a essayé de la lécher. Ça n'a pas marché 😝",'La porte est fermée ! Tigero lui a fait un bisou. Toujours fermée 😘','La porte est fermée ! Tigero a tapé avec sa queue : boum ! Elle ne s’ouvre pas 🐯'],already:['Tu as déjà gagné cette étoile, petite maligne ! 😄','Cette étoile est déjà dans ta poche ! Tigero sourit 😸'],
- wrong:'Oups ! Essaie encore, Annabelle ! 🙈',wrongs:["Oups ! Essaie encore, Annabelle ! 🙈", "Tigero a éternué sur la mauvaise réponse ! Atchoum ! 🤧", "Le singe a glissé sur une banane ! Essaie une autre réponse 🍌", "Presque ! Même le perroquet se trompe parfois 🦜", "Tigero fait une grimace rigolote 😜 On réessaie ?"],hintBtn:'🐯 Demande un indice à Tigero',close:'Fermer',
- roomWon:i=>`Salle ${i} réussie !`,allWon:'Tu as réussi toutes les salles, Annabelle !',wonP:n=>`${n} salles sur 8 ! Tigero te fait un gros câlin tout doux 🤗`,
+ doorLocked:["La porte est fermée ! Tigero a essayé de la lécher. Ça n'a pas marché 😝",'La porte est fermée ! Tigero lui a fait un bisou. Toujours fermée 😘','La porte est fermée ! Tigero a tapé avec sa queue : boum ! Elle ne s’ouvre pas 🐯'],already:[kidG('Tu as déjà gagné cette étoile, [[petite maligne|petit malin|bien vu]] ! 😄'),'Cette étoile est déjà dans ta poche ! Tigero sourit 😸'],
+ wrong:kidG('Oups ! Essaie encore[[@, @]] ! 🙈'),wrongs:[kidG("Oups ! Essaie encore[[@, @]] ! 🙈"), "Tigero a éternué sur la mauvaise réponse ! Atchoum ! 🤧", "Le singe a glissé sur une banane ! Essaie une autre réponse 🍌", "Presque ! Même le perroquet se trompe parfois 🦜", "Tigero fait une grimace rigolote 😜 On réessaie ?"],hintBtn:'🐯 Demande un indice à Tigero',close:'Fermer',
+ roomWon:i=>`Salle ${i} réussie !`,allWon:kidG('Tu as réussi toutes les salles[[@, @]] !'),wonP:n=>`${n} salles sur 8 ! Tigero te fait un gros câlin tout doux 🤗`,
  next:'Salle suivante 🐾',playAgain:'Rejouer 🔁',home:"Retour à l'accueil",
- final:"Tu as réussi, Annabelle ! Tu es l'exploratrice la plus courageuse et la plus maligne de toute la jungle !",
+ final:kidG("Tu as réussi[[@, @]] ! Tu es [[l'exploratrice la plus courageuse et la plus maligne|l'explorateur le plus courageux et le plus malin|la star la plus courageuse et la plus maligne]] de toute la jungle !"),
  paused:'Pause ⏸️',resume:'Continuer ▶️',restart:'Recommencer la salle 🔄',soundOn:'Son : activé 🔊',soundOff:'Son : coupé 🔇',grown:'Pour les grands : modifier les questions ✏️',
- customTag:'✏️ Question des parents',customHint:'Relis la question doucement. Tu peux y arriver ! 🐯',customWin:'Bravo, Annabelle ! Voici une étoile ! ⭐',
+ customTag:'✏️ Question des parents',customHint:'Relis la question doucement. Tu peux y arriver ! 🐯',customWin:kidG('Bravo[[@, @]] ! Voici une étoile ! ⭐'),
  edT:'Pour les grands ✏️',edIntro:'Choisissez une salle et un objet, écrivez une question, remplissez 2 à 4 réponses et cochez la bonne.',edRoom:'Salle',slots:['🦜 Perroquet','🦒 Girafe','✏️ Crayons'],
  edQ:'Question, ex. : combien font 6 × 7 ?',edOpt:i=>`Réponse ${i}`+(i>2?' (facultatif)':''),edErr:'Il faut une question, au moins 2 réponses différentes et la bonne réponse cochée.',
  edSave:'Enregistrer',edSaved:'Enregistré ! ✅',edReset:"Revenir à la question d'origine",edNote:'Enregistré sur cet appareil seulement. Votre question s’affiche dans toutes les langues (sans indice personnalisé).'},
-en:{dir:'ltr',name:'English',sub:"Annabelle & Tigero's",title:'Treehouse Escape',
- intro:"Hi Annabelle! I'm Tigero, a tiger cub 🐯 We got locked in the treehouse! Can you help us escape? Find 3 stars, open the chest and grab the golden key 🔑",
+en:{dir:'ltr',name:'English',sub:kidG("[[@@ & ]]Tigero's"),title:'Treehouse Escape',
+ intro:kidG("Hi[[@ @]]! I'm Tigero, a tiger cub 🐯 We got locked in the treehouse! Can you help us escape? Find 3 stars, open the chest and grab the golden key 🔑"),
  go:"Let's go! 🐾",cont:n=>`Continue: room ${n} 🐾`,again:'Start over 🔁',paws:n=>`🐾 ${n} of 8 rooms escaped`,
  room:i=>`Room ${i} of 8`,
  rooms:['Treehouse hideout','Butterfly garden classroom',"Explorer's mountain lookout",'Coral reef submarine'],
- sayStart:"Uh-oh, Annabelle! We're locked in! Tap things in the room to find 3 stars ⭐",
- welcome:n=>`Welcome to the ${n.charAt(0).toLowerCase()+n.slice(1)}, Annabelle! Find 3 new stars ⭐`,
+ sayStart:kidG("Uh-oh[[@, @]]! We're locked in! Tap things in the room to find 3 stars ⭐"),
+ welcome:n=>kidG(`Welcome to the ${n.charAt(0).toLowerCase()+n.slice(1)}[[@, @]]! Find 3 new stars ⭐`),
  monkey:['🐒 The monkey whispers: the parrot, the giraffe and the pencils have stars! Hee hee!','🐒 Oh! The monkey scratches his head with a banana 🍌 Hint: parrot, giraffe, pencils!','🐒 The monkey does two somersaults and says: the stars are with the parrot, the giraffe and the pencils! 🤸'],
  chestNeed:n=>`The chest needs 3 stars. You have ${n}! 🔒`,chestKey:'WOW! A shiny golden key! 🔑 Now try the door!',chestEmpty:'The chest is empty now. Go to the door! 🚪',
  doorLocked:["The door is locked! Tigero tried licking it. Didn't work 😝",'The door is locked! Tigero gave it a kiss. Still locked 😘','The door is locked! Tigero bonked it with his tail: boing! It did not open 🐯'],already:['You already got this star, silly! 😄','That star is already in your pocket! Tigero grins 😸'],
- wrong:'Oopsie! Try again, Annabelle! 🙈',wrongs:["Oopsie! Try again, Annabelle! 🙈", "Tigero sneezed on the wrong answer! Achoo! 🤧", "The monkey slipped on a banana! Try another answer 🍌", "Almost! Even the parrot gets mixed up sometimes 🦜", "Tigero pulls a silly face 😜 Shall we try again?"],hintBtn:'🐯 Ask Tigero for a hint',close:'Close',
- roomWon:i=>`Room ${i} escaped!`,allWon:'You beat every room, Annabelle!',wonP:n=>`${n} of 8 rooms beaten! Tigero gives you a big fuzzy hug 🤗`,
+ wrong:kidG('Oopsie! Try again[[@, @]]! 🙈'),wrongs:[kidG("Oopsie! Try again[[@, @]]! 🙈"), "Tigero sneezed on the wrong answer! Achoo! 🤧", "The monkey slipped on a banana! Try another answer 🍌", "Almost! Even the parrot gets mixed up sometimes 🦜", "Tigero pulls a silly face 😜 Shall we try again?"],hintBtn:'🐯 Ask Tigero for a hint',close:'Close',
+ roomWon:i=>`Room ${i} escaped!`,allWon:kidG('You beat every room[[@, @]]!'),wonP:n=>`${n} of 8 rooms beaten! Tigero gives you a big fuzzy hug 🤗`,
  next:'Next room 🐾',playAgain:'Play again 🔁',home:'Back to start',
- final:'You did it, Annabelle! You are the bravest, smartest explorer in the whole jungle!',
+ final:kidG('You did it[[@, @]]! You are the bravest, smartest explorer in the whole jungle!'),
  paused:'Paused ⏸️',resume:'Keep playing ▶️',restart:'Restart room 🔄',soundOn:'Sound: on 🔊',soundOff:'Sound: off 🔇',grown:'For grown-ups: edit questions ✏️',
- customTag:'✏️ A grown-up question',customHint:'Read the question again, slowly. You can do it! 🐯',customWin:'Great job, Annabelle! Here is a star! ⭐',
+ customTag:'✏️ A grown-up question',customHint:'Read the question again, slowly. You can do it! 🐯',customWin:kidG('Great job[[@, @]]! Here is a star! ⭐'),
  edT:'For grown-ups ✏️',edIntro:'Pick a room and an object, write a question, fill in 2–4 choices and tick the right one.',edRoom:'Room',slots:['🦜 Parrot','🦒 Giraffe','✏️ Pencils'],
  edQ:'Question, e.g. What is 6 × 7?',edOpt:i=>`Choice ${i}`+(i>2?' (optional)':''),edErr:'Needs a question, at least 2 different choices, and the right answer ticked.',
  edSave:'Save',edSaved:'Saved! ✅',edReset:'Back to the original question',edNote:'Saved on this device only. Your question shows in every language (without a custom hint).'}
@@ -342,9 +346,9 @@ en:{dir:'ltr',name:'English',sub:"Annabelle & Tigero's",title:'Treehouse Escape'
 const SLOTS=['parrot','giraffe','pencils'];
 const PUZ=[
 { // room 1 treehouse (warm-up, 3rd grade)
- parrot:{he:["🦜 סקוואק! אנאבל, כמה זה 5 × 4?",["15", "20", "25"],1,"סקוואק! מושלם! הנה כוכב! ⭐","ספרי בחמישיות: 5, 10, 15, … 🦜"],
-  fr:["🦜 Croâ ! Annabelle, combien font 5 × 4 ?",["15", "20", "25"],1,"Croâ-tastique ! Voici une étoile ! ⭐","Compte de 5 en 5 : 5, 10, 15, … 🦜"],
-  en:["🦜 Squawk! Annabelle, what is 5 × 4?",["15", "20", "25"],1,"Squawk-tastic! Here's a star! ⭐","Count in 5s: 5, 10, 15, … 🦜"]},
+ parrot:{he:[kidG("🦜 סקוואק![[@ @,]] כמה זה 5 × 4?"),["15", "20", "25"],1,"סקוואק! מושלם! הנה כוכב! ⭐",kidG("[[ספרי|ספור|ספרו]] בחמישיות: 5, 10, 15, … 🦜")],
+  fr:[kidG("🦜 Croâ ![[@ @, combien|| Combien]] font 5 × 4 ?"),["15", "20", "25"],1,"Croâ-tastique ! Voici une étoile ! ⭐","Compte de 5 en 5 : 5, 10, 15, … 🦜"],
+  en:[kidG("🦜 Squawk![[@ @, what|| What]] is 5 × 4?"),["15", "20", "25"],1,"Squawk-tastic! Here's a star! ⭐","Count in 5s: 5, 10, 15, … 🦜"]},
  giraffe:{he:['🦒 איזו חיה היא לא ממשפחת החתולים?',['🦁 אריה','צבוע','🐆 נמר'],1,'נכון! הצבוע דומה יותר לכלב. טיגרו גאה בך! ⭐','אריה, נמר וטיגריס הם חתולים גדולים. אחת החיות צוחקת ודומה יותר לכלב… 🐾'],
   fr:['🦒 Quel animal n’est PAS de la famille des chats ?',['🦁 Lion','Hyène','🐆 Léopard'],1,'Bravo ! La hyène ressemble plutôt à un chien. Tigero est fier de toi ! ⭐','Le lion, le léopard et le tigre sont de grands chats. Un de ces animaux rigole et ressemble plutôt à un chien… 🐾'],
   en:['🦒 Which animal is NOT part of the cat family?',['🦁 Lion','Hyena','🐆 Leopard'],1,'Right! Hyenas are more like dogs. Tigero is proud! ⭐','Lions, leopards and tigers are big cats. One of these animals giggles and is more like a dog… 🐾']},
@@ -352,35 +356,35 @@ const PUZ=[
   fr:['✏️ Un bébé tigre dort 18 heures par jour. Combien d’heures est-il réveillé ?',['8','4','6'],2,'Exactement ! Tigero est réveillé et prêt à jouer ! ⭐','Combien d’heures y a-t-il dans une journée entière ? 🌙'],
   en:['✏️ A tiger cub sleeps 18 hours a day. How many hours is it awake?',['8','4','6'],2,'Exactly! Now Tigero is awake and ready to play! ⭐','How many hours are in one whole day? 🌙']}},
 { // room 2 garden
- parrot:{he:['🌸 בגינה יש 6 שורות של פרחים, ובכל שורה 9 פרחים. כמה פרחים יש בסך הכול?',['45','63','54'],2,'ספירת פרחים נהדרת! כוכב לאנאבל! ⭐','6 שורות של 9: אפשר לחשב 6 × 10, ואז להוריד פרח אחד מכל שורה. 🌸'],
-  fr:['🌸 Dans le jardin, il y a 6 rangées de 9 fleurs. Combien de fleurs en tout ?',['45','63','54'],2,'Super comptage de fleurs ! Une étoile pour Annabelle ! ⭐','6 rangées de 9 : calcule 6 × 10, puis enlève une fleur dans chaque rangée. 🌸'],
-  en:['🌸 The garden has 6 rows of flowers with 9 flowers in each row. How many flowers altogether?',['45','63','54'],2,'Wonderful flower counting! A star for Annabelle! ⭐','6 rows of 9: try 6 × 10, then take one flower away from each row. 🌸']},
- giraffe:{he:['🦒 איזו מילה מתחרזת עם „פֶּרַח”?',['עץ','ירח','דבורה'],1,'חרוז מושלם: פרח, ירח! ⭐','אמרי לאט: פֶּ-רַח. איזו מילה נגמרת באותו צליל? 🌸'],
+ parrot:{he:['🌸 בגינה יש 6 שורות של פרחים, ובכל שורה 9 פרחים. כמה פרחים יש בסך הכול?',['45','63','54'],2,kidG('ספירת פרחים נהדרת! כוכב [[@ל@||בשבילך]]! ⭐'),'6 שורות של 9: אפשר לחשב 6 × 10, ואז להוריד פרח אחד מכל שורה. 🌸'],
+  fr:['🌸 Dans le jardin, il y a 6 rangées de 9 fleurs. Combien de fleurs en tout ?',['45','63','54'],2,kidG('Super comptage de fleurs ! Une étoile pour [[@@||toi]] ! ⭐'),'6 rangées de 9 : calcule 6 × 10, puis enlève une fleur dans chaque rangée. 🌸'],
+  en:['🌸 The garden has 6 rows of flowers with 9 flowers in each row. How many flowers altogether?',['45','63','54'],2,kidG('Wonderful flower counting! A star for [[@@||you]]! ⭐'),'6 rows of 9: try 6 × 10, then take one flower away from each row. 🌸']},
+ giraffe:{he:['🦒 איזו מילה מתחרזת עם „פֶּרַח”?',['עץ','ירח','דבורה'],1,'חרוז מושלם: פרח, ירח! ⭐',kidG('[[אמרי|אמור|אמרו]] לאט: פֶּ-רַח. איזו מילה נגמרת באותו צליל? 🌸')],
   fr:['🦒 Quel mot rime avec « papillon » ?',['Fleur','Chanson','Abeille'],1,'Rime parfaite : papillon, chanson ! ⭐','Dis-le doucement : pa-pi-llon. Quel mot finit par le même son ? 🦋'],
   en:['🦒 Which word rhymes with “butterfly”?',['Bee','Sky','Flower'],1,'Butterfly, sky: a perfect rhyme! ⭐','Say it slowly: butter-FLY. Which word ends with the same sound? 🦋']},
- pencils:{he:['✏️ מה המספר הבא: 3, 6, 12, 24, …?',['48','36','30'],0,'גילית את החוקיות! ⭐','בדקי מה קורה בכל צעד: איך 3 הופך ל-6, ו-6 הופך ל-12? 🔍'],
+ pencils:{he:['✏️ מה המספר הבא: 3, 6, 12, 24, …?',['48','36','30'],0,'גילית את החוקיות! ⭐',kidG('[[בדקי|בדוק|בדקו]] מה קורה בכל צעד: איך 3 הופך ל-6, ו-6 הופך ל-12? 🔍')],
   fr:['✏️ Quel nombre vient ensuite : 3, 6, 12, 24, … ?',['48','36','30'],0,'Tu as trouvé la règle ! ⭐','Regarde chaque pas : comment 3 devient 6, et 6 devient 12 ? 🔍'],
   en:['✏️ What comes next: 3, 6, 12, 24, …?',['48','36','30'],0,'You cracked the pattern! ⭐','Look at each step: how does 3 become 6, and 6 become 12? 🔍']}},
 { // room 3 lookout
- parrot:{he:["⛰️ בבוקר טיגרו טיפס 20 מדרגות, ואחר הצהריים עוד 15. כמה מדרגות בסך הכול?",["25", "35", "45"],1,"חשבון של מטפסת הרים אמיתית! ⭐","קודם 20 ועוד 10, ואז עוד 5. ⛰️"],
+ parrot:{he:["⛰️ בבוקר טיגרו טיפס 20 מדרגות, ואחר הצהריים עוד 15. כמה מדרגות בסך הכול?",["25", "35", "45"],1,kidG("חשבון של [[מטפסת הרים אמיתית|מטפס הרים אמיתי|מטפסי הרים אמיתיים]]! ⭐"),"קודם 20 ועוד 10, ואז עוד 5. ⛰️"],
   fr:["⛰️ Le matin, Tigero grimpe 20 marches, et l’après-midi encore 15. Combien de marches en tout ?",["25", "35", "45"],1,"Un calcul de vraie alpiniste ! ⭐","D’abord 20 plus 10, puis encore 5. ⛰️"],
   en:["⛰️ Tigero climbs 20 steps in the morning and 15 more in the afternoon. How many steps in total?",["25", "35", "45"],1,"Real mountain-climber maths! ⭐","First 20 plus 10, then 5 more. ⛰️"]},
- giraffe:{he:['🦒 השלימי: אתמול אנאבל וטיגרו ___ לפסגה.',['טיפס','טיפסה','טיפסו'],2,'מילים נהדרות! טיגרו גאה בך! ⭐','„אתמול” – זה כבר קרה. ושימי לב: הם שניים! 👧🐯'],
-  fr:["🦒 Complète : Annabelle et Tigero ___ au sommet.",["monte", "montent", "montes"],1,"Bravo pour la grammaire ! Tigero est fier de toi ! ⭐","Ils sont deux : Annabelle ET Tigero. Quel mot se termine par « -ent » ? 👧🐯"],
-  en:['🦒 Fill the gap: Yesterday, Annabelle and Tigero ___ to the top.',['go','went','going'],1,'Wonderful words! Tigero is proud! ⭐','“Yesterday” means it already happened, and “go” is a sneaky word that changes completely. 🕰️']},
- pencils:{he:["🎒 החוקרת אורזת 3 תיקים, ובכל תיק 5 חטיפים. כמה חטיפים יש בסך הכול?",["10", "15", "20"],1,"חשבון של חוקרת אמיתית! הכוכב השלישי! ⭐","5 ועוד 5 ועוד 5. 🎒"],
-  fr:["🎒 L’exploratrice remplit 3 sacs avec 5 goûters dans chacun. Combien de goûters en tout ?",["10", "15", "20"],1,"Un calcul de vraie exploratrice ! Ta troisième étoile ! ⭐","5 plus 5 plus 5. 🎒"],
+ giraffe:{he:[kidG('🦒 [[השלימי|השלם|השלימו]]: אתמול [[@@||הקוף]] וטיגרו ___ לפסגה.'),['טיפס','טיפסה','טיפסו'],2,'מילים נהדרות! טיגרו גאה בך! ⭐',kidG('„אתמול” – זה כבר קרה. [[ושימי|ושים|ושימו]] לב: הם שניים! [[👧|👦|🧒]]🐯')],
+  fr:[kidG("🦒 Complète : [[@@||Le singe]] et Tigero ___ au sommet."),["monte", "montent", "montes"],1,"Bravo pour la grammaire ! Tigero est fier de toi ! ⭐",kidG("Ils sont deux : [[@@||le singe]] ET Tigero. Quel mot se termine par « -ent » ? [[👧|👦|🧒]]🐯")],
+  en:[kidG('🦒 Fill the gap: Yesterday, [[@@||the monkey]] and Tigero ___ to the top.'),['go','went','going'],1,'Wonderful words! Tigero is proud! ⭐','“Yesterday” means it already happened, and “go” is a sneaky word that changes completely. 🕰️']},
+ pencils:{he:[kidG("🎒 [[החוקרת אורזת|החוקר אורז|החוקרים אורזים]] 3 תיקים, ובכל תיק 5 חטיפים. כמה חטיפים יש בסך הכול?"),["10", "15", "20"],1,kidG("חשבון של [[חוקרת אמיתית|חוקר אמיתי|חוקרים אמיתיים]]! הכוכב השלישי! ⭐"),"5 ועוד 5 ועוד 5. 🎒"],
+  fr:[kidG("🎒 [[L’exploratrice remplit|L’explorateur remplit|Le singe remplit]] 3 sacs avec 5 goûters dans chacun. Combien de goûters en tout ?"),["10", "15", "20"],1,kidG("[[Un calcul de vraie exploratrice|Un calcul de vrai explorateur|Un vrai calcul d'exploration]] ! Ta troisième étoile ! ⭐"),"5 plus 5 plus 5. 🎒"],
   en:["🎒 The explorer packs 3 bags with 5 snacks in each. How many snacks altogether?",["10", "15", "20"],1,"Real explorer maths! Your third star! ⭐","5 plus 5 plus 5. 🎒"]}},
 { // room 4 coral (4th grade)
- parrot:{he:["🌊 הצוללת יורדת 10 מטר בכל דקה. באיזה עומק היא תהיה אחרי 5 דקות?",["40", "50", "60"],1,"צלילה מושלמת! כוכב ים לאנאבל! ⭐","כל דקה עוד 10 מטר: 10, 20, 30, … 🌊"],
-  fr:["🌊 Le sous-marin descend de 10 mètres chaque minute. À quelle profondeur sera-t-il après 5 minutes ?",["40", "50", "60"],1,"Plongée parfaite ! Une étoile de mer pour Annabelle ! ⭐","Chaque minute, 10 mètres de plus : 10, 20, 30, … 🌊"],
-  en:["🌊 The submarine dives 10 metres every minute. How deep is it after 5 minutes?",["40", "50", "60"],1,"Perfect dive! A sea star for Annabelle! ⭐","Every minute 10 more metres: 10, 20, 30, … 🌊"]},
- giraffe:{he:['🐠 במשפט „הדג הנוצץ שוחה מהר”, איזו מילה היא שם תואר (מילה שמתארת)?',['הדג','הנוצץ','שוחה'],1,'שם תואר נהדר! את נוצצת כמו כוכב ים! ⭐','שם תואר מספר לנו איך משהו נראה. איך נראה הדג? 🐠'],
+ parrot:{he:["🌊 הצוללת יורדת 10 מטר בכל דקה. באיזה עומק היא תהיה אחרי 5 דקות?",["40", "50", "60"],1,kidG("צלילה מושלמת! כוכב ים [[@ל@||בשבילך]]! ⭐"),"כל דקה עוד 10 מטר: 10, 20, 30, … 🌊"],
+  fr:["🌊 Le sous-marin descend de 10 mètres chaque minute. À quelle profondeur sera-t-il après 5 minutes ?",["40", "50", "60"],1,kidG("Plongée parfaite ! Une étoile de mer pour [[@@||toi]] ! ⭐"),"Chaque minute, 10 mètres de plus : 10, 20, 30, … 🌊"],
+  en:["🌊 The submarine dives 10 metres every minute. How deep is it after 5 minutes?",["40", "50", "60"],1,kidG("Perfect dive! A sea star for [[@@||you]]! ⭐"),"Every minute 10 more metres: 10, 20, 30, … 🌊"]},
+ giraffe:{he:['🐠 במשפט „הדג הנוצץ שוחה מהר”, איזו מילה היא שם תואר (מילה שמתארת)?',['הדג','הנוצץ','שוחה'],1,kidG('שם תואר נהדר! [[את נוצצת|אתה נוצץ|אתם נוצצים]] כמו כוכב ים! ⭐'),'שם תואר מספר לנו איך משהו נראה. איך נראה הדג? 🐠'],
   fr:['🐠 Dans « Le poisson brillant nage vite », quel mot est un adjectif (un mot qui décrit) ?',['poisson','brillant','nage'],1,'Super adjectif ! Tu brilles comme une étoile de mer ! ⭐','Un adjectif dit comment est quelque chose. Comment est le poisson ? 🐠'],
   en:['🐠 In “The shiny fish swims fast”, which word is an adjective (a describing word)?',['fish','shiny','swims'],1,'Super describing word! You shine like a sea star! ⭐','An adjective tells us what something is like. What is the fish like? 🐠']},
- pencils:{he:["🦪 אנאבל מצאה 12 פנינים וחילקה אותן שווה בשווה ל-3 תיבות. כמה פנינים יש בכל תיבה?",["3", "4", "6"],1,"חלוקת פנינים מושלמת! כוכב הים האחרון שלך, אנאבל! ⭐","חלקי 12 ל-3 ערימות שוות, פנינה אחת בכל פעם. 🦪"],
-  fr:["🦪 Annabelle trouve 12 perles et les partage équitablement entre 3 coffres. Combien de perles dans chaque coffre ?",["3", "4", "6"],1,"Partage parfait ! Ta dernière étoile de mer, Annabelle ! ⭐","Partage 12 en 3 tas égaux, une perle à la fois. 🦪"],
-  en:["🦪 Annabelle finds 12 pearls and shares them equally between 3 chests. How many pearls are in each chest?",["3", "4", "6"],1,"Perfect pearl sharing! Your last sea star, Annabelle! ⭐","Share the 12 pearls into 3 equal piles, one at a time. 🦪"]}}
+ pencils:{he:[kidG("🦪 [[@@ וטיגרו||טיגרו והקוף]] מצאו 12 פנינים וחילקו אותן שווה בשווה ל-3 תיבות. כמה פנינים יש בכל תיבה?"),["3", "4", "6"],1,kidG("חלוקת פנינים מושלמת! כוכב הים האחרון שלך[[@, @]]! ⭐"),kidG("[[חלקי|חלק|חלקו]] 12 ל-3 ערימות שוות, פנינה אחת בכל פעם. 🦪")],
+  fr:[kidG("🦪 [[@@ et Tigero||Tigero et le singe]] trouvent 12 perles et les partagent équitablement entre 3 coffres. Combien de perles dans chaque coffre ?"),["3", "4", "6"],1,kidG("Partage parfait ! Ta dernière étoile de mer[[@, @]] ! ⭐"),"Partage 12 en 3 tas égaux, une perle à la fois. 🦪"],
+  en:[kidG("🦪 [[@@ and Tigero||Tigero and the monkey]] find 12 pearls and share them equally between 3 chests. How many pearls are in each chest?"),["3", "4", "6"],1,kidG("Perfect pearl sharing! Your last sea star[[@, @]]! ⭐"),"Share the 12 pearls into 3 equal piles, one at a time. 🦪"]}}
 ];
 
 
@@ -389,22 +393,22 @@ const TOT=8, DAILY_FLAG='annabelle-escape-daily';
 Object.assign(T.he,{rooms2:['בית העץ בערב','גן הפרפרים בשקיעה','פסגת ההרים בזריחה','שונית האלמוגים בלילה'],daily:'📅 החדר היומי',musOn:'🎵 מוזיקה',musOff:'🎵 כבויה',round2:'🌙 סיבוב 2: חידות קצת יותר קשות!',stars3:'בלי טעויות = 3 כוכבים!'});
 Object.assign(T.fr,{rooms2:['La cabane le soir','Le jardin au coucher du soleil','Le sommet au lever du jour','Le récif la nuit'],daily:'📅 Salle du jour',musOn:'🎵 Musique',musOff:'🎵 Coupée',round2:'🌙 Tour 2 : des énigmes un peu plus dures !',stars3:'Sans erreur = 3 étoiles !'});
 Object.assign(T.en,{rooms2:['Treehouse at Dusk','Butterfly Garden at Sunset','Mountain Top at Sunrise','Coral Reef by Night'],daily:'📅 Daily room',musOn:'🎵 Music',musOff:'🎵 Off',round2:'🌙 Round 2: slightly trickier riddles!',stars3:'No mistakes = 3 stars!'});
-Object.assign(T.he,{expBtn:n=>`🔥 אקספרט · חדר ${n}`,rushBtn:'⚡ מרוץ חידות',rushBestTag:n=>` · 🏆${n}`,xGo:s=>`🔥 אקספרט · ${s} שניות!`,xLoseT:'נגמר הזמן! ⏰',xLoseP:'כל טעות עולה 8 שניות. נסי שוב, מהר ובטוח יותר! 🐯',retry:'עוד ניסיון 🔁',xWon:i=>`אקספרט! ברחת מחדר ${i} 🔥`,xAll:'אלופת האקספרט! ברחת מכל 8 החדרים 🔥',xLeft:s=>`נשארו לך ${s} שניות ⏱`,xNext:'לחדר הבא 🔥',
+Object.assign(T.he,{expBtn:n=>`🔥 אקספרט · חדר ${n}`,rushBtn:'⚡ מרוץ חידות',rushBestTag:n=>` · 🏆${n}`,xGo:s=>`🔥 אקספרט · ${s} שניות!`,xLoseT:'נגמר הזמן! ⏰',xLoseP:kidG('כל טעות עולה 8 שניות. [[נסי|נסה|נסו]] שוב, מהר ובטוח יותר! 🐯'),retry:'עוד ניסיון 🔁',xWon:i=>`אקספרט! ברחת מחדר ${i} 🔥`,xAll:kidG('[[אלופת האקספרט|אלוף האקספרט|אלופי האקספרט]]! ברחת מכל 8 החדרים 🔥'),xLeft:s=>`נשארו לך ${s} שניות ⏱`,xNext:'לחדר הבא 🔥',
  rushLbl:'מרוץ חידות ⚡',rushScore:n=>`${n} נקודות`,rushGo:'⚡ 60 שניות! נכון: +2 שניות, טעות: −4 שניות',rushEnd:'נגמר הזמן! ⏰',rushRes:(n,m)=>`${n} תשובות נכונות · רצף שיא ${m}`,rushNew:'🏆 שיא חדש!',rushRank:n=>`🎉 מקום ${n} בטבלה!`,rushTop:'חמשת הטובים ביותר',rushAgain:'עוד סיבוב ⚡'});
-Object.assign(T.fr,{expBtn:n=>`🔥 Expert · salle ${n}`,rushBtn:'⚡ Course éclair',rushBestTag:n=>` · 🏆${n}`,xGo:s=>`🔥 Expert · ${s} s !`,xLoseT:'Le temps est écoulé ! ⏰',xLoseP:'Chaque erreur coûte 8 secondes. Réessaie, plus vite et plus sûre ! 🐯',retry:'Réessayer 🔁',xWon:i=>`Expert ! Salle ${i} réussie 🔥`,xAll:'Championne Expert ! Les 8 salles sont réussies 🔥',xLeft:s=>`Il te restait ${s} secondes ⏱`,xNext:'Salle suivante 🔥',
+Object.assign(T.fr,{expBtn:n=>`🔥 Expert · salle ${n}`,rushBtn:'⚡ Course éclair',rushBestTag:n=>` · 🏆${n}`,xGo:s=>`🔥 Expert · ${s} s !`,xLoseT:'Le temps est écoulé ! ⏰',xLoseP:kidG('Chaque erreur coûte 8 secondes. Réessaie, [[plus vite et plus sûre|plus vite et plus sûr|plus vite et sans erreur]] ! 🐯'),retry:'Réessayer 🔁',xWon:i=>`Expert ! Salle ${i} réussie 🔥`,xAll:kidG('[[Championne Expert|Champion Expert|Bravo, Expert]] ! Les 8 salles sont réussies 🔥'),xLeft:s=>`Il te restait ${s} secondes ⏱`,xNext:'Salle suivante 🔥',
  rushLbl:'Course éclair ⚡',rushScore:n=>`${n} points`,rushGo:'⚡ 60 secondes ! Bonne réponse : +2 s, erreur : −4 s',rushEnd:'Temps écoulé ! ⏰',rushRes:(n,m)=>`${n} bonnes réponses · meilleure série ${m}`,rushNew:'🏆 Nouveau record !',rushRank:n=>`🎉 Place n°${n} du classement !`,rushTop:'Les 5 meilleurs scores',rushAgain:'Encore une manche ⚡'});
 Object.assign(T.en,{expBtn:n=>`🔥 Expert · room ${n}`,rushBtn:'⚡ Rush',rushBestTag:n=>` · 🏆${n}`,xGo:s=>`🔥 Expert · ${s} seconds!`,xLoseT:"Time's up! ⏰",xLoseP:'Every mistake costs 8 seconds. Try again, faster and surer! 🐯',retry:'Try again 🔁',xWon:i=>`Expert! Room ${i} escaped 🔥`,xAll:'Expert champion! All 8 rooms escaped 🔥',xLeft:s=>`You had ${s} seconds left ⏱`,xNext:'Next room 🔥',
  rushLbl:'Riddle Rush ⚡',rushScore:n=>`${n} points`,rushGo:'⚡ 60 seconds! Right: +2 s, wrong: −4 s',rushEnd:"Time's up! ⏰",rushRes:(n,m)=>`${n} correct · best streak ${m}`,rushNew:'🏆 New high score!',rushRank:n=>`🎉 #${n} on the table!`,rushTop:'Top 5 scores',rushAgain:'Another round ⚡'});
 const mk=(h,f,e)=>({he:h,fr:f,en:e});
 const PUZ2=[
-{ parrot:mk(['🐒 הקוף אסף 4 ערמות, ובכל ערמה 7 בננות. כמה בננות יש לו?',['24','28','32'],1,'כפל של אלופה! ⭐','7 ועוד 7 ועוד 7 ועוד 7. 🍌'],
-   ['🐒 Le singe fait 4 tas de 7 bananes. Combien de bananes ?',['24','28','32'],1,'Une multiplication de championne ! ⭐','7 plus 7 plus 7 plus 7. 🍌'],
+{ parrot:mk(['🐒 הקוף אסף 4 ערמות, ובכל ערמה 7 בננות. כמה בננות יש לו?',['24','28','32'],1,kidG('כפל של [[אלופה|אלוף|אלופים]]! ⭐'),'7 ועוד 7 ועוד 7 ועוד 7. 🍌'],
+   ['🐒 Le singe fait 4 tas de 7 bananes. Combien de bananes ?',['24','28','32'],1,kidG('[[Une multiplication de championne|Une multiplication de champion|Une super multiplication]] ! ⭐'),'7 plus 7 plus 7 plus 7. 🍌'],
    ['🐒 The monkey makes 4 piles of 7 bananas. How many bananas?',['24','28','32'],1,'Multiplication champion! ⭐','7 + 7 + 7 + 7. 🍌']),
   giraffe:mk(['🦒 מה ההפך של „גבוה”?',['נמוך','רחב','מהיר'],0,'מילים מנצחות! ⭐','ג׳ירפה גבוהה… ונמלה? 🐜'],
    ['🦒 Quel est le contraire de « grand » ?',['petit','long','vite'],0,'Des mots gagnants ! ⭐','Une girafe est grande… et une fourmi ? 🐜'],
    ['🦒 What is the opposite of “tall”?',['short','wide','fast'],0,'Winning words! ⭐','A giraffe is tall… and an ant? 🐜']),
-  pencils:mk(['✏️ מה המספר הבא: 2, 5, 8, 11, …?',['13','14','15'],1,'חוקרת חוקיות! ⭐','בכל צעד מוסיפים אותו מספר. כמה? 🔍'],
-   ['✏️ Quel nombre vient ensuite : 2, 5, 8, 11, … ?',['13','14','15'],1,'Reine des suites ! ⭐','À chaque pas, on ajoute le même nombre. Lequel ? 🔍'],
+  pencils:mk(['✏️ מה המספר הבא: 2, 5, 8, 11, …?',['13','14','15'],1,kidG('[[חוקרת חוקיות|חוקר חוקיות|חוקרי חוקיות]]! ⭐'),'בכל צעד מוסיפים אותו מספר. כמה? 🔍'],
+   ['✏️ Quel nombre vient ensuite : 2, 5, 8, 11, … ?',['13','14','15'],1,kidG('[[Reine des suites|Roi des suites|Au top des suites]] ! ⭐'),'À chaque pas, on ajoute le même nombre. Lequel ? 🔍'],
    ['✏️ What comes next: 2, 5, 8, 11, …?',['13','14','15'],1,'Pattern detective! ⭐','Each step adds the same number. Which one? 🔍'])},
 { parrot:mk(['🦋 לכל פרפר 6 רגליים. כמה רגליים יש ל-5 פרפרים?',['25','30','35'],1,'חשבון פרפרים מושלם! ⭐','5 פעמים 6. אפשר לספור בקפיצות של 6. 🦋'],
    ['🦋 Un papillon a 6 pattes. Combien de pattes pour 5 papillons ?',['25','30','35'],1,'Un calcul de papillons parfait ! ⭐','5 fois 6. Compte de 6 en 6. 🦋'],
@@ -418,20 +422,20 @@ const PUZ2=[
 { parrot:mk(['⛰️ הטיול התחיל ב-8:30 ונמשך שעה וחצי. מתי הוא נגמר?',['9:30','10:00','10:30'],1,'שעון מושלם! ⭐','8:30 ועוד שעה זה 9:30. ועוד חצי שעה? ⏰'],
    ['⛰️ La balade commence à 8h30 et dure une heure et demie. Elle finit à quelle heure ?',['9h30','10h00','10h30'],1,'Une horloge parfaite ! ⭐','8h30 plus une heure : 9h30. Et une demi-heure de plus ? ⏰'],
    ['⛰️ The hike starts at 8:30 and lasts an hour and a half. When does it end?',['9:30','10:00','10:30'],1,'Perfect clock skills! ⭐','8:30 plus one hour is 9:30. Then half an hour more? ⏰']),
-  giraffe:mk(['🦒 איזה משפט הוא שאלה?',['מה השעה?','השעה שלוש.','תראי את הפסגה!'],0,'זיהית שאלה! ⭐','שאלה נגמרת בסימן שאלה. 🤔'],
+  giraffe:mk(['🦒 איזה משפט הוא שאלה?',['מה השעה?','השעה שלוש.',kidG('[[תראי|תראה|תראו]] את הפסגה!')],0,'זיהית שאלה! ⭐','שאלה נגמרת בסימן שאלה. 🤔'],
    ['🦒 Quelle phrase est une question ?',['Quelle heure est-il ?','Il est trois heures.','Regarde le sommet !'],0,'Tu as repéré la question ! ⭐','Une question finit par « ? ». 🤔'],
    ['🦒 Which sentence is a question?',['What time is it?','It is three o’clock.','Look at the top!'],0,'You spotted the question! ⭐','A question ends with “?”. 🤔']),
-  pencils:mk(['🎒 התיק של טיגרו שוקל 12 ק״ג. החוקרת סוחבת חצי ממנו. כמה ק״ג?',['4','6','8'],1,'חצי זה חילוק ב-2! ⭐','חצי = לחלק ל-2 חלקים שווים. 🎒'],
-   ['🎒 Le sac de Tigero pèse 12 kg. L’exploratrice en porte la moitié. Combien de kg ?',['4','6','8'],1,'La moitié, c’est diviser par 2 ! ⭐','La moitié = 2 parts égales. 🎒'],
+  pencils:mk([kidG('🎒 התיק של טיגרו שוקל 12 ק״ג. [[החוקרת סוחבת|החוקר סוחב|החוקרים סוחבים]] חצי ממנו. כמה ק״ג?'),['4','6','8'],1,'חצי זה חילוק ב-2! ⭐','חצי = לחלק ל-2 חלקים שווים. 🎒'],
+   [kidG('🎒 Le sac de Tigero pèse 12 kg. [[L’exploratrice en porte|L’explorateur en porte|Le singe en porte]] la moitié. Combien de kg ?'),['4','6','8'],1,'La moitié, c’est diviser par 2 ! ⭐','La moitié = 2 parts égales. 🎒'],
    ['🎒 Tigero’s bag weighs 12 kg. The explorer carries half of it. How many kg?',['4','6','8'],1,'Half means divide by 2! ⭐','Half = 2 equal parts. 🎒'])},
-{ parrot:mk(['🐠 בשונית יש 24 דגים. שליש מהם שחו משם. כמה דגים נשארו?',['8','16','18'],1,'שליש וחילוק – את אלופה! ⭐','שליש של 24 זה 24 לחלק ל-3. ואז להחסיר. 🐠'],
+{ parrot:mk(['🐠 בשונית יש 24 דגים. שליש מהם שחו משם. כמה דגים נשארו?',['8','16','18'],1,kidG('שליש וחילוק – [[את אלופה|אתה אלוף|אתם אלופים]]! ⭐'),'שליש של 24 זה 24 לחלק ל-3. ואז להחסיר. 🐠'],
    ['🐠 Dans le récif il y a 24 poissons. Un tiers s’en va. Combien en restent-ils ?',['8','16','18'],1,'Un tiers, bravo ! ⭐','Un tiers de 24 = 24 divisé par 3. Puis on enlève. 🐠'],
    ['🐠 The reef has 24 fish. A third of them swim away. How many are left?',['8','16','18'],1,'Thirds, well done! ⭐','A third of 24 is 24 divided by 3. Then subtract. 🐠']),
   giraffe:mk(['🦒 מי לא שייך לאוקיינוס?',['כריש','פרח','דולפין'],1,'עין חדה! ⭐','איזה אחד לא יכול לשחות? 🌸'],
    ['🦒 Qui n’appartient pas à l’océan ?',['requin','fleur','dauphin'],1,'Bien vu ! ⭐','Lequel ne sait pas nager ? 🌸'],
    ['🦒 Which one does not belong in the ocean?',['shark','flower','dolphin'],1,'Sharp eyes! ⭐','Which one cannot swim? 🌸']),
-  pencils:mk(['🔑 המפתח האחרון! כמה זה 7 × 8?',['54','56','64'],1,'את אלופת הכפל! ⭐','7×8 = 7×4 כפול 2. 28 כפול 2? 🗝️'],
-   ['🔑 La dernière clé ! Combien font 7 × 8 ?',['54','56','64'],1,'Championne de la multiplication ! ⭐','7×8 = 7×4 fois 2. 28 fois 2 ? 🗝️'],
+  pencils:mk(['🔑 המפתח האחרון! כמה זה 7 × 8?',['54','56','64'],1,kidG('[[את אלופת הכפל|אתה אלוף הכפל|אתם אלופי הכפל]]! ⭐'),'7×8 = 7×4 כפול 2. 28 כפול 2? 🗝️'],
+   ['🔑 La dernière clé ! Combien font 7 × 8 ?',['54','56','64'],1,kidG('[[Championne de la multiplication|Champion de la multiplication|Au top de la multiplication]] ! ⭐'),'7×8 = 7×4 fois 2. 28 fois 2 ? 🗝️'],
    ['🔑 The last key! What is 7 × 8?',['54','56','64'],1,'Multiplication champion! ⭐','7×8 = 7×4 doubled. 28 doubled? 🗝️'])}
 ].map(r=>{ const o={}; for(const k of Object.keys(r)){ const [he,fr,en]=[r[k].he,r[k].fr,r[k].en]; o[k]={he,fr,en}; } return o; });
 
@@ -507,7 +511,7 @@ function applyLang(){const t=T[lang];document.documentElement.lang=lang;document
   $('wHome').textContent=t.home;
   updateSound();renderHUD();$('bubble').textContent=sayText();kHints();xLang();
   if(S.puzzle)renderPuzzle(); if(S.wonOpen)renderWon(); if($('ed').classList.contains('on'))renderEd();
-  document.title=t.title+' · Annabelle';}
+  document.title=t.title;}
 function updateSound(){const t=T[lang];$('muteS').textContent=muted?'🔇':'🔊';$('paSound').textContent=muted?t.soundOff:t.soundOn;}
 function toggleMute(){muted=!muted;localStorage.setItem(MKEY,muted?'1':'0');if(muted)stopSpeak();updateSound();sfx('tap');}
 

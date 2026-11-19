@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="tictactoe"></script><!--/pt-->
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="tictactoe"></script><!--/pt--><script>/* kid profile (kid.js): "[[f|m|x]]" = the Hebrew / French form for a girl | a boy | neutral; "[[@ … ]]" is kept only when the profile has a name (@ = the name; "[[@ … || … ]]" = with a name || without) */
+function kidG(s){var K=window.KidApp,n="";try{n=K&&K.kid?String(K.kid().name||""):""}catch(e){}
+ return String(s).replace(/\[\[([^@|\]][^|\]]*|)\|([^|\]]*)\|([^\]]*)\]\]/g,function(_,f,m,x){try{return K&&K.g?K.g(f,m,x):f}catch(e){return f}})
+  .replace(/\[\[@([^\]]*)\]\]/g,function(_,a){a=a.split("||");return n?a[0].replace(/@/g,function(){return n}):a[1]||""})}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -129,12 +133,12 @@ const $=id=>document.getElementById(id);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 /* ============ i18n ============ */
 const TX={
-he:{title:"איקס עיגול חתולים",sub:"דגים נגד כדורי צמר – מי ינצח? 🐟🧶",play:"▶ שחקי",
- p1:"🤖 נגד המחשב",p2:"👥 שניים",easy:"🐣 קל ומצחיק",norm:"🐯 רגיל",me:"🐟 אני מתחילה",cpu:"🧶 המחשב מתחיל",match:"🏆 עד 3 נצחונות",one:"🎮 משחק אחד",
+he:{title:"איקס עיגול חתולים",sub:"דגים נגד כדורי צמר – מי ינצח? 🐟🧶",play:kidG("▶ [[שחקי|שחק|שחקו]]"),
+ p1:"🤖 נגד המחשב",p2:"👥 שניים",easy:"🐣 קל ומצחיק",norm:"🐯 רגיל",me:kidG("🐟 [[אני מתחילה|אני מתחיל|אנחנו מתחילים]]"),cpu:"🧶 המחשב מתחיל",match:"🏆 עד 3 נצחונות",one:"🎮 משחק אחד",
  rules:"שלוש בשורה מנצח! הדגים 🐟 נגד כדורי הצמר 🧶. לוחצים על כרית או במקשים 1–9 (כמו במחשבון) או בחצים + Enter.",
  turnF:"תור הדגים 🐟",turnY:"תור הצמר 🧶",turnMe:"התור שלך! 🐟",turnMeY:"התור שלך! 🧶",cpuThink:"החתול חושב… 🤔",
  silly:["אופס, החתול התבלבל! 🙈","הוא שם בכל מקום! 😹","חחח מהלך מוזר! 🤪","הוא מחזיק את העכבר הפוך! 🐭"],
- sleep:["חרררר… הקוסם נרדם 😴","zzz… תעירי אותי כשתחליטי 💤"],
+ sleep:["חרררר… הקוסם נרדם 😴",kidG("zzz… [[תעירי|תעיר|תעירו]] אותי [[כשתחליטי|כשתחליט|כשתחליטו]] 💤")],
  winF:"הדגים ניצחו! 🐟🎉",winY:"כדורי הצמר ניצחו! 🧶🎉",winMe:"ניצחת!! 🎉",loseMe:"המחשב ניצח הפעם 😸",draw:"תיקו! כולם נרדמו 😴",
  cheer:["מיאו-ווו! 🎉","יפה מאוד! 😻","וואו! ✨"],
  oWin:"ניצחון! 🎉",oLose:"הפעם המחשב 😸",oDraw:"תיקו 😴",oMatchWin:"זכית באליפות! 🏆",oMatchLose:"המחשב זכה באליפות 🏆",oMatchF:"הדגים זכו באליפות! 🏆",oMatchY:"הצמר זכה באליפות! 🏆",
@@ -163,11 +167,11 @@ en:{title:"Cat Tic-Tac-Toe",sub:"Fish vs balls of yarn – who wins? 🐟🧶",p
  score:"{a} : {b}",statsL:"Wins vs computer: {w} · Draws: {d}",
  again:"🔁 Again",next:"▶ Next round",menu:"☰ Menu",paused:"Paused",resume:"▶ Resume",noGL:"No 3D in this browser, but you can play the simple version 🐱",home:"🏠 All games",tile:"Cushion"}};
 const TXX={
-he:{g_ult:"אולטימטיבי",d_ult:"9 לוחות קטנים! הכרית שתבחרי שולחת את היריבה ללוח המתאים. נצחי בשלושה לוחות בשורה! (נגד המחשב או בשניים)",ultTip:"🏰 הכרית שתבחרי שולחת את היריבה ללוח המתאים!",ultFree:"בחרי כל לוח פתוח 👆",ultGo:"שחקי בלוח המואר ✨",ultBoard:"לוח נכבש! 🏁",ultWrong:"רק בלוח המואר! ☝️",smart:"🧠 חכם",g_classic:"קלאסי",g_endless:"צמר אינסופי",g_powers:"כוחות חתול",g_big:"לוח ענק",g_chaos:"חתול הכאוס",
+he:{g_ult:"אולטימטיבי",d_ult:kidG("9 לוחות קטנים! הכרית [[שתבחרי|שתבחר|שתבחרו]] שולחת את [[היריבה|היריב|היריב]] ללוח המתאים. [[נצחי|נצח|נצחו]] בשלושה לוחות בשורה! (נגד המחשב או בשניים)"),ultTip:kidG("🏰 הכרית [[שתבחרי|שתבחר|שתבחרו]] שולחת את [[היריבה|היריב|היריב]] ללוח המתאים!"),ultFree:kidG("[[בחרי|בחר|בחרו]] כל לוח פתוח 👆"),ultGo:kidG("[[שחקי|שחק|שחקו]] בלוח המואר ✨"),ultBoard:"לוח נכבש! 🏁",ultWrong:"רק בלוח המואר! ☝️",smart:"🧠 חכם",g_classic:"קלאסי",g_endless:"צמר אינסופי",g_powers:"כוחות חתול",g_big:"לוח ענק",g_chaos:"חתול הכאוס",
  d_classic:"שלוש בשורה – הקלאסי!",d_endless:"לכל אחד רק 3 חתיכות. הרביעית מעלימה את הישנה ביותר (היא מהבהבת)!",d_powers:"כל אחד מקבל 3 כוחות חד־פעמיים: חכה, עכבר, זום, מגן וכפול!",d_big:"לוח גדול וארבע בשורה! (ברמת חכם – 5×5)",d_chaos:"חתול סורר מפיל חתיכה כל כמה תורות – ויש אזהרה לפני!",
- tip_endless:"♾️ רק 3 חתיכות לכל אחד – הישנה מהבהבת ותיעלם!",tip_big:"🧩 ארבע בשורה מנצח!",tip_chaos:"😼 כל כמה תורות חתול סורר מפיל חתיכה – שימי לב לאזהרה ⚠️",gift:"🎁 הקוסם נתן 3 כוחות לכל אחד! לחצי על כוח בשורה למטה",
+ tip_endless:"♾️ רק 3 חתיכות לכל אחד – הישנה מהבהבת ותיעלם!",tip_big:"🧩 ארבע בשורה מנצח!",tip_chaos:kidG("😼 כל כמה תורות חתול סורר מפיל חתיכה – [[שימי|שים|שימו]] לב לאזהרה ⚠️"),gift:kidG("🎁 הקוסם נתן 3 כוחות לכל אחד! [[לחצי|לחץ|לחצו]] על כוח בשורה למטה"),
  pw_hook:"חכה",pw_mouse:"עכבר",pw_zoom:"זום",pw_shield:"מגן",pw_dbl:"כפול",
- h_hook:"🐟 בחרי חתיכה של היריב להסרה",h_mouse:"🐭 בחרי כרית ריקה לחסימה",h_zoom1:"🌀 בחרי חתיכה ראשונה להחלפה",h_zoom2:"🌀 עכשיו בחרי חתיכה שנייה",h_shield:"😴 בחרי חתיכה שלך להגנה",
+ h_hook:kidG("🐟 [[בחרי|בחר|בחרו]] חתיכה של היריב להסרה"),h_mouse:kidG("🐭 [[בחרי|בחר|בחרו]] כרית ריקה לחסימה"),h_zoom1:kidG("🌀 [[בחרי|בחר|בחרו]] חתיכה ראשונה להחלפה"),h_zoom2:kidG("🌀 עכשיו [[בחרי|בחר|בחרו]] חתיכה שנייה"),h_shield:kidG("😴 [[בחרי|בחר|בחרו]] חתיכה שלך להגנה"),
  hookSay:"החכה תפסה חתיכה! 🎣😹",mouseSay:"העכבר חסם את הכרית! 🐭",zoomSay:"זום! כולם התבלבלו 🌀😹",shieldSay:"החתיכה ישנה בשלום 😴🛡️",dblSay:"⚡ שני מהלכים ברצף!",noTarget:"אין מטרה לכוח הזה 🙈",
  chaosWarn:"⚠️ החתול הסורר בדרך! חתיכה בסכנה",chaosKnock:"😹 החתול הסורר הפיל חתיכה!",vanish:"🧶 החתיכה הישנה נעלמה! 💨",starNew:"⭐ כוכב חדש!",starGold:"🌟 כוכב זהב!"},
 fr:{g_ult:"Ultime",d_ult:"9 petits plateaux ! La case que tu choisis envoie l'adversaire sur le plateau correspondant. Gagne trois plateaux alignés ! (contre l'ordi ou à deux)",ultTip:"🏰 La case choisie envoie l'adversaire sur le plateau correspondant !",ultFree:"Choisis un plateau ouvert 👆",ultGo:"Joue dans le plateau lumineux ✨",ultBoard:"Plateau gagné ! 🏁",ultWrong:"Seulement dans le plateau lumineux ! ☝️",smart:"🧠 Malin",g_classic:"Classique",g_endless:"Laine infinie",g_powers:"Pouvoirs de chat",g_big:"Grand plateau",g_chaos:"Chat chaos",
@@ -187,8 +191,8 @@ en:{g_ult:"Ultimate",d_ult:"9 little boards! The cushion you pick sends your opp
 for(const k in TXX)Object.assign(TX[k],TXX[k]);
 const TXY={
 he:{p3:"🌐 אונליין",g_adv:"מסע",d_adv:"מסע של 10 שלבים נגד החתולים – אוספים כוכבים ופותחים עולמות חדשים! 🗺️",mapT:"🗺️ מסע החתולים",mapS:"כוכבים: {n} / 30",daily:"📅 האתגר היומי",dailyDone:"📅 האתגר היומי ✅",stg:"שלב {n}",
- wn:["חצר הקלאסיקה","סמטת הצמר","פארק הכוחות","עיר הלוח הענק","טירת הכאוס"],goal:"🎯 נצחי ב־{n} מהלכים או פחות ל־⭐⭐⭐",stageWin:"שלב עבר! 🎉",stageDraw:"תיקו! עוד ניסיון? 😸",stageLose:"כמעט! בפעם הבאה החתול יתבלבל קצת יותר 😸",nextStage:"▶ השלב הבא",retry:"🔁 עוד ניסיון",toMap:"🗺️ למפה",newWorld:"🔓 נפתח עולם חדש!",dailyWin:"האתגר היומי הושלם! 🎁",
- theirTurn:"התור של החברה… ⏳",loseFr:"החברה ניצחה הפעם 😸",oLoseFr:"החברה ניצחה הפעם 😸",oChampLose:"החברה זכתה באליפות 🏆",shareT:"בואי לשחק איתי איקס עיגול חתולים! 🐟🧶",left:"החברה יצאה מהמשחק 👋",waitRe:"מחכה לחברה… 🕐",online:"🌐 אונליין"},
+ wn:["חצר הקלאסיקה","סמטת הצמר","פארק הכוחות","עיר הלוח הענק","טירת הכאוס"],goal:kidG("🎯 [[נצחי|נצח|נצחו]] ב־{n} מהלכים או פחות ל־⭐⭐⭐"),stageWin:"שלב עבר! 🎉",stageDraw:"תיקו! עוד ניסיון? 😸",stageLose:"כמעט! בפעם הבאה החתול יתבלבל קצת יותר 😸",nextStage:"▶ השלב הבא",retry:"🔁 עוד ניסיון",toMap:"🗺️ למפה",newWorld:"🔓 נפתח עולם חדש!",dailyWin:"האתגר היומי הושלם! 🎁",
+ theirTurn:kidG("התור של [[החברה|החבר|החברים]]… ⏳"),loseFr:kidG("[[החברה ניצחה|החבר ניצח|החברים ניצחו]] הפעם 😸"),oLoseFr:kidG("[[החברה ניצחה|החבר ניצח|החברים ניצחו]] הפעם 😸"),oChampLose:kidG("[[החברה זכתה|החבר זכה|החברים זכו]] באליפות 🏆"),shareT:"בואו לשחק איתי איקס עיגול חתולים! 🐟🧶",left:kidG("[[החברה יצאה|החבר יצא|החברים יצאו]] מהמשחק 👋"),waitRe:kidG("[[מחכה לחברה|מחכה לחבר|מחכים לחברים]]… 🕐"),online:"🌐 אונליין"},
 fr:{p3:"🌐 En ligne",g_adv:"Aventure",d_adv:"Une aventure de 10 niveaux contre les chats – gagne des étoiles et ouvre de nouveaux mondes ! 🗺️",mapT:"🗺️ L'aventure des chats",mapS:"Étoiles : {n} / 30",daily:"📅 Défi du jour",dailyDone:"📅 Défi du jour ✅",stg:"Niveau {n}",
  wn:["Cour classique","Ruelle de laine","Parc des pouvoirs","Ville grand plateau","Château du chaos"],goal:"🎯 Gagne en {n} coups ou moins pour ⭐⭐⭐",stageWin:"Niveau réussi ! 🎉",stageDraw:"Égalité ! On réessaie ? 😸",stageLose:"Presque ! La prochaine fois le chat se trompera un peu plus 😸",nextStage:"▶ Niveau suivant",retry:"🔁 Réessayer",toMap:"🗺️ La carte",newWorld:"🔓 Nouveau monde ouvert !",dailyWin:"Défi du jour réussi ! 🎁",
  theirTurn:"Au tour de ton ami… ⏳",loseFr:"Ton ami gagne cette fois 😸",oLoseFr:"Ton ami gagne cette fois 😸",oChampLose:"Ton ami gagne le championnat 🏆",shareT:"Viens jouer au Morpion des chats avec moi ! 🐟🧶",left:"Ton ami a quitté la partie 👋",waitRe:"J'attends ton ami… 🕐",online:"🌐 En ligne"},

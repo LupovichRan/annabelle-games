@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head><!--pt--><script src="playtime.js" data-app="bubbles"></script><!--/pt-->
+<head><!--pt--><script src="playtime.js" data-app="bubbles"></script><!--/pt--><script>/* kid profile (kid.js): "[[f|m|x]]" = the Hebrew / French form for a girl | a boy | neutral; "[[@ … ]]" is kept only when the profile has a name (@ = the name; "[[@ … || … ]]" = with a name || without) */
+function kidG(s){var K=window.KidApp,n="";try{n=K&&K.kid?String(K.kid().name||""):""}catch(e){}
+ return String(s).replace(/\[\[([^@|\]][^|\]]*|)\|([^|\]]*)\|([^\]]*)\]\]/g,function(_,f,m,x){try{return K&&K.g?K.g(f,m,x):f}catch(e){return f}})
+  .replace(/\[\[@([^\]]*)\]\]/g,function(_,a){a=a.split("||");return n?a[0].replace(/@/g,function(){return n}):a[1]||""})}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffd6c4">
-<title>בועות החתולים של אנאבל</title><script src="safe.js"></script>
+<title>בועות החתולים</title><script src="safe.js"></script>
 <style>
   :root{ --bg1:#ffe9a8; --bg2:#ffc7d9; --ink:#4a2c6b; --accent:#ff7a3d; --accent2:#7c5cff; --ok:#34c47c; --bad:#ff4d6d; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -236,7 +240,7 @@ html.desk .heads .bub{width:clamp(44px,min(17vw,11vh),104px);height:clamp(44px,m
 
 <script>
 "use strict";
-/* ============ DATA: animals (shared with Annabelle's first game) ============ */
+/* ============ DATA: animals (shared with the memory game) ============ */
 const ANIMALS = {
   cat:     {fur:"#a9a9b8",dark:"#6d6d80",muzzle:"#ecebf2",eye:"#8fd16b",nose:"#f29bb0",inner:"#f7b9c8",ears:"point",pattern:"tabby",bg:"#d9f2ff",voice:"meow",
             name:{he:"חתול",fr:"chat",en:"cat"},
@@ -425,28 +429,28 @@ const SFX = {
 
 /* ============ TEXTS ============ */
 const T = {
-  he:{daily:"אתגר יומי",musOn:"🎵 מוזיקה",musOff:"🎵 כבויה",dir:"rtl",title:"בועות החתולים של אנאבל",how:"פוצצי רק את הבועות עם החיות הנכונות לפני שנגמר הזמן!",play:"▶ שחקי",levels:"שלבים",lv:"שלב",best:"שיא",
-      collect:"אספי רק:",go:"▶ יאללה!",newT:"משימה חדשה!",combo:"קומבו",sec:"שנ׳",paused:"הפסקה",resume:"▶ המשך",restart:"🔁 מההתחלה",menu:"🏠 תפריט",
-      next:"לשלב הבא ⬅",again:"🔁 עוד פעם",passT:"שלב {n} הושלם!",passS:"ניקוד: {s}",failT:"כמעט!",failS:"צברת {s} מתוך {g}. עוד ניסיון ותצליחי!",
-      rec:"שיא חדש! 🏆",win:"כל הכבוד, אנאבל!",winS:"עברת את כל השלבים! ניקוד כולל: {n}",
+  he:{daily:"אתגר יומי",musOn:"🎵 מוזיקה",musOff:"🎵 כבויה",dir:"rtl",title:"בועות החתולים",how:kidG("[[פוצצי|פוצץ|פוצצו]] רק את הבועות עם החיות הנכונות לפני שנגמר הזמן!"),play:kidG("▶ [[שחקי|שחק|שחקו]]"),levels:"שלבים",lv:"שלב",best:"שיא",
+      collect:kidG("[[אספי|אסוף|אספו]] רק:"),go:"▶ יאללה!",newT:"משימה חדשה!",combo:"קומבו",sec:"שנ׳",paused:"הפסקה",resume:"▶ המשך",restart:"🔁 מההתחלה",menu:"🏠 תפריט",
+      next:"לשלב הבא ⬅",again:"🔁 עוד פעם",passT:"שלב {n} הושלם!",passS:"ניקוד: {s}",failT:"כמעט!",failS:kidG("צברת {s} מתוך {g}. עוד ניסיון [[ותצליחי|ותצליח|ותצליחו]]!"),
+      rec:"שיא חדש! 🏆",win:kidG("כל הכבוד[[@, @]]!"),winS:"עברת את כל השלבים! ניקוד כולל: {n}",
       hFlee:"חלק מהבועות בורחות מהאצבע!",hObs:"מכשולים חוסמים לחיצות – הבועות מקפצות מהם",hThorn:"זהירות! בועת קוצים מורידה {n} שניות",hGoal:"יעד: {g} נקודות",
-      diff:"קושי",easy:"🐣 קל",normal:"⭐ רגיל",expert:"🔥 מומחית",rush:"🔥 מרוץ בועות",rushT:"מרוץ בועות",wave:"גל",hRush:"מרוץ אינסופי! כל משימה היא גל חדש – מהיר וקשה יותר. עד שהזמן נגמר!",hExpert:"מומחית: בועות מהירות, קוצים כואבים ובלי עזרה. בועה בורחת מתחמקת ממגע בשוליים – כווני למרכז!",rushSub:"ניקוד {s} · גל {w} · קומבו {c}",top5:"🏆 החמש הטובות",pts:"נק׳",waveUp:"גל {w}!",
+      diff:"קושי",easy:"🐣 קל",normal:"⭐ רגיל",expert:kidG("🔥 [[מומחית|מומחה|מומחים]]"),rush:"🔥 מרוץ בועות",rushT:"מרוץ בועות",wave:"גל",hRush:"מרוץ אינסופי! כל משימה היא גל חדש – מהיר וקשה יותר. עד שהזמן נגמר!",hExpert:kidG("[[מומחית|מומחה|מומחים]]: בועות מהירות, קוצים כואבים ובלי עזרה. בועה בורחת מתחמקת ממגע בשוליים – [[כווני|כוון|כוונו]] למרכז!"),rushSub:"ניקוד {s} · גל {w} · קומבו {c}",top5:"🏆 החמש הטובות",pts:"נק׳",waveUp:"גל {w}!",
       oops:["אופס! 🙈","הי הי, לא זה! 😹","מיאו־פס! 🙊","בלגן חמוד! 🤪","גיגי! 🙃"],giggle:["חי חי!","חחח 😆","גיגול! 💧","ציק ציק!"],
-      cheer:["מיאוווו! 😻","את אלופה! 🏆","וואו! 🌟","פיצוץ מושלם! 🎉","הידד! 🥳"],look:"👀 הנה!",
-      failFun:["כמעט! החתולים צוחקים איתך 😹","אופס, הבועות ברחו! 💧","עוד קצת ותצליחי! 😺","הבועות מדגדגות! 🤭"]},
-  fr:{daily:"Défi du jour",musOn:"🎵 Musique",musOff:"🎵 Coupée",dir:"ltr",title:"Les bulles félines d'Annabelle",how:"Éclate seulement les bulles avec les bons animaux avant la fin du temps !",play:"▶ Jouer",levels:"Niveaux",lv:"Niveau",best:"Record",
+      cheer:["מיאוווו! 😻",kidG("[[את אלופה|אתה אלוף|אתם אלופים]]! 🏆"),"וואו! 🌟","פיצוץ מושלם! 🎉","הידד! 🥳"],look:"👀 הנה!",
+      failFun:["כמעט! החתולים צוחקים איתך 😹","אופס, הבועות ברחו! 💧",kidG("עוד קצת [[ותצליחי|ותצליח|ותצליחו]]! 😺"),"הבועות מדגדגות! 🤭"]},
+  fr:{daily:"Défi du jour",musOn:"🎵 Musique",musOff:"🎵 Coupée",dir:"ltr",title:"Bulles de chats",how:"Éclate seulement les bulles avec les bons animaux avant la fin du temps !",play:"▶ Jouer",levels:"Niveaux",lv:"Niveau",best:"Record",
       collect:"Attrape seulement :",go:"▶ C'est parti !",newT:"Nouvelle mission !",combo:"Combo",sec:"s",paused:"Pause",resume:"▶ Continuer",restart:"🔁 Recommencer",menu:"🏠 Menu",
       next:"Niveau suivant ➡",again:"🔁 Rejouer",passT:"Niveau {n} réussi !",passS:"Score : {s}",failT:"Presque !",failS:"Tu as {s} points sur {g}. Encore un essai et tu vas y arriver !",
-      rec:"Nouveau record ! 🏆",win:"Bravo, Annabelle !",winS:"Tu as réussi tous les niveaux ! Score total : {n}",
+      rec:"Nouveau record ! 🏆",win:kidG("Bravo[[@, @]] !"),winS:"Tu as réussi tous les niveaux ! Score total : {n}",
       hFlee:"Certaines bulles fuient ton doigt !",hObs:"Les obstacles bloquent les touches et font rebondir les bulles",hThorn:"Attention ! Une bulle à épines fait perdre {n} secondes",hGoal:"Objectif : {g} points",
-      diff:"Difficulté",easy:"🐣 Facile",normal:"⭐ Normal",expert:"🔥 Experte",rush:"🔥 Course aux bulles",rushT:"Course aux bulles",wave:"Vague",collectH:"Attrape :",hRush:"Course sans fin ! Chaque mission est une nouvelle vague, plus rapide et plus dure. Jusqu'à la fin du temps !",hExpert:"Experte : bulles rapides, épines qui piquent, aucune aide. Une bulle fuyante esquive si tu touches son bord : vise le centre !",rushSub:"Score {s} · vague {w} · combo {c}",top5:"🏆 Les 5 meilleurs",pts:"pts",waveUp:"Vague {w} !",
+      diff:"Difficulté",easy:"🐣 Facile",normal:"⭐ Normal",expert:kidG("🔥 [[Experte|Expert|Expert]]"),rush:"🔥 Course aux bulles",rushT:"Course aux bulles",wave:"Vague",collectH:"Attrape :",hRush:"Course sans fin ! Chaque mission est une nouvelle vague, plus rapide et plus dure. Jusqu'à la fin du temps !",hExpert:kidG("[[Experte|Expert|Expert]] : bulles rapides, épines qui piquent, aucune aide. Une bulle fuyante esquive si tu touches son bord : vise le centre !"),rushSub:"Score {s} · vague {w} · combo {c}",top5:"🏆 Les 5 meilleurs",pts:"pts",waveUp:"Vague {w} !",
       oops:["Oups ! 🙈","Hi hi, pas celle-là ! 😹","Miaou-ps ! 🙊","Quel joli désordre ! 🤪","Boing ! 🙃"],giggle:["Hi hi !","Ha ha 😆","Glouglou ! 💧","Tchic tchic !"],
-      cheer:["Miaouuu ! 😻","Tu es une championne ! 🏆","Waouh ! 🌟","Éclatement parfait ! 🎉","Hourra ! 🥳"],look:"👀 Ici !",
+      cheer:["Miaouuu ! 😻",kidG("[[Tu es une championne|Tu es un champion|Quel talent]] ! 🏆"),"Waouh ! 🌟","Éclatement parfait ! 🎉","Hourra ! 🥳"],look:"👀 Ici !",
       failFun:["Presque ! Les chats rient avec toi 😹","Oups, les bulles se sont sauvées ! 💧","Encore un peu et tu y es ! 😺","Les bulles chatouillent ! 🤭"]},
-  en:{daily:"Daily challenge",musOn:"🎵 Music",musOff:"🎵 Off",dir:"ltr",title:"Annabelle's Cat Bubbles",how:"Pop only the bubbles with the right animals before time runs out!",play:"▶ Play",levels:"Levels",lv:"Level",best:"Best",
+  en:{daily:"Daily challenge",musOn:"🎵 Music",musOff:"🎵 Off",dir:"ltr",title:"Cat Bubbles",how:"Pop only the bubbles with the right animals before time runs out!",play:"▶ Play",levels:"Levels",lv:"Level",best:"Best",
       collect:"Pop only:",go:"▶ Let's go!",newT:"New mission!",combo:"Combo",sec:"s",paused:"Paused",resume:"▶ Resume",restart:"🔁 Restart",menu:"🏠 Menu",
       next:"Next level ➡",again:"🔁 Play again",passT:"Level {n} complete!",passS:"Score: {s}",failT:"So close!",failS:"You got {s} of {g} points. One more try and you'll do it!",
-      rec:"New record! 🏆",win:"Well done, Annabelle!",winS:"You beat every level! Total score: {n}",
+      rec:"New record! 🏆",win:kidG("Well done[[@, @]]!"),winS:"You beat every level! Total score: {n}",
       hFlee:"Some bubbles run away from your finger!",hObs:"Obstacles block taps and bubbles bounce off them",hThorn:"Careful! A thorn bubble costs {n} seconds",hGoal:"Goal: {g} points",
       diff:"Difficulty",easy:"🐣 Easy",normal:"⭐ Normal",expert:"🔥 Expert",rush:"🔥 Bubble Rush",rushT:"Bubble Rush",wave:"Wave",hRush:"Endless run! Every mission is a new wave, faster and harder. Until the clock hits zero!",hExpert:"Expert: fast bubbles, nasty thorns, no help. A runaway bubble dodges if you hit its edge, so aim for the centre!",rushSub:"Score {s} · wave {w} · combo {c}",top5:"🏆 Top 5",pts:"pts",waveUp:"Wave {w}!",
       oops:["Oopsie! 🙈","Hee hee, not that one! 😹","Meow-ps! 🙊","Cute mess! 🤪","Boing! 🙃"],giggle:["Hee hee!","Ha ha 😆","Giggle! 💧","Tee-hee!"],
@@ -1074,7 +1078,7 @@ function stopConfetti(){ cancelAnimationFrame(confRaf); const c=$("confetti"); c
 
 /* ============ KEYBOARD (laptop): virtual cursor + shortcuts ============ */
 const KH={
-  he:"חיצים / WASD – הזיזי סמן · רווח / Enter – פוצצי · P / Esc – הפסקה · M – שקט",
+  he:kidG("חיצים / WASD – [[הזיזי|הזז|הזיזו]] סמן · רווח / Enter – [[פוצצי|פוצץ|פוצצו]] · P / Esc – הפסקה · M – שקט"),
   fr:"Flèches / WASD : viser · Espace / Entrée : éclater · P / Échap : pause · M : son",
   en:"Arrows / WASD: aim · Space / Enter: pop · P / Esc: pause · M: sound"};
 const KHM={ he:"Tab / חיצים לבחירה · Enter לאישור · 1-9/0 שלב · D יומי · R מרוץ · M – שקט", fr:"Tab / flèches : choisir · Entrée : valider · 1-9/0 : niveau · D : défi · R : course · M : son", en:"Tab / arrows: choose · Enter: confirm · 1-9/0: level · D: daily · R: rush · M: sound"};
