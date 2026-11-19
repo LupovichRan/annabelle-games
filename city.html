@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co https://0.peerjs.com wss://0.peerjs.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><!--pt--><script src="playtime.js" data-app="city"></script><!--/pt-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6a48f0">
+<title>עיר החתולים</title><script src="safe.js"></script>
+<!--
+  KITTY CITY (city.html) – a kind life / money simulator. Play coins only: no real money, no purchases, no ads, no links out.
+  The job is PLAYING GAMES: on every open the page compares AnnabelleRewards.get().stats (plays / wins per game id) with its own
+  snapshot and pays a salary for what was played since (read-only: this page never writes the rewards save, it only calls
+  AnnabelleRewards.award({game:'city',...}) for goals, the same way mathquest.html does).
+
+  SAVE FORMAT – localStorage 'annabelle-city' (per profile, like every annabelle-* save; other pages may READ it):
+  { v:1, seed, day (city day, 1..), real:'YYYY-MM-DD' (last real day a city day passed), skips:{d,n} ("next day" presses today),
+    cash, sav (integer coins), savF (interest fraction 0..9999), auto (0|10|20|30 % of salary auto-saved), score (trust 0..100),
+    job:{init, snap:{p:{game:plays}, w:{game:wins}}, worked (paid plays ever -> career), date, mult, used, usedW, by, byW (daily caps),
+         slips:[{d,p,l,w,g,t,s,r,n,o,m}] (day, plays, learning plays, wins, gross, tax, auto-saved, loan catch-up, net, over cap, pay %)},
+    home:{id 0..6, own, miss, dep}, mort:null|{bal,rate (per 10000 per day),pay,orig,int,miss,day}, loan:null|{same},
+    px:{assetId:[prices in hundredths of a coin, last 60 days]}, pf:{assetId:{q,c (cost)}},
+    own:{itemId: city day bought}, slots:[itemId|''] x16 (home view), hat, car,
+    goals:{goalId: day reached}, tips:{tipId:1}, tx:[{d,k,a,b,x?}] (day, kind, amount, cash balance after, item) last 150,
+    nw:[net worth per day, last 90], st:{slips,bought,sold,trades,divs,loansDone,mortDone,cashHome,earned,taxes,interest,bizInc,divInc},
+    sum:{nw, cash, lvl (career 0..5), home, own, day}   <- the small READ API for other pages (launcher tile, album...) }
+  Everything is validated on load (Eng.sane): numbers finite + clamped, money is integer coins >= 0, unknown ids dropped.
+  Tests: window.__city = {state(), pay(), nextDay(), buy(id), act(name,args), go(screen)};  window.__cityToday = 'YYYY-MM-DD' overrides the date.
+-->
+<style>
+:root{--ink:#2b2350;--pk:#e0457b;--ye:#ffd23f;--gr:#3ecf7a;--bl:#2a8fd0;--vi:#6a48f0;--cream:#fff9ea;--soft:#f3eeff;--red:#e2574c;--grn:#1e9e57}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#8fd77a;font-family:"Rubik","Varela Round","IBM Plex Sans Hebrew",Arial,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-action:manipulation;background:none;padding:0;margin:0}
+button:disabled{opacity:.45;cursor:default}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+#top{flex:none;display:flex;align-items:center;gap:6px;padding:max(6px,env(safe-area-inset-top)) 8px 6px;background:linear-gradient(#7c5cff,#6a48f0);color:#fff;box-shadow:0 3px 0 #0002;z-index:3;min-height:58px}
+#navSlot{display:flex;flex:none}
+#me{display:flex;align-items:center;gap:6px;flex:1;min-width:0;min-height:46px;text-align:start;border-radius:14px;padding:0 4px}
+#meTxt{min-width:0;display:flex;flex-direction:column;line-height:1.15}
+#meTxt b{font-size:15.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#meTxt small{font-size:12px;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{background:#fff;color:var(--ink);border-radius:999px;padding:4px 10px;font-weight:900;font-size:15px;box-shadow:0 3px 0 #0003;white-space:nowrap;min-height:34px;display:inline-flex;align-items:center;gap:4px;flex:none}
+.pill.pop{animation:pillPop .5s}@keyframes pillPop{40%{transform:scale(1.25) rotate(-4deg)}}
+.mx{direction:ltr;unicode-bidi:isolate;display:inline-flex;align-items:center;gap:.22em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cn{display:inline-block;width:.92em;height:.92em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6b0,#ffc928 55%,#e59a00);box-shadow:inset 0 0 0 .09em #c27d00;flex:none}
+.pos{color:var(--grn)}.neg{color:var(--red)}
+.av{position:relative;display:inline-flex;align-items:center;justify-content:center;font-size:34px;line-height:1;width:1.25em;height:1.25em;flex:none}
+.av .h{position:absolute;left:50%;transform:translateX(-50%);font-size:.56em;pointer-events:none}
+.av .h.top{top:-.3em}.av .h.mid{top:.3em;font-size:.5em}.av .h.low{top:.78em;font-size:.5em}
+#main{flex:1;min-height:0;display:flex;flex-direction:column}
+#mapWrap{flex:1;min-height:0;position:relative;background:#8fd77a;overflow:hidden}
+#mapSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#side{flex:none;display:flex;flex-direction:column;min-height:0;max-height:100%;background:var(--cream)}
+#panel{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:10px 12px 14px;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+body[data-scr="map"] #side{border-radius:22px 22px 0 0;margin-top:-14px;z-index:2;box-shadow:0 -4px 0 #0001;max-height:52%}
+body:not([data-scr="map"]) #mapWrap{display:none}
+body:not([data-scr="map"]) #side{flex:1}
+#tabs{flex:none;display:flex;background:#fff;box-shadow:0 -3px 0 #0001;padding-bottom:var(--sab,env(safe-area-inset-bottom,0px));z-index:2}
+.tab{flex:1;min-height:58px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;gap:1px;border-radius:14px;margin:3px 2px}
+.tab .e{font-size:23px;line-height:1.1}.tab.on{color:var(--vi);background:var(--soft)}
+.pl{cursor:pointer;outline:none}.pl:active .bd{transform:scale(.95)}.pl .bd{transform-box:fill-box;transform-origin:center bottom;transition:transform .08s}
+.pl:focus-visible .lb{stroke:var(--vi);stroke-width:3}
+.bob{transform-box:fill-box;transform-origin:center;animation:bob 1.6s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-5px)}}
+.drive{animation:drive 16s linear infinite}@keyframes drive{from{transform:translateX(560px)}to{transform:translateX(-180px)}}
+.fly{animation:drive 11s linear infinite}
+.sway{transform-box:fill-box;transform-origin:center bottom;animation:sway 3.2s ease-in-out infinite}@keyframes sway{50%{transform:rotate(4deg)}}
+h2,h3{margin:0}
+.hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}.hd h2{flex:1;font-size:21px;font-weight:900;min-width:0}
+.ib{width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 3px 0 #0002;font-size:20px;display:flex;align-items:center;justify-content:center;flex:none;font-weight:900}
+.ib:active,.btn:active,.chip:active,.it:active,.slot:active,.hrow:active{transform:translateY(2px) scale(.98)}
+.cd{background:#fff;border-radius:18px;padding:12px;box-shadow:0 3px 0 #0001;margin-bottom:10px}
+.cd h3{font-size:17px;font-weight:900;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.cd h3 .sp{flex:1}
+.sub{font-size:13.5px;font-weight:600;opacity:.75;line-height:1.35}
+.big{font-size:26px;font-weight:900}
+.rw{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.rw .sp{flex:1}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 0;font-weight:700;font-size:15px;border-bottom:1px dashed #0001}.kv:last-child{border:none}.kv>span:first-child{min-width:0}
+.kv.tot{font-weight:900;font-size:17px;border-top:2px solid #0002;border-bottom:none;margin-top:4px;padding-top:8px}
+.btn{min-height:48px;border-radius:16px;padding:6px 16px;font-weight:900;font-size:16.5px;box-shadow:0 4px 0 #0003;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#fff;text-align:center;line-height:1.15}
+.btn.g{background:var(--gr);color:#073b1c}.btn.y{background:var(--ye)}.btn.p{background:var(--pk);color:#fff}.btn.v{background:var(--vi);color:#fff}.btn.w{background:var(--soft)}
+.btn.wide{width:100%}.btn.sm{min-height:44px;font-size:14.5px;padding:4px 12px;border-radius:14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btns .btn{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:46px;min-width:48px;border-radius:999px;padding:4px 13px;background:var(--soft);font-weight:800;font-size:14.5px;display:inline-flex;align-items:center;justify-content:center;gap:4px;border:2px solid transparent}
+.chip.on{background:var(--vi);color:#fff}
+.tip{width:44px;height:44px;border-radius:50%;background:#fff3b8;font-size:19px;flex:none;box-shadow:0 2px 0 #0002;display:inline-flex;align-items:center;justify-content:center;margin:-8px 0}
+.bar{height:14px;border-radius:99px;background:#0001;overflow:hidden;direction:ltr}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#6fe39a,#3ecf7a)}
+.bar.sc i{background:linear-gradient(90deg,#ffb347,#ffd23f,#3ecf7a)}
+.warn{background:#fff1d6;border:2px solid #ffc76b;border-radius:14px;padding:8px 10px;font-weight:800;font-size:14px;margin-bottom:8px;line-height:1.35}
+.note{background:var(--soft);border-radius:14px;padding:8px 10px;font-weight:700;font-size:13.5px;line-height:1.4;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.it{background:#fff;border-radius:16px;padding:8px 4px 7px;box-shadow:0 3px 0 #0001;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:112px;position:relative;font-weight:800;font-size:13px;text-align:center;border:2px solid transparent}
+.it .e{font-size:36px;line-height:1.15}.it .n{line-height:1.15;min-height:2.3em;display:flex;align-items:center;justify-content:center;padding:0 2px}
+.it .pr{font-size:14px;background:var(--soft);border-radius:99px;padding:2px 9px}
+.it.own{border-color:var(--gr);background:#f1fff5}.it.own .pr{background:#c8f5d8}
+.it.no .pr{opacity:.55}
+.it .tag{position:absolute;top:4px;inset-inline-end:5px;font-size:11px;background:#fff3b8;border-radius:99px;padding:1px 6px}
+.room{border-radius:20px;padding:12px 10px 16px;background:linear-gradient(#ffe7c2 0,#ffe7c2 58%,#d7a676 58%,#c8925f 100%);position:relative;margin-bottom:10px;box-shadow:inset 0 0 0 3px #0001}
+.room .wn{position:absolute;top:10px;inset-inline-end:14px;width:54px;height:44px;border-radius:8px;background:linear-gradient(#9fdcff,#d9f3ff);border:4px solid #fff;box-shadow:0 2px 0 #0002}
+.room .who{display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;min-height:64px}
+.room .who .av{font-size:50px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.slot{aspect-ratio:1;min-height:52px;border-radius:14px;border:2px dashed #0003;font-size:clamp(28px,8vw,38px);display:flex;align-items:center;justify-content:center;background:#fff6;line-height:1}
+.slot.full{border:2px solid #fff;background:#fff9;box-shadow:0 3px 0 #0002}
+.slot.empty{font-size:20px;color:#0005;font-weight:900}
+.hrow{display:flex;align-items:center;gap:10px;width:100%;text-align:start;background:#fff;border-radius:16px;padding:8px 10px;box-shadow:0 3px 0 #0001;margin-bottom:8px;min-height:60px;font-weight:800}
+.hrow .e{font-size:30px;flex:none;width:40px;text-align:center}.hrow .m{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.hrow .m small{font-weight:600;font-size:12.5px;opacity:.75}
+.hrow .r{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none;font-size:14.5px}
+.hrow.done{background:#f1fff5}.hrow.cur{outline:3px solid var(--vi)}
+.dots{display:inline-flex;gap:2px;direction:ltr}.dots i{width:7px;height:7px;border-radius:50%;background:#0002}.dots i.on{background:var(--pk)}
+.tx{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;align-items:center;font-size:13.5px;font-weight:700;padding:6px 0;border-bottom:1px dashed #0001}
+.tx .d{opacity:.6;font-size:12px}.tx .a{font-weight:900;text-align:end}.tx .b{grid-column:2/4;text-align:end;font-size:11.5px;opacity:.6;margin-top:-3px}
+svg.ch{display:block;width:100%;height:auto;direction:ltr}
+.leg{display:flex;gap:12px;font-size:12.5px;font-weight:700;align-items:center;flex-wrap:wrap}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:4px;vertical-align:-1px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;direction:ltr}.cal span{aspect-ratio:1;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.cal span.t{background:var(--vi);color:#fff;box-shadow:0 3px 0 #0003}.cal span.dv{background:#fff3b8}.cal span.p{opacity:.45}
+.park{border-radius:20px;min-height:230px;background:linear-gradient(#bfe9ff 0,#e6f7ff 36%,#8fd77a 36%,#6cc45a 100%);position:relative;padding:92px 10px 12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:flex-end;justify-content:center;font-size:44px;line-height:1;overflow:hidden;margin-bottom:10px}
+.park .sun{position:absolute;top:10px;inset-inline-start:16px;font-size:40px}.park .cl{position:absolute;top:16px;inset-inline-end:20px;font-size:34px;opacity:.9}
+.park .pet{font-size:32px;animation:hop 1.4s ease-in-out infinite}.park .pet:nth-child(odd){animation-delay:-.6s}@keyframes hop{50%{transform:translateY(-7px)}}
+.hearts{letter-spacing:1px;font-size:15px;white-space:nowrap}
+#ov{position:fixed;inset:0;background:#2b235099;display:none;align-items:center;justify-content:center;padding:14px;z-index:40}
+#ov.on{display:flex}
+#card{background:var(--cream);border-radius:24px;padding:16px 14px 14px;width:min(100%,440px);max-height:100%;overflow-y:auto;overflow-x:hidden;box-shadow:0 8px 0 #0003;animation:cardIn .22s;touch-action:pan-y;overscroll-behavior:contain}
+@keyframes cardIn{from{transform:scale(.85);opacity:0}}
+#card h2{font-size:22px;font-weight:900;text-align:center;margin-bottom:8px;line-height:1.2}
+#card .hero{font-size:54px;text-align:center;line-height:1.1}
+#card p{margin:6px 0;font-weight:700;font-size:15.5px;line-height:1.45}
+#card p.c{text-align:center}
+.amt{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0}.amt .v{font-size:30px;font-weight:900;min-width:110px;text-align:center}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:var(--vi);direction:ltr;touch-action:pan-x}
+#toast{position:fixed;left:50%;bottom:calc(84px + var(--sab,0px));transform:translate(-50%,30px);background:var(--ink);color:#fff;border-radius:16px;padding:10px 16px;font-weight:800;font-size:15px;opacity:0;pointer-events:none;transition:all .25s;z-index:50;width:max-content;max-width:calc(100% - 24px);text-align:center;line-height:1.35}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#fxl{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+#fxl span{position:absolute;top:-40px;font-size:26px;animation:fall 1.6s ease-in forwards}@keyframes fall{to{transform:translateY(110vh) rotate(380deg);opacity:.2}}
+#extras{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:6px 0}
+#holder{display:none}
+.flag{min-width:48px;min-height:44px;border-radius:14px;background:#fff;font-size:24px;box-shadow:0 3px 0 #0002;display:inline-flex;align-items:center;justify-content:center;border:3px solid transparent}.flag.on{border-color:var(--vi)}
+.today .rw{font-weight:800;font-size:14.5px;gap:4px 10px}
+.today .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}.today .top b{font-size:18px;font-weight:900}
+.mini{font-size:13.5px;font-weight:700;background:#fff;border-radius:12px;padding:6px 9px;box-shadow:0 2px 0 #0001;display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+@media (min-width:900px){
+ #main{flex-direction:row}
+ #mapWrap,body:not([data-scr="map"]) #mapWrap{display:block;flex:1}
+ #side,body[data-scr="map"] #side,body:not([data-scr="map"]) #side{flex:none;width:468px;max-height:none;margin:0;border-radius:0;box-shadow:-3px 0 0 #0001}
+ #tabs{order:-1;box-shadow:0 3px 0 #0001;padding-bottom:0}
+ .tab{flex-direction:row;gap:4px;font-size:13.5px;min-height:50px}.tab .e{font-size:20px}
+ #toast{bottom:24px}
+ .slot{font-size:36px}
+}
+@media (max-height:660px) and (max-width:899px){.tab{min-height:52px}.tab .e{font-size:21px}#top{min-height:54px}body[data-scr="map"] #side{max-height:56%}}
+@media (prefers-reduced-motion:reduce){.bob,.drive,.fly,.sway,.park .pet{animation:none}}
+</style>
+<!--pwa--><link rel="manifest" href="manifests/city.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/city-192.png"><meta name="apple-mobile-web-app-title" content="עיר החתולים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/city-apple-180.png"><script src="pwa.js" data-app="city" data-slots='[["#extras", "append"]]' defer></script><script src="nav.js" data-menuslot="#navSlot" defer></script><!--/pwa-->
+<script src="desktop.js"></script>
+<script src="rewards.js" defer></script>
+</head>
+<body data-scr="map">
+<div id="app">
+ <div id="top"><span id="navSlot"></span><button id="me" type="button"><span class="av" id="meAv"></span><span id="meTxt"><b id="meT"></b><small id="meJ"></small></span></button><span class="pill" id="pDay"></span><span class="pill" id="pCash"></span></div>
+ <div id="main">
+  <div id="mapWrap"><svg id="mapSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div id="side"><div id="panel"></div><div id="tabs"></div></div>
+ </div>
+</div>
+<div id="holder"><div id="extras"></div></div>
+<div id="ov"><div id="card" role="dialog" aria-modal="true"></div></div>
+<div id="toast"></div><div id="fxl"></div>
+<script>
+(function(){'use strict';
+/*ENGINE-START  (pure money engine: no DOM, no storage; the same code runs in the node balance simulation) */
+const Eng=(function(){
+const CFG={GIFT:120,PLAY:10,LEARN:16,WIN:6,TAX:10,CAP_DAY:12,CAP_GAME:4,CARRY:3,SKIPS:2,GRACE:3,SAV_BP:20,GARN:30,TXMAX:150,HIST:60,MAXM:1e9,DIV_EVERY:5,SELL_FEE:5};
+const LEARN={mathquest:1,wordcity:1,sciencelab:1,thinking:1,reading:1};
+const CAREER=[{at:0,mult:100,loan:150,e:'🐣'},{at:10,mult:120,loan:300,e:'🎮'},{at:30,mult:145,loan:600,e:'⭐'},{at:75,mult:175,loan:1000,e:'🌟'},{at:150,mult:210,loan:1600,e:'🏆'},{at:300,mult:250,loan:2500,e:'👑'}];
+const HOMES=[
+ {id:0,e:'🚪',rent:4,dep:0,price:0,slots:4,comfort:1,col:'#c9b8ff'},
+ {id:1,e:'🏢',rent:10,dep:60,price:2000,slots:6,comfort:2,col:'#ffd08a'},
+ {id:2,e:'🏬',rent:18,dep:120,price:3200,slots:8,comfort:3,col:'#8fd3ff'},
+ {id:3,e:'🏠',rent:30,dep:200,price:5000,slots:10,comfort:4,col:'#ffa8b8'},
+ {id:4,e:'🏡',rent:0,dep:0,price:8000,slots:12,comfort:5,col:'#a6e88f'},
+ {id:5,e:'🏘️',rent:0,dep:0,price:14000,slots:14,comfort:6,col:'#ffe27a'},
+ {id:6,e:'🏰',rent:0,dep:0,price:26000,slots:16,comfort:8,col:'#d9c2ff'}];
+const DOWNS=[10,20,30,50],MTERMS=[20,40,60],LTERMS=[10,20,30];
+/* investments: prices are integers in hundredths of a coin */
+const ASSETS=[
+ {id:'bond',e:'📜',kind:'bond',base:100,drift:25,vol:0,div:0,risk:0},
+ {id:'idx',e:'🧺',kind:'index',base:100,drift:0,vol:0,div:60,risk:2},
+ {id:'milk',e:'🥛',kind:'stock',base:50,drift:24,vol:90,div:180,risk:1},
+ {id:'yarn',e:'🧶',kind:'stock',base:40,drift:26,vol:130,div:150,risk:2},
+ {id:'nip',e:'🌿',kind:'stock',base:70,drift:32,vol:200,div:80,risk:3},
+ {id:'air',e:'✈️',kind:'stock',base:90,drift:36,vol:270,div:50,risk:3},
+ {id:'tuna',e:'🐟',kind:'stock',base:60,drift:44,vol:360,div:0,risk:4},
+ {id:'laser',e:'🔦',kind:'stock',base:25,drift:52,vol:520,div:0,risk:5}];
+const AS={};ASSETS.forEach(a=>AS[a.id]=a);
+/* shop: [id, emoji, category, price, he, fr, en, extra]   categories: fur dec pet hat car gar biz */
+const RAW=[
+ ['chair','🪑','fur',25,'כיסא','Chaise','Chair'],['lamp','💡','fur',20,'מנורה','Lampe','Lamp'],['basket','🧺','fur',15,'סל','Panier','Basket'],
+ ['phone','☎️','fur',30,'טלפון','Téléphone','Telephone'],['books','📚','fur',35,'ספרים','Livres','Books'],['clock','🕰️','fur',45,'שעון','Horloge','Clock'],
+ ['radio','📻','fur',55,'רדיו','Radio','Radio'],['bed','🛏️','fur',60,'מיטה','Lit','Bed'],['dining','🍽️','fur',70,'פינת אוכל','Coin repas','Dining set'],
+ ['shower','🚿','fur',90,'מקלחת','Douche','Shower'],['sofa','🛋️','fur',120,'ספה','Canapé','Sofa'],['guitar','🎸','fur',140,'גיטרה','Guitare','Guitar'],
+ ['bath','🛁','fur',150,'אמבטיה','Baignoire','Bathtub'],['tv','📺','fur',180,'טלוויזיה','Télévision','TV'],['console','🎮','fur',220,'קונסולת משחקים','Console de jeux','Game console'],
+ ['scope','🔭','fur',260,'טלסקופ','Télescope','Telescope'],['laptop','💻','fur',320,'מחשב','Ordinateur','Computer'],['piano','🎹','fur',450,'פסנתר','Piano','Piano'],
+ ['balloon','🎈','dec',10,'בלון','Ballon','Balloon'],['candle','🕯️','dec',12,'נר','Bougie','Candle'],['yoyo','🪀','dec',14,'יו-יו','Yo-yo','Yo-yo'],
+ ['sprout','🌱','dec',15,'עציץ','Plante','Plant'],['puzzle','🧩','dec',22,'פאזל','Puzzle','Puzzle'],['bouquet','💐','dec',25,'זר פרחים','Bouquet','Bouquet'],
+ ['diya','🪔','dec',26,'מנורת שמן','Lampe à huile','Oil lamp'],['kite','🪁','dec',28,'עפיפון','Cerf-volant','Kite'],['teddy','🧸','dec',30,'דובי','Nounours','Teddy bear'],
+ ['lantern','🏮','dec',38,'פנס נייר','Lanterne','Lantern'],['frame','🖼️','dec',40,'תמונה','Tableau','Painting'],['paint','🎨','dec',50,'ערכת ציור','Kit de peinture','Paint set'],
+ ['globe','🌍','dec',65,'גלובוס','Globe','Globe'],['crystal','🔮','dec',200,'כדור בדולח','Boule de cristal','Crystal ball'],['trophy','🏆','dec',300,'גביע','Trophée','Trophy'],
+ ['diamond','💎','dec',1500,'יהלום','Diamant','Diamond'],
+ ['fish','🐠','pet',40,'דג זהב','Poisson','Fish'],['hamster','🐹','pet',70,'אוגר','Hamster','Hamster'],['turtle','🐢','pet',90,'צב','Tortue','Turtle'],
+ ['bird','🐦','pet',110,'ציפור','Oiseau','Bird'],['rabbit','🐰','pet',130,'ארנב','Lapin','Rabbit'],['hedgehog','🦔','pet',180,'קיפוד','Hérisson','Hedgehog'],
+ ['parrot','🦜','pet',240,'תוכי','Perroquet','Parrot'],['kitten','🐈','pet',300,'גור חתולים','Chaton','Kitten'],['puppy','🐶','pet',350,'כלבלב','Chiot','Puppy'],
+ ['sloth','🦥','pet',600,'עצלן','Paresseux','Sloth'],['unicorn','🦄','pet',2500,'חד-קרן','Licorne','Unicorn'],
+ ['bow','🎀','hat',25,'סרט','Nœud','Bow',{pos:'top'}],['cap','🧢','hat',30,'כובע מצחייה','Casquette','Cap',{pos:'top'}],['glasses','👓','hat',35,'משקפיים','Lunettes','Glasses',{pos:'mid'}],
+ ['scarf','🧣','hat',45,'צעיף','Écharpe','Scarf',{pos:'low'}],['sunhat','👒','hat',55,'כובע שמש','Chapeau de soleil','Sun hat',{pos:'top'}],['shades','🕶️','hat',60,'משקפי שמש','Lunettes de soleil','Sunglasses',{pos:'mid'}],
+ ['helmet','⛑️','hat',80,'קסדה','Casque','Helmet',{pos:'top'}],['tophat','🎩','hat',150,'צילינדר','Haut-de-forme','Top hat',{pos:'top'}],['gradcap','🎓','hat',200,'כובע סיום','Chapeau de diplômé','Graduation cap',{pos:'top'}],
+ ['crown','👑','hat',1200,'כתר','Couronne','Crown',{pos:'top'}],
+ ['skate','🛹','car',45,'סקייטבורד','Skateboard','Skateboard'],['scooter','🛴','car',60,'קורקינט','Trottinette','Scooter'],['bike','🚲','car',150,'אופניים','Vélo','Bicycle'],
+ ['moped','🛵','car',500,'קטנוע','Scooter','Moped'],['tuktuk','🛺','car',800,'טוקטוק','Tuk-tuk','Tuk-tuk'],['moto','🏍️','car',1100,'אופנוע','Moto','Motorbike'],
+ ['car','🚗','car',1500,'מכונית','Voiture','Car'],['boat','🚤','car',3000,'סירת מנוע','Bateau','Speedboat'],['heli','🚁','car',8000,'מסוק','Hélicoptère','Helicopter'],
+ ['rocket','🚀','car',20000,'חללית','Fusée','Rocket'],
+ ['sunflower','🌻','gar',12,'חמנייה','Tournesol','Sunflower'],['tulip','🌷','gar',15,'צבעוני','Tulipe','Tulip'],['rose','🌹','gar',20,'ורד','Rose','Rose'],
+ ['cactus','🌵','gar',30,'קקטוס','Cactus','Cactus'],['pine','🌲','gar',45,'אורן','Sapin','Pine tree'],['tree','🌳','gar',50,'עץ','Arbre','Tree'],
+ ['parasol','⛱️','gar',70,'שמשייה','Parasol','Parasol'],['flamingo','🦩','gar',85,'פלמינגו','Flamant rose','Flamingo'],['tent','🏕️','gar',160,'אוהל','Tente','Tent'],
+ ['fountain','⛲','gar',600,'מזרקה','Fontaine','Fountain'],['carousel','🎠','gar',2000,'קרוסלה','Manège','Carousel'],['wheel','🎡','gar',5000,'גלגל ענק','Grande roue','Ferris wheel'],
+ ['lemon','🍋','biz',150,'דוכן לימונדה','Stand de limonade','Lemonade stand',{inc:3}],['news','📰','biz',250,'דוכן עיתונים','Kiosque à journaux','Newsstand',{inc:5}],
+ ['ice','🍦','biz',400,'עגלת גלידה','Chariot de glaces','Ice cream cart',{inc:7}],['bakery','🧁','biz',900,'מאפיית קאפקייקס','Pâtisserie','Cupcake bakery',{inc:15}],
+ ['pizza','🍕','biz',2000,'פיצרייה','Pizzeria','Pizzeria',{inc:32}],['circus','🎪','biz',4500,'קרקס','Cirque','Circus',{inc:70}],['hotel','🏨','biz',9000,'מלון חתולים','Hôtel des chats','Cat hotel',{inc:135}]];
+const ITEMS=RAW.map(r=>Object.assign({id:r[0],e:r[1],cat:r[2],price:r[3],n:[r[4],r[5],r[6]],inc:0},r[7]||{}));
+const IT={};ITEMS.forEach(i=>IT[i.id]=i);
+const RES={fur:50,dec:50,pet:0,hat:40,gar:50,biz:70,car:80};
+const PLACE={fur:1,dec:1,pet:1};
+const GOALS=[
+ {id:'job',e:'💼',rw:15,t:S=>S.st.slips>=1},
+ {id:'shop',e:'🛍️',rw:10,t:S=>S.st.bought>=1},
+ {id:'save100',e:'🐷',rw:20,t:S=>S.sav>=100,p:S=>[S.sav,100]},
+ {id:'rent',e:'🏢',rw:30,t:S=>S.home.id>=1},
+ {id:'inv',e:'📈',rw:20,t:S=>S.st.trades>=1},
+ {id:'pet',e:'🐹',rw:20,t:S=>ITEMS.some(i=>i.cat==='pet'&&S.own[i.id]!==undefined)},
+ {id:'decor',e:'🛋️',rw:30,t:S=>placed(S)>=6,p:S=>[placed(S),6]},
+ {id:'biz',e:'🍋',rw:30,t:S=>ITEMS.some(i=>i.cat==='biz'&&S.own[i.id]!==undefined)},
+ {id:'divs',e:'💌',rw:25,t:S=>S.st.divs>=1},
+ {id:'diverse',e:'🧺',rw:50,t:S=>held(S)>=4,p:S=>[held(S),4]},
+ {id:'save1000',e:'🏦',rw:80,t:S=>S.sav>=1000,p:S=>[S.sav,1000]},
+ {id:'loan',e:'🤝',rw:40,t:S=>S.st.loansDone>=1},
+ {id:'score',e:'💯',rw:50,t:S=>S.score>=80,p:S=>[S.score,80]},
+ {id:'pro',e:'⭐',rw:40,t:S=>career(S)>=2,p:S=>[S.job.worked,CAREER[2].at]},
+ {id:'own',e:'🏠',rw:100,t:S=>S.home.own},
+ {id:'mort',e:'🎉',rw:200,t:S=>S.st.mortDone>=1||(S.home.own&&!S.mort&&S.st.cashHome>=1)},
+ {id:'nw1',e:'🥉',rw:50,t:S=>netWorth(S)>=1000,p:S=>[netWorth(S),1000]},
+ {id:'nw5',e:'🥈',rw:150,t:S=>netWorth(S)>=5000,p:S=>[netWorth(S),5000]},
+ {id:'nw20',e:'🥇',rw:400,t:S=>netWorth(S)>=20000,p:S=>[netWorth(S),20000]},
+ {id:'champ',e:'🏆',rw:150,t:S=>career(S)>=4,p:S=>[S.job.worked,CAREER[4].at]},
+ {id:'nw50',e:'💎',rw:1000,t:S=>netWorth(S)>=50000,p:S=>[netWorth(S),50000]},
+ {id:'castle',e:'🏰',rw:1000,t:S=>S.home.id===6&&S.home.own}];
+const GO={};GOALS.forEach(g=>GO[g.id]=g);
+
+function fin(x){return typeof x==='number'&&isFinite(x)}
+function ci(x,lo,hi,d){if(typeof x!=='number')x=typeof x==='string'&&x!==''?Number(x):NaN;if(!isFinite(x))return d===undefined?lo:d;x=Math.round(x);return x<lo?lo:x>hi?hi:x}
+function isObj(o){return !!o&&typeof o==='object'&&!Array.isArray(o)}
+function has(o,k){return Object.prototype.hasOwnProperty.call(o,k)}
+const GID=/^[a-z0-9_-]{1,40}$/i,DATE=/^\d{4}-\d{2}-\d{2}$/;
+function rnd(seed,day,i){let t=(seed^Math.imul(day+7919,0x9E3779B1)^Math.imul(i+1,0x85EBCA6B))>>>0;return function(){t=(t+0x6D2B79F5)>>>0;let r=Math.imul(t^t>>>15,1|t);r=(r+Math.imul(r^r>>>7,61|r))^r;return((r^r>>>14)>>>0)/4294967296}}
+function dayDiff(a,b){if(!DATE.test(a)||!DATE.test(b))return 1;const p=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10));const d=Math.round((p(b)-p(a))/864e5);return fin(d)?d:1}
+
+function fresh(seed){
+ const S={v:1,seed:ci(seed,1,2147483647,12345),day:1,real:'',skips:{d:'',n:0},cash:0,sav:0,savF:0,auto:0,score:50,
+  job:{init:0,snap:{p:{},w:{}},worked:0,date:'',mult:1,used:0,usedW:0,by:{},byW:{},slips:[]},
+  home:{id:0,own:false,miss:0,dep:0},mort:null,loan:null,px:{},pf:{},own:{},slots:[],hat:'',car:'',
+  goals:{},tips:{},tx:[],nw:[],st:{slips:0,bought:0,sold:0,trades:0,divs:0,loansDone:0,mortDone:0,cashHome:0,earned:0,taxes:0,interest:0,bizInc:0,divInc:0},sum:{}};
+ for(let i=0;i<16;i++)S.slots.push('');
+ ASSETS.forEach(A=>S.px[A.id]=[A.base*100]);
+ for(let d=-24;d<=0;d++)stepMarket(S,d);
+ return S}
+
+/* accept anything (old / broken / hand-edited save) and rebuild a valid state */
+function sane(o,seed){
+ const S=fresh(isObj(o)&&fin(o.seed)?o.seed:seed);if(!isObj(o))return S;
+ const M=CFG.MAXM;
+ S.day=ci(o.day,1,1e6,1);S.real=typeof o.real==='string'&&DATE.test(o.real)?o.real:'';
+ if(isObj(o.skips)){S.skips.d=typeof o.skips.d==='string'&&DATE.test(o.skips.d)?o.skips.d:'';S.skips.n=ci(o.skips.n,0,99,0)}
+ S.cash=ci(o.cash,0,M,0);S.sav=ci(o.sav,0,M,0);S.savF=ci(o.savF,0,9999,0);S.auto=[0,10,20,30].indexOf(o.auto)>=0?o.auto:0;S.score=ci(o.score,0,100,50);
+ const J=isObj(o.job)?o.job:{},j=S.job;j.init=J.init?1:0;j.worked=ci(J.worked,0,1e7,0);j.date=typeof J.date==='string'&&DATE.test(J.date)?J.date:'';j.mult=ci(J.mult,1,CFG.CARRY,1);
+ j.used=ci(J.used,0,1e4,0);j.usedW=ci(J.usedW,0,1e4,0);
+ const cmap=(src,max)=>{const out={};let n=0;if(isObj(src))for(const k in src)if(has(src,k)&&GID.test(k)&&!(k in Object.prototype)&&fin(src[k])&&n++<300)out[k]=ci(src[k],0,max,0);return out};
+ if(isObj(J.snap)){j.snap.p=cmap(J.snap.p,1e9);j.snap.w=cmap(J.snap.w,1e9)}j.by=cmap(J.by,1e4);j.byW=cmap(J.byW,1e4);
+ if(Array.isArray(J.slips))j.slips=J.slips.filter(isObj).slice(-30).map(s=>({d:ci(s.d,1,1e6,1),p:ci(s.p,0,999,0),l:ci(s.l,0,999,0),w:ci(s.w,0,999,0),g:ci(s.g,0,M,0),t:ci(s.t,0,M,0),s:ci(s.s,0,M,0),r:ci(s.r,0,M,0),n:ci(s.n,0,M,0),o:ci(s.o,0,9999,0),m:ci(s.m,100,1000,100)}));
+ const H=isObj(o.home)?o.home:{};S.home.id=ci(H.id,0,HOMES.length-1,0);S.home.own=!!H.own&&S.home.id>0;S.home.miss=ci(H.miss,0,CFG.GRACE,0);S.home.dep=S.home.own?0:ci(H.dep,0,HOMES[S.home.id].dep,0);
+ const debt=(d,maxBal,rlo,rhi)=>{if(!isObj(d))return null;const bal=ci(d.bal,0,maxBal,0);if(bal<=0)return null;const rate=ci(d.rate,rlo,rhi,rlo),minPay=Math.round(bal*rate/10000)+1;
+  return {bal:bal,rate:rate,pay:ci(d.pay,minPay,bal+minPay,minPay),orig:ci(d.orig,bal,M,bal),int:ci(d.int,0,M,0),miss:ci(d.miss,0,99,0),day:ci(d.day,1,1e6,1)}};
+ S.mort=S.home.own?debt(o.mort,HOMES[S.home.id].price,10,100):null;if(S.mort)S.mort.miss=Math.min(S.mort.miss,CFG.GRACE-1);
+ S.loan=debt(o.loan,CAREER[CAREER.length-1].loan*2,20,300);
+ if(isObj(o.px)){let ok=true;const px={};ASSETS.forEach(A=>{const a=o.px[A.id];if(!Array.isArray(a)||!a.length||a.length>CFG.HIST||!a.every(v=>fin(v)&&v>=1&&v<=1e9&&v===Math.round(v)))ok=false;else px[A.id]=a.slice()});if(ok)S.px=px}
+ if(isObj(o.pf))ASSETS.forEach(A=>{const p=o.pf[A.id];if(isObj(p)){const q=ci(p.q,0,1e6,0);if(q>0)S.pf[A.id]={q:q,c:ci(p.c,0,M,0)}}});
+ if(isObj(o.own))ITEMS.forEach(i=>{if(has(o.own,i.id)&&fin(o.own[i.id]))S.own[i.id]=ci(o.own[i.id],1,1e6,1)});
+ if(Array.isArray(o.slots)){const seen={},cap=HOMES[S.home.id].slots;for(let i=0;i<16;i++){const id=o.slots[i];if(i<cap&&typeof id==='string'&&has(IT,id)&&PLACE[IT[id].cat]&&S.own[id]!==undefined&&!seen[id]){S.slots[i]=id;seen[id]=1}}}
+ S.hat=typeof o.hat==='string'&&has(IT,o.hat)&&IT[o.hat].cat==='hat'&&S.own[o.hat]!==undefined?o.hat:'';
+ S.car=typeof o.car==='string'&&has(IT,o.car)&&IT[o.car].cat==='car'&&S.own[o.car]!==undefined?o.car:'';
+ if(isObj(o.goals))GOALS.forEach(g=>{if(has(o.goals,g.id)&&fin(o.goals[g.id]))S.goals[g.id]=ci(o.goals[g.id],1,1e6,1)});
+ if(isObj(o.tips))for(const k in o.tips)if(has(o.tips,k)&&/^[a-z]{1,12}$/.test(k))S.tips[k]=1;
+ if(Array.isArray(o.tx))S.tx=o.tx.filter(isObj).slice(-CFG.TXMAX).map(x=>{const r={d:ci(x.d,1,1e6,1),k:typeof x.k==='string'&&/^[a-z]{1,8}$/.test(x.k)?x.k:'misc',a:ci(x.a,-M,M,0),b:ci(x.b,0,M,0)};if(typeof x.x==='string'&&/^[a-z0-9]{1,12}$/.test(x.x))r.x=x.x;return r});
+ if(Array.isArray(o.nw))S.nw=o.nw.filter(fin).slice(-90).map(v=>ci(v,-M,M*4,0));
+ if(isObj(o.st))for(const k in S.st)S.st[k]=ci(o.st[k],0,M,0);
+ summary(S);return S}
+
+function career(S){let l=0;for(let i=0;i<CAREER.length;i++)if(S.job.worked>=CAREER[i].at)l=i;return l}
+function placed(S){let n=0;const cap=HOMES[S.home.id].slots;for(let i=0;i<cap;i++)if(S.slots[i])n++;return n}
+function held(S){let n=0;for(const k in S.pf)if(S.pf[k].q>0)n++;return n}
+function price(S,id){const h=S.px[id];return h[h.length-1]}
+function tx(S,k,a,x){const r={d:S.day,k:k,a:a,b:S.cash};if(x)r.x=x;S.tx.push(r);if(S.tx.length>CFG.TXMAX)S.tx.splice(0,S.tx.length-CFG.TXMAX)}
+function add(S,n){S.cash=Math.min(CFG.MAXM,S.cash+Math.max(0,Math.round(n)))}
+function bump(S,n){S.score=Math.max(0,Math.min(100,S.score+n))}
+
+/* ---------- market ---------- */
+function stepMarket(S,d){
+ let sum=0,n=0;
+ ASSETS.forEach((A,i)=>{if(A.kind==='index')return;const h=S.px[A.id];let p=h[h.length-1];
+  if(A.kind==='bond')p=Math.round(p*(1+A.drift/10000));
+  else{const r=rnd(S.seed,d,i),z=(r()+r()+r()-1.5)*2,trend=A.base*100*Math.pow(1+A.drift/10000,d);
+   const ret=A.drift/10000+A.vol/10000*z+0.025*Math.log(trend/p);
+   p=Math.round(p*Math.exp(ret));p=Math.max(Math.round(trend*.3),Math.min(Math.round(trend*3.5),p));sum+=p/(A.base*100);n++}
+  if(!fin(p)||p<1)p=A.base*100;p=Math.min(p,1e9);
+  h.push(p);if(h.length>CFG.HIST)h.shift()});
+ const ih=S.px.idx;let ip=Math.round(10000*sum/Math.max(1,n));if(!fin(ip)||ip<1)ip=10000;ih.push(Math.min(ip,1e9));if(ih.length>CFG.HIST)ih.shift()}
+function pfValue(S){let v=0;for(const k in S.pf)v+=Math.floor(S.pf[k].q*price(S,k)/100);return v}
+function invBuy(S,id,q){if(!has(AS,id))return {ok:false,err:'bad'};q=ci(q,0,1e6,0);if(q<1)return {ok:false,err:'bad'};
+ const cost=Math.ceil(q*price(S,id)/100);if(cost>S.cash)return {ok:false,err:'cash',need:cost-S.cash};
+ const p=S.pf[id]||(S.pf[id]={q:0,c:0});if(p.q+q>1e6)return {ok:false,err:'bad'};S.cash-=cost;p.q+=q;p.c+=cost;S.st.trades++;tx(S,'inv',-cost,id);return {ok:true,cost:cost,q:q}}
+function invSell(S,id,q){const p=S.pf[id];q=ci(q,0,1e6,0);if(!p||q<1||q>p.q)return {ok:false,err:'bad'};
+ const got=Math.floor(q*price(S,id)/100),c=Math.round(p.c*q/p.q);p.q-=q;p.c-=c;if(p.q<=0)delete S.pf[id];add(S,got);S.st.trades++;tx(S,'invs',got,id);return {ok:true,got:got,gain:got-c,q:q}}
+
+/* ---------- debts: fixed daily payment, interest on what is still owed ---------- */
+function annuity(P,bp,n){const r=bp/10000;return Math.max(Math.round(P*r)+1,Math.ceil(P*r/(1-Math.pow(1+r,-n))))}
+function sched(bal,bp,pay){const out=[];let g=0;while(bal>0&&g++<500){const it=Math.round(bal*bp/10000);let p=Math.min(pay,bal+it),pr=p-it;if(pr<1)pr=1;bal-=pr;out.push([it,pr])}return out}
+function quote(P,bp,n){const pay=annuity(P,bp,n),sc=sched(P,bp,pay);let it=0;sc.forEach(r=>it+=r[0]);return {amt:P,rate:bp,pay:pay,n:sc.length,interest:it,total:P+it,sched:sc}}
+function mortRate(S){return S.score>=70?30:S.score>=40?40:50}
+function loanRate(S){return S.score>=70?80:S.score>=40?100:120}
+function loanLimit(S){const b=CAREER[career(S)].loan;return Math.round(b*(S.score>=70?1.25:S.score>=40?1:.5)/10)*10}
+function loanQuote(S,amt,term){return quote(amt,loanRate(S),term)}
+function mortQuote(S,hid,down,term){const P=HOMES[hid].price,dn=Math.ceil(P*down/100),q=quote(P-dn,mortRate(S),term);q.down=dn;q.price=P;return q}
+function loanTake(S,amt,term){amt=ci(amt,0,1e6,0);if(S.loan)return {ok:false,err:'has'};if(LTERMS.indexOf(term)<0||amt<20||amt>loanLimit(S))return {ok:false,err:'bad'};
+ const q=loanQuote(S,amt,term);S.loan={bal:amt,rate:q.rate,pay:q.pay,orig:amt,int:0,miss:0,day:S.day};add(S,amt);tx(S,'loan',amt);return {ok:true,q:q}}
+function payDebt(S,key,p){/* one scheduled payment already taken from the kid: split it */const m=S[key],it=Math.round(m.bal*m.rate/10000);let pr=p-it;if(pr<1)pr=1;m.bal-=pr;m.int+=it;if(m.bal<=0){S[key]=null;return true}return false}
+function due(S,key){const m=S[key];if(!m)return 0;return Math.min(m.pay,m.bal+Math.round(m.bal*m.rate/10000))}
+function loanRepay(S,amt){const l=S.loan;if(!l)return {ok:false,err:'bad'};amt=Math.min(ci(amt,0,1e9,0),l.bal,S.cash);if(amt<1)return {ok:false,err:'cash'};
+ S.cash-=amt;l.bal-=amt;tx(S,'loanp',-amt);let done=false;if(l.bal<=0){S.loan=null;S.st.loansDone++;bump(S,10);done=true}else l.miss=0;return {ok:true,paid:amt,done:done}}
+function mortExtra(S,amt){const m=S.mort;if(!m)return {ok:false,err:'bad'};amt=Math.min(ci(amt,0,1e9,0),m.bal,S.cash);if(amt<1)return {ok:false,err:'cash'};
+ S.cash-=amt;m.bal-=amt;tx(S,'mortx',-amt);let done=false;if(m.bal<=0){S.mort=null;S.st.mortDone++;bump(S,10);done=true}else m.miss=0;return {ok:true,paid:amt,done:done}}
+
+/* ---------- housing ---------- */
+function moveTo(S,id,own,dep){S.home={id:id,own:!!own,miss:0,dep:dep||0};const cap=HOMES[id].slots;for(let i=cap;i<16;i++)S.slots[i]=''}
+function homeEquity(S){if(!S.home.own)return S.home.dep;return Math.max(0,HOMES[S.home.id].price-(S.mort?S.mort.bal:0))}
+function leaveValue(S){/* what the kid gets back when moving out now */if(!S.home.own)return S.home.dep;const P=HOMES[S.home.id].price;return Math.max(0,P-Math.floor(P*CFG.SELL_FEE/100)-(S.mort?S.mort.bal:0))}
+function leave(S){const back=leaveValue(S);if(S.home.own){S.mort=null;/* never leaves a debt behind */if(back>0){add(S,back);tx(S,'homes',back,'h'+S.home.id)}}
+ else if(back>0){add(S,back);tx(S,'depb',back)}return back}
+function rentHome(S,id){const H=HOMES[id];if(!H||(!H.rent)||(S.home.id===id&&!S.home.own))return {ok:false,err:'bad'};
+ const back=leaveValue(S);if(S.cash+back<H.dep)return {ok:false,err:'cash',need:H.dep-S.cash-back};
+ leave(S);S.cash-=H.dep;if(H.dep)tx(S,'dep',-H.dep,'h'+id);moveTo(S,id,false,H.dep);return {ok:true,back:back}}
+function buyHome(S,id,down,term){const H=HOMES[id];if(!H||!H.price||(S.home.id===id&&S.home.own))return {ok:false,err:'bad'};
+ const back=leaveValue(S);
+ if(!term){if(S.cash+back<H.price)return {ok:false,err:'cash',need:H.price-S.cash-back};leave(S);S.cash-=H.price;tx(S,'home',-H.price,'h'+id);moveTo(S,id,true);S.st.cashHome++;return {ok:true,back:back}}
+ if(DOWNS.indexOf(down)<0||MTERMS.indexOf(term)<0)return {ok:false,err:'bad'};
+ const q=mortQuote(S,id,down,term);if(S.cash+back<q.down)return {ok:false,err:'cash',need:q.down-S.cash-back};
+ leave(S);S.cash-=q.down;tx(S,'down',-q.down,'h'+id);moveTo(S,id,true);S.mort={bal:q.amt,rate:q.rate,pay:q.pay,orig:q.amt,int:0,miss:0,day:S.day};return {ok:true,q:q,back:back}}
+
+/* ---------- shop ---------- */
+function itemValue(S,id){const it=IT[id];if(!it||S.own[id]===undefined)return 0;let pct=RES[it.cat];if(it.cat==='car')pct=Math.max(40,80-2*Math.max(0,S.day-S.own[id]));return Math.floor(it.price*pct/100)}
+function buyItem(S,id){if(!has(IT,id))return {ok:false,err:'bad'};const it=IT[id];if(S.own[id]!==undefined)return {ok:false,err:'has'};if(S.cash<it.price)return {ok:false,err:'cash',need:it.price-S.cash};
+ S.cash-=it.price;S.own[id]=S.day;S.st.bought++;tx(S,'buy',-it.price,id);
+ if(PLACE[it.cat]){const cap=HOMES[S.home.id].slots;for(let i=0;i<cap;i++)if(!S.slots[i]){S.slots[i]=id;break}}
+ if(it.cat==='hat'&&!S.hat)S.hat=id;if(it.cat==='car')S.car=id;return {ok:true,price:it.price}}
+function sellItem(S,id){if(!has(IT,id)||S.own[id]===undefined)return {ok:false,err:'bad'};if(IT[id].cat==='pet')return {ok:false,err:'pet'};
+ const v=itemValue(S,id);delete S.own[id];for(let i=0;i<16;i++)if(S.slots[i]===id)S.slots[i]='';if(S.hat===id)S.hat='';
+ if(S.car===id){S.car='';ITEMS.forEach(i=>{if(i.cat==='car'&&S.own[i.id]!==undefined)S.car=i.id})}
+ add(S,v);S.st.sold++;tx(S,'sell',v,id);return {ok:true,got:v,loss:IT[id].price-v}}
+function place(S,slot,id){slot=ci(slot,0,15,0);if(slot>=HOMES[S.home.id].slots)return {ok:false,err:'bad'};
+ if(!id){S.slots[slot]='';return {ok:true}}if(!has(IT,id)||!PLACE[IT[id].cat]||S.own[id]===undefined)return {ok:false,err:'bad'};
+ for(let i=0;i<16;i++)if(S.slots[i]===id)S.slots[i]='';S.slots[slot]=id;return {ok:true}}
+function wear(S,id){if(!id){S.hat='';return {ok:true}}if(!has(IT,id)||S.own[id]===undefined)return {ok:false,err:'bad'};
+ if(IT[id].cat==='hat')S.hat=S.hat===id?'':id;else if(IT[id].cat==='car')S.car=id;else return {ok:false,err:'bad'};return {ok:true}}
+function bizIncome(S){let n=0;ITEMS.forEach(i=>{if(i.inc&&S.own[i.id]!==undefined)n+=i.inc});return n}
+function itemsValue(S){let v=0;for(const id in S.own)v+=itemValue(S,id);return v}
+
+/* ---------- bank ---------- */
+function deposit(S,amt){amt=Math.min(ci(amt,0,1e9,0),S.cash);if(amt<1)return {ok:false,err:'cash'};S.cash-=amt;S.sav=Math.min(CFG.MAXM,S.sav+amt);tx(S,'savin',-amt);return {ok:true,amt:amt}}
+function withdraw(S,amt){amt=Math.min(ci(amt,0,1e9,0),S.sav);if(amt<1)return {ok:false,err:'cash'};S.sav-=amt;add(S,amt);tx(S,'savout',amt);return {ok:true,amt:amt}}
+function setAuto(S,p){if([0,10,20,30].indexOf(p)<0)return {ok:false,err:'bad'};S.auto=p;return {ok:true}}
+function grow(amount,days){/* savings projection with daily compounding */let a=amount,f=0;const out=[a];for(let d=0;d<days;d++){const acc=f+a*CFG.SAV_BP;a+=Math.floor(acc/10000);f=acc%10000;out.push(a)}return out}
+function netWorth(S){return S.cash+S.sav+pfValue(S)+homeEquity(S)+itemsValue(S)-(S.loan?S.loan.bal:0)}
+function breakdown(S){return {cash:S.cash,sav:S.sav,inv:pfValue(S),home:homeEquity(S),items:itemsValue(S),loan:S.loan?S.loan.bal:0,mort:S.mort?S.mort.bal:0}}
+function summary(S){S.sum={nw:netWorth(S),cash:S.cash,lvl:career(S),home:S.home.id,own:S.home.own?1:0,day:S.day}}
+
+/* ---------- the job: salary for games played since the last visit ---------- */
+function pay(S,stats,today){
+ const J=S.job,P=isObj(stats)&&isObj(stats.plays)?stats.plays:{},W=isObj(stats)&&isObj(stats.wins)?stats.wins:{};
+ const val=(o,g)=>has(o,g)&&fin(o[g])?ci(o[g],0,1e9,0):0;
+ const games=[];for(const g in P)if(has(P,g)&&GID.test(g)&&g!=='city'&&g!=='misc'&&!(g in Object.prototype))games.push(g);
+ for(const g in W)if(has(W,g)&&GID.test(g)&&g!=='city'&&g!=='misc'&&!(g in Object.prototype)&&games.indexOf(g)<0)games.push(g);
+ games.sort((a,b)=>(LEARN[b]|0)-(LEARN[a]|0)||(a<b?-1:1));
+ const snapNow=()=>{const p={},w={};games.slice(0,300).forEach(g=>{p[g]=val(P,g);w[g]=val(W,g)});J.snap={p:p,w:w}};
+ if(!DATE.test(today))today='2000-01-01';
+ if(!J.init){J.init=1;snapNow();J.date=today;J.mult=1;add(S,CFG.GIFT);tx(S,'gift',CFG.GIFT);summary(S);return {gift:CFG.GIFT}}
+ if(J.date!==today){J.mult=Math.max(1,Math.min(CFG.CARRY,dayDiff(J.date,today)));J.date=today;J.used=0;J.usedW=0;J.by={};J.byW={}}
+ let np=0,nl=0,nw=0,over=0;const capD=CFG.CAP_DAY*J.mult,capG=CFG.CAP_GAME*J.mult;
+ games.forEach(g=>{
+  const dp=Math.max(0,val(P,g)-(J.snap.p[g]|0)),dw=Math.max(0,val(W,g)-(J.snap.w[g]|0));
+  const ap=Math.max(0,Math.min(dp,capG-(J.by[g]|0),capD-J.used)),aw=Math.max(0,Math.min(dw,capG-(J.byW[g]|0),capD-J.usedW));
+  if(ap){J.by[g]=(J.by[g]|0)+ap;J.used+=ap;if(LEARN[g])nl+=ap;else np+=ap}
+  if(aw){J.byW[g]=(J.byW[g]|0)+aw;J.usedW+=aw;nw+=aw}
+  over+=dp-ap});
+ snapNow();
+ if(np+nl+nw===0)return over>0?{rest:over}:null;
+ const lvl0=career(S),mult=CAREER[lvl0].mult;
+ const gross=Math.round((np*CFG.PLAY+nl*CFG.LEARN+nw*CFG.WIN)*mult/100),tax=Math.floor(gross*CFG.TAX/100);let left=gross-tax,rep=0;
+ if(S.loan&&S.loan.miss>=CFG.GRACE){rep=Math.min(S.loan.bal,Math.floor(left*CFG.GARN/100));left-=rep;S.loan.bal-=rep;if(S.loan.bal<=0){S.loan=null;S.st.loansDone++}}
+ const sv=Math.floor(left*S.auto/100),net=left-sv;S.sav=Math.min(CFG.MAXM,S.sav+sv);add(S,net);
+ J.worked+=np+nl;S.st.slips++;S.st.earned=Math.min(CFG.MAXM,S.st.earned+gross);S.st.taxes=Math.min(CFG.MAXM,S.st.taxes+tax);
+ const slip={d:S.day,p:np,l:nl,w:nw,g:gross,t:tax,s:sv,r:rep,n:net,o:over,m:mult};J.slips.push(slip);if(J.slips.length>30)J.slips.shift();
+ tx(S,'sal',net);const lvl1=career(S);summary(S);
+ return Object.assign({lvlUp:lvl1>lvl0?lvl1:0},slip)}
+function avgPay(S){const s=S.job.slips.slice(-5);if(!s.length)return 0;let t=0;s.forEach(x=>t+=x.n);return Math.round(t/s.length)}
+
+/* ---------- a new city day ---------- */
+function bills(S){const H=HOMES[S.home.id];return {home:S.home.own?due(S,'mort'):H.rent,loan:due(S,'loan'),own:S.home.own}}
+function billTotal(S){const b=bills(S);return b.home+b.loan}
+function payBill(S,amt){if(S.cash>=amt){S.cash-=amt;return 1}if(S.cash+S.sav>=amt){S.sav-=amt-S.cash;S.cash=0;return 2}return 0}
+function advance(S){
+ S.day=Math.min(1e6,S.day+1);const ev=[];
+ /* savings interest (kept exact with a fraction counter, so even a few coins grow) */
+ if(S.sav>0){const acc=S.savF+S.sav*CFG.SAV_BP,it=Math.floor(acc/10000);S.savF=acc%10000;if(it>0){S.sav=Math.min(CFG.MAXM,S.sav+it);S.st.interest+=it;ev.push({k:'int',a:it})}}
+ stepMarket(S,S.day);
+ if(S.day%CFG.DIV_EVERY===0){let tot=0;for(const id in S.pf){const A=AS[id];if(A&&A.div){tot+=Math.floor(S.pf[id].q*price(S,id)*A.div/1e6)}}
+  if(tot>0){add(S,tot);S.st.divs++;S.st.divInc+=tot;tx(S,'div',tot);ev.push({k:'div',a:tot})}}
+ const bi=bizIncome(S);if(bi>0){add(S,bi);S.st.bizInc+=bi;tx(S,'biz',bi);ev.push({k:'biz',a:bi})}
+ /* home */
+ const H=HOMES[S.home.id];
+ if(S.home.own){if(S.mort){const p=due(S,'mort'),r=payBill(S,p);
+   if(r){tx(S,'mort',-p);bump(S,1);const done=payDebt(S,'mort',p);ev.push({k:'mort',a:-p,sv:r===2});if(done){S.st.mortDone++;bump(S,10);ev.push({k:'mortdone'})}else S.mort.miss=0}
+   else{S.mort.miss++;bump(S,-6);if(S.mort.miss>=CFG.GRACE){const eq=homeEquity(S);S.mort=null;add(S,eq);tx(S,'homes',eq,'h'+H.id);moveTo(S,0,false,0);ev.push({k:'moved',a:eq})}else ev.push({k:'mortmiss',n:CFG.GRACE-S.mort.miss})}}}
+ else{const r=payBill(S,H.rent);
+  if(r){tx(S,'rent',-H.rent);S.home.miss=0;if(H.id>0)bump(S,1);ev.push({k:'rent',a:-H.rent,sv:r===2})}
+  else if(H.id===0)ev.push({k:'rentfree'});
+  else{S.home.miss++;bump(S,-6);if(S.home.miss>=CFG.GRACE){const dep=S.home.dep;add(S,dep);if(dep)tx(S,'depb',dep);moveTo(S,0,false,0);ev.push({k:'moved',a:dep})}else ev.push({k:'rentmiss',n:CFG.GRACE-S.home.miss})}}
+ /* loan: a missed payment only waits (no extra interest, no spiral) */
+ if(S.loan){const p=due(S,'loan'),r=payBill(S,p);
+  if(r){tx(S,'loanp',-p);bump(S,1);const done=payDebt(S,'loan',p);ev.push({k:'loanp',a:-p,sv:r===2});if(done){S.st.loansDone++;bump(S,10);ev.push({k:'loandone'})}else S.loan.miss=0}
+  else{S.loan.miss=Math.min(99,S.loan.miss+1);bump(S,-6);ev.push({k:'loanmiss'})}}
+ /* market news: the biggest mover */
+ let best=null;ASSETS.forEach(A=>{if(A.kind!=='stock')return;const h=S.px[A.id],c=h.length>1?(h[h.length-1]-h[h.length-2])/h[h.length-2]:0;if(!best||Math.abs(c)>Math.abs(best.c))best={id:A.id,c:c}});
+ if(best&&held(S)>0)ev.push({k:'mkt',x:best.id,pc:Math.round(best.c*1000)/10});
+ S.nw.push(netWorth(S));if(S.nw.length>90)S.nw.shift();summary(S);
+ return {day:S.day,ev:ev}}
+function skipsLeft(S,today){return S.skips.d===today?Math.max(0,CFG.SKIPS-S.skips.n):CFG.SKIPS}
+function canSkip(S,today){if(skipsLeft(S,today)<1)return {ok:false,err:'limit'};const need=billTotal(S);if(S.cash+S.sav<need&&!(S.home.id===0&&!S.loan))return {ok:false,err:'bills',need:need-S.cash-S.sav};return {ok:true}}
+function skip(S,today){const c=canSkip(S,today);if(!c.ok)return c;if(S.skips.d!==today)S.skips={d:today,n:0};S.skips.n++;const r=advance(S);r.ok=true;return r}
+/* called when the page opens: one city day per real calendar day */
+function open(S,today){if(!DATE.test(today))return null;if(!S.real){S.real=today;if(!S.nw.length)S.nw.push(netWorth(S));return null}if(S.real===today)return null;S.real=today;return advance(S)}
+function goals(S){const got=[];GOALS.forEach(g=>{if(S.goals[g.id]===undefined){let ok=false;try{ok=!!g.t(S)}catch(e){}if(ok){S.goals[g.id]=S.day;add(S,g.rw);tx(S,'goal',g.rw,g.id);got.push(g)}}});if(got.length)summary(S);return got}
+function happy(S){const cap=HOMES[S.home.id].slots;let pets=0;for(let i=0;i<cap;i++)if(S.slots[i]&&IT[S.slots[i]].cat==='pet')pets++;return Math.max(1,Math.min(5,Math.round((HOMES[S.home.id].comfort+placed(S)*.6+pets*.6+(S.home.own?1:0))/2.4)))}
+return {CFG,LEARN,CAREER,HOMES,DOWNS,MTERMS,LTERMS,ASSETS,AS,ITEMS,IT,RES,PLACE,GOALS,GO,fresh,sane,career,placed,held,price,pfValue,invBuy,invSell,annuity,sched,quote,mortRate,loanRate,loanLimit,loanQuote,mortQuote,loanTake,due,loanRepay,mortExtra,homeEquity,leaveValue,rentHome,buyHome,itemValue,buyItem,sellItem,place,wear,bizIncome,itemsValue,deposit,withdraw,setAuto,grow,netWorth,breakdown,summary,pay,avgPay,bills,billTotal,advance,skipsLeft,canSkip,skip,open,goals,happy,dayDiff,ci};
+})();
+/*ENGINE-END*/
+/* ================= texts (he / fr / en) – {f|m|x} picks the Hebrew form for the kid's gender ================= */
+const TX={
+he:{title:'עיר החתולים',sub:'משחקים, מרוויחים ובונים חיים בעיר',
+ tMap:'מפה',tBank:'בנק',tShop:'חנות',tHome:'הבית',tGoals:'יעדים',
+ plBank:'בנק',plShop:'קניון',plMarket:'בורסה',plJob:'לשכת עבודה',plHall:'עירייה',plPark:'פארק',plHomes:'שכונת המגורים',
+ day:'יום {n}',ok:'בסדר',yay:'יש!',cancel:'ביטול',back:'חזרה',close:'סגירה',buy:'קנייה',sell:'מכירה',all:'הכול',perDay:'ליום',days:'{n} ימים',lesson:'מה זה?',
+ wT:'ברוכים הבאים לעיר החתולים!',wB1:'🎮 העבודה שלך: לשחק במשחקים. כל משחק = משכורת!',wB2:'💰 במטבעות אפשר לשכור דירה, לקנות בית, לחסוך ולהשקיע.',wB3:'🧡 אלה מטבעות משחק בלבד. אף פעם לא כסף אמיתי.',wGift:'מתנת פתיחה מראש העיר:',wGo:'{בואי|בוא|בואו} נתחיל!',
+ slT:'תלוש משכורת',slWorked:'מאז הביקור האחרון: {p} משחקים, {w} ניצחונות',slPlays:'משחקים',slLearn:'משחקי למידה',slWins:'ניצחונות',slBonus:'בונוס דרגה',slGross:'סך הכול (ברוטו)',slTax:'מס עירוני {n}%',slTaxWhy:'המס משלם על הפארק, הכבישים ובית הספר של העיר.',slSave:'חיסכון אוטומטי {n}%',slRep:'החזר להלוואה',slNet:'נכנס לחשבון',slOver:'עוד {n} משחקים היו מעבר למכסה של היום. גם חתולים צריכים לנוח — מחר יש עבודה חדשה!',slUp:'קידום! מהיום: {x} (שכר ×{m})',
+ rest:'המכסה של היום מלאה. מחר יש עבודה חדשה! 😺',
+ nwT:'בוקר טוב! יום {n}',evInt:'ריבית על החיסכון',evDiv:'דיבידנד מההשקעות',evBiz:'הכנסה מהעסקים',evRent:'שכר דירה',evRentfree:'אין מספיק לשכר הדירה — העירייה שילמה היום על החדר. 🧡',evRentmiss:'אין מספיק לשכר הדירה. לא נורא! נשארו {n} ימי חסד.',evMort:'תשלום משכנתה',evMortmiss:'אין מספיק לתשלום המשכנתה. לא נורא! נשארו {n} ימי חסד.',evMortdone:'🎉 המשכנתה שולמה במלואה! הבית כולו שלך!',evMoved:'בנק החתולים עזר לעבור לחדר קטן יותר, והחזיר את החלק שלך:',evLoanp:'החזר הלוואה',evLoanmiss:'אין מספיק להחזר ההלוואה. הבנק מחכה בסבלנות (בלי ריבית נוספת).',evLoandone:'🎉 ההלוואה הוחזרה במלואה!',evUp:'{x} עלתה היום {n}%',evDown:'{x} ירדה היום {n}%',fromSav:'(נלקח מהחיסכון)',evQuiet:'יום שקט בעיר. 🌤️',
+ tdBills:'מחר לשלם:',tdNone:'מחר אין תשלומים 🎈',tdIn:'מחר נכנס:',tdNext:'ליום הבא',tdLeft:'נשארו {n} היום',tdLimit:'מחר יגיע יום חדש 🌙',tdNeed:'קודם צריך עוד {a} לתשלומים של מחר — זמן לשחק!',tdWarnHome:'⚠️ פספסנו תשלום על הבית. נשארו {n} ימי חסד.',tdWarnLoan:'⚠️ יש החזר הלוואה שמחכה.',nw:'שווי נקי',tdRent:'שכר דירה',tdMort:'משכנתה',tdLoan:'הלוואה',tdBiz:'עסקים',
+ bkCash:'חשבון עובר ושב',bkCashSub:'הכסף לקניות ולתשלומים',bkSav:'חשבון חיסכון',bkSavRate:'ריבית {p} ליום',bkDep:'הפקדה',bkWd:'משיכה',bkGrow:'{a} היום ← {b} בעוד {n} ימים',bkGrowSub:'הריבית מצטרפת לחיסכון וגם היא מרוויחה ריבית!',bkAuto:'חיסכון אוטומטי מהמשכורת',
+ bkLoan:'הלוואה',bkLoanNone:'אין הלוואה. אפשר ללוות עד {a}.',bkLoanTake:'לקחת הלוואה',bkLoanBal:'נשאר להחזיר',bkLoanPay:'תשלום יומי',bkLoanLeft:'עוד {n} תשלומים',bkRepay:'להחזיר עכשיו',bkScore:'ציון אמינות',sc0:'בתחילת הדרך',sc1:'טוב',sc2:'מצוין',bkScoreSub:'משלמים בזמן ← הציון עולה ← הריבית יורדת. הלוואה: {l} ליום · משכנתה: {m} ליום',
+ bkTx:'התנועות שלי',bkTxNone:'עדיין אין תנועות.',txDay:'יום',
+ lnT:'הלוואה מבנק החתולים',lnAmt:'כמה ללוות?',lnTerm:'בכמה ימים להחזיר?',lnDaily:'תשלום כל יום',lnTotal:'לווים {a} ומחזירים {b}',lnInt:'מחיר ההלוואה (ריבית): {a}',lnGo:'לקחת את ההלוואה',lnTip:'הלוואה היא לא מתנה — מחזירים יותר ממה שקיבלנו.',
+ amHow:'כמה?',amDep:'להפקיד לחיסכון',amWd:'למשוך מהחיסכון',amRepay:'להחזיר להלוואה',amExtra:'תשלום נוסף למשכנתה',amExtraSub:'כל מטבע נוסף מקטין את החוב — ואת הריבית!',
+ hsT:'שכונת המגורים',hsHere:'כאן הבית שלך',hsRenting:'בשכירות',hsOwn:'בבעלותך',hsMort:'עם משכנתה',hsRent:'לשכור',hsBuy:'לקנות',hsRentDay:'שכירות',hsDep:'פיקדון',hsPrice:'מחיר',hsSlots:'{n} מקומות לחפצים',hsBack:'מהבית הנוכחי {תקבלי|תקבל|תקבלו} בחזרה {a}',hsRentQ:'לעבור לגור ב{x}?',hsRentInfo:'שכירות {a} ליום. פיקדון {b} (מוחזר כשעוזבים).',hsBuyT:'לקנות את {x}',hsCash:'לשלם הכול עכשיו',hsMortBtn:'לקחת משכנתה',hsMortSub:'משלמים חלק עכשיו, והבנק מלווה את השאר',hsNeed:'חסרים {a}',hsSellFee:'כשמוכרים בית משלמים {n}% דמי מעבר.',hsMoved:'ברוכים הבאים לבית החדש! 🏡',
+ mgT:'משכנתה',mgDown:'כמה לשלם עכשיו (מקדמה)?',mgTerm:'בכמה ימים להחזיר?',mgNow:'לשלם עכשיו',mgLend:'הבנק מלווה',mgRate:'ריבית ליום',mgDaily:'תשלום כל יום',mgTotalInt:'סך כל הריבית',mgLegP:'החזר החוב',mgLegI:'ריבית',mgChart:'כל עמודה = תשלום אחד. בהתחלה יש יותר ריבית, בסוף כמעט רק החזר.',mgFit2:'🟢 מתאים למשכורת שלך',mgFit1:'🟡 קצת צפוף — כדאי להשאיר רזרבה',mgFit0:'🔴 כבד מדי למשכורת של היום. אולי מקדמה גדולה יותר?',mgAvg:'המשכורת הרגילה שלך: בערך {a} ליום',mgGo:'לקנות עם משכנתה',mgBal:'נשאר לשלם',mgLeft:'עוד {n} תשלומים',mgPaidInt:'ריבית ששולמה עד עכשיו',mgExtra:'תשלום נוסף',mgPaid:'שולם {n}%',mgSave:'חוסך {a} של ריבית ו-{n} תשלומים',mgDone:'🎉 המשכנתה שולמה! הבית כולו שלך!',
+ c_all:'הכול',c_fur:'רהיטים',c_dec:'קישוטים',c_pet:'חיות',c_hat:'אביזרים',c_car:'כלי רכב',c_gar:'גינה',c_biz:'עסקים',
+ shOwned:'יש לך',shBuyQ:'לקנות {x}?',shInc:'מרוויח {a} בכל יום',shIncBack:'מחזיר את המחיר בעוד כ-{n} ימים',shResale:'במכירה חוזרת: {a}',shResaleWhy:'חפץ משומש שווה פחות מחדש.',shCarWhy:'כלי רכב מאבדים ערך בכל יום.',shPetNo:'חיות לא מוכרים — הן חלק מהמשפחה! 🧡',shSellQ:'למכור את {x}?',shSellInfo:'נקנה ב-{a}, נמכר עכשיו ב-{b}',shSold:'נמכר!',shBought:'נקנה! 🎉',shPlace:'לשים בבית',shWear:'ללבוש',shUnwear:'להוריד',shRide:'לנסוע בזה',shPark:'מופיע בפארק 🌳',shOnMap:'מופיע על המפה',
+ hmSlots:'החדר שלי',hmEmpty:'מקום פנוי',hmPick:'מה לשים כאן?',hmNothing:'אין חפצים פנויים. קונים בחנות! 🛍️',hmRemove:'לפנות את המקום',hmInv:'כל החפצים שלי',hmInvNone:'עדיין אין חפצים. קופצים לחנות?',hmMove:'לעבור דירה',hmHappy:'שמחה',hmToShop:'לחנות',hmWorth:'שווי במכירה',
+ ivT:'בורסת החתולים',ivValue:'שווי ההשקעות',ivCost:'שילמת',ivPL:'רווח / הפסד',ivLesson:'מחירים עולים ויורדים. לא שמים את כל הביצים בסל אחד!',ivPrice:'מחיר',ivYou:'יש לך {q}',ivQty:'כמה יחידות?',ivBuy:'לקנות ב-{a}',ivSell:'למכור ב-{a}',ivDiv:'מחלקת דיבידנד כל {n} ימים',ivNoDiv:'לא מחלקת דיבידנד',ivRisk:'סיכון',ivToday:'היום',kBond:'אגרת חוב',kIndex:'קרן מדד',kStock:'מניה',ivChart:'{n} הימים האחרונים',ivMax:'מקסימום',ivGain:'רווח של {a} 🎉',ivLoss:'הפסד של {a}. קורה לכל משקיע.',ivBought:'נקנה!',
+ jbT:'לשכת העבודה',jbJob:'העבודה שלי: לשחק!',jbNext:'עוד {n} משחקים עד הדרגה הבאה',jbTop:'הדרגה הכי גבוהה! 👑',jbRates:'כמה מרוויחים?',jbPlay:'כל משחק',jbLearn:'משחק למידה (חשבון, מילים, מדע)',jbWin:'כל ניצחון',jbMult:'בונוס הדרגה שלך',jbToday:'היום שולמו {a} מתוך {b} משחקים',jbCapWhy:'עד {g} משחקים מכל משחק ביום — כדאי לגוון!',jbSlips:'תלושי המשכורת',jbNoSlips:'עדיין אין תלושים. {שחקי|שחק|שחקו} במשחק {וחזרי|וחזור|וחזרו} לכאן!',jbLadder:'סולם הדרגות',jbAt:'מ-{n} משחקים',jbLoan:'הלוואה עד {a}',jbPlayNow:'למשחקים 🎮',
+ hlT:'העירייה',hlCal:'לוח השנה של העיר',hlEvery:'מה קורה בכל יום בעיר?',hlIn:'נכנס',hlOut:'יוצא',hlSavInt:'ריבית על החיסכון',hlTaxes:'המסים ששילמת עד היום: {a}. תודה! מהם נבנה הפארק. 🌳',hlDivIn:'הדיבידנד הבא בעוד {n} ימים',hlDivToday:'מחר מחלקים דיבידנד!',hlBal:'בסך הכול ליום',
+ pkT:'הפארק',pkEmpty:'הפארק מחכה לך! פריטי גינה מהחנות יופיעו כאן.',pkShop:'לחנות הגינה',
+ glNW:'שווי נקי',glNWSub:'כל מה שיש לך, פחות מה שחייבים',bCash:'עובר ושב',bSav:'חיסכון',bInv:'השקעות',bHome:'בית',bItems:'חפצים',bLoan:'הלוואה',glHist:'השווי שלך לאורך הימים',glT:'היעדים שלי',glDone:'יעד הושג!',glNext:'היעד הבא',glTips:'כרטיסי ידע',setSound:'צלילים',glOf:'{a} מתוך {b}',
+ eCash:'חסרים {a}',repaired:'השמירה תוקנה ואפשר להמשיך לשחק 🧡',
+ tx_gift:'מתנת פתיחה',tx_sal:'משכורת',tx_buy:'קנייה',tx_sell:'מכירה',tx_rent:'שכר דירה',tx_dep:'פיקדון',tx_depb:'פיקדון חזר',tx_mort:'משכנתה',tx_mortx:'תשלום נוסף למשכנתה',tx_down:'מקדמה לבית',tx_home:'קניית בית',tx_homes:'מכירת בית',tx_loan:'קבלת הלוואה',tx_loanp:'החזר הלוואה',tx_savin:'הפקדה לחיסכון',tx_savout:'משיכה מהחיסכון',tx_inv:'קניית השקעה',tx_invs:'מכירת השקעה',tx_div:'דיבידנד',tx_biz:'הכנסה מעסקים',tx_goal:'פרס על יעד',tx_misc:'תנועה'},
+fr:{title:'Chat-Ville',sub:'Joue, gagne des pièces et construis ta vie en ville',
+ tMap:'Carte',tBank:'Banque',tShop:'Boutique',tHome:'Maison',tGoals:'Objectifs',
+ plBank:'Banque',plShop:'Centre commercial',plMarket:'Bourse',plJob:'Bureau du travail',plHall:'Mairie',plPark:'Parc',plHomes:'Quartier des maisons',
+ day:'Jour {n}',ok:'OK',yay:'Youpi !',cancel:'Annuler',back:'Retour',close:'Fermer',buy:'Acheter',sell:'Vendre',all:'Tout',perDay:'par jour',days:'{n} jours',lesson:"C'est quoi ?",
+ wT:'Bienvenue à Chat-Ville !',wB1:'🎮 Ton travail : jouer aux jeux. Chaque partie = un salaire !',wB2:'💰 Avec tes pièces : loue un appartement, achète une maison, épargne et investis.',wB3:"🧡 Ce sont des pièces de jeu. Jamais de l'argent réel.",wGift:'Cadeau de bienvenue du maire :',wGo:"C'est parti !",
+ slT:'Fiche de paie',slWorked:'Depuis ta dernière visite : {p} parties, {w} victoires',slPlays:'Parties',slLearn:"Jeux d'apprentissage",slWins:'Victoires',slBonus:'Bonus de niveau',slGross:'Total (brut)',slTax:'Impôt de la ville {n} %',slTaxWhy:"L'impôt paie le parc, les routes et l'école de la ville.",slSave:'Épargne automatique {n} %',slRep:'Remboursement du prêt',slNet:'Arrive sur ton compte',slOver:"{n} autres parties dépassaient la limite du jour. Les chats aussi se reposent : demain, nouveau travail !",slUp:'Promotion ! Tu es maintenant : {x} (salaire ×{m})',
+ rest:'La limite du jour est atteinte. Demain, nouveau travail ! 😺',
+ nwT:'Bonjour ! Jour {n}',evInt:"Intérêts de l'épargne",evDiv:'Dividendes de tes placements',evBiz:'Revenus de tes commerces',evRent:'Loyer',evRentfree:"Pas assez pour le loyer : la mairie a payé la chambre aujourd'hui. 🧡",evRentmiss:'Pas assez pour le loyer. Pas grave ! Il reste {n} jours de délai.',evMort:'Mensualité du crédit maison',evMortmiss:'Pas assez pour le crédit maison. Pas grave ! Il reste {n} jours de délai.',evMortdone:'🎉 Le crédit est entièrement payé ! La maison est à toi !',evMoved:"La Banque des chats t'a aidé à déménager dans une chambre plus petite et te rend ta part :",evLoanp:'Remboursement du prêt',evLoanmiss:"Pas assez pour le prêt. La banque attend patiemment (sans intérêts en plus).",evLoandone:'🎉 Le prêt est entièrement remboursé !',evUp:"{x} a monté de {n} % aujourd'hui",evDown:"{x} a baissé de {n} % aujourd'hui",fromSav:"(pris sur l'épargne)",evQuiet:'Journée calme en ville. 🌤️',
+ tdBills:'À payer demain :',tdNone:'Rien à payer demain 🎈',tdIn:'Demain tu reçois :',tdNext:'Jour suivant',tdLeft:"encore {n} aujourd'hui",tdLimit:'Un nouveau jour arrivera demain 🌙',tdNeed:"Il manque {a} pour payer demain : c'est l'heure de jouer !",tdWarnHome:'⚠️ Un paiement pour la maison a été manqué. Il reste {n} jours de délai.',tdWarnLoan:'⚠️ Un remboursement de prêt attend.',nw:'Fortune nette',tdRent:'Loyer',tdMort:'Crédit maison',tdLoan:'Prêt',tdBiz:'Commerces',
+ bkCash:'Compte courant',bkCashSub:"L'argent pour acheter et payer",bkSav:"Compte d'épargne",bkSavRate:'Intérêts : {p} par jour',bkDep:'Déposer',bkWd:'Retirer',bkGrow:"{a} aujourd'hui → {b} dans {n} jours",bkGrowSub:"Les intérêts s'ajoutent à l'épargne et rapportent eux aussi !",bkAuto:'Épargne automatique sur le salaire',
+ bkLoan:'Prêt',bkLoanNone:"Pas de prêt. Tu peux emprunter jusqu'à {a}.",bkLoanTake:'Prendre un prêt',bkLoanBal:'Reste à rembourser',bkLoanPay:'Paiement par jour',bkLoanLeft:'encore {n} paiements',bkRepay:'Rembourser',bkScore:'Note de confiance',sc0:'Débutant',sc1:'Bien',sc2:'Excellent',bkScoreSub:'Payer à temps → la note monte → les intérêts baissent. Prêt : {l} par jour · Crédit maison : {m} par jour',
+ bkTx:'Mes opérations',bkTxNone:"Pas encore d'opérations.",txDay:'Jour',
+ lnT:'Prêt de la Banque des chats',lnAmt:'Combien emprunter ?',lnTerm:'Rembourser en combien de jours ?',lnDaily:'Paiement chaque jour',lnTotal:'Tu empruntes {a} et tu rends {b}',lnInt:'Prix du prêt (intérêts) : {a}',lnGo:'Prendre le prêt',lnTip:"Un prêt n'est pas un cadeau : on rend plus que ce qu'on a reçu.",
+ amHow:'Combien ?',amDep:"Déposer sur l'épargne",amWd:"Retirer de l'épargne",amRepay:'Rembourser le prêt',amExtra:'Paiement en plus pour la maison',amExtraSub:'Chaque pièce en plus réduit la dette… et les intérêts !',
+ hsT:'Quartier des maisons',hsHere:'Tu habites ici',hsRenting:'en location',hsOwn:'à toi',hsMort:'avec un crédit',hsRent:'Louer',hsBuy:'Acheter',hsRentDay:'Loyer',hsDep:'Caution',hsPrice:'Prix',hsSlots:'{n} places pour tes objets',hsBack:'Ton logement actuel te rend {a}',hsRentQ:'Emménager dans : {x} ?',hsRentInfo:'Loyer {a} par jour. Caution {b} (rendue quand tu pars).',hsBuyT:'Acheter : {x}',hsCash:'Tout payer maintenant',hsMortBtn:'Prendre un crédit maison',hsMortSub:'Tu paies une partie, la banque prête le reste',hsNeed:'Il manque {a}',hsSellFee:'Quand on vend une maison, on paie {n} % de frais.',hsMoved:'Bienvenue dans ta nouvelle maison ! 🏡',
+ mgT:'Crédit maison',mgDown:'Combien payer maintenant (apport) ?',mgTerm:'Rembourser en combien de jours ?',mgNow:'Tu paies maintenant',mgLend:'La banque prête',mgRate:'Intérêts par jour',mgDaily:'Paiement chaque jour',mgTotalInt:'Total des intérêts',mgLegP:'Remboursement',mgLegI:'Intérêts',mgChart:"Une barre = un paiement. Au début il y a plus d'intérêts, à la fin presque que du remboursement.",mgFit2:'🟢 Va bien avec ton salaire',mgFit1:'🟡 Un peu serré : garde une réserve',mgFit0:"🔴 Trop lourd pour ton salaire d'aujourd'hui. Un apport plus grand ?",mgAvg:'Ton salaire habituel : environ {a} par jour',mgGo:'Acheter avec le crédit',mgBal:'Reste à payer',mgLeft:'encore {n} paiements',mgPaidInt:'Intérêts déjà payés',mgExtra:'Payer en plus',mgPaid:'{n} % payé',mgSave:"Économise {a} d'intérêts et {n} paiements",mgDone:'🎉 Crédit remboursé ! La maison est à toi !',
+ c_all:'Tout',c_fur:'Meubles',c_dec:'Déco',c_pet:'Animaux',c_hat:'Accessoires',c_car:'Véhicules',c_gar:'Jardin',c_biz:'Commerces',
+ shOwned:'À toi',shBuyQ:'Acheter : {x} ?',shInc:'Rapporte {a} chaque jour',shIncBack:'Rembourse son prix en {n} jours environ',shResale:'À la revente : {a}',shResaleWhy:"Un objet d'occasion vaut moins qu'un neuf.",shCarWhy:'Les véhicules perdent de la valeur chaque jour.',shPetNo:'On ne vend pas les animaux : ils font partie de la famille ! 🧡',shSellQ:'Vendre : {x} ?',shSellInfo:'Acheté {a}, revendu maintenant {b}',shSold:'Vendu !',shBought:'Acheté ! 🎉',shPlace:'Mettre à la maison',shWear:'Porter',shUnwear:'Enlever',shRide:'Rouler avec',shPark:'Visible au parc 🌳',shOnMap:'Visible sur la carte',
+ hmSlots:'Ma pièce',hmEmpty:'Place libre',hmPick:'Que mettre ici ?',hmNothing:"Pas d'objet libre. On en achète à la boutique ! 🛍️",hmRemove:'Libérer la place',hmInv:'Tous mes objets',hmInvNone:"Pas encore d'objets. Un tour à la boutique ?",hmMove:'Déménager',hmHappy:'Bonheur',hmToShop:'À la boutique',hmWorth:'Valeur à la revente',
+ ivT:'Bourse des chats',ivValue:'Valeur des placements',ivCost:'Tu as payé',ivPL:'Gain / perte',ivLesson:'Les prix montent et descendent. Ne mets pas tous tes œufs dans le même panier !',ivPrice:'Prix',ivYou:'Tu en as {q}',ivQty:'Combien de parts ?',ivBuy:'Acheter pour {a}',ivSell:'Vendre pour {a}',ivDiv:'Verse un dividende tous les {n} jours',ivNoDiv:'Ne verse pas de dividende',ivRisk:'Risque',ivToday:"aujourd'hui",kBond:'Obligation',kIndex:'Fonds indiciel',kStock:'Action',ivChart:'Les {n} derniers jours',ivMax:'Max',ivGain:'Gain de {a} 🎉',ivLoss:'Perte de {a}. Ça arrive à tous les investisseurs.',ivBought:'Acheté !',
+ jbT:'Bureau du travail',jbJob:'Mon travail : jouer !',jbNext:'Encore {n} parties avant le niveau suivant',jbTop:'Le plus haut niveau ! 👑',jbRates:'Combien gagne-t-on ?',jbPlay:'Chaque partie',jbLearn:"Jeu d'apprentissage (maths, mots, sciences)",jbWin:'Chaque victoire',jbMult:'Ton bonus de niveau',jbToday:"Aujourd'hui : {a} parties payées sur {b}",jbCapWhy:"Jusqu'à {g} parties par jeu chaque jour : varie les jeux !",jbSlips:'Fiches de paie',jbNoSlips:'Pas encore de fiche. Joue à un jeu et reviens ici !',jbLadder:'Les niveaux',jbAt:'dès {n} parties',jbLoan:"prêt jusqu'à {a}",jbPlayNow:'Aux jeux 🎮',
+ hlT:'Mairie',hlCal:'Calendrier de la ville',hlEvery:'Que se passe-t-il chaque jour ?',hlIn:'Reçu',hlOut:'Payé',hlSavInt:"Intérêts de l'épargne",hlTaxes:"Tes impôts jusqu'ici : {a}. Merci ! Ils ont construit le parc. 🌳",hlDivIn:'Prochain dividende dans {n} jours',hlDivToday:'Demain, on verse les dividendes !',hlBal:'Total par jour',
+ pkT:'Le parc',pkEmpty:"Le parc t'attend ! Les objets de jardin de la boutique apparaîtront ici.",pkShop:'Boutique de jardin',
+ glNW:'Fortune nette',glNWSub:'Tout ce que tu as, moins ce que tu dois',bCash:'Compte',bSav:'Épargne',bInv:'Placements',bHome:'Maison',bItems:'Objets',bLoan:'Prêt',glHist:'Ta fortune au fil des jours',glT:'Mes objectifs',glDone:'Objectif atteint !',glNext:'Prochain objectif',glTips:'Cartes savoir',setSound:'Sons',glOf:'{a} sur {b}',
+ eCash:'Il manque {a}',repaired:'La sauvegarde a été réparée, tu peux continuer 🧡',
+ tx_gift:'Cadeau de bienvenue',tx_sal:'Salaire',tx_buy:'Achat',tx_sell:'Vente',tx_rent:'Loyer',tx_dep:'Caution',tx_depb:'Caution rendue',tx_mort:'Crédit maison',tx_mortx:'Paiement en plus (maison)',tx_down:'Apport maison',tx_home:"Achat d'une maison",tx_homes:"Vente d'une maison",tx_loan:'Prêt reçu',tx_loanp:'Remboursement du prêt',tx_savin:"Dépôt sur l'épargne",tx_savout:"Retrait de l'épargne",tx_inv:'Achat de placement',tx_invs:'Vente de placement',tx_div:'Dividende',tx_biz:'Revenus des commerces',tx_goal:"Prime d'objectif",tx_misc:'Opération'},
+en:{title:'Kitty City',sub:'Play, earn coins and build your life in the city',
+ tMap:'Map',tBank:'Bank',tShop:'Shop',tHome:'Home',tGoals:'Goals',
+ plBank:'Bank',plShop:'Mall',plMarket:'Stock market',plJob:'Job office',plHall:'Town hall',plPark:'Park',plHomes:'Home district',
+ day:'Day {n}',ok:'OK',yay:'Yay!',cancel:'Cancel',back:'Back',close:'Close',buy:'Buy',sell:'Sell',all:'All',perDay:'per day',days:'{n} days',lesson:"What's that?",
+ wT:'Welcome to Kitty City!',wB1:'🎮 Your job: playing games. Every game = a salary!',wB2:'💰 With coins you can rent a flat, buy a house, save and invest.',wB3:'🧡 These are play coins only. Never real money.',wGift:'A welcome gift from the mayor:',wGo:"Let's go!",
+ slT:'Pay slip',slWorked:'Since your last visit: {p} games, {w} wins',slPlays:'Games',slLearn:'Learning games',slWins:'Wins',slBonus:'Career bonus',slGross:'Total (gross)',slTax:'City tax {n}%',slTaxWhy:'The tax pays for the park, the roads and the city school.',slSave:'Auto-savings {n}%',slRep:'Loan catch-up',slNet:'Into your account',slOver:"{n} more games were over today's limit. Cats need rest too — tomorrow there is new work!",slUp:'Promotion! You are now: {x} (pay ×{m})',
+ rest:"Today's limit is full. Tomorrow there is new work! 😺",
+ nwT:'Good morning! Day {n}',evInt:'Savings interest',evDiv:'Dividends from your investments',evBiz:'Income from your businesses',evRent:'Rent',evRentfree:'Not enough for rent — the town hall paid for your room today. 🧡',evRentmiss:'Not enough for rent. No worries! {n} grace days left.',evMort:'Mortgage payment',evMortmiss:'Not enough for the mortgage. No worries! {n} grace days left.',evMortdone:'🎉 The mortgage is fully paid! The house is all yours!',evMoved:'The Cat Bank helped you move to a smaller room and gave you back your share:',evLoanp:'Loan payment',evLoanmiss:'Not enough for the loan payment. The bank waits patiently (no extra interest).',evLoandone:'🎉 The loan is fully repaid!',evUp:'{x} went up {n}% today',evDown:'{x} went down {n}% today',fromSav:'(taken from savings)',evQuiet:'A quiet day in the city. 🌤️',
+ tdBills:'To pay tomorrow:',tdNone:'Nothing to pay tomorrow 🎈',tdIn:'Coming in tomorrow:',tdNext:'Next day',tdLeft:'{n} left today',tdLimit:'A new day will come tomorrow 🌙',tdNeed:"You need {a} more for tomorrow's bills — time to play!",tdWarnHome:'⚠️ A home payment was missed. {n} grace days left.',tdWarnLoan:'⚠️ A loan payment is waiting.',nw:'Net worth',tdRent:'Rent',tdMort:'Mortgage',tdLoan:'Loan',tdBiz:'Businesses',
+ bkCash:'Current account',bkCashSub:'Money for shopping and bills',bkSav:'Savings account',bkSavRate:'Interest: {p} per day',bkDep:'Deposit',bkWd:'Withdraw',bkGrow:'{a} today → {b} in {n} days',bkGrowSub:'Interest joins your savings and earns interest too!',bkAuto:'Auto-save from every salary',
+ bkLoan:'Loan',bkLoanNone:'No loan. You can borrow up to {a}.',bkLoanTake:'Take a loan',bkLoanBal:'Left to repay',bkLoanPay:'Daily payment',bkLoanLeft:'{n} payments left',bkRepay:'Repay now',bkScore:'Trust score',sc0:'Getting started',sc1:'Good',sc2:'Excellent',bkScoreSub:'Pay on time → score goes up → interest goes down. Loan: {l} per day · Mortgage: {m} per day',
+ bkTx:'My transactions',bkTxNone:'No transactions yet.',txDay:'Day',
+ lnT:'Loan from the Cat Bank',lnAmt:'How much to borrow?',lnTerm:'Pay back in how many days?',lnDaily:'Payment every day',lnTotal:'You borrow {a} and return {b}',lnInt:'Price of the loan (interest): {a}',lnGo:'Take the loan',lnTip:'A loan is not a gift — you give back more than you got.',
+ amHow:'How much?',amDep:'Deposit to savings',amWd:'Withdraw from savings',amRepay:'Repay the loan',amExtra:'Extra mortgage payment',amExtraSub:'Every extra coin shrinks the debt — and the interest!',
+ hsT:'Home district',hsHere:'You live here',hsRenting:'renting',hsOwn:'yours',hsMort:'with a mortgage',hsRent:'Rent',hsBuy:'Buy',hsRentDay:'Rent',hsDep:'Deposit',hsPrice:'Price',hsSlots:'{n} spots for your things',hsBack:'Your current home gives you back {a}',hsRentQ:'Move into the {x}?',hsRentInfo:'Rent {a} per day. Deposit {b} (returned when you leave).',hsBuyT:'Buy the {x}',hsCash:'Pay it all now',hsMortBtn:'Take a mortgage',hsMortSub:'You pay a part now, the bank lends the rest',hsNeed:'{a} missing',hsSellFee:'Selling a house costs a {n}% moving fee.',hsMoved:'Welcome to your new home! 🏡',
+ mgT:'Mortgage',mgDown:'How much to pay now (down payment)?',mgTerm:'Pay back in how many days?',mgNow:'You pay now',mgLend:'The bank lends',mgRate:'Interest per day',mgDaily:'Payment every day',mgTotalInt:'Total interest',mgLegP:'Paying back',mgLegI:'Interest',mgChart:'Each bar = one payment. At first there is more interest, at the end almost only paying back.',mgFit2:'🟢 Fits your salary well',mgFit1:'🟡 A bit tight — keep a reserve',mgFit0:"🔴 Too heavy for today's salary. A bigger down payment?",mgAvg:'Your usual salary: about {a} per day',mgGo:'Buy with a mortgage',mgBal:'Left to pay',mgLeft:'{n} payments left',mgPaidInt:'Interest paid so far',mgExtra:'Pay extra',mgPaid:'{n}% paid',mgSave:'Saves {a} of interest and {n} payments',mgDone:'🎉 Mortgage paid off! The house is all yours!',
+ c_all:'All',c_fur:'Furniture',c_dec:'Decor',c_pet:'Pets',c_hat:'Outfits',c_car:'Vehicles',c_gar:'Garden',c_biz:'Businesses',
+ shOwned:'Yours',shBuyQ:'Buy the {x}?',shInc:'Earns {a} every day',shIncBack:'Pays back its price in about {n} days',shResale:'Resale value: {a}',shResaleWhy:'A used thing is worth less than a new one.',shCarWhy:'Vehicles lose value every day.',shPetNo:'Pets are never sold — they are family! 🧡',shSellQ:'Sell the {x}?',shSellInfo:'Bought for {a}, sells now for {b}',shSold:'Sold!',shBought:'Bought! 🎉',shPlace:'Put at home',shWear:'Wear',shUnwear:'Take off',shRide:'Ride it',shPark:'Shows up in the park 🌳',shOnMap:'Shows up on the map',
+ hmSlots:'My room',hmEmpty:'Free spot',hmPick:'What goes here?',hmNothing:'No free things. Get some in the shop! 🛍️',hmRemove:'Clear this spot',hmInv:'All my things',hmInvNone:'No things yet. Visit the shop?',hmMove:'Move home',hmHappy:'Happiness',hmToShop:'To the shop',hmWorth:'Resale value',
+ ivT:'Cat stock market',ivValue:'Investments value',ivCost:'You paid',ivPL:'Profit / loss',ivLesson:'Prices go up and down. Do not put all your eggs in one basket!',ivPrice:'Price',ivYou:'You own {q}',ivQty:'How many units?',ivBuy:'Buy for {a}',ivSell:'Sell for {a}',ivDiv:'Pays a dividend every {n} days',ivNoDiv:'Pays no dividend',ivRisk:'Risk',ivToday:'today',kBond:'Bond',kIndex:'Index fund',kStock:'Stock',ivChart:'Last {n} days',ivMax:'Max',ivGain:'A profit of {a} 🎉',ivLoss:'A loss of {a}. It happens to every investor.',ivBought:'Bought!',
+ jbT:'Job office',jbJob:'My job: playing games!',jbNext:'{n} more games to the next level',jbTop:'The top level! 👑',jbRates:'How much do you earn?',jbPlay:'Every game',jbLearn:'Learning game (math, words, science)',jbWin:'Every win',jbMult:'Your career bonus',jbToday:'Today: {a} of {b} games paid',jbCapWhy:'Up to {g} games of each game per day — mix it up!',jbSlips:'Pay slips',jbNoSlips:'No pay slips yet. Play a game and come back!',jbLadder:'Career ladder',jbAt:'from {n} games',jbLoan:'loan up to {a}',jbPlayNow:'To the games 🎮',
+ hlT:'Town hall',hlCal:'City calendar',hlEvery:'What happens every city day?',hlIn:'In',hlOut:'Out',hlSavInt:'Savings interest',hlTaxes:'Your taxes so far: {a}. Thank you! They built the park. 🌳',hlDivIn:'Next dividend in {n} days',hlDivToday:'Dividends are paid tomorrow!',hlBal:'Total per day',
+ pkT:'The park',pkEmpty:'The park is waiting for you! Garden items from the shop show up here.',pkShop:'Garden shop',
+ glNW:'Net worth',glNWSub:'Everything you have, minus what you owe',bCash:'Account',bSav:'Savings',bInv:'Investments',bHome:'Home',bItems:'Things',bLoan:'Loan',glHist:'Your net worth over the days',glT:'My goals',glDone:'Goal reached!',glNext:'Next goal',glTips:'Knowledge cards',setSound:'Sounds',glOf:'{a} of {b}',
+ eCash:'{a} missing',repaired:'Your save was repaired, you can keep playing 🧡',
+ tx_gift:'Welcome gift',tx_sal:'Salary',tx_buy:'Bought',tx_sell:'Sold',tx_rent:'Rent',tx_dep:'Deposit',tx_depb:'Deposit returned',tx_mort:'Mortgage',tx_mortx:'Extra mortgage payment',tx_down:'Down payment',tx_home:'Bought a home',tx_homes:'Sold a home',tx_loan:'Loan received',tx_loanp:'Loan payment',tx_savin:'To savings',tx_savout:'From savings',tx_inv:'Bought investment',tx_invs:'Sold investment',tx_div:'Dividend',tx_biz:'Business income',tx_goal:'Goal prize',tx_misc:'Transaction'}};
+/* names: [he, fr, en] */
+const NM={
+ home:[['חדר קטן','Petite chambre','Tiny room'],['דירת סטודיו','Studio','Studio flat'],['דירה עם מרפסת','Appartement avec balcon','Flat with a balcony'],['בית קטן','Maisonnette','Cottage'],['בית עם גינה','Maison avec jardin','Garden house'],['וילה','Villa','Villa'],['טירת החתולים','Château des chats','Cat castle']],
+ job:[['{מתמחה|מתמחה|מתמחים}','Stagiaire','Intern'],['{שחקנית צעירה|שחקן צעיר|שחקנים צעירים}','Jeune pro','Junior player'],['{שחקנית מקצוענית|שחקן מקצוען|שחקנים מקצוענים}','Pro du jeu','Pro player'],['{כוכבת משחקים|כוכב משחקים|כוכבי משחקים}','Star des jeux','Game star'],['{אלופה|אלוף|אלופים}','Champion','Champion'],['{אגדה|אגדה|אגדות}','Légende','Legend']],
+ asset:{bond:['אגרת חוב של העיר','Obligation de la ville','City bond'],idx:['קרן מדד החתולים','Fonds Chat-Indice','Kitty index fund'],milk:['בר החלב','Bar à lait','Milk Bar'],yarn:['צמר ושות׳','Laine & Cie','Yarn & Co'],nip:['חוות הקטניפ','Fermes Herbe-à-chat','Catnip Farms'],air:['מיאו איירליינס','Air Miaou','Purr Airlines'],tuna:['טונה-טק','Thon-Tech','Tuna Tech'],laser:['מעבדות לייזר','Labos Laser','Laser Labs']},
+ adesc:{bond:['בטוחה מאוד: עולה לאט וביציבות, כל יום קצת.','Très sûre : monte lentement, un peu chaque jour.','Very safe: grows slowly and steadily, a bit every day.'],idx:['חתיכה קטנה מכל שש החברות יחד. פיזור = פחות סיכון.','Un petit bout des six entreprises à la fois. Diversifier = moins de risque.','A little piece of all six companies at once. Spreading out = less risk.'],milk:['חברה רגועה שמחלקת דיבידנד יפה.','Entreprise tranquille qui verse un bon dividende.','A calm company that pays a nice dividend.'],yarn:['כדורי צמר לכל חתול. יציבה למדי.','Des pelotes pour tous les chats. Assez stable.','Yarn balls for every cat. Fairly steady.'],nip:['גדלה יפה, אבל תלויה במזג האוויר.','Pousse bien, mais dépend de la météo.','Grows nicely, but depends on the weather.'],air:['טסה גבוה… ולפעמים נוחתת מהר.','Vole haut… et atterrit parfois vite.','Flies high… and sometimes lands fast.'],tuna:['חברת טכנולוגיה: קופצת חזק למעלה ולמטה.','Entreprise techno : de grands bonds en haut et en bas.','A tech company: big jumps up and down.'],laser:['הכי מסוכנת! יכולה לזנק או לצנוח.','La plus risquée ! Peut bondir ou plonger.','The riskiest! It can soar or dive.']},
+ goal:{job:['משכורת ראשונה','Premier salaire','First salary'],shop:['קנייה ראשונה בחנות','Premier achat','First shop item'],save100:['100 מטבעות בחיסכון','100 pièces en épargne','100 coins in savings'],rent:['לעבור לדירה','Emménager dans un appartement','Move into a flat'],inv:['השקעה ראשונה','Premier placement','First investment'],pet:['לאמץ חיה','Adopter un animal','Adopt a pet'],decor:['6 חפצים בבית','6 objets à la maison','6 things at home'],biz:['לפתוח עסק','Ouvrir un commerce','Open a business'],divs:['דיבידנד ראשון','Premier dividende','First dividend'],diverse:['פיזור: 4 השקעות שונות','Diversifier : 4 placements différents','Diversify: 4 different investments'],save1000:['1,000 מטבעות בחיסכון','1 000 pièces en épargne','1,000 coins in savings'],loan:['להחזיר הלוואה עד הסוף','Rembourser un prêt en entier','Repay a loan in full'],score:['ציון אמינות 80','Note de confiance 80','Trust score 80'],pro:['דרגת מקצוענים','Niveau pro','Reach the pro level'],own:['בית משלי','Ma propre maison','A home of my own'],mort:['בית בלי חוב','Une maison sans dette','A home with no debt'],nw1:['שווי נקי 1,000','Fortune nette 1 000','Net worth 1,000'],nw5:['שווי נקי 5,000','Fortune nette 5 000','Net worth 5,000'],nw20:['שווי נקי 20,000','Fortune nette 20 000','Net worth 20,000'],champ:['דרגת אלופים','Niveau champion','Reach the champion level'],nw50:['שווי נקי 50,000','Fortune nette 50 000','Net worth 50,000'],castle:['טירת החתולים שלי','Mon château des chats','Own the cat castle']}};
+const TIPS=[
+ {id:'budget',e:'🧮',t:['תקציב','Le budget','Budget'],b:['תקציב הוא תוכנית לכסף: כמה נכנס, כמה יוצא וכמה נשאר. קודם משלמים את מה שחייבים (שכר דירה), אחר כך חוסכים קצת, ורק אז קונים מה שרוצים.','Un budget, c\'est un plan pour ton argent : ce qui entre, ce qui sort, ce qui reste. On paie d\'abord ce qu\'on doit (le loyer), puis on épargne un peu, et ensuite on achète ce qui fait plaisir.','A budget is a plan for your money: what comes in, what goes out, what is left. First pay what you must (rent), then save a little, and only then buy what you want.']},
+ {id:'interest',e:'🐷',t:['ריבית וחיסכון','Intérêts et épargne','Interest and savings'],b:['כששמים כסף בחיסכון, הבנק מוסיף עליו קצת בכל יום — זאת ריבית. הריבית מצטרפת לחיסכון, ולמחרת גם היא מרוויחה ריבית. ככה כדור שלג קטן הופך לגדול!','Quand tu mets de l\'argent en épargne, la banque en ajoute un peu chaque jour : ce sont les intérêts. Ils rejoignent ton épargne et rapportent à leur tour. Une petite boule de neige devient grande !','When you put money in savings, the bank adds a little every day — that is interest. The interest joins your savings and earns interest too. A small snowball becomes a big one!']},
+ {id:'loan',e:'🤝',t:['הלוואה','Le prêt','Loans'],b:['הלוואה היא כסף שהבנק נותן עכשיו, ומחזירים אותו בתשלומים — עם תוספת שנקראת ריבית. לווים 100, מחזירים בערך 112. כדאי ללוות רק למשהו חשוב, ורק כמה שבאמת אפשר להחזיר.','Un prêt, c\'est de l\'argent que la banque donne maintenant et qu\'on rend petit à petit, avec un supplément : les intérêts. On emprunte 100, on rend environ 112. Emprunte seulement pour une chose importante, et seulement ce que tu peux rendre.','A loan is money the bank gives you now, and you pay it back bit by bit — plus an extra called interest. Borrow 100, return about 112. Borrow only for something important, and only what you can really pay back.']},
+ {id:'mortgage',e:'🏠',t:['משכנתה','Le crédit maison','Mortgage'],b:['בית הוא יקר, אז משלמים חלק עכשיו (מקדמה) והבנק מלווה את השאר. כל יום מחזירים תשלום קבוע: חלק ממנו ריבית וחלק מקטין את החוב. מקדמה גדולה יותר = פחות ריבית. כשהחוב נגמר — הבית כולו שלך!','Une maison coûte cher : on paie une partie maintenant (l\'apport) et la banque prête le reste. Chaque jour on rend la même somme : une part d\'intérêts et une part qui réduit la dette. Plus l\'apport est grand, moins il y a d\'intérêts. Quand la dette est finie, la maison est à toi !','A house costs a lot, so you pay a part now (the down payment) and the bank lends the rest. Every day you pay the same amount: part is interest, part shrinks the debt. A bigger down payment = less interest. When the debt is gone, the house is all yours!']},
+ {id:'rentbuy',e:'🔑',t:['לשכור או לקנות?','Louer ou acheter ?','Rent or buy?'],b:['בשכירות משלמים מעט בכל יום ואפשר לעבור בקלות — אבל הדירה אף פעם לא נהיית שלך. בקנייה משלמים הרבה יותר, ובסוף יש לך בית ששווה כסף. אין תשובה אחת נכונה: זה תלוי כמה כסף יש וכמה זמן רוצים להישאר.','En location, on paie peu chaque jour et on déménage facilement, mais le logement n\'est jamais à toi. En achetant, on paie beaucoup plus, et à la fin on possède une maison qui a de la valeur. Pas de réponse unique : cela dépend de ton argent et du temps que tu veux rester.','Renting costs little each day and moving is easy — but the flat never becomes yours. Buying costs much more, and in the end you own a home that is worth money. There is no single right answer: it depends on your money and how long you want to stay.']},
+ {id:'invest',e:'📈',t:['השקעות','Investir','Investing'],b:['מי שקונה מניה מקבל חלק קטן מחברה. אם החברה מצליחה המחיר עולה, ולפעמים היא גם מחלקת דיבידנד. אבל המחיר יכול גם לרדת! משקיעים רק כסף שלא צריך מחר, ובסבלנות.','Acheter une action, c\'est posséder un petit morceau d\'une entreprise. Si elle réussit, le prix monte, et parfois elle verse un dividende. Mais le prix peut aussi baisser ! On investit seulement l\'argent dont on n\'a pas besoin demain, et avec patience.','Buying a stock means owning a tiny piece of a company. If the company does well the price goes up, and sometimes it pays a dividend. But the price can go down too! Invest only money you do not need tomorrow, and be patient.']},
+ {id:'risk',e:'🧺',t:['סיכון ופיזור','Risque et diversification','Risk and diversification'],b:['מניה שיכולה לעלות הרבה יכולה גם לרדת הרבה — זה הסיכון. אגרת חוב בטוחה אבל עולה לאט. הסוד: לא לשים את כל הביצים בסל אחד. כשמפזרים בין כמה חברות, או קונים קרן מדד, ירידה של אחת כמעט לא מורגשת.','Une action qui peut beaucoup monter peut aussi beaucoup baisser : c\'est le risque. Une obligation est sûre mais monte lentement. Le secret : ne pas mettre tous ses œufs dans le même panier. En répartissant entre plusieurs entreprises, ou avec un fonds indiciel, la chute d\'une seule se sent à peine.','A stock that can rise a lot can also fall a lot — that is risk. A bond is safe but grows slowly. The secret: do not put all your eggs in one basket. Spread over several companies, or buy an index fund, and one fall hardly hurts.']},
+ {id:'tax',e:'🏛️',t:['מסים','Les impôts','Taxes'],b:['מכל משכורת, חלק קטן הולך לעיר — זה מס. במסים בונים דברים שכולם נהנים מהם: פארק, כבישים, בית ספר וכבאית. כולם נותנים קצת, וכולם מרוויחים.','Sur chaque salaire, une petite part va à la ville : c\'est l\'impôt. Il sert à construire ce dont tout le monde profite : le parc, les routes, l\'école, les pompiers. Chacun donne un peu, tout le monde y gagne.','From every salary, a small part goes to the city — that is tax. Taxes build things everyone enjoys: the park, roads, the school, the fire truck. Everyone gives a little, everyone gains.']},
+ {id:'resale',e:'♻️',t:['ערך במכירה חוזרת','La valeur de revente','Resale value'],b:['חפץ חדש שווה את המחיר שלו רק בחנות. ברגע שקונים אותו הוא ״משומש״, ואם מוכרים — מקבלים פחות. כלי רכב מאבדים ערך בכל יום. עסק, לעומת זאת, מכניס כסף בכל יום. לפני שקונים שואלים: זה יעלה לי כסף או יביא לי כסף?','Un objet neuf vaut son prix seulement en boutique. Dès qu\'on l\'achète il est « d\'occasion », et si on le revend, on reçoit moins. Les véhicules perdent de la valeur chaque jour. Un commerce, lui, rapporte chaque jour. Avant d\'acheter, demande-toi : ça me coûte ou ça me rapporte ?','A new thing is worth its price only in the shop. Once bought it is "used", and if you sell it you get less. Vehicles lose value every day. A business, however, brings in money every day. Before buying, ask: will this cost me money or earn me money?']},
+ {id:'score',e:'💯',t:['ציון אמינות','La note de confiance','Trust score'],b:['הבנק זוכר אם משלמים בזמן. מי שמשלם תמיד בזמן מקבל ציון גבוה, ואז הבנק מוכן להלוות יותר ובריבית נמוכה יותר. פספסנו תשלום? לא נורא — משלמים שוב בזמן והציון עולה חזרה.','La banque se souvient si tu paies à temps. Si tu paies toujours à temps, ta note monte, et la banque prête plus, avec moins d\'intérêts. Un paiement manqué ? Pas grave : paie de nouveau à temps et la note remonte.','The bank remembers if you pay on time. Always paying on time gives a high score, and then the bank lends more, at lower interest. Missed a payment? No worries — pay on time again and the score climbs back.']}];
+/* ================= page ================= */
+const KEY='annabelle-city';
+const $=id=>document.getElementById(id);
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let lang=ls.get('annabelle-lang')||'he';if(!TX[lang])lang='he';
+const LI=()=>({he:0,fr:1,en:2})[lang];
+function kidRaw(){try{if(window.KidApp&&typeof KidApp.kid==='function'){const k=KidApp.kid();if(k&&typeof k==='object')return k}}catch(e){}
+ try{const p=JSON.parse(ls.get('annabelle-profiles')||'null');if(p&&Array.isArray(p.list)){const c=p.list.filter(x=>x&&x.id===p.cur)[0]||p.list[0];if(c&&typeof c==='object')return c}}catch(e){}return {}}
+function Gs(f,m,x){try{if(window.KidApp&&typeof KidApp.g==='function'){const r=KidApp.g(f,m,x);if(typeof r==='string'&&r)return r}}catch(e){}
+ const g=kidRaw().gender;if(g==='f')return f;if(g==='m')return m;return x!==undefined?x:f+'/'+m}
+function heroEmo(){const e=kidRaw().emo;return typeof e==='string'&&e&&e.length<=8?e:'🐱'}
+function gfix(s){return s.replace(/\{([^{}|]*)\|([^{}|]*)(?:\|([^{}|]*))?\}/g,(m,f,ma,x)=>Gs(f,ma,x))}
+function raw(k){let s=TX[lang][k];if(s===undefined)s=TX.he[k];return typeof s==='string'?gfix(s):String(k)}
+function t(k,o){let s=raw(k);if(o)for(const x in o)s=s.split('{'+x+'}').join(o[x]);return s}
+/* tn: a text with nodes inside (coins, numbers) -> array of nodes; never innerHTML */
+function tn(k,o){return raw(k).split(/(\{\w+\})/).filter(p=>p!=='').map(p=>{const m=/^\{(\w+)\}$/.exec(p);if(m&&o&&o[m[1]]!==undefined){const v=o[m[1]];return v&&v.nodeType?v:num(v)}return document.createTextNode(p)})}
+const L=a=>gfix(a[LI()]||a[0]);
+function setLang(l){lang=TX[l]?l:'he';ls.set('annabelle-lang',lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';document.title=t('title')}
+function h(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;for(let i=2;i<arguments.length;i++)ap(e,arguments[i]);return e}
+function ap(e,c){if(c==null||c===false||c==='')return e;if(Array.isArray(c))c.forEach(x=>ap(e,x));else if(c.nodeType)e.appendChild(c);else e.appendChild(document.createTextNode(String(c)));return e}
+function B(cls,label,fn){const b=h('button',cls,label);b.type='button';if(fn)b.addEventListener('click',fn);return b}
+function fmt(n){n=Math.round(n);if(!isFinite(n))n=0;const s=Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,lang==='fr'?' ':',');return (n<0?'−':'')+s}
+function num(v){return h('span','mx',typeof v==='number'?fmt(v):String(v))}
+function coin(n,o){o=o||{};return h('span','mx'+(o.cls?' '+o.cls:o.col?(n<0?' neg':n>0?' pos':''):''),(o.sign&&n>0?'+':'')+fmt(n),h('i','cn'))}
+function dec1(v){let s=(Math.round(v*10)/10).toFixed(1);if(lang==='fr')s=s.replace('.',',');return s}
+function pctS(bp){return dec1(bp/100).replace(/^(\d+)[.,]0$/,'$1')+(lang==='fr'?' %':'%')}
+function pxS(p){return dec1(p/100)}
+function today(){if(typeof window.__cityToday==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(window.__cityToday))return window.__cityToday;const d=new Date(),z=n=>(n<10?'0':'')+n;return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+
+/* ---------- state ---------- */
+let S=null,scr='map',shopCat='all',repaired=false,t0=Date.now();
+function seed(){try{const a=new Uint32Array(1);crypto.getRandomValues(a);return (a[0]%2147483646)+1}catch(e){return Math.floor(Math.random()*2147483646)+1}}
+function load(){const r=ls.get(KEY);let o=null;if(r){try{o=JSON.parse(r)}catch(e){o=null}if(!o||typeof o!=='object'||Array.isArray(o)){o=null;repaired=true}}S=Eng.sane(o,seed())}
+function save(){Eng.summary(S);ls.set(KEY,JSON.stringify(S))}
+const R=()=>window.AnnabelleRewards;
+function rstats(){try{if(R()&&R().get){const g=R().get();if(g&&g.stats)return g.stats}}catch(e){}try{const o=JSON.parse(ls.get('annabelle-rewards')||'null');if(o&&o.stats)return o.stats}catch(e){}return {plays:{},wins:{}}}
+function award(list){try{const r=R();if(!r||!r.award)return;list.forEach(o=>{o.game='city';r.award(o)})}catch(e){}}
+function flushR(){try{const r=R();r&&r.flush&&r.flush()}catch(e){}}
+function track(type,data){try{window.KidApp&&KidApp.track&&KidApp.track(type,data)}catch(e){}}
+function audit(a,tg,d){try{window.KidApp&&KidApp.audit&&KidApp.audit(a,tg,d,'kid')}catch(e){}}
+function ev(act,d){d=d||{};d.act=act;d.day=S.day;track('city',d)}
+/* sounds (respect the shared mute switch) */
+let AC=null;const muted=()=>ls.get('annabelle-muted')==='1';
+function beep(f,d,ty,when){if(muted())return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+(when||0);o.type=ty||'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(.12,s+.02);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d+.02)}catch(e){}}
+const SFX={coin(){beep(880,.12);beep(1320,.16,'sine',.09)},tap(){beep(520,.06,'triangle')},no(){beep(220,.16,'triangle')},win(){[523,659,784,1047].forEach((f,i)=>beep(f,.18,'sine',i*.1))}};
+function toast(nodes){const e=$('toast');e.textContent='';ap(e,nodes);e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
+function confetti(list){const f=$('fxl');for(let i=0;i<14;i++){const s=h('span','',list[i%list.length]);s.style.left=(4+Math.random()*90)+'%';s.style.animationDelay=(Math.random()*.5)+'s';f.appendChild(s);setTimeout(()=>s.remove(),2400)}}
+function pop(id){const e=$(id);e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop')}
+
+/* after every action: goals, save, redraw */
+function after(){const got=Eng.goals(S);save();render();
+ if(got.length){SFX.win();confetti(['🎉','⭐','💰',got[0].e]);got.forEach((g,i)=>setTimeout(()=>toast([g.e+' '+t('glDone')+' '+L(NM.goal[g.id])+' ',coin(g.rw,{sign:1})]),i*2700));
+  award([{event:'levelClear',level:Object.keys(S.goals).length},{event:'star',stars:1}]);flushR();ev('goal',{n:Object.keys(S.goals).length});pop('pCash')}}
+function fail(r){SFX.no();if(r&&r.err==='cash'&&r.need)toast(tn('eCash',{a:coin(r.need)}))}
+
+/* ---------- dialogs ---------- */
+let dq=[],dOpen=false;
+function nextDlg(){const b=dq.shift(),ov=$('ov'),c=$('card');c.textContent='';if(!b){dOpen=false;ov.classList.remove('on');return}dOpen=true;b(c);ov.classList.add('on');c.scrollTop=0;const f=c.querySelector('button.btn.g,button.btn.v,button.btn');if(f)try{f.focus({preventScroll:true})}catch(e){}}
+function dlg(b){dq.push(b);if(!dOpen)nextDlg()}
+function show(b){dq.unshift(b);nextDlg()}
+function closeDlg(){nextDlg()}
+function okBtn(label,cls){return B('btn wide '+(cls||'g'),label||t('ok'),()=>{SFX.tap();closeDlg()})}
+function kv(a,b,cls){return h('div','kv'+(cls?' '+cls:''),h('span','',a),h('span','',b))}
+function tipBtn(id){return B('tip','💡',e=>{e.stopPropagation();tipDlg(id)})}
+function tipDlg(id){const T=TIPS.filter(x=>x.id===id)[0];if(!T)return;S.tips[id]=1;save();SFX.tap();show(c=>{ap(c,[h('div','hero',T.e),h('h2','',L(T.t)),h('p','',L(T.b)),okBtn()])})}
+function avatar(size){const a=h('span','av',heroEmo());if(size)a.style.fontSize=size+'px';if(S.hat&&Eng.IT[S.hat]){const it=Eng.IT[S.hat];a.appendChild(h('span','h '+(it.pos||'top'),it.e))}return a}
+function hearts(n){return h('span','hearts','❤️'.repeat(n)+'🤍'.repeat(5-n))}
+function jobName(l){return L(NM.job[l])}
+function homeName(id){return L(NM.home[id])}
+function itName(id){return L(Eng.IT[id].n)}
+function asName(id){return L(NM.asset[id])}
+
+/* ---------- charts (inline SVG) ---------- */
+const NS='http://www.w3.org/2000/svg';
+function s(tag,at){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);for(let i=2;i<arguments.length;i++){const c=arguments[i];if(c!=null)e.appendChild(c.nodeType?c:document.createTextNode(String(c)))}return e}
+function lineChart(vals,o){o=o||{};const W=300,H=o.h||84,p=6,n=vals.length;let mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);if(mx===mn){mx+=1;mn-=1}
+ const X=i=>p+(W-2*p)*(n>1?i/(n-1):.5),Y=v=>H-p-12-(H-2*p-24)*(v-mn)/(mx-mn);const up=vals[n-1]>=vals[0],col=o.col||(up?'#1e9e57':'#e2574c');
+ const pts=vals.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+ const g=s('svg',{viewBox:'0 0 '+W+' '+H,'class':'ch',role:'img'});
+ g.appendChild(s('rect',{x:0,y:0,width:W,height:H,rx:12,fill:'#f6f2ff'}));
+ g.appendChild(s('polygon',{points:X(0)+','+(H-p)+' '+pts+' '+X(n-1)+','+(H-p),fill:col,opacity:.16}));
+ g.appendChild(s('polyline',{points:pts,fill:'none',stroke:col,'stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round'}));
+ g.appendChild(s('circle',{cx:X(n-1),cy:Y(vals[n-1]),r:4.5,fill:col,stroke:'#fff','stroke-width':2}));
+ const f=o.fmt||fmt;g.appendChild(s('text',{x:p+2,y:12,'font-size':10.5,'font-weight':700,fill:'#2b2350',opacity:.6,direction:'ltr'},f(mx)));g.appendChild(s('text',{x:p+2,y:H-4,'font-size':10.5,'font-weight':700,fill:'#2b2350',opacity:.6,direction:'ltr'},f(mn)));
+ return g}
+function spark(vals,W,H){const n=vals.length,mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals)||1,r=mx-mn||1;const pts=vals.map((v,i)=>(2+(W-4)*i/(n-1||1)).toFixed(1)+','+(H-3-(H-6)*(v-mn)/r).toFixed(1)).join(' ');
+ const g=s('svg',{viewBox:'0 0 '+W+' '+H,width:W,height:H,style:'direction:ltr;flex:none'});g.appendChild(s('polyline',{points:pts,fill:'none',stroke:vals[n-1]>=vals[0]?'#1e9e57':'#e2574c','stroke-width':2,'stroke-linejoin':'round'}));return g}
+function barsChart(sc){const W=300,H=92,p=6;let rows=sc;if(sc.length>60){const st=Math.ceil(sc.length/60);rows=sc.filter((r,i)=>i%st===0)}const n=rows.length;let mx=1;rows.forEach(r=>mx=Math.max(mx,r[0]+r[1]));
+ const g=s('svg',{viewBox:'0 0 '+W+' '+H,'class':'ch',role:'img'});g.appendChild(s('rect',{x:0,y:0,width:W,height:H,rx:12,fill:'#f6f2ff'}));
+ const bw=(W-2*p)/n;rows.forEach((r,i)=>{const hp=(H-2*p)*r[1]/mx,hi=(H-2*p)*r[0]/mx,x=p+i*bw;
+  g.appendChild(s('rect',{x:x+.4,y:H-p-hp,width:Math.max(1,bw-.8),height:hp,fill:'#3ecf7a'}));if(hi>0)g.appendChild(s('rect',{x:x+.4,y:H-p-hp-hi,width:Math.max(1,bw-.8),height:hi,fill:'#e0457b'}))});return g}
+function legend(){return h('div','leg',h('span','',h('i'),t('mgLegP')),h('span','',h('i'),t('mgLegI')))}
+function mkLegend(){const l=legend();l.children[0].firstChild.style.background='#3ecf7a';l.children[1].firstChild.style.background='#e0457b';return l}
+
+/* ---------- the town map ---------- */
+function drawMap(){
+ const svg=$('mapSvg'),wrap=$('mapWrap'),W=wrap.clientWidth,H=wrap.clientHeight;if(!W||!H)return;
+ const vw=Math.max(400,400*W/H),vh=Math.max(400,400*H/W);svg.setAttribute('viewBox',(-(vw-400)/2).toFixed(1)+' '+(-(vh-400)/2).toFixed(1)+' '+vw.toFixed(1)+' '+vh.toFixed(1));
+ svg.textContent='';const rtl=lang==='he';
+ const A=(e)=>{svg.appendChild(e);return e};
+ A(s('rect',{x:-500,y:-500,width:1400,height:1400,fill:'#8fd77a'}));
+ /* scenery outside the town square (shows on wide / tall screens) */
+ for(let i=0;i<70;i++){const x=-480+((i*197+31)%1360),y=-480+((i*331+77)%1360);if(x>-22&&x<422&&y>-22&&y<422)continue;if((y>112&&y<160)||(y>246&&y<294))continue;
+  if(i%3===0)A(s('ellipse',{cx:x,cy:y,rx:26,ry:12,fill:'#a6e58f',opacity:.7}));else{A(s('rect',{x:x-2.5,y:y,width:5,height:11,fill:'#9a6a3c'}));A(s('circle',{cx:x,cy:y-5,r:12,fill:i%2?'#4fae52':'#5fbf5c'}));A(s('circle',{cx:x-4,cy:y-9,r:4,fill:'#fff',opacity:.18}))}}
+ [[60,14,30],[330,10,24],[20,250,18],[384,256,20]].forEach(c=>A(s('ellipse',{cx:c[0],cy:c[1],rx:c[2],ry:c[2]*.4,fill:'#a6e58f',opacity:.6})));
+ [[24,-20],[86,-44],[150,-16],[214,-50],[262,-22],[326,-46],[384,-14],[40,-84],[190,-96],[300,-88],[30,432],[110,452],[200,428],[290,456],[366,434]].forEach((q,i)=>{A(s('rect',{x:q[0]-2.5,y:q[1],width:5,height:11,fill:'#9a6a3c'}));A(s('circle',{cx:q[0],cy:q[1]-5,r:11+i%3,fill:i%2?'#4fae52':'#5fbf5c'}))});
+ [[120,-66],[340,-70],[70,470],[250,480]].forEach(q=>A(s('text',{x:q[0],y:q[1],'font-size':15,'text-anchor':'middle'},'🌼')));
+ /* roads */
+ [128,262].forEach(y=>{A(s('rect',{x:-500,y:y,width:1400,height:21,fill:'#8f95ab'}));A(s('rect',{x:-500,y:y-2,width:1400,height:2,fill:'#d8d2c2'}));A(s('rect',{x:-500,y:y+21,width:1400,height:2,fill:'#d8d2c2'}));A(s('line',{x1:-500,y1:y+10.5,x2:900,y2:y+10.5,stroke:'#fff','stroke-width':2,'stroke-dasharray':'10 9',opacity:.85}))});
+ [133,267].forEach(x=>{A(s('rect',{x:x-8,y:149,width:16,height:113,fill:'#8f95ab'}));A(s('line',{x1:x,y1:152,x2:x,y2:260,stroke:'#fff','stroke-width':1.6,'stroke-dasharray':'8 8',opacity:.8}))});
+ function place(key,label,build,box){const g=s('g',{'class':'pl',tabindex:0,role:'button','aria-label':label,'data-go':key});const bd=s('g',{'class':'bd'});build(bd);g.appendChild(bd);
+  if(label){const tx=s('text',{x:box.cx,y:box.ly+12.5,'text-anchor':'middle','font-size':12.5,'font-weight':800,fill:'#2b2350',direction:rtl?'rtl':'ltr'},label);const wd=Math.min(box.w>200?190:128,label.length*(rtl?7.4:7.3)+16);
+   g.appendChild(s('rect',{'class':'lb',x:box.cx-wd/2,y:box.ly,width:wd,height:17,rx:8.5,fill:'#fff',stroke:'#0002'}));g.appendChild(tx)}
+  g.appendChild(s('rect',{x:box.x,y:box.y,width:box.w,height:box.h,fill:'transparent'}));
+  const fn=()=>{SFX.tap();go(key)};g.addEventListener('click',fn);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn()}});A(g);return g}
+ function house(g,cx,top,w,hh,col,roof,emo,o){o=o||{};const x=cx-w/2,by=top+16,bh=hh-16;
+  g.appendChild(s('ellipse',{cx:cx,cy:top+hh+1,rx:w/2+6,ry:5,fill:'#000',opacity:.12}));
+  g.appendChild(s('rect',{x:x,y:by,width:w,height:bh,rx:5,fill:col,stroke:'#2b2350','stroke-opacity':.25,'stroke-width':1.5}));
+  if(o.roof==='flat'){g.appendChild(s('rect',{x:x-4,y:by-7,width:w+8,height:11,rx:4,fill:roof}))}
+  else if(o.roof==='dome'){g.appendChild(s('path',{d:'M'+(x+6)+' '+by+' Q'+cx+' '+(top-18)+' '+(x+w-6)+' '+by+' Z',fill:roof}));g.appendChild(s('rect',{x:x-4,y:by-3,width:w+8,height:7,rx:3,fill:roof}));g.appendChild(s('line',{x1:cx,y1:top-2,x2:cx,y2:top-14,stroke:'#2b2350','stroke-width':1.5}));g.appendChild(s('path',{d:'M'+cx+' '+(top-14)+' l11 4 l-11 4 Z',fill:'#e0457b'}))}
+  else g.appendChild(s('path',{d:'M'+(x-6)+' '+(by+2)+' L'+cx+' '+top+' L'+(x+w+6)+' '+(by+2)+' Z',fill:roof,stroke:'#2b2350','stroke-opacity':.2}));
+  if(o.cols)for(let i=0;i<4;i++)g.appendChild(s('rect',{x:x+8+i*(w-22)/3,y:by+6,width:6,height:bh-10,rx:2,fill:'#fff',opacity:.85}));
+  if(o.awn){for(let i=0;i<6;i++)g.appendChild(s('rect',{x:x-3+i*(w+6)/6,y:by+2,width:(w+6)/6,height:11,fill:i%2?'#fff':'#e0457b'}))}
+  if(o.win)for(let r=0;r<2;r++)for(let i=0;i<4;i++)g.appendChild(s('rect',{x:x+8+i*(w-24)/3,y:by+8+r*18,width:8,height:10,rx:2,fill:'#fff',opacity:.8}));
+  if(emo){g.appendChild(s('circle',{cx:cx,cy:by+bh/2+3,r:17,fill:'#fff',opacity:.92}));g.appendChild(s('text',{x:cx,y:by+bh/2+11,'text-anchor':'middle','font-size':23},emo))}}
+ place('bank',t('plBank'),g=>house(g,68,30,96,76,'#ffe9a8','#e8862d','🏦',{cols:1}),{cx:68,ly:108,x:12,y:22,w:112,h:104});
+ place('hall',t('plHall'),g=>house(g,200,34,88,72,'#d7ecff','#2a8fd0','🏛️',{roof:'dome'}),{cx:200,ly:108,x:148,y:10,w:104,h:116});
+ place('invest',t('plMarket'),g=>{house(g,332,30,96,76,'#d9c8ff','#6a48f0','📈',{roof:'flat',win:1})},{cx:332,ly:108,x:276,y:18,w:112,h:108});
+ place('shop',t('plShop'),g=>house(g,68,162,100,76,'#ffd0de','#e0457b','🛍️',{roof:'flat',awn:1}),{cx:68,ly:240,x:12,y:152,w:112,h:106});
+ place('job',t('plJob'),g=>house(g,332,162,96,76,'#c9f5d8','#1e9e57','💼',{win:1}),{cx:332,ly:240,x:276,y:152,w:112,h:106});
+ /* park: what the kid bought for the garden shows up */
+ const gar=Eng.ITEMS.filter(i=>i.cat==='gar'&&S.own[i.id]!==undefined).slice(-7);
+ place('park',t('plPark'),g=>{g.appendChild(s('ellipse',{cx:200,cy:200,rx:56,ry:40,fill:'#6cc45a',stroke:'#58ad49','stroke-width':2}));g.appendChild(s('ellipse',{cx:214,cy:212,rx:20,ry:10,fill:'#8fdcff',stroke:'#fff','stroke-width':1.5}));
+  const P=[[166,196],[190,180],[222,186],[240,204],[176,220],[200,200],[232,226]];
+  if(!gar.length){[[168,196],[226,184]].forEach(p=>{g.appendChild(s('rect',{x:p[0]-2,y:p[1]-2,width:4,height:10,fill:'#9a6a3c'}));g.appendChild(s('circle',{cx:p[0],cy:p[1]-8,r:11,fill:'#3f9d48'}))});g.appendChild(s('text',{x:192,y:206,'text-anchor':'middle','font-size':17},'🌼'))}
+  gar.forEach((it,i)=>g.appendChild(s('text',{x:P[i][0],y:P[i][1],'text-anchor':'middle','font-size':i<4?19:17,'class':i%2?'sway':''},it.e)))},{cx:200,ly:240,x:144,y:156,w:112,h:102});
+ /* businesses the kid owns stand along the street */
+ Eng.ITEMS.filter(i=>i.cat==='biz'&&S.own[i.id]!==undefined).forEach((it,i)=>{A(s('rect',{x:22+i*27,y:288,width:22,height:16,rx:4,fill:'#fff',stroke:'#e8862d','stroke-width':1.5}));A(s('text',{x:33+i*27,y:301,'text-anchor':'middle','font-size':13},it.e))});
+ /* home district */
+ place('housing',t('plHomes'),g=>{Eng.HOMES.forEach((Hm,i)=>{const cx=30+i*56.6,w=42,hh=34+i*3,top=378-hh,cur=S.home.id===i;
+   const hg=s('g',{});house(hg,cx,top,w,hh,Hm.col,i===6?'#6a48f0':['#b89cff','#e8862d','#2a8fd0','#e0457b','#1e9e57','#d99a00','#6a48f0'][i],'',{roof:i<3?'flat':''});
+   if(i===6){[cx-w/2-2,cx+w/2-7].forEach(x=>{hg.appendChild(s('rect',{x:x,y:top+4,width:9,height:hh-4,rx:2,fill:Hm.col,stroke:'#2b2350','stroke-opacity':.25}));hg.appendChild(s('path',{d:'M'+(x-2)+' '+(top+5)+' l6.5 -11 l6.5 11 Z',fill:'#6a48f0'}))})}
+   hg.appendChild(s('rect',{x:cx-4.5,y:378-13,width:9,height:13,rx:2,fill:'#7a4a22'}));hg.appendChild(s('rect',{x:cx-14,y:top+21,width:8,height:8,rx:2,fill:'#fff',opacity:.85}));hg.appendChild(s('rect',{x:cx+6,y:top+21,width:8,height:8,rx:2,fill:'#fff',opacity:.85}));
+   if(cur){hg.appendChild(s('rect',{x:cx-w/2-3,y:top+13,width:w+6,height:hh-10,rx:7,fill:'none',stroke:'#ffd23f','stroke-width':3}))}
+   g.appendChild(hg);
+   if(cur){g.appendChild(s('text',{x:cx,y:top-4,'text-anchor':'middle','font-size':19,'class':'bob'},heroEmo()));if(S.home.own)g.appendChild(s('text',{x:cx+15,y:top+12,'text-anchor':'middle','font-size':11},'⭐'))}})},{cx:200,ly:381,x:2,y:306,w:396,h:94});
+ /* the kid's vehicle drives through town */
+ if(S.car&&Eng.IT[S.car]){const air=S.car==='heli'||S.car==='rocket';A(s('text',{x:0,y:air?24:146,'font-size':air?24:20,'class':air?'fly':'drive','text-anchor':'middle'},Eng.IT[S.car].e))}
+ A(s('text',{x:372,y:-((vh-400)/2)+26,'font-size':24,'text-anchor':'middle'},'☀️'));
+}
+
+/* ---------- screens ---------- */
+const TABS=[['map','🗺️','tMap'],['bank','🏦','tBank'],['shop','🛍️','tShop'],['home','🏠','tHome'],['goals','🎯','tGoals']];
+const SUBS={housing:1,invest:1,job:1,hall:1,park:1};
+function go(k){if(k!==scr){scr=k;document.body.setAttribute('data-scr',k);$('panel').scrollTop=0}closeAll();render()}
+function closeAll(){dq=[];if(dOpen)nextDlg()}
+function head(title,tip){return h('div','hd',B('ib',lang==='he'?'▶':'◀',()=>{SFX.tap();go('map')}),h('h2','',title),tip?tipBtn(tip):null)}
+function nextBtn(){const td=today(),c=Eng.canSkip(S,td),left=Eng.skipsLeft(S,td);
+ if(c.ok){const nb=B('btn g wide','⏩ '+t('tdNext')+' · '+t('tdLeft',{n:left}),doSkip);nb.id='nextDay';return nb}
+ if(c.err==='limit')return h('div','note',t('tdLimit'));
+ return h('div','note',tn('tdNeed',{a:coin(c.need)}))}
+function billsRow(){const b=Eng.bills(S),inc=Eng.bizIncome(S),o=[];
+ if(b.home+b.loan>0){const r=h('div','rw',h('span','',t('tdBills')));if(b.home)ap(r,h('span','',(b.own?t('tdMort'):t('tdRent'))+' ',coin(b.home)));if(b.loan)ap(r,h('span','',t('tdLoan')+' ',coin(b.loan)));o.push(r)}else o.push(h('div','rw',t('tdNone')));
+ if(inc>0)o.push(h('div','rw',h('span','',t('tdIn')),h('span','',t('tdBiz')+' ',coin(inc,{sign:1,col:1}))));return o}
+function warns(){const o=[];if(S.home.own&&S.mort&&S.mort.miss>0)o.push(h('div','warn',t('tdWarnHome',{n:Eng.CFG.GRACE-S.mort.miss})));if(!S.home.own&&S.home.miss>0)o.push(h('div','warn',t('tdWarnHome',{n:Eng.CFG.GRACE-S.home.miss})));if(S.loan&&S.loan.miss>0)o.push(h('div','warn',t('tdWarnLoan')));return o}
+const SCR={};
+SCR.map=function(){const c=h('div','today');
+ ap(c,[h('div','top',h('b','','☀️ '+t('day',{n:S.day})),hearts(Eng.happy(S)),h('span','sp'),h('span','mini',t('nw')+' ',coin(Eng.netWorth(S)))),warns(),h('div','cd',billsRow(),h('div','',nextBtn()))]);
+ const ng=Eng.GOALS.filter(g=>S.goals[g.id]===undefined)[0];if(ng){const gb=B('hrow',null,()=>{SFX.tap();go('goals')});gb.id='nextGoal';let pr=null;if(ng.p){const v=ng.p(S);pr=h('div','bar',h('i'));pr.firstChild.style.width=clamp(100*v[0]/v[1],0,100)+'%';pr.style.height='8px';pr.style.marginTop='3px'}ap(gb,[h('span','e',ng.e),h('span','m',h('small','','🎯 '+t('glNext')),h('span','',L(NM.goal[ng.id])),pr),h('span','r',coin(ng.rw,{sign:1}))]);c.appendChild(gb)}
+ c.querySelector('.top .sp').style.flex='1';c.querySelector('.mini').style.margin='0';const nb=c.querySelector('.cd>div:last-child');nb.style.marginTop='8px';return c};
+function doSkip(){const r=Eng.skip(S,today());if(!r.ok){fail(r);render();return}SFX.coin();ev('day',{skip:1});news(r);after()}
+function news(rep){dlg(c=>{ap(c,[h('div','hero','☀️'),h('h2','',t('nwT',{n:rep.day}))]);const list=h('div','cd');let n=0;
+ rep.ev.forEach(e=>{n++;const sv=e.sv?' '+t('fromSav'):'';
+  if(e.k==='int')ap(list,kv('🐷 '+t('evInt'),coin(e.a,{sign:1,col:1})));else if(e.k==='div')ap(list,kv('💌 '+t('evDiv'),coin(e.a,{sign:1,col:1})));else if(e.k==='biz')ap(list,kv('🍋 '+t('evBiz'),coin(e.a,{sign:1,col:1})));
+  else if(e.k==='rent')ap(list,kv('🔑 '+t('evRent')+sv,coin(e.a,{col:1})));else if(e.k==='mort')ap(list,kv('🏠 '+t('evMort')+sv,coin(e.a,{col:1})));else if(e.k==='loanp')ap(list,kv('🤝 '+t('evLoanp')+sv,coin(e.a,{col:1})));
+  else if(e.k==='rentfree')ap(list,h('div','note',t('evRentfree')));else if(e.k==='rentmiss')ap(list,h('div','warn',t('evRentmiss',{n:e.n})));else if(e.k==='mortmiss')ap(list,h('div','warn',t('evMortmiss',{n:e.n})));
+  else if(e.k==='loanmiss')ap(list,h('div','warn',t('evLoanmiss')));else if(e.k==='mortdone')ap(list,h('div','note',t('evMortdone')));else if(e.k==='loandone')ap(list,h('div','note',t('evLoandone')));
+  else if(e.k==='moved')ap(list,h('div','note',t('evMoved')+' ',coin(e.a,{sign:1})));
+  else if(e.k==='mkt')ap(list,h('div','note',(e.pc>=0?'📈 ':'📉 ')+t(e.pc>=0?'evUp':'evDown',{x:asName(e.x),n:dec1(Math.abs(e.pc))})))});
+ if(!n)ap(list,h('div','sub',t('evQuiet')));ap(c,[list,okBtn()])})}
+
+/* --- bank --- */
+function askAmount(o){show(c=>{const max=Math.max(o.min||1,o.max),min=o.min||1,step=o.step||1;let v=clamp(o.init||max,min,max);
+ const val=h('span','v'),pv=h('div','note'),rg=h('input');rg.type='range';rg.min=min;rg.max=max;rg.step=step;rg.setAttribute('aria-label',o.title);
+ const set=x=>{v=clamp(Math.round(x/step)*step,min,max);val.textContent='';val.appendChild(coin(v));rg.value=v;pv.textContent='';const p=o.preview&&o.preview(v);if(p){ap(pv,p);pv.style.display=''}else pv.style.display='none'};
+ rg.addEventListener('input',()=>set(+rg.value));
+ const bump=d=>B('ib',d>0?'+':'−',()=>{SFX.tap();set(v+d*step)});
+ const chips=h('div','chips');chips.style.justifyContent='center';[[.25,'¼'],[.5,'½'],[1,t('all')]].forEach(f=>{if(max>=4||f[0]===1)chips.appendChild(B('chip',f[1],()=>{SFX.tap();set(Math.max(min,Math.floor(max*f[0])))}))});
+ const amt=h('div','amt',bump(-1),val,bump(1));amt.style.direction='ltr';
+ ap(c,[h('h2','',o.title),o.sub?h('p','c sub',o.sub):null,amt,rg,chips,pv,h('div','btns',B('btn w',t('cancel'),closeDlg),B('btn g',o.ok||t('ok'),()=>{closeDlg();o.cb(v)}))]);set(v)})}
+function savCard(){const c=h('div','cd'),base=S.sav>0?S.sav:100,gr=Eng.grow(base,60);
+ ap(c,[h('h3','','🐷 '+t('bkSav'),h('span','sp'),tipBtn('interest')),h('div','big',coin(S.sav)),h('div','sub',t('bkSavRate',{p:pctS(Eng.CFG.SAV_BP)})),
+  h('div','btns',B('btn g',t('bkDep'),()=>{if(S.cash<1)return fail({});askAmount({title:t('amDep'),max:S.cash,init:Math.max(1,Math.floor(S.cash/2)),preview:v=>tn('bkGrow',{a:coin(S.sav+v),b:coin(Eng.grow(S.sav+v,60)[60]),n:60}),cb:v=>{const r=Eng.deposit(S,v);if(r.ok){SFX.coin();ev('save',{n:v})}after()}})}),
+   B('btn w',t('bkWd'),()=>{if(S.sav<1)return fail({});askAmount({title:t('amWd'),max:S.sav,init:S.sav,cb:v=>{const r=Eng.withdraw(S,v);if(r.ok){SFX.coin();ev('save',{n:-v})}after()}})})),
+  h('div','note',tn('bkGrow',{a:coin(base),b:coin(gr[60]),n:60}),h('div','sub',t('bkGrowSub'))),lineChart(gr,{h:70,col:'#1e9e57'}),
+  h('div','sub',t('bkAuto'))]);c.lastChild.style.margin='10px 0 6px';
+ const ch=h('div','chips');[0,10,20,30].forEach(p=>ch.appendChild(B('chip'+(S.auto===p?' on':''),pctS(p*100),()=>{SFX.tap();Eng.setAuto(S,p);after()})));c.appendChild(ch);return c}
+function loanCard(){const c=h('div','cd');ap(c,h('h3','','🤝 '+t('bkLoan'),h('span','sp'),tipBtn('loan')));
+ if(!S.loan){ap(c,[h('div','sub',tn('bkLoanNone',{a:coin(Eng.loanLimit(S))})),h('div','btns',B('btn y',t('bkLoanTake'),loanDlg))]);return c}
+ const l=S.loan,sc=Eng.sched(l.bal,l.rate,l.pay);
+ ap(c,[kv(t('bkLoanBal'),coin(l.bal)),kv(t('bkLoanPay'),coin(Eng.due(S,'loan'))),kv(t('mgRate'),num(pctS(l.rate))),h('div','sub',t('bkLoanLeft',{n:sc.length})),
+  h('div','btns',B('btn g',t('bkRepay'),()=>{const mx=Math.min(S.cash,l.bal);if(mx<1)return fail({});askAmount({title:t('amRepay'),max:mx,init:mx,cb:v=>{const r=Eng.loanRepay(S,v);if(r.ok){SFX.coin();ev('loan',{repay:v,done:r.done?1:0});if(r.done){toast(t('evLoandone'));confetti(['🎉','🤝'])}}after()}})}))]);return c}
+function loanDlg(){const lim=Eng.loanLimit(S);let amt=Math.min(lim,100),term=20;SFX.tap();
+ show(c=>{const draw=()=>{c.textContent='';const q=Eng.loanQuote(S,amt,term);const rg=h('input');rg.type='range';rg.min=20;rg.max=lim;rg.step=10;rg.value=amt;rg.setAttribute('aria-label',t('lnAmt'));rg.addEventListener('change',()=>{amt=clamp(Math.round(+rg.value/10)*10,20,lim);draw()});
+   const val=h('span','v',coin(amt));rg.addEventListener('input',()=>{val.textContent='';val.appendChild(coin(+rg.value))});
+   const ch=h('div','chips');ch.style.justifyContent='center';Eng.LTERMS.forEach(n=>ch.appendChild(B('chip'+(term===n?' on':''),t('days',{n:n}),()=>{SFX.tap();term=n;draw()})));
+   ap(c,[h('div','hero','🤝'),h('h2','',t('lnT')),h('p','c sub',t('lnAmt')),h('div','amt',val),rg,h('p','c sub',t('lnTerm')),ch,
+    h('div','cd',kv(t('lnDaily'),coin(q.pay)),kv(t('mgRate'),num(pctS(q.rate))),h('div','kv tot',h('span','',tn('lnTotal',{a:coin(amt),b:coin(q.total)})))),
+    h('div','note',tn('lnInt',{a:coin(q.interest)}),h('div','sub',t('lnTip'))),
+    h('div','btns',B('btn w',t('cancel'),closeDlg),B('btn y',t('lnGo'),()=>{const r=Eng.loanTake(S,amt,term);closeDlg();if(r.ok){SFX.coin();ev('loan',{n:amt,term:term});audit('city_loan','loan',{n:amt,term:term});pop('pCash')}else fail(r);after()}))]);c.querySelector('.cd').style.marginTop='10px'};draw()})}
+function scoreCard(){const c=h('div','cd'),lv=S.score>=70?2:S.score>=40?1:0;
+ ap(c,[h('h3','','💯 '+t('bkScore'),h('span','sp'),tipBtn('score')),h('div','rw',h('span','big',num(S.score)),h('span','chip on',t('sc'+lv))),h('div','bar sc',h('i')),h('div','sub',t('bkScoreSub',{l:pctS(Eng.loanRate(S)),m:pctS(Eng.mortRate(S))}))]);
+ c.querySelector('.bar i').style.width=S.score+'%';c.querySelector('.bar').style.margin='6px 0';c.querySelector('.chip').style.minHeight='30px';return c}
+function txLabel(x){let s=t(TX.he['tx_'+x.k]?'tx_'+x.k:'tx_misc');if(x.x){if(Eng.IT[x.x])s+=' · '+Eng.IT[x.x].e+' '+itName(x.x);else if(NM.asset[x.x])s+=' · '+asName(x.x);else if(NM.goal[x.x])s+=' · '+L(NM.goal[x.x]);else if(/^h\d$/.test(x.x)&&NM.home[+x.x[1]])s+=' · '+homeName(+x.x[1])}return s}
+function txCard(){const c=h('div','cd');ap(c,h('h3','','🧾 '+t('bkTx')));if(!S.tx.length){ap(c,h('div','sub',t('bkTxNone')));return c}
+ S.tx.slice(-40).reverse().forEach(x=>c.appendChild(h('div','tx',h('span','d',t('txDay')+' ',num(x.d)),h('span','',txLabel(x)),h('span','a',coin(x.a,{sign:1,col:1})),h('span','b',coin(x.b)))));return c}
+SCR.bank=function(){return [h('div','cd',h('h3','','💳 '+t('bkCash'),h('span','sp'),tipBtn('budget')),h('div','big',coin(S.cash)),h('div','sub',t('bkCashSub'))),savCard(),loanCard(),S.mort?mortCard():null,scoreCard(),txCard()]};
+
+/* --- shop & things --- */
+const CATS=[['all','✨'],['fur','🛋️'],['dec','🎈'],['pet','🐹'],['hat','🎩'],['car','🚲'],['gar','🌻'],['biz','🍋']];
+function itemCard(it,inv){const own=S.own[it.id]!==undefined;const b=B('it'+(own?' own':S.cash<it.price?' no':''),null,()=>{SFX.tap();own?itemDlg(it.id):buyDlg(it.id)});b.setAttribute('data-item',it.id);
+ ap(b,[h('span','e',it.e),h('span','n',L(it.n)),h('span','pr',inv?(it.cat==='pet'?'🧡':coin(Eng.itemValue(S,it.id))):own?'✓ '+t('shOwned'):coin(it.price))]);if(it.inc)b.appendChild(h('span','tag',h('span','mx','+'+it.inc),' ',h('i','cn')));return b}
+SCR.shop=function(){const ch=h('div','chips');ch.style.marginBottom='10px';CATS.forEach(c=>ch.appendChild(B('chip'+(shopCat===c[0]?' on':''),c[1]+' '+t('c_'+c[0]),()=>{SFX.tap();shopCat=c[0];$('panel').scrollTop=0;render()})));
+ const g=h('div','grid');Eng.ITEMS.filter(i=>shopCat==='all'||i.cat===shopCat).slice().sort((a,b)=>a.price-b.price).forEach(it=>g.appendChild(itemCard(it)));
+ return [h('div','hd',h('h2','','🛍️ '+t('plShop')),tipBtn('resale')),ch,g]};
+function resaleNote(it,val){if(it.cat==='pet')return h('div','note',t('shPetNo'));return h('div','note',tn('shResale',{a:coin(val)}),h('div','sub',t(it.cat==='car'?'shCarWhy':'shResaleWhy')))}
+function buyDlg(id){const it=Eng.IT[id];show(c=>{const can=S.cash>=it.price,res=Math.floor(it.price*Eng.RES[it.cat]/100);
+ ap(c,[h('div','hero',it.e),h('h2','',t('shBuyQ',{x:L(it.n)})),h('p','c',h('span','big',coin(it.price))),
+  it.inc?h('div','note',tn('shInc',{a:coin(it.inc)}),h('div','sub',t('shIncBack',{n:Math.ceil(it.price/it.inc)}))):null,
+  it.cat==='gar'?h('div','note',t('shPark')):it.cat==='car'?h('div','note',t('shOnMap')):null,resaleNote(it,res),
+  can?null:h('div','warn',tn('eCash',{a:coin(it.price-S.cash)})),
+  h('div','btns',B('btn w',t('cancel'),closeDlg),B('btn g',[t('buy')+' ',coin(it.price)],()=>{const r=Eng.buyItem(S,id);closeDlg();if(r.ok){SFX.coin();toast(it.e+' '+t('shBought'));ev('buy',{p:it.price,c:it.cat});audit('city_buy',id,{p:it.price});pop('pCash')}else fail(r);after()}))]);
+ const w=c.querySelector('.warn');if(w)w.style.marginTop='8px';if(!can)c.querySelector('.btn.g').disabled=true})}
+function itemDlg(id){const it=Eng.IT[id];if(S.own[id]===undefined)return;show(c=>{const val=Eng.itemValue(S,id),inSlot=S.slots.indexOf(id)>=0,acts=h('div','btns');
+ if(Eng.PLACE[it.cat]&&!inSlot)acts.appendChild(B('btn v',t('shPlace'),()=>{const cap=Eng.HOMES[S.home.id].slots;let f=-1;for(let i=0;i<cap;i++)if(!S.slots[i]){f=i;break}closeDlg();if(f<0){SFX.no();toast(t('hmEmpty')+': 0')}else{Eng.place(S,f,id);SFX.tap()}after()}));
+ if(it.cat==='hat')acts.appendChild(B('btn v',t(S.hat===id?'shUnwear':'shWear'),()=>{Eng.wear(S,id);SFX.tap();closeDlg();after()}));
+ if(it.cat==='car'&&S.car!==id)acts.appendChild(B('btn v',t('shRide'),()=>{Eng.wear(S,id);SFX.tap();closeDlg();after()}));
+ if(it.cat!=='pet')acts.appendChild(B('btn p',[t('sell')+' ',coin(val)],()=>{const r=Eng.sellItem(S,id);closeDlg();if(r.ok){SFX.coin();toast([t('shSold')+' ',coin(r.got,{sign:1})]);ev('sell',{p:r.got,c:it.cat});audit('city_sell',id,{p:r.got})}after()}));
+ ap(c,[h('div','hero',it.e),h('h2','',L(it.n)),it.inc?h('div','note',tn('shInc',{a:coin(it.inc)})):null,
+  it.cat==='pet'?h('div','note',t('shPetNo')):h('div','note',tn('shSellInfo',{a:coin(it.price),b:coin(val)}),h('div','sub',t(it.cat==='car'?'shCarWhy':'shResaleWhy'))),acts,h('div','btns',B('btn w',t('close'),closeDlg))])})}
+
+/* --- my home --- */
+function slotDlg(i){const cur=S.slots[i];show(c=>{const free=Eng.ITEMS.filter(it=>Eng.PLACE[it.cat]&&S.own[it.id]!==undefined&&S.slots.indexOf(it.id)<0),g=h('div','grid');
+ free.forEach(it=>{const b=B('it',null,()=>{Eng.place(S,i,it.id);SFX.tap();closeDlg();after()});ap(b,[h('span','e',it.e),h('span','n',L(it.n))]);b.style.minHeight='84px';g.appendChild(b)});
+ ap(c,[h('h2','',t('hmPick')),free.length?g:h('p','c',t('hmNothing')),h('div','btns',cur?B('btn p',t('hmRemove'),()=>{Eng.place(S,i,'');SFX.tap();closeDlg();after()}):null,free.length?null:B('btn y',t('hmToShop'),()=>{closeDlg();go('shop')}),B('btn w',t('close'),closeDlg))])})}
+function homeStatus(){return S.home.own?(S.mort?t('hsMort'):t('hsOwn')):t('hsRenting')}
+SCR.home=function(){const H=Eng.HOMES[S.home.id],room=h('div','room'),sl=h('div','slots');
+ for(let i=0;i<H.slots;i++){const id=S.slots[i],b=B('slot '+(id?'full':'empty'),id?Eng.IT[id].e:'+',()=>{SFX.tap();slotDlg(i)});b.setAttribute('aria-label',id?itName(id):t('hmEmpty'));sl.appendChild(b)}
+ const who=h('div','who',avatar(50),h('div','',h('div','',h('b','',H.e+' '+homeName(H.id))),h('div','sub',homeStatus()),h('div','',t('hmHappy')+' ',hearts(Eng.happy(S)))));who.lastChild.style.fontWeight='800';
+ ap(room,[h('div','wn'),who,sl]);
+ const inv=Eng.ITEMS.filter(i=>S.own[i.id]!==undefined),g=h('div','grid');inv.forEach(it=>g.appendChild(itemCard(it,true)));
+ return [h('div','hd',h('h2','','🏠 '+t('hmSlots')),B('btn sm y','🚚 '+t('hmMove'),()=>{SFX.tap();go('housing')})),warns(),room,S.mort?mortCard():null,
+  h('div','cd',h('h3','','🎒 '+t('hmInv'),h('span','sp'),inv.length?h('span','sub',t('hmWorth')+' ',coin(Eng.itemsValue(S))):null),inv.length?g:[h('div','sub',t('hmInvNone')),h('div','btns',B('btn y',t('hmToShop'),()=>go('shop')))])]};
+function mortCard(){const m=S.mort,P=Eng.HOMES[S.home.id].price,sc=Eng.sched(m.bal,m.rate,m.pay),paid=Math.round(100*(P-m.bal)/P),c=h('div','cd');
+ ap(c,[h('h3','','🏠 '+t('mgT'),h('span','sp'),tipBtn('mortgage')),kv(t('mgBal'),h('span','big',coin(m.bal))),h('div','bar',h('i')),h('div','sub',t('mgPaid',{n:paid})+' · '+t('mgLeft',{n:sc.length})),
+  kv(t('mgDaily'),coin(Eng.due(S,'mort'))),kv(t('mgRate'),num(pctS(m.rate))),kv(t('mgPaidInt'),coin(m.int)),barsChart(sc),mkLegend(),
+  h('div','btns',B('btn g','💪 '+t('mgExtra'),()=>{const mx=Math.min(S.cash,m.bal);if(mx<1)return fail({});const i0=sc.reduce((a,r)=>a+r[0],0);
+   askAmount({title:t('amExtra'),sub:t('amExtraSub'),max:mx,init:Math.max(1,Math.floor(mx/2)),preview:v=>{const s2=Eng.sched(m.bal-v,m.rate,m.pay),i2=s2.reduce((a,r)=>a+r[0],0);return tn('mgSave',{a:coin(Math.max(0,i0-i2)),n:Math.max(0,sc.length-s2.length)})},
+    cb:v=>{const r=Eng.mortExtra(S,v);if(r.ok){SFX.coin();ev('mortgage',{extra:v,done:r.done?1:0});if(r.done){toast(t('mgDone'));confetti(['🎉','🏠','⭐'])}}after()}})}))]);
+ c.querySelector('.bar i').style.width=paid+'%';c.querySelector('.bar').style.margin='4px 0';return c}
+
+/* --- housing --- */
+SCR.housing=function(){const o=[head('🏘️ '+t('hsT'),'rentbuy'),warns()];
+ Eng.HOMES.forEach(H=>{const cur=S.home.id===H.id,c=h('div','cd');if(cur)c.style.outline='3px solid var(--vi)';c.setAttribute('data-home',H.id);
+  ap(c,[h('h3','',h('span','',H.e+' '+homeName(H.id)),h('span','sp'),cur?h('span','chip on',t('hsHere')):null),h('div','sub',t('hsSlots',{n:H.slots})+' · ',hearts(Math.min(5,Math.ceil(H.comfort*5/8)))),
+   cur?h('div','note',homeStatus()):null,H.rent?kv('🔑 '+t('hsRentDay'),h('span','',coin(H.rent),' '+t('perDay'))):null,H.dep?kv(t('hsDep'),coin(H.dep)):null,H.price?kv('🏷️ '+t('hsPrice'),coin(H.price)):null]);
+  const ch=c.querySelector('h3 .chip');if(ch){ch.style.minHeight='28px';ch.style.fontSize='12.5px'}
+  const bt=h('div','btns');if(H.rent&&!(cur&&!S.home.own))bt.appendChild(B('btn y',t('hsRent'),()=>rentDlg(H.id)));if(H.price&&!(cur&&S.home.own))bt.appendChild(B('btn g',t('hsBuy'),()=>buyHomeDlg(H.id)));if(bt.childNodes.length)c.appendChild(bt);o.push(c)});
+ o.push(h('div','sub',t('hsSellFee',{n:Eng.CFG.SELL_FEE})));return o};
+function backNote(){const b=Eng.leaveValue(S);return b>0?h('div','note',tn('hsBack',{a:coin(b)})):null}
+function movedFx(){SFX.win();confetti(['🏡','🎉','🔑']);toast(t('hsMoved'))}
+function rentDlg(id){const H=Eng.HOMES[id];SFX.tap();show(c=>{const have=S.cash+Eng.leaveValue(S),can=have>=H.dep;
+ ap(c,[h('div','hero',H.e),h('h2','',t('hsRentQ',{x:homeName(id)})),h('p','',tn('hsRentInfo',{a:coin(H.rent),b:coin(H.dep)})),backNote(),can?null:h('div','warn',tn('hsNeed',{a:coin(H.dep-have)})),
+  h('div','btns',B('btn w',t('cancel'),closeDlg),B('btn y',t('hsRent'),()=>{const r=Eng.rentHome(S,id);closeDlg();if(r.ok){movedFx();ev('rent',{h:id,p:H.rent});audit('city_rent','h'+id,{p:H.rent})}else fail(r);after()}))]);if(!can)c.querySelector('.btn.y').disabled=true})}
+function buyHomeDlg(id){const H=Eng.HOMES[id];SFX.tap();show(c=>{const have=S.cash+Eng.leaveValue(S),can=have>=H.price;
+ const b1=B('btn g wide',[t('hsCash')+' ',coin(H.price)],()=>{const r=Eng.buyHome(S,id,0,0);closeDlg();if(r.ok){movedFx();ev('buy',{h:id,p:H.price,c:'home'});audit('city_home','h'+id,{p:H.price})}else fail(r);after()});b1.disabled=!can;
+ const b2=B('btn v wide','🏦 '+t('hsMortBtn'),()=>mortDlg(id));
+ ap(c,[h('div','hero',H.e),h('h2','',t('hsBuyT',{x:homeName(id)})),h('p','c',h('span','big',coin(H.price))),backNote(),b1,can?null:h('p','c sub',tn('hsNeed',{a:coin(H.price-have)})),b2,h('p','c sub',t('hsMortSub')),h('div','btns',B('btn w',t('cancel'),closeDlg))]);b2.style.marginTop='8px'})}
+function mortDlg(id){const H=Eng.HOMES[id];let down=20,term=40;SFX.tap();
+ show(c=>{const draw=()=>{c.textContent='';const q=Eng.mortQuote(S,id,down,term),have=S.cash+Eng.leaveValue(S),can=have>=q.down,avg=Eng.avgPay(S),fit=avg<=0?0:q.pay<=avg*.45?2:q.pay<=avg*.8?1:0;
+   const c1=h('div','chips'),c2=h('div','chips');Eng.DOWNS.forEach(p=>c1.appendChild(B('chip'+(down===p?' on':''),[pctS(p*100)+' · ',coin(Math.ceil(H.price*p/100))],()=>{SFX.tap();down=p;draw()})));
+   Eng.MTERMS.forEach(n=>c2.appendChild(B('chip'+(term===n?' on':''),t('days',{n:n}),()=>{SFX.tap();term=n;draw()})));
+   ap(c,[h('h2','','🏦 '+t('mgT')+' · '+H.e+' '+homeName(id)),h('p','sub',t('mgDown')),c1,h('p','sub',t('mgTerm')),c2,
+    h('div','cd',kv(t('mgNow'),coin(q.down)),kv(t('mgLend'),coin(q.amt)),kv(t('mgRate'),num(pctS(q.rate))),kv(t('mgDaily'),h('b','',coin(q.pay))),kv(t('mgTotalInt'),coin(q.interest,{cls:'neg'})),h('div','kv tot',h('span','',tn('lnTotal',{a:coin(q.amt),b:coin(q.total)})))),
+    barsChart(q.sched),mkLegend(),h('div','sub',t('mgChart')),h('div','note',t('mgFit'+fit),avg>0?h('div','sub',tn('mgAvg',{a:coin(avg)})):null),backNote(),can?null:h('div','warn',tn('hsNeed',{a:coin(q.down-have)})),
+    h('div','btns',B('btn w',t('cancel'),closeDlg),B('btn g',t('mgGo'),()=>{const r=Eng.buyHome(S,id,down,term);closeDlg();if(r.ok){movedFx();ev('mortgage',{h:id,down:down,term:term,pay:q.pay});audit('city_mortgage','h'+id,{down:down,term:term})}else fail(r);after()}))]);
+   c.querySelector('.cd').style.marginTop='10px';if(!can)c.querySelector('.btn.g').disabled=true};draw()})}
+
+/* --- investing --- */
+function chg(id){const p=S.px[id],a=p[p.length-1],b=p.length>1?p[p.length-2]:a;return (a-b)/b*100}
+function chgNode(v){return h('span','mx '+(v>=0?'pos':'neg'),(v>=0?'▲ ':'▼ ')+dec1(Math.abs(v))+'%')}
+function dots(n){const d=h('span','dots');for(let i=0;i<5;i++)d.appendChild(h('i',i<n?'on':''));return d}
+SCR.invest=function(){const val=Eng.pfValue(S);let cost=0;for(const k in S.pf)cost+=S.pf[k].c;
+ const o=[head('📈 '+t('ivT'),'invest'),h('div','cd',h('h3','','💼 '+t('ivValue'),h('span','sp'),tipBtn('risk')),h('div','big',coin(val)),cost?kv(t('ivCost'),coin(cost)):null,cost?kv(t('ivPL'),coin(val-cost,{sign:1,col:1})):null,h('div','sub',t('ivLesson')))];
+ Eng.ASSETS.forEach(A=>{const p=Eng.price(S,A.id),own=S.pf[A.id],b=B('hrow',null,()=>assetDlg(A.id));b.setAttribute('data-asset',A.id);
+  ap(b,[h('span','e',A.e),h('span','m',h('span','',asName(A.id)),h('small','',t(A.kind==='bond'?'kBond':A.kind==='index'?'kIndex':'kStock')+' · ',dots(A.risk),own?[' · '+t('ivYou',{q:fmt(own.q)})]:null)),spark(S.px[A.id].slice(-20),54,26),h('span','r',h('span','mx',pxS(p),h('i','cn')),chgNode(chg(A.id)))]);o.push(b)});return o};
+function assetDlg(id){const A=Eng.AS[id];let q=1;SFX.tap();show(c=>{const draw=()=>{c.textContent='';const p=Eng.price(S,id),own=S.pf[id],maxB=Math.max(0,Math.floor(S.cash*100/p)),cost=Math.ceil(q*p/100),got=Math.floor(q*p/100),hist=S.px[id];
+  const st=h('div','amt',B('ib','−',()=>{SFX.tap();q=Math.max(1,q-1);draw()}),h('span','v',num(q)),B('ib','+',()=>{SFX.tap();q=Math.min(1e5,q+1);draw()}));st.style.direction='ltr';
+  const ch=h('div','chips');ch.style.justifyContent='center';[1,5,10].forEach(n=>ch.appendChild(B('chip'+(q===n?' on':''),'×'+n,()=>{SFX.tap();q=n;draw()})));ch.appendChild(B('chip',t('ivMax'),()=>{SFX.tap();q=Math.max(1,maxB);draw()}));
+  const bb=B('btn g',tn('ivBuy',{a:coin(cost)}),()=>{const r=Eng.invBuy(S,id,q);if(r.ok){SFX.coin();toast(A.e+' '+t('ivBought'));ev('invest',{n:r.cost,q:q});audit('city_invest',id,{n:r.cost});pop('pCash')}else fail(r);after();draw()});bb.disabled=cost>S.cash;
+  const sb=B('btn p',tn('ivSell',{a:coin(got)}),()=>{const r=Eng.invSell(S,id,q);if(r.ok){SFX.coin();toast(tn(r.gain>=0?'ivGain':'ivLoss',{a:coin(Math.abs(r.gain))}));ev('sell',{p:r.got,c:'inv',gain:r.gain});audit('city_invsell',id,{n:r.got})}else fail(r);after();q=1;draw()});sb.disabled=!own||own.q<q;
+  ap(c,[h('h2','',A.e+' '+asName(id)),h('div','rw',h('span','chip',t(A.kind==='bond'?'kBond':A.kind==='index'?'kIndex':'kStock')),h('span','sub',t('ivRisk')+' ',dots(A.risk)),h('span','sp'),h('span','big',h('span','mx',pxS(p),h('i','cn'))),chgNode(chg(id))),
+   h('p','',L(NM.adesc[id])),lineChart(hist.map(v=>v/100),{h:96,fmt:v=>dec1(v)}),h('div','sub',t('ivChart',{n:hist.length})+' · '+(A.div?t('ivDiv',{n:Eng.CFG.DIV_EVERY}):t('ivNoDiv'))),
+   own?h('div','note',t('ivYou',{q:fmt(own.q)})+' = ',coin(Math.floor(own.q*p/100)),' · '+t('ivPL')+' ',coin(Math.floor(own.q*p/100)-own.c,{sign:1,col:1})):null,
+   h('p','c sub',t('ivQty')),st,ch,h('div','btns',bb,sb),h('div','btns',B('btn w',t('close'),closeDlg))]);c.querySelector('.rw .chip').style.minHeight='30px'};draw()})}
+
+/* --- job office --- */
+function slipRows(sl){const o=[];if(sl.p)o.push(kv(t('slPlays')+' ×'+sl.p,coin(sl.p*Eng.CFG.PLAY)));if(sl.l)o.push(kv('📚 '+t('slLearn')+' ×'+sl.l,coin(sl.l*Eng.CFG.LEARN)));if(sl.w)o.push(kv('🏅 '+t('slWins')+' ×'+sl.w,coin(sl.w*Eng.CFG.WIN)));
+ const base=sl.p*Eng.CFG.PLAY+sl.l*Eng.CFG.LEARN+sl.w*Eng.CFG.WIN;if(sl.g-base>0)o.push(kv('⭐ '+t('slBonus')+' ×'+dec1(sl.m/100),coin(sl.g-base,{sign:1})));
+ o.push(kv(t('slGross'),h('b','',coin(sl.g))));o.push(kv('🏛️ '+t('slTax',{n:Eng.CFG.TAX}),coin(-sl.t,{col:1})));if(sl.s)o.push(kv('🐷 '+t('slSave',{n:sl.g-sl.t-sl.r>0?Math.round(100*sl.s/(sl.g-sl.t-sl.r)):0}),coin(-sl.s)));if(sl.r)o.push(kv('🤝 '+t('slRep'),coin(-sl.r)));
+ o.push(h('div','kv tot',h('span','',t('slNet')),coin(sl.n,{sign:1,cls:'pos'})));return o}
+function slipDlg(sl,fresh){(fresh?dlg:show)(c=>{ap(c,[h('div','hero','💼'),h('h2','',t('slT')),h('p','c',t('slWorked',{p:sl.p+sl.l,w:sl.w})),h('div','cd',slipRows(sl)),h('div','sub',t('slTaxWhy')),
+  sl.lvlUp?h('div','note','🎉 '+t('slUp',{x:jobName(sl.lvlUp),m:dec1(Eng.CAREER[sl.lvlUp].mult/100)})):null,sl.o?h('div','note',t('slOver',{n:sl.o})):null,okBtn(fresh?t('yay'):t('ok'))]);c.lastChild.style.marginTop='10px'})}
+SCR.job=function(){const lv=Eng.career(S),C=Eng.CAREER,nx=C[lv+1],J=S.job,o=[head('💼 '+t('jbT'),'tax')],me=h('div','cd'),td=today(),used=J.date===td?J.used:0,cap=Eng.CFG.CAP_DAY*(J.date===td?J.mult:1);
+ ap(me,[h('div','rw',avatar(44),h('div','',h('div','',h('b','',C[lv].e+' '+jobName(lv))),h('div','sub',t('jbJob')))),h('div','bar',h('i')),h('div','sub',nx?t('jbNext',{n:nx.at-J.worked}):t('jbTop')),h('div','note',t('jbToday',{a:used,b:cap}),h('div','sub',t('jbCapWhy',{g:Eng.CFG.CAP_GAME}))),h('div','btns',B('btn g',t('jbPlayNow'),()=>{save();location.href='index.html'}))]);
+ me.querySelector('.bar i').style.width=(nx?clamp(100*(J.worked-C[lv].at)/(nx.at-C[lv].at),3,100):100)+'%';me.querySelector('.bar').style.margin='8px 0 4px';me.querySelector('.rw b').style.fontSize='19px';o.push(me);
+ const m=C[lv].mult/100,pr=v=>coin(Math.round(v*m));o.push(h('div','cd',h('h3','','💰 '+t('jbRates')),kv('🎮 '+t('jbPlay'),pr(Eng.CFG.PLAY)),kv('📚 '+t('jbLearn'),pr(Eng.CFG.LEARN)),kv('🏅 '+t('jbWin'),pr(Eng.CFG.WIN)),kv('⭐ '+t('jbMult'),num('×'+dec1(m))),kv('🏛️ '+t('slTax',{n:Eng.CFG.TAX}),tipBtn('tax'))));
+ const lad=h('div','cd',h('h3','','📊 '+t('jbLadder')));C.forEach((c,i)=>{const r=h('div','hrow'+(i===lv?' cur':i<lv?' done':''),h('span','e',c.e),h('span','m',h('span','',jobName(i)),h('small','',t('jbAt',{n:c.at})+' · ',tn('jbLoan',{a:coin(c.loan)}))),h('span','r',num('×'+dec1(c.mult/100))));r.style.boxShadow='none';r.style.background=i===lv?'var(--soft)':i<lv?'#f1fff5':'#fafafa';r.style.marginBottom='5px';lad.appendChild(r)});o.push(lad);
+ const sl=h('div','cd',h('h3','','🧾 '+t('jbSlips')));if(!J.slips.length)ap(sl,h('div','sub',t('jbNoSlips')));J.slips.slice(-8).reverse().forEach(x=>{const b=B('hrow',null,()=>{SFX.tap();slipDlg(x)});ap(b,[h('span','e','🧾'),h('span','m',h('span','',t('day',{n:x.d})),h('small','',t('slWorked',{p:x.p+x.l,w:x.w}))),h('span','r',coin(x.n,{sign:1,cls:'pos'}))]);b.style.boxShadow='none';b.style.background='#fafafa';b.style.marginBottom='5px';sl.appendChild(b)});o.push(sl);return o};
+
+/* --- town hall --- */
+SCR.hall=function(){const o=[head('🏛️ '+t('hlT'),'budget'),warns()],b=Eng.bills(S),inc=Eng.bizIncome(S),si=Math.floor(S.sav*Eng.CFG.SAV_BP/10000),cal=h('div','cal'),start=S.day-((S.day-1)%7),E=Eng.CFG.DIV_EVERY;
+ for(let d=start;d<start+14;d++)cal.appendChild(h('span',d===S.day?'t':d<S.day?'p':d%E===0?'dv':'',d%E===0&&d!==S.day?'💌':String(d)));
+ const dn=E-(S.day%E);o.push(h('div','cd',h('h3','','📅 '+t('hlCal')+' · '+t('day',{n:S.day})),cal,h('div','sub','💌 '+(dn===1?t('hlDivToday'):t('hlDivIn',{n:dn}))),h('div','',nextBtn())));const cc=o[o.length-1];cc.children[2].style.margin='6px 0 8px';
+ const c=h('div','cd',h('h3','','🧮 '+t('hlEvery')));if(inc)ap(c,kv('🍋 '+t('tdBiz'),coin(inc,{sign:1,col:1})));if(S.sav)ap(c,kv('🐷 '+t('hlSavInt'),h('span','mx pos','≈ +'+fmt(si),h('i','cn'))));
+ if(b.home)ap(c,kv((b.own?'🏠 '+t('tdMort'):'🔑 '+t('tdRent')),coin(-b.home,{col:1})));if(b.loan)ap(c,kv('🤝 '+t('tdLoan'),coin(-b.loan,{col:1})));ap(c,h('div','kv tot',h('span','',t('hlBal')),coin(inc+si-b.home-b.loan,{sign:1,col:1})));o.push(c);
+ o.push(h('div','cd',h('h3','','🏛️ '+t('slTax',{n:Eng.CFG.TAX}),h('span','sp'),tipBtn('tax')),h('div','sub',tn('hlTaxes',{a:coin(S.st.taxes)}))));return o};
+
+/* --- park --- */
+SCR.park=function(){const gar=Eng.ITEMS.filter(i=>i.cat==='gar'&&S.own[i.id]!==undefined),pets=Eng.ITEMS.filter(i=>i.cat==='pet'&&S.own[i.id]!==undefined),pk=h('div','park',h('span','sun','☀️'),h('span','cl','☁️'));
+ gar.forEach(it=>{const e=h('span','',it.e);if(it.price>=600)e.style.fontSize='62px';pk.appendChild(e)});pets.forEach(it=>pk.appendChild(h('span','pet',it.e)));pk.appendChild(avatar(40));
+ return [head('🌳 '+t('pkT')),pk,gar.length?null:h('div','note',t('pkEmpty')),h('div','cd',h('div','rw',h('b','',t('hmHappy')),hearts(Eng.happy(S)),h('span','sp'),B('btn sm y','🌻 '+t('pkShop'),()=>{shopCat='gar';go('shop')})))]};
+
+/* --- goals, net worth, tips, settings --- */
+SCR.goals=function(){const b=Eng.breakdown(S),nw=Eng.netWorth(S),c=h('div','cd');
+ ap(c,[h('h3','','💎 '+t('glNW')),h('div','big',coin(nw)),h('div','sub',t('glNWSub'))]);
+ [['💳','bCash',b.cash],['🐷','bSav',b.sav],['📈','bInv',b.inv],['🏠','bHome',b.home],['🎒','bItems',b.items],['🤝','bLoan',-b.loan]].forEach(r=>{if(r[2]!==0)ap(c,kv(r[0]+' '+t(r[1]),coin(r[2],{col:r[2]<0})))});
+ if(S.nw.length>1){ap(c,[h('div','sub',t('glHist')),lineChart(S.nw.concat([nw]),{h:80,col:'#6a48f0'})]);c.children[c.children.length-2].style.margin='8px 0 4px'}
+ const n=Object.keys(S.goals).length,gl=h('div','cd',h('h3','','🎯 '+t('glT'),h('span','sp'),h('span','sub',t('glOf',{a:n,b:Eng.GOALS.length}))));
+ Eng.GOALS.slice().sort((x,y)=>(S.goals[x.id]!==undefined)-(S.goals[y.id]!==undefined)).forEach(g=>{const done=S.goals[g.id]!==undefined;let pr=null;if(!done&&g.p){const v=g.p(S);pr=h('div','bar',h('i'));pr.firstChild.style.width=clamp(100*v[0]/v[1],0,100)+'%';pr.style.height='8px';pr.style.marginTop='3px'}
+  const r=h('div','hrow'+(done?' done':''),h('span','e',g.e),h('span','m',h('span','',L(NM.goal[g.id])),pr),h('span','r',done?'✅':coin(g.rw,{sign:1})));r.style.boxShadow='none';r.style.marginBottom='5px';if(!done)r.style.background='#fafafa';gl.appendChild(r)});
+ const tp=h('div','cd',h('h3','','💡 '+t('glTips'))),tg=h('div','chips');TIPS.forEach(T=>tg.appendChild(B('chip',T.e+' '+L(T.t)+(S.tips[T.id]?' ✓':''),()=>tipDlg(T.id))));tp.appendChild(tg);
+ const st=h('div','cd'),fl=h('div','chips');fl.style.justifyContent='center';[['he','🇮🇱'],['fr','🇫🇷'],['en','🇬🇧']].forEach(l=>{const b2=B('flag'+(lang===l[0]?' on':''),l[1],()=>{setLang(l[0]);SFX.tap();buildTabs();render()});b2.setAttribute('aria-label',l[0]);b2.setAttribute('data-lang',l[0]);fl.appendChild(b2)});
+ fl.appendChild(B('flag',muted()?'🔇':'🔊',()=>{ls.set('annabelle-muted',muted()?'0':'1');SFX.tap();render()}));fl.lastChild.setAttribute('aria-label',t('setSound'));ap(st,[fl,$('extras')]);
+ return [c,gl,tp,st]};
+
+function buildTabs(){const tb=$('tabs');tb.textContent='';TABS.forEach(x=>{const b=B('tab',null,()=>{SFX.tap();go(x[0])});b.setAttribute('data-tab',x[0]);ap(b,[h('span','e',x[1]),h('span','',t(x[2]))]);tb.appendChild(b)})}
+function render(){
+ $('meAv').replaceWith(Object.assign(avatar(34),{id:'meAv'}));$('meT').textContent=t('title');const lv=Eng.career(S);$('meJ').textContent=Eng.CAREER[lv].e+' '+jobName(lv);
+ const pd=$('pDay');pd.textContent='☀️ ';pd.appendChild(num(S.day));pd.setAttribute('aria-label',t('day',{n:S.day}));const pc=$('pCash');pc.textContent='';pc.appendChild(coin(S.cash));
+ const act=SUBS[scr]?'map':scr;Array.prototype.forEach.call($('tabs').children,b=>b.classList.toggle('on',b.getAttribute('data-tab')===act));
+ const p=$('panel'),y=p.scrollTop;$('holder').appendChild($('extras'));p.textContent='';ap(p,(SCR[scr]||SCR.map)());p.scrollTop=y;
+ drawMap()}
+
+/* ---------- salary + day when the page opens / comes back ---------- */
+function work(first){const td=today(),sl=Eng.pay(S,rstats(),td),rep=Eng.open(S,td);
+ if(sl&&sl.gift){dlg(c=>{ap(c,[h('div','hero','🏙️'),h('h2','',t('wT')),h('p','',t('wB1')),h('p','',t('wB2')),h('p','',t('wB3')),h('div','cd',kv('🎁 '+t('wGift'),h('span','big',coin(sl.gift,{sign:1,cls:'pos'})))),okBtn(t('wGo'))])});ev('salary',{gift:sl.gift})}
+ else if(sl&&sl.n!==undefined){slipDlg(sl,true);SFX.coin();ev('salary',{n:sl.n,p:sl.p+sl.l,w:sl.w,lvl:Eng.career(S)});audit('city_salary','job',{n:sl.n})}
+ else if(sl&&sl.rest&&!first)toast(t('rest'));
+ if(rep){news(rep);ev('day',{skip:0})}
+ if(sl||rep||first)after()}
+function boot(){setLang(lang);load();buildTabs();document.body.setAttribute('data-scr',scr);
+ $('me').addEventListener('click',()=>{SFX.tap();go('job')});
+ $('ov').addEventListener('click',e=>{if(e.target===$('ov')&&$('card').querySelector('.btn.w'))closeDlg()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&dOpen)closeDlg()});
+ let rz=0;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawMap,120)});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')work(false);else save()});
+ window.addEventListener('pagehide',()=>{save();track('game_end',{sec:Math.round((Date.now()-t0)/1000),score:Eng.netWorth(S),win:false})});
+ window.addEventListener('storage',e=>{if(e.key==='annabelle-lang'&&e.newValue&&TX[e.newValue]){setLang(e.newValue);buildTabs();render()}});
+ render();work(true);
+ if(repaired)toast(t('repaired'));
+ award([{event:'play'}]);track('game_start',{mode:'city',level:Eng.career(S)+1});
+ setTimeout(drawMap,300)}
+window.__city={state:()=>JSON.parse(JSON.stringify(S)),pay:()=>{const r=Eng.pay(S,rstats(),today());after();return r},nextDay:()=>{const r=Eng.skip(S,today());after();return r},
+ buy:id=>{const r=Eng.buyItem(S,id);after();return r},act:(name,args)=>{if(typeof Eng[name]!=='function')return null;const r=Eng[name].apply(null,[S].concat(args||[]));after();return r},go:go,eng:Eng};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+</body>
+</html>
