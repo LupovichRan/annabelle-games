@@ -118,6 +118,15 @@ input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;bac
 #qOs .btn{min-height:54px;background:#fff}#qOs .btn.ok{background:#7be08f}#qOs .btn.no{background:#ffc9c9}
 #qX{min-height:52px;flex:none;background:#fffbe0;border:3px solid var(--ink);border-radius:14px;padding:6px 10px;font-weight:800;font-size:clamp(13px,3.8vw,16px);line-height:1.3;display:flex;align-items:center;justify-content:center;text-align:center;visibility:hidden}
 #qX.on{visibility:visible}
+.pips{display:inline-flex;gap:2px;direction:ltr;vertical-align:middle}.pips i{width:8px;height:8px;border-radius:50%;background:#d9d4ea;display:block}.pips i.on{background:#39b36a}
+#qCard .mem{display:flex;gap:10px;margin-top:4px;direction:ltr;flex-wrap:wrap}#qCard .mem span{display:inline-flex;align-items:center;gap:3px;opacity:1}#qCard .pips i{background:#ffffff44}#qCard .pips i.on{background:#8dffb0}
+html[dir=rtl] #qCard .mem{justify-content:flex-end}
+.crs{display:flex;flex-direction:column;gap:5px;margin:8px 0}.crT{font-weight:900;font-size:14px;opacity:.75}
+.cr{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center;text-align:start;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:4px 10px;font-weight:900;font-size:14.5px}
+.cr small{grid-column:1/3;font-weight:700;font-size:12.5px;opacity:.8}.cr .upm{color:#1f8a4a}
+.nx{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 2px}.card .nx .btn{margin:0;font-size:15px;padding:6px 8px;min-height:50px}.card .nx .btn:first-child{grid-column:1/3;font-size:clamp(16px,4.6vw,20px)}.card .nx .btn:last-child:nth-child(2){grid-column:1/3}
+#qQ{flex-direction:column;gap:4px}#qQ .rv{font-size:12.5px;font-weight:900;color:var(--pk)}
+#qNext,#qSkip{display:none;flex:none}#quiz.warm #qSkip{display:flex}#quiz.warm #qStage,#quiz.warm #qTime,#quiz.warm #qPause{display:none}
 #qTime.low{background:#ff5a6e;color:#fff;animation:blink .5s steps(2) infinite}
 #conf{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:45}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:44}#flash.on{animation:fl .35s}@keyframes fl{0%{opacity:.8}100%{opacity:0}}
@@ -159,11 +168,12 @@ body.shake #stage,body.shake #qStage{animation:shk .3s}@keyframes shk{20%{transf
  <div id="ctl"></div><div id="ask"></div>
 </div></div>
 <div class="scr" id="quiz"><div class="col">
- <div class="bar"><button class="ib" id="qBack" aria-label="back">◀</button><span class="pill" id="qTime" dir="ltr"></span><div class="ttl" id="qTtl"></div><span class="pill" id="qScore" dir="ltr"></span><button class="ib" id="qPause" aria-label="pause">⏸</button></div>
+ <div class="bar"><button class="ib" id="qBack" aria-label="back">◀</button><span class="pill" id="qTime" dir="ltr"></span><button class="btn sm w" id="qSkip" type="button"></button><div class="ttl" id="qTtl"></div><span class="pill" id="qScore" dir="ltr"></span><button class="ib" id="qPause" aria-label="pause">⏸</button></div>
  <div id="qStage"><canvas id="qcv"></canvas></div>
  <div id="qQ"></div>
  <div id="qX"></div>
  <div id="qOs"></div>
+ <button class="btn g" id="qNext" type="button"></button>
 </div></div>
 <div class="ov" id="ovWhy"><div class="card" id="cWhy"></div></div>
 <div class="ov" id="ovRes"><div class="card" id="cRes"></div></div>
@@ -212,6 +222,18 @@ const TX={
  lvUp:["עולים רמה! הניסויים הבאים קצת יותר מאתגרים 🚀","Niveau supérieur ! Les prochaines expériences sont plus corsées 🚀","Level up! The next experiments are a bit trickier 🚀"],
  lvDn:["נעבור לניסויים קצת יותר קלים 🙂","On passe à des expériences un peu plus faciles 🙂","Let's switch to slightly easier experiments 🙂"],
  dailyWin:["ניסוי היום הושלם! 🎉","Expérience du jour réussie ! 🎉","Daily experiment complete! 🎉"],
+ wT:["חימום קצר 🧠","Petit échauffement 🧠","Quick warm-up 🧠"],
+ wS:["{0} שאלות קצרות ממה שכבר ענית עליו. בלי שעון ובלי ניקוד.","{0} petites questions que tu as déjà vues. Sans chrono, sans points.","{0} quick questions you have seen before. No clock, no points."],
+ wS1:["שאלה קצרה אחת ממה שכבר ענית עליו. בלי שעון ובלי ניקוד.","Une petite question que tu as déjà vue. Sans chrono, sans points.","One quick question you have seen before. No clock, no points."],
+ wGo:["▶ יאללה","▶ C'est parti","▶ Let's go"],wSkip:["⏭ [[דלגי|דלג|דלגו]]","⏭ Passer","⏭ Skip"],wNext:["▶ הלאה","▶ Suivant","▶ Next"],wFin:["✔ סיימנו","✔ Terminé","✔ Done"],
+ fromB:["🕰️ מפעם קודמת","🕰️ Déjà vu","🕰️ From before"],revTag:["🔁 חזרה","🔁 Révision","🔁 Review"],wDone:["החימום הושלם!","Échauffement terminé !","Warm-up done!"],
+ wRem:["עדיין [[זוכרת|זוכר|זוכרים]] {0} מתוך {1} {2} 💪","Tu te souviens encore de {0} sur {1} {2} 💪","You still remember {0} of {1} from {2} 💪"],
+ wW0:["מאתמול","d'hier","yesterday"],wW1:["מלפני כמה ימים","d'il y a quelques jours","a few days ago"],wW2:["מהשבוע שעבר","de la semaine dernière","last week"],
+ wNone:["אלה עוד צריכות קצת תרגול. נחזור אליהן מחר 🙂","Celles-ci demandent encore un peu d'entraînement. On y reviendra demain 🙂","These need a little more practice. We'll bring them back tomorrow 🙂"],
+ canDo:["מה [[את כבר יודעת|אתה כבר יודע|אתם כבר יודעים]]:","Ce que tu sais maintenant :","What you know now:"],
+ stSolid:["יושב חזק 💪","solide 💪","solid 💪"],stNear:["בדרך הנכונה · עוד {0} כדי לנעול","ça vient · encore {0} pour le fixer","getting there · {0} more to lock it in"],stNew:["עוד חדש · נחזור לזה בקרוב","encore nouveau · on y reviendra bientôt","still new · we'll come back to it soon"],
+ nxWeak:["💪 לחזק {0} שאלות","💪 Renforcer {0} questions","💪 Strengthen {0} questions"],nxWeak1:["💪 לחזק שאלה אחת","💪 Renforcer 1 question","💪 Strengthen 1 question"],nxLab:["🏠 בחירה חופשית","🏠 Choix libre","🏠 Free choice"],
+ catL:["🌿 מדעי החיים","🌿 Sciences de la vie","🌿 Life science"],catE:["🌍 כדור הארץ והחלל","🌍 Terre et espace","🌍 Earth & space"],catP:["⚡ חומר, כוח ואנרגיה","⚡ Matière, forces, énergie","⚡ Matter, forces & energy"],
  paused:["הפסקה ⏸","Pause ⏸","Paused ⏸"],resume:["▶ המשך","▶ Continuer","▶ Resume"],
  score:["ניקוד","Score","Score"],newRec:["שיא חדש!","NOUVEAU RECORD !","NEW RECORD!"],qEnd:["הטיל נחת! 🚀","La fusée a atterri ! 🚀","The rocket has landed! 🚀"],
  qRight:["{0} תשובות נכונות מתוך {1}","{0} bonnes réponses sur {1}","{0} correct out of {1}"],alt:["גובה","Altitude","Altitude"],
@@ -225,6 +247,33 @@ function add(p){for(let i=1;i<arguments.length;i++)if(arguments[i])p.appendChild
 function clear(e){while(e.firstChild)e.removeChild(e.firstChild);return e}
 function showScr(id){['hub','lab','quiz'].forEach(s=>$(s).classList.toggle('on',s===id))}
 function showOv(id){['ovWhy','ovRes','ovPause'].forEach(s=>$(s).classList.toggle('on',s===id))}
+/*LEITNER*/
+/* ============ spaced review memory (Leitner boxes; pure, no DOM; the same block lives in mathquest, thinking and sciencelab) ============
+   map: {unitId:{b:box 1..5, d:day it is due, r:right, w:wrong, l:last day seen}}.  A right answer on a DUE unit moves it up one box and
+   schedules it IV[box] days ahead; a right answer that is not due yet only counts (no cramming up the boxes in one sitting);
+   a miss sends it back to box 1, due tomorrow. */
+const Leitner=(function(){
+ const IV=[1,2,4,8,16],MAXB=5,ok=v=>typeof v==='number'&&isFinite(v),ci=(v,a,b,d)=>ok(v)?Math.max(a,Math.min(b,Math.floor(v))):d;
+ function clean(raw,valid,day,cap){const o={};if(!raw||typeof raw!=='object'||Array.isArray(raw)||!ok(day))return o;let n=0;
+  for(const id of Object.keys(raw)){if(n>=(cap||400))break;let v=false;try{v=!!valid(id)}catch(e){}if(!v)continue;const r=raw[id];if(!r||typeof r!=='object'||Array.isArray(r))continue;
+   const b=ci(r.b,1,MAXB,1);o[id]={b:b,d:ci(r.d,0,day+IV[b-1],day+1),r:ci(r.r,0,1e6,0),w:ci(r.w,0,1e6,0),l:ci(r.l,0,day,day)};n++}
+  return o}
+ function answer(map,id,right,day){let r=map[id];const fresh=!r;if(!r)r=map[id]={b:1,d:day+1,r:0,w:0,l:day};const from=fresh?0:r.b,wasDue=!fresh&&r.d<=day,gap=fresh?0:Math.max(0,day-r.l);
+  if(right){r.r++;if(wasDue){r.b=Math.min(MAXB,r.b+1);r.d=day+IV[r.b-1]}}else{r.w++;r.b=1;r.d=day+1}
+  r.l=day;return{id:id,ok:!!right,fresh:fresh,from:from,to:r.b,up:!fresh&&r.b>from,due:wasDue,gap:gap,retry:!right}}
+ function due(map,day){return Object.keys(map).filter(id=>map[id].d<=day).sort((a,b)=>map[a].d-map[b].d||map[a].l-map[b].l||map[a].b-map[b].b||(a<b?-1:a>b?1:0))}
+ /* up to n (never more than 5) due units, oldest first, but never two of one topic in a row while another topic is waiting (interleaving) */
+ function pick(map,day,n,topic,fit){n=Math.max(0,Math.min(5,Math.floor(n)||0));const pool=due(map,day).filter(id=>!fit||fit(id)),out=[];let last=null;
+  while(out.length<n&&pool.length){let i=pool.findIndex(id=>topic(id)!==last);if(i<0)i=0;const id=pool.splice(i,1)[0];out.push(id);last=topic(id)}return out}
+ /* the unit that most needs practice: lowest box, then most misses, then seen longest ago (null when everything is in the top box) */
+ function weakest(map,fit){let best=null;for(const id of Object.keys(map)){if(fit&&!fit(id))continue;const r=map[id];if(r.b>=MAXB)continue;
+   if(!best||r.b<map[best].b||(r.b===map[best].b&&(r.w-r.r>map[best].w-map[best].r||(r.w-r.r===map[best].w-map[best].r&&r.l<map[best].l))))best=id}return best}
+ return{IV:IV,MAXB:MAXB,clean:clean,answer:answer,due:due,pick:pick,weakest:weakest}})();
+/*/LEITNER*/
+/* test clock: only honoured on a QA device (localStorage kidapp-qa=1); production always uses the real local day */
+let QADAY=null;try{if(ls.get('kidapp-qa')==='1'){const v=+sessionStorage.getItem('kidapp-qa-day');if(v>0)QADAY=Math.floor(v)}}catch(e){}
+function dayNum(){if(QADAY!==null)return QADAY;const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)}
+let RQ=[]; /* same-session retries (question keys) that did not fit in the run where the miss happened */
 /* ============ save ============ */
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 function loadSave(){let s={};try{s=JSON.parse(ls.get(KEY)||'{}')}catch(e){s={}}if(!s||typeof s!=='object'||Array.isArray(s))s={};
@@ -234,6 +283,9 @@ function loadSave(){let s={};try{s=JSON.parse(ls.get(KEY)||'{}')}catch(e){s={}}i
  if(Array.isArray(s.hi))o.hi=s.hi.filter(h=>h&&fin(h.s)&&h.s>=0).map(h=>({s:Math.floor(h.s),d:typeof h.d==='string'?h.d.slice(0,12):'',m:'quiz'})).sort((a,b)=>b.s-a.s).slice(0,5);
  if(s.streak&&fin(s.streak.n)&&typeof s.streak.last==='string')o.streak={n:Math.max(0,Math.floor(s.streak.n)),last:s.streak.last.slice(0,12)};
  if(s.daily&&typeof s.daily.d==='string')o.daily={d:s.daily.d.slice(0,12),done:s.daily.done?1:0};
+ /* added fields (older saves simply lack them): rev = review memory of quiz questions (pruned against the bank once it is parsed),
+    wd = day of the last warm-up offer, qlv = quiz level carried from live performance */
+ o.rev=Leitner.clean(s.rev,id=>/^q[0-9a-z]{1,9}$/.test(id),dayNum(),400);o.wd=fin(s.wd)&&s.wd>0?Math.floor(s.wd):0;o.qlv=fin(s.qlv)&&s.qlv>=1&&s.qlv<=4?s.qlv:0;
  sumStars(o);return o}
 function sumStars(o){IDS.forEach(id=>{let n=0;for(let i=0;i<NCH;i++){let b=0;for(let L=1;L<=4;L++)b=Math.max(b,o.ch[id][L][i]);n+=b}o.stars[id]=n})}
 let SV=loadSave();
@@ -1250,18 +1302,30 @@ P|4|מהו הסמל הכימי של זהב?|Quel est le symbole chimique de l'or
 P|4|על הירח המשקל שלך קטן יותר. מה נשאר בדיוק אותו דבר?|Sur la Lune, ton poids est plus petit. Qu'est-ce qui reste exactement pareil ?|On the Moon you weigh less. What stays exactly the same?|המסה שלך~Ta masse~Your mass|המשקל שלך~Ton poids~Your weight|כוח המשיכה~La gravité~The gravity|גובה הקפיצה שלך~La hauteur de tes sauts~How high you jump|מסה היא כמות החומר, ומשקל הוא הכוח שבו הכבידה מושכת אותה.|La masse est la quantité de matière ; le poids est la force avec laquelle la gravité l'attire.|Mass is the amount of matter; weight is the force of gravity pulling on it.
 P|4|כמה זה 0 קלווין (האפס המוחלט) במעלות צלזיוס?|À combien de degrés Celsius correspond 0 kelvin (le zéro absolu) ?|What is 0 kelvin (absolute zero) in degrees Celsius?|-273 °C|0 °C|-100 °C|273 °C|באפס המוחלט לחלקיקים יש האנרגיה הנמוכה ביותר האפשרית.|Au zéro absolu, les particules ont la plus faible énergie possible.|At absolute zero particles have the lowest possible energy.
 `;
+/* a stable key per question (hash of its English text), so the review memory survives re-ordering or additions to the bank */
+function qkey(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return 'q'+(h>>>0).toString(36)}
 const iso=s=>s.replace(/(^|[^\u0590-\u05ffA-Za-z\d])(-\d+(?:[.,:]\d+)*(?:\s?(?:°C|km|%))?)|(\d+(?:[.,:]\d+)*(?:\s?(?:°C|km|%))?)/g,(m,a,b,c)=>b!==undefined?a+'\u2066'+b+'\u2069':'\u2066'+c+'\u2069');
 const QUIZ=QRAW.trim().split('\n').map((ln,ix)=>{const p=ln.split('|'),o=k=>{const a=p[k].split('~');return a.length===3?a.map(iso):[U(a[0]),U(a[0]),U(a[0])]};
- return{id:ix,c:p[0],l:+p[1],q:[iso(p[2]),iso(p[3]),iso(p[4])],o:[o(5),o(6),o(7),o(8)],x:[iso(p[9]),iso(p[10]),iso(p[11])],n:p.length}});
-const Q={on:false,t:60,score:0,combo:0,maxCombo:0,n:0,ok:0,alt:0,v:0,lvl:2,used:{},cur:null,lock:0,t0:0,last:'',order:[],stars:[],rec:false};
-function startQuiz(){ac();E.mode='quiz';showOv(null);showScr('quiz');Object.assign(Q,{on:true,t:60,score:0,combo:0,maxCombo:0,n:0,ok:0,alt:0,v:30,lvl:baseLevel(),used:{},cur:null,lock:0,last:'',rec:false});paused=false;
+ return{id:ix,k:qkey(p[4]),c:p[0],l:+p[1],q:[iso(p[2]),iso(p[3]),iso(p[4])],o:[o(5),o(6),o(7),o(8)],x:[iso(p[9]),iso(p[10]),iso(p[11])],n:p.length}});
+const QK={};QUIZ.forEach(q=>{QK[q.k]=q});Object.keys(SV.rev).forEach(id=>{if(!QK[id])delete SV.rev[id]});
+const Q={on:false,t:60,score:0,combo:0,maxCombo:0,n:0,ok:0,alt:0,v:0,lvl:2,used:{},cur:null,lock:0,t0:0,last:'',order:[],stars:[],rec:false,rv:0,retry:[],cat:{}};
+const CATS=['L','E','P'],catOf=k=>QK[k]?QK[k].c:'';
+function showQ(q,rv,fn){const qq=clear($('qQ'));if(rv)add(qq,el('span','rv',T(rv===2?TX.revTag:TX.fromB)));add(qq,el('span',null,({L:'🌿 ',E:'🌍 ',P:'⚡ '})[q.c]+T(q.q)));$('qX').className='';$('qX').textContent='';const os=clear($('qOs'));
+ Q.order.forEach((oi,k)=>{const b=el('button','btn',T(q.o[oi]));b.dataset.c=oi===0?'1':'0';b.onclick=()=>fn(k);os.appendChild(b)})}
+function noteQ(q,ok,st){const lr=Leitner.answer(SV.rev,q.k,ok,dayNum()),c=st[q.c]||(st[q.c]={n:0,ok:0,up:0});c.n++;if(ok)c.ok++;if(lr.up)c.up=1;return lr}
+function startQuiz(){ac();E.mode='quiz';showOv(null);showScr('quiz');/* R7: the rocket starts where live performance left it last time (first run: the onboarding/age level) */
+ Object.assign(Q,{on:true,t:60,score:0,combo:0,maxCombo:0,n:0,ok:0,alt:0,v:30,lvl:SV.qlv?clamp(SV.qlv,1,4):baseLevel(),used:{},cur:null,lock:0,last:'',rec:false,rv:0,retry:RQ.splice(0,1).filter(k=>QK[k]).map(k=>({k:k,at:2})),cat:{}});paused=false;$('quiz').classList.remove('warm');$('qNext').style.display='none';
  Q.stars=Array.from({length:50},()=>({x:Math.random(),y:Math.random(),s:rnd(.5,2)}));$('qTtl').dir=lang==='he'?'rtl':'ltr';$('qTtl').textContent='🚀 '+T(TX.quiz);SV.plays++;save();award({event:'play'});track('game_start',{game:'sciencelab',station:'quiz',level:Q.lvl});nextQ();updQuizHud()}
 function nextQ(){const tg=clamp(Math.round(Q.lvl),1,4);let pool=QUIZ.filter(q=>!Q.used[q.id]&&q.l===tg&&q.c!==Q.last);if(!pool.length)pool=QUIZ.filter(q=>!Q.used[q.id]&&Math.abs(q.l-tg)<=1&&q.c!==Q.last);if(!pool.length)pool=QUIZ.filter(q=>!Q.used[q.id]);if(!pool.length){Q.used={};pool=QUIZ}
- const q=pick(pool);Q.used[q.id]=1;Q.cur=q;Q.last=q.c;Q.t0=performance.now();Q.lock=0;Q.order=[0,1,2,3].sort(()=>Math.random()-.5);
- $('qQ').textContent=({L:'🌿 ',E:'🌍 ',P:'⚡ '})[q.c]+T(q.q);$('qX').className='';$('qX').textContent='';const os=clear($('qOs'));
- Q.order.forEach((oi,k)=>{const b=el('button','btn',T(q.o[oi]));b.dataset.c=oi===0?'1':'0';b.onclick=()=>answerQ(k);os.appendChild(b)})}
+ /* spaced review woven in: a pending same-session retry first (3 questions after the miss), else every 5th question is one that is due */
+ let q=null,rv=0;const ri=Q.retry.findIndex(x=>x.at<=Q.n);
+ if(ri>=0){q=QK[Q.retry.splice(ri,1)[0].k];rv=2}
+ else if(Q.n%5===4){const id=Leitner.pick(SV.rev,dayNum(),1,catOf,k=>QK[k]&&!Q.used[QK[k].id])[0];if(id){q=QK[id];rv=1}}
+ if(!q)q=pick(pool);Q.rv=rv;Q.used[q.id]=1;Q.cur=q;Q.last=q.c;Q.t0=performance.now();Q.lock=0;Q.order=[0,1,2,3].sort(()=>Math.random()-.5);
+ showQ(q,rv,answerQ)}
 function answerQ(k){if(!Q.on||Q.lock>0||paused||!Q.cur)return;const bs=$('qOs').children,b=bs[k];if(!b)return;const q=Q.cur,ok=Q.order[k]===0;Q.n++;
- track('answer',{skill:'quiz',cat:q.c,ok:ok,ms:Math.round(performance.now()-Q.t0),level:q.l});
+ const ad={skill:'quiz',cat:q.c,ok:ok,ms:Math.round(performance.now()-Q.t0),level:q.l};if(Q.rv)ad.rev=1;track('answer',ad);noteQ(q,ok,Q.cat);
+ if(!ok&&Q.rv!==2)Q.retry.push({k:q.k,at:Q.n+2});
  for(const x of bs){if(x.dataset.c==='1')x.classList.add('ok')}
  if(ok){Q.ok++;Q.combo++;Q.maxCombo=Math.max(Q.maxCombo,Q.combo);Q.score+=Math.round(10*q.l*(1+Math.min(Q.combo-1,5)*.2));Q.v=Math.min(600,Q.v+90+Q.combo*25);Q.lvl=Math.min(4,Q.lvl+.34);SFX.ok();Q.lock=.9;if(Q.combo>=3&&Q.combo%2===1){SFX.launch();shake()}if(Q.combo===5)award({event:'combo',score:5})}
  else{b.classList.add('no');Q.combo=0;Q.v*=.4;Q.lvl=Math.max(1,Q.lvl-.5);SFX.no();Q.lock=2.6}
@@ -1277,12 +1341,43 @@ function quizDraw(){const f=fit($('qcv')),g=f.g,W=f.w,H=f.h;g.fillStyle='#141233
  label(g,T(TX.alt)+' '+U(Math.round(Q.alt/10),'km'),W-70,16,12,'#fff');if(Q.combo>=2)txt(g,'×'+Q.combo,56,H/2,26,'#ffd23f')}
 function hiTable(cur){const d=el('div','hs');add(d,el('div','hsT','★ '+T(TX.hi)+' ★'));if(!SV.hi.length)add(d,el('div','hsE',T(TX.hiE)));
  SV.hi.forEach((h,k)=>{const r=el('div','hsR'+(k===cur?' cur':''));add(r,el('span',null,(k+1)+'.'),el('span',null,String(h.s)),el('span',null,h.d));d.appendChild(r)});return d}
-function endQuiz(){if(!Q.on)return;Q.on=false;const prev=SV.best,ent={s:Q.score,d:today(),m:'quiz'};SV.hi.push(ent);SV.hi.sort((a,b)=>b.s-a.s);SV.hi=SV.hi.slice(0,5);const pos=SV.hi.indexOf(ent);Q.rec=Q.score>prev&&Q.score>0;SV.best=Math.max(SV.best,Q.score);save();
+function endQuiz(){if(!Q.on)return;Q.on=false;const prev=SV.best,ent={s:Q.score,d:today(),m:'quiz'};SV.hi.push(ent);SV.hi.sort((a,b)=>b.s-a.s);SV.hi=SV.hi.slice(0,5);const pos=SV.hi.indexOf(ent);Q.rec=Q.score>prev&&Q.score>0;SV.best=Math.max(SV.best,Q.score);if(Q.n>=3)SV.qlv=Math.round(Q.lvl*100)/100;Q.retry.forEach(x=>{RQ.push(x.k)});Q.retry=[];while(RQ.length>3)RQ.shift();save();
  award({event:'score',score:Q.score});award({event:'combo',score:Q.maxCombo});if(Q.rec)award({event:'win'});flushR();track('game_end',{game:'sciencelab',station:'quiz',score:Q.score,sec:60,win:Q.rec});
  const c=clear($('cRes'));add(c,el('h2',null,T(TX.qEnd)));const sc=el('p','scl','0');add(c,sc);if(Q.rec)add(c,el('p','rec',T(TX.newRec)));
  add(c,el('p',null,T(TX.qRight,U(Q.ok),U(Q.n))+' · '+T(TX.alt)+' '+U(Math.round(Q.alt/10),'km')),hiTable(pos));
- const ag=el('button','btn g',T(TX.qGo));ag.id='qAgain';ag.onclick=()=>{SFX.click();startQuiz()};const hb=el('button','btn w',T(TX.hub));hb.onclick=()=>{SFX.click();toMenu()};add(c,ag,hb);showOv('ovRes');
+ const ag=el('button','btn g',T(TX.qGo));ag.id='qAgain';ag.onclick=()=>{SFX.click();startQuiz()};c.dataset.kind='result';if(Q.n)add(c,catRows(Q.cat));add(c,nextChoices(ag));showOv('ovRes');
  if(Q.rec){SFX.rec();confetti(90);flash()}else SFX.win();let n=0;const tg=Q.score,iv=setInterval(()=>{n=Math.min(tg,n+Math.max(1,Math.ceil(tg/30)));sc.textContent='⭐ '+n;if(n>=tg)clearInterval(iv)},30)}
+/* ---------------- spaced review: memory pips, competence rows, next choices, warm-up ---------------- */
+function pips(b){const p=el('span','pips');p.dataset.box=b;for(let i=1;i<=5;i++)p.appendChild(el('i',i<=b?'on':''));return p}
+function catBox(c){let n=0,sum=0;for(const k in SV.rev)if(catOf(k)===c){n++;sum+=SV.rev[k].b}return n?Math.max(1,Math.round(sum/n)):0}
+/* R5: what the kid knows now, per science area (this round + memory strength), instead of a bare score */
+function catRows(st){const w=el('div','crs');add(w,el('div','crT',T(TX.canDo)));CATS.forEach(c=>{const k=st[c];if(!k)return;const b=catBox(c),row=el('div','cr');row.dataset.cat=c;
+  const nm=el('span',null,T(TX['cat'+c]));if(k.up)add(nm,el('span','upm',' ⬆'));add(row,nm,pips(b),el('small',null,(b>=3||(k.n>=2&&k.ok===k.n))?T(TX.stSolid):k.ok>0?T(TX.stNear,U(Math.max(1,3-b))):T(TX.stNew)));w.appendChild(row)});return w}
+function weakIds(){return Object.keys(SV.rev).filter(k=>SV.rev[k].b<=2&&SV.rev[k].w>0).sort((a,b)=>SV.rev[a].b-SV.rev[b].b||(SV.rev[b].w-SV.rev[b].r)-(SV.rev[a].w-SV.rev[a].r)||SV.rev[a].l-SV.rev[b].l).slice(0,3)}
+/* R5: a choice of what comes next (first = the natural continuation; strengthen the weakest questions; free choice = the lab) */
+function nextChoices(first){const w=el('div','nx'),wk=weakIds();add(w,first);
+ if(wk.length){const b=el('button','btn w',wk.length===1?T(TX.nxWeak1):T(TX.nxWeak,U(wk.length)));b.dataset.nx='weak';b.onclick=()=>{SFX.click();startWarm(wk,'weak')};add(w,b)}
+ const f=el('button','btn w',T(TX.nxLab));f.dataset.nx='free';f.onclick=()=>{SFX.click();toMenu()};add(w,f);return w}
+/* warm-up: up to 3 due questions (never more than 5), oldest first, mixed areas; untimed, no score, explanation after every answer; offered once a day, always skippable */
+const W={ids:[],n:0,ok:0,res:[],due:0,cur:null,lock:false,kind:'warm',t0:0,cat:{}};
+function warmIds(){return Leitner.pick(SV.rev,dayNum(),3,catOf,k=>!!QK[k])}
+function startWarm(ids,kind){ids=(ids||warmIds()).filter(k=>QK[k]).slice(0,5);if(!ids.length)return false;ac();E.mode='warm';Q.on=false;paused=false;E.won=true;document.body.classList.remove('asking');showOv(null);showScr('quiz');$('quiz').classList.add('warm');
+ if(kind!=='weak'){SV.wd=dayNum();save()}Object.assign(W,{ids:ids,n:0,ok:0,res:[],due:Leitner.due(SV.rev,dayNum()).length,cur:null,lock:false,kind:kind||'warm',cat:{}});
+ $('qTtl').dir=lang==='he'?'rtl':'ltr';$('qTtl').textContent=T(TX.wT);$('qSkip').textContent=T(TX.wSkip);$('qNext').style.display='none';track('game_start',{game:'sciencelab',station:'warm',level:0});warmQ();return true}
+function warmQ(){const q=QK[W.ids[W.n]];W.cur=q;W.lock=false;W.t0=performance.now();Q.order=[0,1,2,3].sort(()=>Math.random()-.5);$('qScore').textContent=U((W.n+1)+'/'+W.ids.length);showQ(q,1,warmAns)}
+function warmAns(k){if(E.mode!=='warm'||W.lock||paused||!W.cur)return;const bs=$('qOs').children,b=bs[k];if(!b)return;const q=W.cur,ok=Q.order[k]===0;W.lock=true;W.n++;if(ok)W.ok++;
+ W.res.push(noteQ(q,ok,W.cat));track('answer',{skill:'quiz',cat:q.c,ok:ok,ms:Math.round(performance.now()-W.t0),level:q.l,rev:1});
+ if(!ok&&W.kind!=='weak'){RQ.push(q.k);while(RQ.length>3)RQ.shift()}
+ for(const x of bs){if(x.dataset.c==='1')x.classList.add('ok')}if(ok)SFX.ok();else{b.classList.add('no');SFX.no()}save();
+ const x=$('qX');x.textContent=(ok?'✔ ':'💡 ')+T(q.x);x.className='on';const nb=$('qNext');nb.textContent=T(W.n>=W.ids.length?TX.wFin:TX.wNext);nb.style.display='flex'}
+function warmNext(){if(E.mode!=='warm'||!W.lock)return;$('qNext').style.display='none';if(W.n>=W.ids.length)warmEnd();else warmQ()}
+function offerWarm(){const n=warmIds().length;if(!n||E.mode!=='hub')return false;const c=clear($('cRes'));c.dataset.kind='warm';add(c,el('h2',null,T(TX.wT)),el('p',null,n===1?T(TX.wS1):T(TX.wS,U(n))));
+ const go=el('button','btn g',T(TX.wGo));go.id='wGo';go.onclick=()=>{SFX.click();startWarm()};const sk=el('button','btn w',T(TX.wSkip));sk.id='wSkip';sk.onclick=()=>{SFX.click();SV.wd=dayNum();save();showOv(null)};add(c,go,sk);showOv('ovRes');return true}
+function warmEnd(){const R=W.res,n=R.length,ok=W.ok,gap=R.reduce((m,x)=>Math.max(m,x.gap),0),c=clear($('cRes'));c.dataset.kind='warmEnd';W.cur=null;
+ track('review',{game:'sciencelab',n:n,ok:ok,due:W.due});track('game_end',{game:'sciencelab',station:'warm',score:0,sec:0,win:true});
+ const p=el('p',null,ok?T(TX.wRem,U(ok),U(n),T(TX['wW'+(gap>=6?2:gap>=2?1:0)])):T(TX.wNone));p.id='wSum';add(c,el('h2',null,T(TX.wDone)),p,catRows(W.cat));
+ const dp=dailyPick(),dd=SV.daily.d===today()&&SV.daily.done,first=el('button','btn g',dd?'🚀 '+T(TX.quiz):'🔬 '+T(TX.daily));first.dataset.nx='map';first.onclick=()=>{SFX.click();if(dd)startQuiz();else startStation(dp.st,undefined,dp.i,true)};
+ add(c,nextChoices(first));save();showOv('ovRes');if(ok){SFX.win();confetti(40)}else SFX.click()}
 /* ================================================================ HUB / DAILY ================================================================ */
 function dailyPick(){const d=today();let h=0;for(let k=0;k<d.length;k++)h=(h*31+d.charCodeAt(k))>>>0;return{st:IDS[h%IDS.length],i:Math.floor(h/8)%NCH}}
 function renderHub(){document.title=T(TX.title);const h=clear($('hTitle'));h.textContent=T(TX.title);add(h,el('small',null,T(TX.sub)));
@@ -1291,11 +1386,11 @@ function renderHub(){document.title=T(TX.title);const h=clear($('hTitle'));h.tex
  db.onclick=()=>{SFX.click();startStation(dp.st,undefined,dp.i,true)};
  const g=clear($('grid'));IDS.forEach(id=>{const st=ST[id],L=stLevel(id),arr=SV.ch[id][L],done=arr.filter(Boolean).length,b=el('button','stc');b.dataset.st=id;const e=el('span','e',st.ico);e.style.background=st.col;
   const bar=el('span','bar'),fi=el('i');fi.style.width=(done/NCH*100)+'%';bar.appendChild(fi);add(b,el('span','lv',T(TX.lv)+' '+L),e,el('b',null,T(st.name)),el('span','s','⭐ '+SV.stars[id]+'/'+NCH*3),bar);b.onclick=()=>{SFX.click();startStation(id)};g.appendChild(b)});
- const q=clear($('qCard'));add(q,el('span','e','🚀'));const qt=el('div');add(qt,el('b',null,T(TX.quiz)),el('span',null,T(TX.quizS)));add(q,qt);q.onclick=()=>{SFX.click();startQuiz()};
+ const q=clear($('qCard'));add(q,el('span','e','🚀'));const qt=el('div');add(qt,el('b',null,T(TX.quiz)),el('span',null,T(TX.quizS)));const mem=el('div','mem');CATS.forEach(c=>{const m=el('span',null,({L:'🌿',E:'🌍',P:'⚡'})[c]);m.dataset.cat=c;add(m,pips(catBox(c)));add(mem,m)});add(qt,mem);add(q,qt);q.onclick=()=>{SFX.click();startQuiz()};
  const hh=$('hHi'),nt=hiTable(-1);clear(hh);while(nt.firstChild)hh.appendChild(nt.firstChild);
  const fl=clear($('flags'));LANGS.forEach(l=>{const b=el('button',l===lang?'on':'',l.toUpperCase());b.dataset.lang=l;b.onclick=()=>{SFX.click();setLang(l);renderHub()};fl.appendChild(b)});save()}
 function isYesterday(s){const y=new Date();y.setDate(y.getDate()-1);return s===y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate()}
-function toMenu(){E.mode='hub';Q.on=false;paused=false;E.won=true;document.body.classList.remove('asking');untoast();showOv(null);showScr('hub');renderHub();flushR()}
+function toMenu(){E.mode='hub';$('quiz').classList.remove('warm');$('qNext').style.display='none';Q.on=false;paused=false;E.won=true;document.body.classList.remove('asking');untoast();showOv(null);showScr('hub');renderHub();flushR()}
 window.toMenu=toMenu;
 /* ================================================================ PAUSE / INPUT / LOOP ================================================================ */
 function pause(){if(paused||E.mode==='hub'||$('ovRes').classList.contains('on')||$('ovWhy').classList.contains('on'))return;paused=true;const c=clear($('cPause'));add(c,el('h2',null,T(TX.paused)));const r=el('button','btn g',T(TX.resume));r.id='pRes';r.onclick=resume;const m=el('button','btn w',T(TX.hub));m.onclick=()=>{SFX.click();toMenu()};const ns=el('div');ns.id='navSlot';add(c,r,m,ns);if(E.mode==='lab'){const kb=el('p',null,T(TX.kb));kb.style.fontSize='13px';add(c,kb)}showOv('ovPause')}
@@ -1309,6 +1404,7 @@ const pup=e=>{if(ptr!==e.pointerId)return;ptr=null;if(E.mode!=='lab')return;cons
 document.addEventListener('keydown',e=>{if(window.AnnabelleDesk&&AnnabelleDesk.typing&&AnnabelleDesk.typing(e))return;const k=e.key,c=e.code;
  if(c==='KeyM'){toggleMute();return}if(c==='KeyP'||(k==='Escape'&&paused)){if(paused)resume();else pause();return}if(paused)return;
  if(E.mode==='quiz'){if(k>='1'&&k<='4'){answerQ(+k-1);e.preventDefault()}else if(k==='Escape')toMenu();return}
+ if(E.mode==='warm'){if($('ovRes').classList.contains('on'))return;if(k>='1'&&k<='4'){warmAns(+k-1);e.preventDefault()}else if(k==='Enter'||k===' '){warmNext();e.preventDefault()}else if(k==='Escape')toMenu();return}
  if(E.mode!=='lab')return;if($('ovWhy').classList.contains('on')){if(k==='Enter'||k===' '){const b=$('whyNext');b&&b.click();e.preventDefault()}return}
  if(k==='Escape'){toMenu();return}if(k>='1'&&k<='4'&&E.askCb){E.askCb(+k-1);e.preventDefault();return}if(document.body.classList.contains('asking'))return;
  if(c==='KeyH'){showHint();return}if(c==='KeyR'){enterChallenge();return}
@@ -1316,7 +1412,7 @@ document.addEventListener('keydown',e=>{if(window.AnnabelleDesk&&AnnabelleDesk.t
  else if(k==='ArrowUp'||k==='ArrowDown'){const s=E.sl[1]||E.sl[0];if(!t&&s&&!s.inp.disabled){s.nudge(k==='ArrowUp'?1:-1);e.preventDefault()}}
  else if(k===' '||k==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;if(E.act){E.act();e.preventDefault()}}});
 $('backBtn').onclick=()=>{SFX.click();toMenu()};$('hintBtn').onclick=()=>showHint();$('againBtn').onclick=()=>{SFX.click();enterChallenge()};
-$('muteBtn').onclick=toggleMute;$('musBtn').onclick=toggleMusic;$('qBack').onclick=()=>{SFX.click();toMenu()};$('qPause').onclick=()=>pause();
+$('muteBtn').onclick=toggleMute;$('musBtn').onclick=toggleMusic;$('qBack').onclick=()=>{SFX.click();toMenu()};$('qSkip').onclick=()=>{SFX.click();toMenu()};$('qNext').onclick=()=>{SFX.click();warmNext()};$('qPause').onclick=()=>pause();
 document.addEventListener('pointerdown',()=>ac(),{passive:true});
 let lastT=0,mascT=0;
 function loop(ts){requestAnimationFrame(loop);const dt=Math.min(.05,(ts-lastT)/1000||0);lastT=ts;confStep(dt);
@@ -1329,7 +1425,8 @@ function loop(ts){requestAnimationFrame(loop);const dt=Math.min(.05,(ts-lastT)/1
 window.__sciencelab={
  state(){return{mode:E.mode,station:E.st,level:E.L,idx:E.i,phase:E.phase,won:E.won,attempts:E.attempts,hint:E.hint,pred:E.pred.slice(),asking:document.body.classList.contains('asking'),askA:E.askP?E.askP.a:-1,why:E.ch?E.ch.why:null,type:E.ch?E.ch.type:null,paused:paused,lang:lang,base:baseLevel(),gender:kid().gender,
    stars:Object.assign({},SV.stars),mastery:JSON.parse(JSON.stringify(SV.mastery)),best:SV.best,hi:SV.hi.slice(),streak:Object.assign({},SV.streak),daily:Object.assign({},SV.daily),
-   quiz:{on:Q.on,t:Q.t,score:Q.score,n:Q.n,ok:Q.ok,combo:Q.combo,lvl:Q.lvl,cur:Q.cur?Q.cur.id:null,order:Q.order.slice(),lock:Q.lock}}},
+   quiz:{on:Q.on,t:Q.t,score:Q.score,n:Q.n,ok:Q.ok,combo:Q.combo,lvl:Q.lvl,cur:Q.cur?Q.cur.id:null,key:Q.cur?Q.cur.k:null,rev:Q.rv|0,order:Q.order.slice(),lock:Q.lock,retry:Q.retry.map(x=>x.k)},
+   warm:{on:E.mode==='warm',n:W.n,ok:W.ok,total:W.ids.length,cur:W.cur?W.cur.k:null,lock:W.lock,kind:W.kind,order:Q.order.slice()},wd:SV.wd,qlv:SV.qlv}},
  start(st,L,i){return startStation(st,L,i)},solve(){return solve()},quiz(){startQuiz();return true},
  win(){if(E.mode==='quiz'&&Q.on){const k=Q.order.indexOf(0);Q.lock=0;answerQ(k);Q.t=0;Q.lock=.01;return true}if(E.mode==='lab'&&!E.won){E.fast=true;win();return true}return false},
  lose(){if(E.mode==='quiz'&&Q.on){Q.t=0;Q.lock=0;endQuiz();return true}if(E.mode==='lab'&&!E.won){attempt();return true}return false},
@@ -1340,8 +1437,16 @@ window.__sciencelab={
   if(kind==='moon'||kind==='earth'){const q=st.geo(),a=id*D2R,R=kind==='moon'?q.R*1.05:q.R*.8;return[r.left+q.cx+Math.cos(a)*R,r.top+q.cy-Math.sin(a)*R]}
   if(kind==='mirror'){const q=st.w2c(),m=S.ms[id.k],a=id.a*D2R;return[r.left+q.ox+(m.x+Math.cos(a)*1.2)*q.s,r.top+q.oy+(m.y+Math.sin(a)*1.2)*q.s]}
   if(kind==='lamp'){const q=st.sg();return[r.left+q.ox+id.x*q.s,r.top+q.gy-id.H*q.s]}return[r.left+r.width/2,r.top+r.height/2]},
- sim(){return E.S},ch(){return E.ch},make(st,L,i){return ST[st].make(L,i)},models:M,QUIZ:QUIZ,IDS:IDS,WHY:WHY,ST:ST,T:T,setLang(l){setLang(l);renderHub()}};
+ sim(){return E.S},ch(){return E.ch},make(st,L,i){return ST[st].make(L,i)},models:M,QUIZ:QUIZ,IDS:IDS,WHY:WHY,ST:ST,T:T,setLang(l){setLang(l);renderHub()},reload(){SV=loadSave();Object.keys(SV.rev).forEach(id=>{if(!QK[id])delete SV.rev[id]});renderHub()},
+ /* spaced review: due list, full memory, test clock, warm-up */
+ review(){return Leitner.due(SV.rev,dayNum()).map(id=>({id:id,box:SV.rev[id].b,due:SV.rev[id].d}))},memory(){return JSON.parse(JSON.stringify(SV.rev))},leitner:Leitner,retries(){return RQ.slice()},
+ day(){return dayNum()},setDay(n){QADAY=fin(n)&&n>0?Math.floor(n):null;try{if(QADAY===null)sessionStorage.removeItem('kidapp-qa-day');else if(ls.get('kidapp-qa')==='1')sessionStorage.setItem('kidapp-qa-day',String(QADAY))}catch(e){}return dayNum()},
+ warmup(){return startWarm()},warmOffer(){return offerWarm()},
+ /* answer the current quiz / warm-up question right (true) or wrong (false) without waiting for the rocket lock */
+ quizAnswer(ok){if(E.mode==='warm'){if(W.lock)warmNext();if(E.mode!=='warm'||W.lock)return false;warmAns(Q.order.indexOf(ok?0:1));return true}if(E.mode!=='quiz'||!Q.on)return false;if(Q.lock>0){Q.lock=0;nextQ()}answerQ(Q.order.indexOf(ok?0:1));return true}};
 setLang(lang);updAudioBtns();renderHub();requestAnimationFrame(loop);
+/* first visit of the day with something due: offer the warm-up once (skippable; the lab is right behind it) */
+if(SV.wd!==dayNum()&&warmIds().length)offerWarm();
 addEventListener('resize',()=>{if(E.mode==='lab'&&E.S&&E.S.first!==undefined)E.S.first=false});
 })();
 </script>
