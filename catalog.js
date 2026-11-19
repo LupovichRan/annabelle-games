@@ -32,7 +32,7 @@
 
   /* pages that are being written right now: listed here = hidden everywhere. The lead removes an id when its page ships
      (critters.html exists in the tree but is still in progress: delete the id below to publish it in the store and in starter picks). */
-  var PENDING = {critters: 1};
+  var PENDING = {};
 
   var CATS = [
     {id: 'learn', emo: '🎓', n: {he: 'לומדים', fr: 'Apprendre', en: 'Learning'}},
@@ -138,7 +138,7 @@
     ['חופרים עמוק ומוציאים חיות מהאדמה.', 'On creuse profond et on sort des animaux de la terre.', 'Dig deep and pull animals out of the ground.'], ['fishing', 'animals']);
   g('towerdefense', '🏰', 'adventure', [7, 16], 2, 8, 'L', '', ['#7fbf5a', '#3d8a3a'], ['שומרי המאורה', 'Gardiens de la tanière', 'Tiger Den Defense'],
     ['מציבים טיגריסים על השביל ושומרים על המאורה.', 'On place des tigres sur le chemin pour protéger la tanière.', 'Place tigers along the path to guard the den.'], ['logic', 'animals']);
-  g('critters', '🦔', 'adventure', [5, 14], 1, 6, 'M', 'n', ['#8bd45a', '#2f8f6a'], ['עולם היצורים', 'Le monde des créatures', 'Critter World'],
+  g('critters', '🐾', 'adventure', [5, 14], 1, 6, 'M', 'n', ['#7bd88f', '#2a9d8f'], ['עולם היצורים', 'Le monde des créatures', 'Critter World'],
     ['הרפתקה של חברות, משחק ולמידה עם יצורים קטנים.', 'Une aventure d’amitié, de jeu et de découvertes avec de petites créatures.', 'An adventure of friendship, play and learning with little critters.'], ['animals', 'story']);
   /* ---- retro ---- */
   g('retro', '🕹️', 'retro', [6, 16], 2, 3, 'S', '', ['#7c5cff', '#3b2a8f'], ['פינת הרטרו', 'Coin rétro', 'Retro Corner'],

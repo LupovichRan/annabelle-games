@@ -79,12 +79,13 @@ button.row:active{background:var(--tint)}
 .search input{flex:1;min-width:0;border:0;background:none;min-height:48px;font-size:17px;-webkit-user-select:text;user-select:text}
 .search input:focus-visible{outline:none}
 .search input::-webkit-search-cancel-button{display:none}
-.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .cc{min-height:48px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);font-weight:600;font-size:15px;padding:4px 6px;line-height:1.2;display:flex;align-items:center;justify-content:center;gap:5px}
 .cc[aria-pressed=true],.cc[aria-selected=true]{background:var(--tint);border-color:var(--acc);color:var(--acc-d)}
-.fl{grid-template-columns:repeat(4,1fr)}
+.fl{grid-template-columns:repeat(4,minmax(0,1fr))}
 .fl .cc{flex-direction:column;gap:0;font-size:13px;min-height:54px}
 .fl .cc span{font-size:18px;line-height:1.1}
+@media (max-width:379px){.chips:not(.fl) .cc{font-size:14px;gap:3px;padding:4px 3px}} /* narrow phones: the three category columns stay equal and inside the screen */
 .lbl{color:var(--soft);font-size:14px;font-weight:600;margin-bottom:-10px}
 .empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 /* footer: calm mode */
@@ -104,6 +105,7 @@ button.row:active{background:var(--tint)}
 /* detail sheet */
 .back{position:fixed;inset:0;background:#2b314066;z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--bg);width:100%;max-width:520px;max-height:calc(100dvh - 24px);overflow:auto;border-radius:24px 24px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;position:relative}
+.sheet>*{flex-shrink:0} /* the sheet scrolls; nothing in it is squeezed (the 'adding' bar has overflow:hidden and would collapse) */
 .sheet .x{position:absolute;top:10px;inset-inline-end:10px;width:48px;height:48px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:18px}
 .art{width:112px;height:112px;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:64px;line-height:1;align-self:center;margin-top:6px}
 .sheet h2{font-size:22px;text-align:center;margin:0}
@@ -119,16 +121,56 @@ button.row:active{background:var(--tint)}
 .prog i{position:absolute;inset-block:0;inset-inline-start:0;width:0;background:#c5d6ee;transition:width .8s linear}
 .prog.go i{width:100%}
 .prog span{position:relative}
+/* about the game (gameinfo.js, loaded lazily): 3 pictures in fixed boxes, a summary, one line of facts, and sections that stay closed until asked */
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.shot{position:relative;aspect-ratio:390/800;border-radius:14px;overflow:hidden;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.shot .se{font-size:34px;line-height:1;opacity:.55}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.shot[disabled]{cursor:default}
+.sheet.pics .art{width:72px;height:72px;font-size:42px;border-radius:20px;margin-top:0}
+.about{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.about h3{margin:0;font-size:16px;font-weight:700}
+.sum{font-size:16px}
+.meta{color:var(--soft);font-size:14px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.sh{width:100%;min-height:48px;padding:6px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600;font-size:16px;text-align:start;border-radius:14px}
+.sh i{font-style:normal;color:var(--soft);font-size:14px;flex:none}
+.sp{padding:2px 14px 12px;display:flex;flex-direction:column;gap:10px}
+.log{display:flex;flex-direction:column;gap:10px}
+.log li{display:flex;flex-direction:column;font-size:15px;line-height:1.4}
+.log small,.who small{color:var(--soft);font-size:14px}
+.who{display:flex;flex-direction:column;gap:8px}
+.who li{display:flex;flex-direction:column;font-size:15px;line-height:1.4}
+.who b{font-weight:600}
+.sp .btn{min-height:44px;font-size:15px;font-weight:600}
+/* the larger view of a picture: next / previous / close, a swipe also works – nothing moves by itself */
+.view{position:fixed;inset:0;z-index:40;background:#20242eee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));touch-action:pan-y}
+.vbox{position:relative;height:min(calc(100dvh - 150px),calc((100vw - 24px)*800/390));aspect-ratio:390/800;border-radius:16px;overflow:hidden;background:#3a4050;flex:none}
+.vbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none}
+.vtop{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;font-size:15px;min-height:48px}
+.vtop span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vbar{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;font-size:15px}
+.vb{min-height:48px;min-width:104px;padding:0 14px;border-radius:14px;background:#ffffff22;color:#fff;font-weight:600;font-size:16px;flex:none}
+.vb.x{min-width:48px}
+.vb:active{background:#ffffff44}
+.view :focus-visible{outline-color:#fff}
 @media (min-width:760px){
   body{padding-top:20px}
   .list{grid-template-columns:1fr 1fr}
-  .chips{grid-template-columns:repeat(6,1fr)}
-  .fl{grid-template-columns:repeat(4,1fr)}
+  .chips{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .fl{grid-template-columns:repeat(4,minmax(0,1fr))}
   .acts .btn{flex:0 1 240px}
   .back{align-items:center}
   .sheet{border-radius:24px;max-height:calc(100dvh - 32px)}
+  /* with pictures the sheet has two columns: the pictures at the start side (right in Hebrew, left in French / English), the text beside them */
+  .sheet.pics{max-width:920px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:22px;row-gap:12px;align-content:start;padding-top:18px}
+  .sheet.pics .art{justify-self:center}
+  .sheet.pics>*{grid-column:2}
+  .sheet.pics>.shots{grid-column:1;grid-row:1;align-self:start;position:sticky;top:0}
+  .sheet.pics>.x{grid-column:auto}
 }
-@media (max-height:700px) and (min-width:760px){.art{width:84px;height:84px;font-size:48px;border-radius:22px}.sheet{gap:9px}}
+@media (max-height:700px) and (min-width:760px){.art{width:84px;height:84px;font-size:48px;border-radius:22px}.sheet{gap:9px}.sheet.pics{row-gap:9px}}
+@media (max-height:700px) and (max-width:759px){.sheet.pics .art{display:none}.sheet.pics h2{margin-inline:52px}}
 /* lively mode only (calm off) and only when the system allows motion: one small pop as feedback, never a loop */
 @media (prefers-reduced-motion:no-preference){
   html[data-calm="0"] .art.pop{animation:pop .35s ease-out 1}
@@ -153,6 +195,9 @@ html.desk button:hover:not([disabled]),html.desk .home:hover{filter:brightness(.
 </div>
 <div class="bar" id="bar" role="status" aria-live="polite" hidden><span id="barT"></span><button class="un" id="barU" type="button"></button><button id="barX" type="button">✕</button></div>
 <div class="back" id="back" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"></div></div>
+<div class="view" id="viewer" role="dialog" aria-modal="true" hidden><div class="vtop"><span id="vT"></span><button class="vb x" id="vX" type="button">✕</button></div>
+ <div class="vbox" id="vBox"><img id="vImg" alt="" width="540" height="1108" draggable="false"></div>
+ <div class="vbar"><button class="vb" id="vPrev" type="button"></button><span id="vN" role="status"></span><button class="vb" id="vNext" type="button"></button></div></div>
 <script>
 (function(){
 'use strict';
@@ -175,6 +220,9 @@ var TX={he:function(){return {
  tg:{learn:'למידה',online:'אונליין עם חברים',two:'שניים על מסך אחד',isNew:'חדש'},
  get:'להוסיף – בחינם',getting:'מוסיף…',added:'✓ נוסף למסך הבית',play:'▶ לשחק',remove:'להסיר מהבית',removed:'הוסר. ההתקדמות נשמרת.',keep:'ההתקדמות נשמרת. אפשר להחזיר מתי שרוצים.',close:'סגירה',
  tAdd:'{g} נוסף למסך הבית.',tRm:'{g} הוסר. ההתקדמות נשמרת.',tPack:'נוספו {n} משחקים.',tPack1:'נוסף משחק אחד.',undo:'ביטול',closeA:'סגירת ההודעה',
+ pics:'תמונות מתוך המשחק',picA:'{g}: תמונה {n} מתוך {m} מהמשחק',about:'על המשחק',created:'נוצר ב{d}',ver:'גרסה {v}',updated:'עודכן ב־{d}',
+ whatsNew:'מה השתנה',lmore:'להראות עוד {n}',lmore1:'להראות עוד אחד',asked:'מי ביקש את המשחק',ideas:'רעיונות ותוספות',addName:'רוצים להוסיף כאן שם? ספרו לנו בכפתור 🐞.',
+ prev:'הקודמת',next:'הבאה',vOf:'\u2066{n} / {m}\u2069',vT:'תמונות מתוך {g}',
  calm:'🍃 מצב רגוע',calmOn:'פועל – פחות תנועה ופחות רעש בכל האתר.',calmOff:'כבוי – יותר תנועה ואפקטים.'}},
 fr:function(){return {
  title:'La boutique de jeux',sub:'Tout est gratuit',home:'Accueil',tabs:{mine:'Mes jeux',you:'Pour toi',all:'Tous les jeux'},
@@ -189,6 +237,9 @@ fr:function(){return {
  tg:{learn:'Apprendre',online:'En ligne avec des amis',two:'À deux sur un écran',isNew:'Nouveau'},
  get:'Ajouter – gratuit',getting:'Ajout…',added:'✓ Ajouté à ton écran d’accueil',play:'▶ Jouer',remove:'Retirer de l’accueil',removed:'Retiré. Ta progression est gardée.',keep:'Ta progression est gardée. Tu peux le remettre quand tu veux.',close:'Fermer',
  tAdd:'{g} est ajouté à ton écran d’accueil.',tRm:'{g} est retiré. Ta progression est gardée.',tPack:'{n} jeux ajoutés.',tPack1:'1 jeu ajouté.',undo:'Annuler',closeA:'Fermer le message',
+ pics:'Images du jeu',picA:'{g} : image {n} sur {m} du jeu',about:'À propos du jeu',created:'Créé en {d}',ver:'Version {v}',updated:'Mis à jour le {d}',
+ whatsNew:'Ce qui a changé',lmore:'Voir les {n} autres',lmore1:'Voir 1 de plus',asked:'Qui a demandé ce jeu',ideas:'Idées et ajouts',addName:'Envie d’ajouter un nom ici ? Dites-le-nous avec le bouton 🐞.',
+ prev:'Précédente',next:'Suivante',vOf:'{n} / {m}',vT:'Images de {g}',
  calm:'🍃 Mode calme',calmOn:'Activé – moins de mouvement et de bruit sur tout le site.',calmOff:'Désactivé – plus de mouvement et d’effets.'}},
 en:function(){return {
  title:'Game Shop',sub:'Everything is free',home:'Home',tabs:{mine:'My games',you:'For you',all:'All games'},
@@ -203,6 +254,9 @@ en:function(){return {
  tg:{learn:'Learning',online:'Online with friends',two:'Two on one screen',isNew:'New'},
  get:'Get – free',getting:'Adding…',added:'✓ Added to your home screen',play:'▶ Play',remove:'Remove from home',removed:'Removed. Your progress is kept.',keep:'Your progress is kept. You can add it back any time.',close:'Close',
  tAdd:'{g} is on your home screen.',tRm:'{g} was removed. Your progress is kept.',tPack:'{n} games added.',tPack1:'1 game added.',undo:'Undo',closeA:'Close this message',
+ pics:'Pictures from the game',picA:'{g}: picture {n} of {m} from the game',about:'About the game',created:'Created {d}',ver:'Version {v}',updated:'Updated {d}',
+ whatsNew:'What’s new',lmore:'Show {n} more',lmore1:'Show 1 more',asked:'Who asked for it',ideas:'Ideas and additions',addName:'Want to add a name here? Tell us with the 🐞 button.',
+ prev:'Previous',next:'Next',vOf:'{n} / {m}',vT:'Pictures from {g}',
  calm:'🍃 Calm mode',calmOn:'On – less motion and noise across the site.',calmOff:'Off – more motion and effects.'}}}[LG]();
 function F(s,o){return String(s).replace(/\{(\w+)\}/g,function(m,k){return o[k]!=null?o[k]:''})}
 function el(tag,cls,text){var e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
@@ -214,7 +268,7 @@ function reduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 
 /* ---------- state: the last tab / category / filters are remembered (not the search text) ---------- */
 var UK='annabelle-store-ui',TABS=['mine','you','all'],FILTERS=['calm','learn','together','short'];
-var S={tab:'mine',cat:C.cats[0].id,f:{},q:'',arr:false,sheet:null,undo:null};
+var S={tab:'mine',cat:C.cats[0].id,f:{},q:'',arr:false,sheet:null,undo:null,open:{},told:{},all:false,msg:''};
 try{var u=JSON.parse(localStorage.getItem(UK)||'null');if(u&&typeof u==='object'){if(TABS.indexOf(u.tab)>=0)S.tab=u.tab;
  if(C.cats.some(function(c){return c.id===u.cat}))S.cat=u.cat;if(u.f&&typeof u.f==='object')FILTERS.forEach(function(k){if(u.f[k]===1)S.f[k]=1})}}catch(e){}
 function remember(){try{localStorage.setItem(UK,JSON.stringify({tab:S.tab,cat:S.cat,f:S.f}))}catch(e){}}
@@ -313,15 +367,16 @@ function doPack(pid){var ids=C.packIds(pid),done=C.addMany(ids);if(!done.length)
 
 /* ---------- the detail sheet ---------- */
 var opener=null,progT=0;
-function openSheet(id,from){var g=C.byId(id);if(!g||!C.available(id)||g.parent)return false;opener=from||D.activeElement;S.sheet=id;hideBar();track('open',id);drawSheet('');back.hidden=false;D.body.style.overflow='hidden';
- var h=D.getElementById('shT');if(h)h.focus();return true}
-function closeSheet(){if(!S.sheet)return;clearTimeout(progT);S.sheet=null;back.hidden=true;D.body.style.overflow='';draw();
+function openSheet(id,from){var g=C.byId(id);if(!g||!C.available(id)||g.parent)return false;opener=from||D.activeElement;S.sheet=id;S.open={};S.told={};S.all=false;hideBar();track('open',id);drawSheet('');back.hidden=false;D.body.style.overflow='hidden';
+ var h=D.getElementById('shT');if(h)h.focus();if(!GI)loadInfo();return true}
+function closeSheet(){if(!S.sheet)return;closeViewer(true);clearTimeout(progT);S.sheet=null;back.hidden=true;D.body.style.overflow='';draw();
  var o=opener&&opener.dataset&&opener.dataset.id?view.querySelector('.row[data-id="'+opener.dataset.id+'"]'):null;opener=null;if(o)o.focus()}
-function drawSheet(msg,pop){var g=C.byId(S.sheet);if(!g)return;sheet.textContent='';var has=C.has(g.id);
+function drawSheet(msg,pop){var g=C.byId(S.sheet);if(!g)return;sheet.textContent='';var has=C.has(g.id),inf=info(g.id),pics=!!(inf&&inf.shots);S.msg=msg||'';sheet.classList.toggle('pics',pics);
  var x=btn('x','✕');x.id='shX';x.setAttribute('aria-label',TX.close);x.onclick=closeSheet;sheet.appendChild(x);
  var art=chip(g,'art'+(pop?' pop':''));sheet.appendChild(art);
  var h=el('h2',null,C.name(g.id,LG));h.id='shT';h.tabIndex=-1;sheet.appendChild(h);
  sheet.appendChild(el('p','ds',C.desc(g.id,LG)));
+ if(pics)sheet.appendChild(strip(g,inf));
  var fa=el('div','facts');
  [[TX.age,F(TX.ageV,{a:g.ages[0],b:g.ages[1]})],[TX.mins,F(TX.minsV,{n:g.mins})]].forEach(function(f){var d=el('div','fact');d.appendChild(el('b',null,f[1]));d.appendChild(D.createTextNode(f[0]));fa.appendChild(d)});
  var pc=el('div','fact'),pb=el('b');pb.appendChild(leaves(g));pc.appendChild(pb);pc.appendChild(D.createTextNode(TX.cl[g.calm]));fa.appendChild(pc);sheet.appendChild(fa);
@@ -331,7 +386,75 @@ function drawSheet(msg,pop){var g=C.byId(S.sheet);if(!g)return;sheet.textContent
  if(has){var pl=el('a','btn pri',TX.play);pl.id='shPlay';pl.href=C.href(g.id);sheet.appendChild(pl);
   var rm=btn('btn sec',TX.remove);rm.id='shRm';rm.onclick=function(){if(doRemove(g.id,true)){drawSheet(TX.removed);var b=D.getElementById('shGet');if(b)b.focus()}};sheet.appendChild(rm);
   sheet.appendChild(el('p','note',TX.keep)).style.textAlign='center'}
- else{var gt=btn('btn pri',TX.get);gt.id='shGet';gt.onclick=function(){getNow(g.id,gt)};sheet.appendChild(gt)}}
+ else{var gt=btn('btn pri',TX.get);gt.id='shGet';gt.onclick=function(){getNow(g.id,gt)};sheet.appendChild(gt)}
+ if(inf)sheet.appendChild(about(g,inf));
+ if(pics){var sh=D.getElementById('shots'),k=0;[].forEach.call(sheet.children,function(c){if(c!==sh&&c!==x)k++});sh.style.gridRow='1 / span '+k}} /* two columns on a wide screen: the pictures run beside all the text rows */
+
+/* ---------- about the game: pictures, summary, dates and version, what changed, who asked (window.GameInfo from gameinfo.js) ----------
+   The file is fetched after first paint, so the shop opens as fast as before. Without it (offline and not cached yet) the sheet is simply the short one. */
+var GI=null,giBusy=false;
+function okInfo(o){return !!o&&typeof o==='object'&&!!o.byId&&typeof o.byId==='object'}
+function loadInfo(){if(GI||giBusy)return;if(okInfo(W.GameInfo)){GI=W.GameInfo;gotInfo();return}giBusy=true;
+ var sc=D.createElement('script');sc.src='gameinfo.js';sc.async=true;
+ sc.onload=function(){giBusy=false;if(okInfo(W.GameInfo)){GI=W.GameInfo;gotInfo()}};sc.onerror=function(){giBusy=false;try{sc.remove()}catch(e){}};D.head.appendChild(sc)}
+function gotInfo(){if(!S.sheet||!info(S.sheet)||D.getElementById('shProg'))return;var a=D.activeElement,id=a&&sheet.contains(a)?a.id:'';drawSheet(S.msg);var f=id&&D.getElementById(id);if(f)f.focus()}
+function tri(o){return o&&typeof o==='object'&&typeof o[LG]==='string'?o[LG]:''}
+function info(id){var o=GI&&Object.prototype.hasOwnProperty.call(GI.byId,id)?GI.byId[id]:null;if(!o||typeof o!=='object'||!tri(o.sum))return null;
+ var n=Math.floor(+o.shots);return {shots:n>=1&&n<=3?n:0,sum:tri(o.sum),created:String(o.created||''),updated:String(o.updated||''),ver:String(o.ver||''),
+  log:Array.isArray(o.log)?o.log.filter(function(e){return e&&tri(e.t)}).slice(0,8):[],asked:o.asked&&Array.isArray(o.asked.by)?o.asked.by.map(person).filter(Boolean):[],
+  ideas:Array.isArray(o.ideas)?o.ideas.map(function(e){var p=e&&person(e.by);return p?{n:p.n,role:p.role,t:tri(e.t)}:null}).filter(Boolean):[]}}
+function person(k){var p=GI&&GI.people&&typeof k==='string'&&Object.prototype.hasOwnProperty.call(GI.people,k)?GI.people[k]:null,n=p&&tri(p.n);return n?{n:n,role:tri(p.role)}:null}
+/* dates per language; numbers are wrapped so that they do not flip inside Hebrew */
+var LOC={he:'he-IL',fr:'fr-FR',en:'en-GB'}[LG];
+function iso(x){return '\u2066'+x+'\u2069'}
+function dateOf(s,opt){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);if(!m)return '';try{opt.timeZone='UTC';return new Intl.DateTimeFormat(LOC,opt).format(new Date(Date.UTC(+m[1],+m[2]-1,+m[3])))}catch(e){return iso(s)}}
+function monthYear(s){return dateOf(s,{month:'long',year:'numeric'})}
+function dayMonth(s){return dateOf(s,{day:'numeric',month:'short',year:'numeric'})}
+function verOk(v){return /^\d{1,2}\.\d{1,4}$/.test(v)}
+function shotSrc(id,n){return 'shots/'+id+'-'+n+'.webp'}
+function strip(g,inf){var st=el('div','shots');st.id='shots';st.setAttribute('role','group');st.setAttribute('aria-label',TX.pics);var nm=C.name(g.id,LG);
+ for(var n=1;n<=inf.shots;n++)(function(n){var b=btn('shot'),e=el('span','se',g.emo),im=D.createElement('img');b.dataset.n=n;b.id='shot'+n;b.style.background=tint(g.grad[0]);e.setAttribute('aria-hidden','true');b.appendChild(e);
+  b.disabled=true;im.alt=F(TX.picA,{g:nm,n:n,m:inf.shots});im.width=540;im.height=1108;im.decoding='async';im.loading='lazy';
+  im.onload=function(){b.disabled=false;b.classList.add('ok')};
+  im.onerror=function(){try{im.remove()}catch(x){}b.classList.add('no');b.setAttribute('aria-label',im.alt)}; /* not cached and offline: the box keeps the emoji tile */
+  im.src=shotSrc(g.id,n);b.appendChild(im);b.onclick=function(){openViewer(g.id,n)};st.appendChild(b)})(n);
+ return st}
+function section(key,title,fill,act){var w=el('div','sec'),h=btn('sh'),mk=el('i',null,''),p=el('div','sp');h.id='sec-'+key;p.id='secp-'+key;h.setAttribute('aria-controls',p.id);h.appendChild(el('span',null,title));mk.setAttribute('aria-hidden','true');h.appendChild(mk);
+ function set(on){h.setAttribute('aria-expanded',on?'true':'false');mk.textContent=on?'▲':'▼';p.hidden=!on;if(on&&!p.firstChild)fill(p)}
+ h.onclick=function(){var on=h.getAttribute('aria-expanded')!=='true';if(on)S.open[key]=1;else delete S.open[key];set(on);if(on&&!S.told[act]){S.told[act]=1;track(act,S.sheet)}};
+ w.appendChild(h);w.appendChild(p);set(!!S.open[key]);return w}
+function people(list,p){var ul=el('ul','who');list.forEach(function(x){var li=el('li');li.appendChild(el('b',null,x.t?x.n+': '+x.t:x.n));if(x.role)li.appendChild(el('small',null,x.role));ul.appendChild(li)});p.appendChild(ul)}
+function about(g,inf){var ab=el('div','about');ab.id='about';ab.appendChild(el('h3',null,TX.about));ab.appendChild(el('p','sum',inf.sum));
+ var bits=[];if(monthYear(inf.created))bits.push(F(TX.created,{d:monthYear(inf.created)}));if(verOk(inf.ver))bits.push(F(TX.ver,{v:iso(inf.ver)}));if(dayMonth(inf.updated))bits.push(F(TX.updated,{d:dayMonth(inf.updated)}));
+ if(bits.length){var mt=el('p','meta',bits.join(' · '));mt.id='shMeta';ab.appendChild(mt)}
+ var made=GI&&tri(GI.made),credit=inf.asked.length>0||inf.ideas.length>0,gap=!inf.asked.length||!inf.ideas.length;
+ if(inf.log.length)ab.appendChild(section('log',TX.whatsNew,function(p){var ul=el('ul','log');ul.id='log';
+   function line(e){var li=el('li');li.appendChild(el('span',null,tri(e.t)));var d=dayMonth(String(e.d||'')),v=verOk(String(e.v||''))?F(TX.ver,{v:iso(e.v)}):'';if(d||v)li.appendChild(el('small',null,[d,v].filter(Boolean).join(' · ')));return li}
+   var first=S.all?inf.log:inf.log.slice(0,3),rest=S.all?[]:inf.log.slice(3);first.forEach(function(e){ul.appendChild(line(e))});p.appendChild(ul);
+   if(rest.length){var mb=btn('btn sec',rest.length===1?TX.lmore1:F(TX.lmore,{n:rest.length}));mb.id='logMore';mb.onclick=function(){S.all=true;var at=null;rest.forEach(function(e){var li=line(e);if(!at){at=li;li.tabIndex=-1}ul.appendChild(li)});mb.remove();if(at)at.focus()};p.appendChild(mb)}
+   if(made)p.appendChild(el('p','note',made))},'log'));
+ if(inf.asked.length)ab.appendChild(section('asked',TX.asked,function(p){people(inf.asked,p);if(gap&&!inf.ideas.length)p.appendChild(el('p','note',TX.addName))},'credits'));
+ if(inf.ideas.length)ab.appendChild(section('ideas',TX.ideas,function(p){people(inf.ideas,p);if(gap)p.appendChild(el('p','note',TX.addName))},'credits'));
+ if(!credit){var an=el('p','note',TX.addName);an.id='addName';ab.appendChild(an)}
+ return ab}
+
+/* ---------- the larger view: next / previous / close, arrow keys and a swipe; never advances by itself ---------- */
+var viewer=D.getElementById('viewer'),V={id:null,n:0,list:[],from:null};
+function shown(){return [].slice.call(sheet.querySelectorAll('.shot.ok')).map(function(b){return +b.dataset.n})}
+function drawViewer(){var g=C.byId(V.id),im=D.getElementById('vImg'),i=V.list.indexOf(V.n),m=V.list.length;if(!g||i<0)return;
+ D.getElementById('vBox').style.background=tint(g.grad[0]);im.alt=F(TX.picA,{g:C.name(V.id,LG),n:i+1,m:m});im.src=shotSrc(V.id,V.n);
+ D.getElementById('vN').textContent=F(TX.vOf,{n:i+1,m:m});D.getElementById('vPrev').hidden=D.getElementById('vNext').hidden=m<2}
+function openViewer(id,n){var list=shown();if(list.indexOf(n)<0)return false;V={id:id,n:n,list:list,from:D.getElementById('shot'+n)};
+ var nm=C.name(id,LG),rtl=LG==='he';viewer.setAttribute('aria-label',F(TX.vT,{g:nm}));D.getElementById('vT').textContent=F(TX.vT,{g:nm});
+ D.getElementById('vX').setAttribute('aria-label',TX.close);D.getElementById('vPrev').textContent=(rtl?'▶ ':'◀ ')+TX.prev;D.getElementById('vNext').textContent=TX.next+(rtl?' ◀':' ▶');
+ drawViewer();viewer.hidden=false;D.getElementById('vNext').focus();if(!S.told.shots){S.told.shots=1;track('shots',id)}return true}
+function closeViewer(quiet){if(viewer.hidden)return;viewer.hidden=true;D.getElementById('vImg').removeAttribute('src');var f=V.from;V={id:null,n:0,list:[],from:null};if(!quiet&&f&&D.contains(f))f.focus()}
+function stepViewer(d){var m=V.list.length,i=V.list.indexOf(V.n);if(m<2||i<0)return;V.n=V.list[(i+d+m)%m];drawViewer()}
+D.getElementById('vX').onclick=function(){closeViewer()};D.getElementById('vPrev').onclick=function(){stepViewer(-1)};D.getElementById('vNext').onclick=function(){stepViewer(1)};
+viewer.addEventListener('click',function(e){if(e.target===viewer)closeViewer()});
+(function(){var x0=null,y0=0;viewer.addEventListener('pointerdown',function(e){x0=e.clientX;y0=e.clientY});
+ viewer.addEventListener('pointerup',function(e){if(x0===null)return;var dx=e.clientX-x0,dy=e.clientY-y0;x0=null;if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.5)return;stepViewer((dx<0?1:-1)*(LG==='he'?-1:1))});
+ viewer.addEventListener('pointercancel',function(){x0=null})})();
 /* the "download" moment: the game is added at once; the bar is ~0.8 s of feedback (skipped with reduced motion) */
 function getNow(id,b){if(!doAdd(id,true))return;
  function done(){if(S.sheet!==id)return;drawSheet(TX.added,true);var p=D.getElementById('shPlay');if(p)p.focus()}
@@ -339,9 +462,12 @@ function getNow(id,b){if(!doAdd(id,true))return;
  var pr=el('div','prog'),i=el('i'),sp=el('span',null,TX.getting);pr.id='shProg';pr.setAttribute('role','status');pr.appendChild(i);pr.appendChild(sp);b.replaceWith(pr);
  requestAnimationFrame(function(){requestAnimationFrame(function(){pr.classList.add('go')})});clearTimeout(progT);progT=setTimeout(done,820)}
 back.addEventListener('click',function(e){if(e.target===back)closeSheet()});
-D.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.sheet){e.preventDefault();closeSheet();return}
- if(e.key==='Tab'&&S.sheet){var f=sheet.querySelectorAll('button:not([disabled]),a[href]');if(!f.length)return;var a=f[0],z=f[f.length-1];
-  if(e.shiftKey&&(D.activeElement===a||!sheet.contains(D.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&D.activeElement===z){e.preventDefault();a.focus()}}});
+D.addEventListener('keydown',function(e){var vw=!viewer.hidden;
+ if(vw&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();stepViewer((e.key==='ArrowRight'?1:-1)*(LG==='he'?-1:1));return}
+ if(e.key==='Escape'&&vw){e.preventDefault();closeViewer();return}
+ if(e.key==='Escape'&&S.sheet){e.preventDefault();closeSheet();return}
+ if(e.key==='Tab'&&S.sheet){var box=vw?viewer:sheet,f=[].filter.call(box.querySelectorAll('button:not([disabled]),a[href]'),function(b){return !b.hidden&&!b.closest('[hidden]')});if(!f.length)return;var a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&(D.activeElement===a||!box.contains(D.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&(D.activeElement===z||!box.contains(D.activeElement))){e.preventDefault();a.focus()}}});
 
 /* ---------- calm mode ---------- */
 var calmB=D.getElementById('calm');
@@ -354,10 +480,14 @@ function draw(){drawTabs();view.textContent='';if(S.tab==='mine')drawMine();else
 C.onchange(function(why){if(why==='storage'){if(S.sheet)drawSheet('');else draw()}else if(why==='calm')drawCalm()});
 W.addEventListener('pageshow',function(e){if(e.persisted){if(S.sheet)drawSheet('');else draw()}});
 draw();drawCalm();
+/* gameinfo.js after first paint (idle), never in the way of the first screen */
+(function(){function go(){try{if(W.requestIdleCallback)W.requestIdleCallback(loadInfo,{timeout:2500});else setTimeout(loadInfo,600)}catch(e){setTimeout(loadInfo,600)}}
+ if(D.readyState==='complete')go();else W.addEventListener('load',go)})();
 
 /* test hook */
 W.__store={state:function(){return {tab:S.tab,cat:S.cat,filters:Object.keys(S.f),searching:!!norm(S.q),arrange:S.arr,sheet:S.sheet,undo:!!S.undo,lib:C.lib(),count:C.lib().length,calm:C.calm(),lang:LG}},
- add:function(id){return doAdd(id)},remove:function(id){return doRemove(id)},pack:function(n){return doPack(n)},open:function(id){return openSheet(id)},close:closeSheet,tab:function(t){setTab(t)}};
+ add:function(id){return doAdd(id)},remove:function(id){return doRemove(id)},pack:function(n){return doPack(n)},open:function(id){return openSheet(id)},close:closeSheet,tab:function(t){setTab(t)},
+ info:function(){return {ready:!!GI,viewer:viewer.hidden?null:{id:V.id,n:V.n,of:V.list.length},open:Object.keys(S.open)}},loadInfo:loadInfo,view:function(n){return openViewer(S.sheet,n)},step:stepViewer,closeView:function(){closeViewer()}};
 })();
 </script>
 </body>
