@@ -1,4 +1,4 @@
-/* Annabelle games – shared REWARDS: coins, cat stickers, daily gift, dress-up cosmetics.
+/* Kids games platform – shared REWARDS: coins, cat stickers, daily gift, dress-up cosmetics.
    <script src="rewards.js" defer></script>   (safe to call from any game: always write  window.AnnabelleRewards&&AnnabelleRewards.xxx(...) )
 
    ── INTEGRATION SNIPPET (for game authors) ───────────────────────────────────────────────
@@ -30,7 +30,7 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function lang() { var l = lsGet('annabelle-lang') || 'he'; return l === 'fr' || l === 'en' ? l : 'he'; }
-  function T(o) { if (!o) return ''; if (typeof o === 'string') return o; return o[lang()] || o.he || ''; }
+  function T(o) { if (!o) return ''; var s = typeof o === 'string' ? o : (o[lang()] || o.he || ''), K = window.KidApp; return K && K.gt ? K.gt(s) : s; } // texts are written for a girl; kid.js adapts them
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function dayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function today() { return typeof window.__annabelleToday === 'string' ? window.__annabelleToday : dayKey(); }
@@ -48,7 +48,7 @@
     cups: ['🥤', 'איפה הכדור?', 'Où est la balle ?', 'Cup Shuffle'],
     digrod: ['💪', 'חכת השריר', 'La Canne Muscle', 'Muscle Rod Dig'],
     escape: ['🔑', 'הבריחה מבית העץ', 'Évasion de la cabane', 'Treehouse Escape'],
-    fishing: ['🎣', 'הדיג של אנאבל', 'La pêche', 'Fishing Trip'],
+    fishing: ['🎣', 'מסע הדיג', 'La pêche', 'Fishing Trip'],
     football: ['⚽', 'כדורגל חתולים', 'Foot des chats', 'Cat Football'],
     hiddencats: ['🔍', 'מצאי את החתולים', 'Trouve les chats', 'Find the Cats'],
     lionking: ['🦁', 'הרפתקת האריה הקטן', 'Aventure du petit lion', "Little Lion's Adventure"],
@@ -78,9 +78,12 @@
     simon: ['🎶', 'מקהלת החיות', 'La chorale des animaux', 'Animal Choir'],
     funrun: ['👟', 'מרוץ התעלולים', 'La course aux farces', 'Prank Race'],
     carrace: ['🏎️', 'מרוץ מכוניות החתולים', 'Course de karts des chats', 'Kitty Kart Race'],
+    mathquest: ['🧮', 'מסע החשבון', 'La quête des maths', 'Math Quest'],
+    wordcity: ['🔤', 'עיר המילים', 'La ville des mots', 'Word City'],
+    sciencelab: ['🔬', 'מעבדת המדע', 'Le labo des sciences', 'Science Lab'],
     retro: ['🕹️', 'פינת הרטרו', 'Coin rétro', 'Retro Corner']
   };
-  function gname(id) { var g = GAMES[id]; return g ? g[{he: 1, fr: 2, en: 3}[lang()]] : id; }
+  function gname(id) { var g = GAMES[id]; return g ? T(g[{he: 1, fr: 2, en: 3}[lang()]]) : id; }
 
   /* ---------- state ---------- */
   function fresh() {
@@ -146,7 +149,7 @@
   }
   function escH(x) { return String(x).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   var RETRO = {invaders: 1, tetris: 1, breakout: 1, snake: 1, crossing: 1, pong: 1, safari: 1, simon: 1};
-  var MIND = {magic: 1, magic2: 1, cups: 1, tictactoe: 1, minesweeper: 1, checkers: 1, cats: 1, hiddencats: 1, escape: 1, towerdefense: 1, tetris: 1, simon: 1};
+  var MIND = {mathquest: 1, wordcity: 1, sciencelab: 1, magic: 1, magic2: 1, cups: 1, tictactoe: 1, minesweeper: 1, checkers: 1, cats: 1, hiddencats: 1, escape: 1, towerdefense: 1, tetris: 1, simon: 1};
   var SPORT = {funrun: 1, carrace: 1, football: 1, bowling: 1, pong: 1, thunderkittens: 1, runner: 1, runner3d: 1, pacman: 1, lionking: 1};
   var HIDDEN = {retro: 1, runner3d: 1}; // no tile of their own on the home page
   var QUEST_COINS = 15, QUEST_BONUS = 25;
@@ -232,9 +235,9 @@
     CAT.push(s); STK_BY[id] = s;
   }
   // 1) first play of each game (26)
-  var GS = {funrun: 'אלופת התעלולים', carrace: 'נהגת מרוצים', bubbles: 'מגלת בועות', cats: 'זוגית זוגות', checkers: 'מלכת הדמקה', cups: 'עין הנץ', digrod: 'חופרת בשריר', escape: 'בורחת מהעץ', fishing: 'דייגית צעירה', football: 'כוכבת הכדורגל', hiddencats: 'עין הבולשת', lionking: 'אריה קטן', magic: 'קוסמת קלפים', magic2: 'קוסמת חתולים', minesweeper: 'גננית חתולים', pacman: 'טיגריס רעב', runner: 'רצה בסוואנה', runner3d: 'רצה ב-3D', soya: 'חברה של סויה', soyahome: 'בית של סויה', streetcats: 'חתולת שכונה', thunderkittens: 'לוחמת ברק', towerdefense: 'שומרת המאורה', bowling: 'כוכבת באולינג', tictactoe: 'מלכת איקס עיגול', hole: 'חור רעבתן', fishy: 'דג גדול', kitchen: 'שפית חתולית', invaders: 'מצילה בחלל', tetris: 'מלכת הקוביות', breakout: 'פותחת הכלובים', snake: 'זנב הנמר', crossing: 'שומרת המעבר', pong: 'אלופת הפינג־פונג', safari: 'צלמת ספארי', simon: 'מנצחת המקהלה', retro: 'מבקרת בפינת הרטרו'};
-  var GSF = {funrun: 'Reine des farces', carrace: 'Pilote de course', bubbles: 'Reine des bulles', cats: 'Maître des paires', checkers: 'Reine des dames', cups: 'Œil de lynx', digrod: 'Super muscles', escape: 'Évadée', fishing: 'Jeune pêcheuse', football: 'Star du foot', hiddencats: 'Détective', lionking: 'Petit lion', magic: 'Magicienne', magic2: 'Magie des chats', minesweeper: 'Jardinière', pacman: 'Tigre affamé', runner: 'Coureuse', runner3d: 'Coureuse 3D', soya: 'Amie de Soya', soyahome: 'Maison de Soya', streetcats: 'Chat du quartier', thunderkittens: 'Guerrière', towerdefense: 'Gardienne', bowling: 'Star du bowling', tictactoe: 'Reine du morpion', hole: 'Gouffre gourmand', fishy: 'Gros poisson', kitchen: 'Cheffe chat', invaders: 'Sauveteuse de l\'espace', tetris: 'Reine des blocs', breakout: 'Ouvre-cages', snake: 'Queue de tigre', crossing: 'Gardienne du passage', pong: 'Championne de ping-pong', safari: 'Photographe safari', simon: 'Cheffe de chorale', retro: 'Visiteuse rétro'};
-  var GSE = {funrun: 'Prank Champion', carrace: 'Race Driver', bubbles: 'Bubble Queen', cats: 'Memory Master', checkers: 'Checkers Queen', cups: 'Eagle Eye', digrod: 'Super Muscles', escape: 'Escape Artist', fishing: 'Young Angler', football: 'Football Star', hiddencats: 'Cat Detective', lionking: 'Little Lion', magic: 'Card Magician', magic2: 'Cat Magician', minesweeper: 'Garden Hero', pacman: 'Hungry Tiger', runner: 'Savanna Runner', runner3d: '3D Runner', soya: 'Soya\'s Friend', soyahome: 'Soya\'s Home', streetcats: 'Street Cat', thunderkittens: 'Lightning Fighter', towerdefense: 'Den Guardian', bowling: 'Bowling Star', tictactoe: 'Tic-Tac-Queen', hole: 'Hungry Hole', fishy: 'Big Fish', kitchen: 'Chef Cat', invaders: 'Space Rescuer', tetris: 'Block Queen', breakout: 'Cage Opener', snake: 'Tiger Tail', crossing: 'Crossing Guard', pong: 'Pong Champion', safari: 'Safari Photographer', simon: 'Choir Conductor', retro: 'Retro Visitor'};
+  var GS = {mathquest: 'אלופת החשבון', wordcity: 'אלופת המילים', sciencelab: 'מדענית צעירה', funrun: 'אלופת התעלולים', carrace: 'נהגת מרוצים', bubbles: 'מגלת בועות', cats: 'זוגית זוגות', checkers: 'מלכת הדמקה', cups: 'עין הנץ', digrod: 'חופרת בשריר', escape: 'בורחת מהעץ', fishing: 'דייגית צעירה', football: 'כוכבת הכדורגל', hiddencats: 'עין הבולשת', lionking: 'אריה קטן', magic: 'קוסמת קלפים', magic2: 'קוסמת חתולים', minesweeper: 'גננית חתולים', pacman: 'טיגריס רעב', runner: 'רצה בסוואנה', runner3d: 'רצה ב-3D', soya: 'חברה של סויה', soyahome: 'בית של סויה', streetcats: 'חתולת שכונה', thunderkittens: 'לוחמת ברק', towerdefense: 'שומרת המאורה', bowling: 'כוכבת באולינג', tictactoe: 'מלכת איקס עיגול', hole: 'חור רעבתן', fishy: 'דג גדול', kitchen: 'שפית חתולית', invaders: 'מצילה בחלל', tetris: 'מלכת הקוביות', breakout: 'פותחת הכלובים', snake: 'זנב הנמר', crossing: 'שומרת המעבר', pong: 'אלופת הפינג־פונג', safari: 'צלמת ספארי', simon: 'מנצחת המקהלה', retro: 'מבקרת בפינת הרטרו'};
+  var GSF = {mathquest: 'As des maths', wordcity: 'As des mots', sciencelab: 'Jeune scientifique', funrun: 'Reine des farces', carrace: 'Pilote de course', bubbles: 'Reine des bulles', cats: 'Maître des paires', checkers: 'Reine des dames', cups: 'Œil de lynx', digrod: 'Super muscles', escape: 'Évadée', fishing: 'Jeune pêcheuse', football: 'Star du foot', hiddencats: 'Détective', lionking: 'Petit lion', magic: 'Magicienne', magic2: 'Magie des chats', minesweeper: 'Jardinière', pacman: 'Tigre affamé', runner: 'Coureuse', runner3d: 'Coureuse 3D', soya: 'Amie de Soya', soyahome: 'Maison de Soya', streetcats: 'Chat du quartier', thunderkittens: 'Guerrière', towerdefense: 'Gardienne', bowling: 'Star du bowling', tictactoe: 'Reine du morpion', hole: 'Gouffre gourmand', fishy: 'Gros poisson', kitchen: 'Cheffe chat', invaders: 'Sauveteuse de l\'espace', tetris: 'Reine des blocs', breakout: 'Ouvre-cages', snake: 'Queue de tigre', crossing: 'Gardienne du passage', pong: 'Championne de ping-pong', safari: 'Photographe safari', simon: 'Cheffe de chorale', retro: 'Visiteuse rétro'};
+  var GSE = {mathquest: 'Math Champion', wordcity: 'Word Champion', sciencelab: 'Young Scientist', funrun: 'Prank Champion', carrace: 'Race Driver', bubbles: 'Bubble Queen', cats: 'Memory Master', checkers: 'Checkers Queen', cups: 'Eagle Eye', digrod: 'Super Muscles', escape: 'Escape Artist', fishing: 'Young Angler', football: 'Football Star', hiddencats: 'Cat Detective', lionking: 'Little Lion', magic: 'Card Magician', magic2: 'Cat Magician', minesweeper: 'Garden Hero', pacman: 'Hungry Tiger', runner: 'Savanna Runner', runner3d: '3D Runner', soya: 'Soya\'s Friend', soyahome: 'Soya\'s Home', streetcats: 'Street Cat', thunderkittens: 'Lightning Fighter', towerdefense: 'Den Guardian', bowling: 'Bowling Star', tictactoe: 'Tic-Tac-Queen', hole: 'Hungry Hole', fishy: 'Big Fish', kitchen: 'Chef Cat', invaders: 'Space Rescuer', tetris: 'Block Queen', breakout: 'Cage Opener', snake: 'Tiger Tail', crossing: 'Crossing Guard', pong: 'Pong Champion', safari: 'Safari Photographer', simon: 'Choir Conductor', retro: 'Retro Visitor'};
   Object.keys(GAMES).forEach(function (g) {
     add('g-' + g, GAMES[g][0], GS[g], GSF[g], GSE[g], 'שחקי ב' + GAMES[g][1] + ' בפעם הראשונה', 'Joue à ' + GAMES[g][2] + ' pour la première fois', 'Play ' + GAMES[g][3] + ' for the first time',
       (function (id) { return function (s) { return (s.stats.plays[id] || 0) >= 1; }; })(g), 'games');

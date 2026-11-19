@@ -1,4 +1,4 @@
-/* Annabelle games – laptop/desktop helpers (mouse + keyboard). Loaded by every page.
+/* Kids games platform – laptop/desktop helpers (mouse + keyboard). Loaded by every page.
    - adds class "desk" on <html> when the primary pointer is a mouse/trackpad (hover:hover + pointer:fine)
    - pointer cursor + hover + visible keyboard-focus outline for all buttons/links
    - window.AnnabelleDesk.isDesk(): true on such devices; .typing(e): true when the key event comes from a text field */

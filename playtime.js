@@ -279,6 +279,8 @@
   }
 
   /* ---------- parent panel ---------- */
+  // who-did-what log (telemetry.js; a no-op when it is missing or switched off). Never contains the PIN.
+  function aud(action, target, detail) { try { if (window.KidApp && KidApp.audit) KidApp.audit(action, target, detail || {}, 'parent'); } catch (e) {} }
   var authed = false, waitTimer;
   function closePanel() { if (panelEl) { panelEl.remove(); panelEl = null; } authed = false; clearInterval(waitTimer); render(); }
   function shell(title, body) {
@@ -308,12 +310,12 @@
       if (v.length !== 4 || busy) return;
       if (mode === 'create') return pinPad('confirm', v);
       if (mode === 'confirm') { if (v !== first) { pinPad('create'); panelEl.querySelector('.msg').textContent = t('mismatch'); return; }
-        busy = true; return savePin(v).then(function () { authed = true; showPanel(t('saved')); }); }
+        busy = true; var hadPin = !!par().pin; return savePin(v).then(function () { aud(hadPin ? 'pin_changed' : 'pin_set', 'parent-pin'); if (!authed) aud('panel_opened', 'parent-panel', {via: 'new-pin'}); authed = true; showPanel(t('saved')); }); }
       if (waiting()) { v = ''; show(); return; }
       busy = true;
       verifyPin(v).then(function (ok) {
         busy = false; var p = par();
-        if (ok) { p.fails = 0; delete p.wait; wr(KPAR, p); authed = true; showPanel(); return; }
+        if (ok) { p.fails = 0; delete p.wait; wr(KPAR, p); authed = true; aud('panel_opened', 'parent-panel', {via: 'pin'}); showPanel(); return; }
         p.fails = (p.fails || 0) + 1; if (p.fails >= 3) { p.fails = 0; p.wait = Date.now() + 60000; }
         wr(KPAR, p); v = ''; show(); if (!waiting()) msg.textContent = t('wrong');
         card.animate && card.animate([{transform: 'translateX(-8px)'}, {transform: 'translateX(8px)'}, {transform: 'none'}], {duration: 250});
@@ -331,7 +333,7 @@
     var inp = card.querySelector('input');
     card.querySelector('[data-a=back]').onclick = function () { openPanel(); };
     card.querySelector('[data-a=ok]').onclick = function () {
-      if (+inp.value === a * b && inp.value !== '') { authed = true; showPanel('', true); }
+      if (+inp.value === a * b && inp.value !== '') { authed = true; aud('panel_opened', 'parent-panel', {via: 'math'}); showPanel('', true); }
       else { mathQ(); panelEl.querySelector('.msg').textContent = '✗'; }
     };
   }
@@ -346,8 +348,9 @@
     ['bowling','🎳','באולינג',/^annabelle-bowling-/],['invaders','🚀','פולשי החלל',/^annabelle-retro-invaders/],['tetris','🧱','טטריס חתולים',/^annabelle-retro-tetris/],['breakout','🐾','שוברת הכלובים',/^annabelle-retro-breakout/],
     ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/],
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
-    ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/]];
-  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*)$/;
+    ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/],
+    ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/]];
+  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
     var ks = allKeys(), rw = rd('annabelle-rewards', null);
@@ -380,6 +383,7 @@
       var ids = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.getAttribute('data-g'); });
       if (!all.checked && !ids.length) { msg.textContent = 'לא נבחר כלום'; return; }
       if (step === 0) { step = 1; msg.textContent = all.checked ? 'בטוחים? כל ההתקדמות תימחק. לחצו שוב לאישור' : 'בטוחים? ' + ids.length + ' משחקים יאופסו. לחצו שוב לאישור'; go.textContent = '⚠️ כן, לאפס'; return; }
+      aud('progress_reset', all.checked ? 'all' : ids.join(',').slice(0, 120), {all: all.checked, games: ids, count: ids.length});
       doReset(ids, all.checked); msg.className = 'msg ok'; msg.textContent = '✅ אופס! מרענן…'; go.disabled = true; setTimeout(function () { location.reload(); }, 900);
     };
   }
@@ -396,19 +400,40 @@
       '<div class="msg ok">' + esc(note || '') + '</div>' +
       '<div class="row"><button type="button" class="soft" data-a="rst">🗑️ איפוס התקדמות</button></div>' +
       '<div class="row"><button type="button" class="' + (fromMath ? 'pri' : 'soft') + '" data-a="pin">' + esc(fromMath ? t('newpin') : t('chpin')) + '</button><button type="button" class="soft" data-a="done">' + esc(t('close')) + '</button></div>');
-    function upd(fn, msg) { var pp = par(), ss = play(); fn(pp, ss); wr(KPAR, pp); wr(KP, ss); render(); showPanel(msg || t('saved'), fromMath); }
-    card.querySelector('[data-a=minus]').onclick = function () { upd(function (pp) { pp.limit = Math.max(MIN_LIMIT, pp.limit - STEP); }); };
-    card.querySelector('[data-a=plus5]').onclick = function () { upd(function (pp) { pp.limit = Math.min(MAX_LIMIT, pp.limit + STEP); }); };
-    card.querySelector('[data-a=bonus]').onclick = function () { upd(function (pp, ss) { ss.extra = (ss.extra || 0) + BONUS_MIN * 60; ss.w5 = ss.w1 = 0; }); };
-    card.querySelector('[data-a=reset]').onclick = function () { upd(function (pp, ss) { ss.seconds = 0; ss.extra = 0; ss.w5 = ss.w1 = 0; }); };
+    function upd(fn, what) { var pp = par(), ss = play(); fn(pp, ss); wr(KPAR, pp); wr(KP, ss); render();
+      aud('limits_changed', what, {limit: pp.limit, lock: !!pp.lock, bed: !!pp.bed.on, from: pp.bed.from, to: pp.bed.to, extraMin: Math.round((ss.extra || 0) / 60), playedMin: Math.floor(ss.seconds / 60)});
+      showPanel(t('saved'), fromMath); }
+    card.querySelector('[data-a=minus]').onclick = function () { upd(function (pp) { pp.limit = Math.max(MIN_LIMIT, pp.limit - STEP); }, 'daily-limit'); };
+    card.querySelector('[data-a=plus5]').onclick = function () { upd(function (pp) { pp.limit = Math.min(MAX_LIMIT, pp.limit + STEP); }, 'daily-limit'); };
+    card.querySelector('[data-a=bonus]').onclick = function () { upd(function (pp, ss) { ss.extra = (ss.extra || 0) + BONUS_MIN * 60; ss.w5 = ss.w1 = 0; }, 'bonus-time'); };
+    card.querySelector('[data-a=reset]').onclick = function () { upd(function (pp, ss) { ss.seconds = 0; ss.extra = 0; ss.w5 = ss.w1 = 0; }, 'today-reset'); };
     card.querySelector('[data-a=lock]').onclick = function () { upd(function (pp) {
-      if (lockedNow) { pp.lock = false; var b = bedInfo(pp); if (b.in) pp.skip = b.end; } else { pp.lock = true; delete pp.skip; } }); };
-    card.querySelector('[data-a=bed]').onclick = function () { upd(function (pp) { pp.bed.on = !pp.bed.on; delete pp.skip; }); };
-    ['from', 'to'].forEach(function (k) { card.querySelector('[data-a=' + k + ']').onchange = function (e) { var val = e.target.value; if (/^\d\d:\d\d$/.test(val)) upd(function (pp) { pp.bed[k] = val; delete pp.skip; }); }; });
+      if (lockedNow) { pp.lock = false; var b = bedInfo(pp); if (b.in) pp.skip = b.end; } else { pp.lock = true; delete pp.skip; } }, lockedNow ? 'unlock' : 'lock'); };
+    card.querySelector('[data-a=bed]').onclick = function () { upd(function (pp) { pp.bed.on = !pp.bed.on; delete pp.skip; }, 'bedtime'); };
+    ['from', 'to'].forEach(function (k) { card.querySelector('[data-a=' + k + ']').onchange = function (e) { var val = e.target.value; if (/^\d\d:\d\d$/.test(val)) upd(function (pp) { pp.bed[k] = val; delete pp.skip; }, 'bedtime-' + k); }; });
     card.querySelector('[data-a=rst]').onclick = function () { resetScreen(fromMath); };
     card.querySelector('[data-a=pin]').onclick = function () { pinPad('create'); };
     card.querySelector('[data-a=done]').onclick = closePanel;
   }
+
+  /* ---------- shared platform modules, on every page, in this order: kid profile, telemetry, report button ----------
+     Each one is optional (a missing file is skipped). While the page is still being parsed they are written into the
+     document so kid.js runs before the page's own scripts; otherwise they are appended (ordered, non-blocking). */
+  (function () {
+    if (window.__kidMods) return; window.__kidMods = 1;
+    var base = ''; try { base = me && me.getAttribute('src') ? me.getAttribute('src').replace(/[^\/]*$/, '') : ''; } catch (e) {}
+    if (/["<>\s]/.test(base)) base = '';
+    var mods = ['kid.js', 'telemetry.js', 'feedback.js'], wrote = false;
+    try {
+      if (me && document.currentScript === me && document.readyState === 'loading' && !me.async && !me.defer && me.type !== 'module') {
+        document.write('<script src="' + base + 'kid.js"><\/script><script src="' + base + 'telemetry.js"><\/script><script src="' + base + 'feedback.js" defer><\/script>');
+        wrote = true;
+      }
+    } catch (e) {}
+    if (!wrote) mods.forEach(function (f) {
+      try { var s = document.createElement('script'); s.src = base + f; s.async = false; (document.head || document.documentElement).appendChild(s); } catch (e) {}
+    });
+  })();
 
   window.AnnabellePlaytime = {DEFAULT_LIMIT_MIN: DEFAULT_LIMIT_MIN, left: function () { return left(); }, reason: lockReason, isLocked: function () { return locked; }, openPanel: openPanel, tick: tick, render: render};
 })();

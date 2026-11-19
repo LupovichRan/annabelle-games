@@ -1,4 +1,4 @@
-/* Annabelle games – install-to-home-screen + offline (service worker) */
+/* Kids games platform – install-to-home-screen + offline (service worker) */
 (function () {
   'use strict';
   var me = document.currentScript || document.querySelector('script[src$="pwa.js"]');
@@ -41,6 +41,8 @@
       andNote: 'Opened from WhatsApp? Open the link in Chrome first.', ok: 'Got it 👍'}
   };
   function lang() { var l = 'he'; try { l = localStorage.getItem('annabelle-lang') || 'he'; } catch (e) {} return T[l] ? l : 'he'; }
+  // the Hebrew texts are written for a girl; kid.js turns them masculine / neutral for the current kid
+  function tt() { var t = T[lang()], K = window.KidApp, o = {}, k; if (!K || !K.gt) return t; for (k in t) o[k] = Array.isArray(t[k]) ? t[k].map(K.gt) : K.gt(t[k]); return o; }
 
   var css = 'button.pwa-btn.pwa-btn.pwa-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 16px;margin:6px auto 0;' +
     'border-radius:999px;border:2px solid #7c5cff;background:#fff;color:#5b3b8c;font:800 15px/1.1 "Rubik","Varela Round",Arial,sans-serif;' +
@@ -61,7 +63,7 @@
     return !!deferred || isIOS || isAndroid || force;
   }
   function label(b) {
-    var t = T[lang()];
+    var t = tt();
     var s = b.querySelector('.t'); if (s && s.textContent !== t.btn) s.textContent = t.btn;
     var d = lang() === 'he' ? 'rtl' : 'ltr'; if (b.dir !== d) b.dir = d;
     var h = b.parentNode && b.parentNode.querySelector('.pwa-hint'); if (h && h.textContent !== t.launcherHint) h.textContent = t.launcherHint;
@@ -83,7 +85,7 @@
     tip();
   }
   function tip() {
-    var t = T[lang()], ios = isIOS;
+    var t = tt(), ios = isIOS;
     var w = document.createElement('div'); w.className = 'pwa-tip'; w.dir = lang() === 'he' ? 'rtl' : 'ltr';
     w.innerHTML = '<div class="c"><div class="x">📲</div><h3>' + (ios ? t.tIOS : t.tAnd) + '</h3><ol>' +
       (ios ? t.ios : t.and).map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol><p class="n">' +

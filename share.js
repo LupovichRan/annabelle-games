@@ -1,13 +1,15 @@
-/* Annabelle games – "share with a friend" on WhatsApp (wa.me link; the child picks the contact, nothing is sent automatically).
+/* Kids games platform – "share with a friend" on WhatsApp (wa.me link; the child picks the contact, nothing is sent automatically).
    <script src="share.js" data-slot="#langs" defer>  (launcher: data-all="1" shares the whole collection) */
 (function () {
   'use strict';
   var me = document.currentScript, D = (me && me.dataset) || {};
   var BASE = 'https://lupovichran.github.io/annabelle-games/';
+  // the button speaks to the kid (gender through KidApp.g); the message goes to a friend we know nothing about, so it stays neutral
+  function G(f, m, x) { var K = window.KidApp; return K && K.g ? K.g(f, m, x) : f; }
   var T = {
-    he: {b: 'שתפי עם חברה', g: 'בואי לשחק איתי ב{n}! 🐱', a: 'בואי לשחק איתי במשחקים של אנאבל! 🐱'},
-    fr: {b: 'Partager avec un ami', g: 'Viens jouer avec moi à {n} ! 🐱', a: 'Viens jouer avec moi aux jeux d\'Annabelle ! 🐱'},
-    en: {b: 'Share with a friend', g: 'Come play {n} with me! 🐱', a: 'Come play Annabelle\'s games with me! 🐱'}
+    he: {b: function () { return G('שתפי עם חברה', 'שתף עם חבר', 'שיתוף עם חברים'); }, g: 'רוצים לשחק איתי ב{n}? 🐱', a: 'רוצים לשחק איתי בארץ המשחקים? 🎮'},
+    fr: {b: function () { return 'Partager avec un ami'; }, g: 'Tu viens jouer avec moi à {n} ? 🐱', a: 'Tu viens jouer avec moi au Pays des jeux ? 🎮'},
+    en: {b: function () { return 'Share with a friend'; }, g: 'Come play {n} with me! 🐱', a: 'Come play with me on Game Land! 🎮'}
   };
   function lang() { var l = 'he'; try { l = localStorage.getItem('annabelle-lang') || 'he'; } catch (e) {} return T[l] ? l : 'he'; }
   function name() { var h = lang() !== 'he' && document.querySelector('h1'); if (h && h.textContent.trim()) return h.textContent.trim(); var m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); return (m && m.content) || document.title; }
@@ -26,7 +28,7 @@
       ['pointerdown', 'touchstart', 'mousedown', 'click'].forEach(function (ev) { a.addEventListener(ev, function (e) { e.stopPropagation(); a.href = href(); }, {passive: true}); });
     }
     if (!a.isConnected) tgt.appendChild(a);
-    var s = T[lang()].b; a.href = href();
+    var s = T[lang()].b(); a.href = href();
     var lbl = D.icon ? '💬' : '💬 ' + s; a.title = s;
     if (a.textContent !== lbl) { a.textContent = lbl; a.setAttribute('aria-label', s); }
   }

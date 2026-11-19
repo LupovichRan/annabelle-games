@@ -1,4 +1,4 @@
-/* Annabelle games – shared navigation: 🏠 launcher + ☰ this game's menu.
+/* Kids games platform – shared navigation: 🏠 launcher + ☰ this game's menu.
    <script src="nav.js" data-menuslot="#langs" data-pauseslot="#pause .card" data-menu="toMenu" defer>
    data-menu: name of a global function that returns to the game's start menu (falls back to reload, which opens the start menu). */
 (function () {
