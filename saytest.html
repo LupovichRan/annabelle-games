@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://leitieyscvpebpgdengu.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a5bd7">
+<meta name="robots" content="noindex">
+<title>בדיקת קול</title><script src="safe.js"></script><script src="kid.js"></script><script src="telemetry.js" defer></script><script src="say.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI","Rubik",Arial,sans-serif;background:#eef3ff;color:#23263a;font-size:16px;line-height:1.4;padding:10px 10px calc(24px + env(safe-area-inset-bottom));overflow-wrap:anywhere}
+main{max-width:760px;margin:0 auto}
+h1{font-size:22px;margin:4px 0 2px}h2{font-size:17px;margin:0 0 6px}
+p{margin:4px 0}.sm{font-size:13px;color:#565b73}
+.top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.card{background:#fff;border:2px solid #23263a;border-radius:14px;padding:10px 12px;margin:10px 0;box-shadow:0 3px 0 rgba(35,38,58,.85)}
+button,a.b{font:inherit;font-weight:800;min-height:44px;border:2px solid #23263a;border-radius:11px;background:#fff;color:#23263a;padding:6px 12px;cursor:pointer;box-shadow:0 3px 0 #23263a;touch-action:manipulation;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #23263a}
+button.on{background:#ffd95a}button.go{background:#8fe3a2}button[disabled]{opacity:.45;box-shadow:none}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#voices{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+#voices td,#voices th{border-bottom:1px solid #d9def0;padding:4px 3px;text-align:start;vertical-align:top}
+#voices tr.pick td{background:#fff3c4;font-weight:800}
+.tblw{max-height:240px;overflow:auto;border:1px solid #d9def0;border-radius:8px}
+.txt{font-size:22px;font-weight:700;line-height:1.7;margin:4px 0;padding:4px 8px;border-radius:8px;background:#f6f8ff}
+.txt.pl{font-size:18px;color:#3c4160}
+.txt .w.rd{background:#ffe27a;border-radius:6px;box-shadow:0 0 0 3px #ffe27a}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
+@media (min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cell{border:1px dashed #9aa3c7;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.cell .play{width:100%;font-size:14px;padding:4px 6px}
+.cell .v{display:flex;gap:5px}.cell .v button{flex:1;min-width:44px;padding:4px 2px;font-size:14px}
+.sent{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#565b73;direction:rtl;unicode-bidi:plaintext;min-height:1em;margin-top:4px}
+#sum{font-weight:800}
+pre{white-space:pre-wrap;font-size:12px;background:#f6f8ff;border-radius:8px;padding:8px;margin:6px 0;max-height:220px;overflow:auto;direction:ltr;text-align:left}
+[dir=ltr] .txt{direction:rtl;text-align:right}
+.txt.lat{direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><h1 id="tT"></h1><div class="row" id="langs"></div></div>
+ <p class="sm" id="tSub"></p>
+ <div class="card"><h2 id="tDev"></h2><p id="devLine"></p><p id="pickLine"></p>
+  <div class="row"><button id="bSet"></button><button id="bHow"></button><button id="bRe"></button></div>
+  <div class="tblw"><table id="voices"><thead><tr><th id="thN"></th><th id="thL"></th><th id="thA"></th></tr></thead><tbody></tbody></table></div></div>
+ <div class="card"><h2 id="tSum"></h2><p id="sum"></p><p class="sm" id="sumHint"></p><div class="row" id="sumBtns"></div></div>
+ <div id="samples"></div>
+ <div class="card"><h2 id="tRep"></h2><p class="sm" id="tRepS"></p><pre id="rep"></pre><div class="row"><button id="bCopy"></button><button id="bClear"></button><a class="b" id="bBack" href="reading.html"></a></div></div>
+</main>
+<script>
+(function(){'use strict';
+var $=function(id){return document.getElementById(id)};
+var ls={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+var KEY='annabelle-saytest';
+var TX={
+he:{title:'בדיקת קול ההקראה',sub:'לוחצים על ▶, מקשיבים, ומסמנים 👍 אם זה נשמע נכון או 👎 אם לא. כך נדע בדיוק מה לא עובד במכשיר הזה. שום טקסט או שם לא נשלח – רק שם הקול והסימון.',
+ dev:'המכשיר והקולות',noApi:'הדפדפן הזה לא תומך בהקראה.',voices:'{n} קולות במכשיר',none:'הדפדפן לא מציג רשימת קולות (זה קורה באנדרואיד) – ננסה בכל זאת.',picked:'הקול שנבחר לעברית: {v}',noHe:'לא נמצא קול בעברית ברשימה.',
+ set:'⚙️ בחירת קול',how:'🔈 איך מוסיפים קול?',re:'↻ רענון',name:'קול',tag:'תג שפה',as:'משמש ל',
+ sum:'סיכום',sum0:'עוד לא סימנת כלום.',sumL:'עם ניקוד: 👍 {a} 👎 {b} · בלי ניקוד: 👍 {c} 👎 {d}',better0:'כשיש מספיק סימונים נציע כאן את ההגדרה המתאימה למכשיר.',betterN:'במכשיר הזה ההקראה עם ניקוד נשמעת טוב יותר.',betterP:'במכשיר הזה ההקראה בלי ניקוד נשמעת טוב יותר.',useN:'להקריא עם ניקוד',useP:'להקריא בלי ניקוד',useA:'מצב אוטומטי',now:'מצב נוכחי: {m}',mAuto:'אוטומטי',mOn:'עם ניקוד',mOff:'בלי ניקוד',
+ nik:'עם ניקוד',pl:'בלי ניקוד',norm:'רגיל',slow:'🐢 לאט',ok:'נשמע נכון',bad:'נשמע לא נכון',sent:'נשלח למנוע:',
+ rep:'דוח לשליחה',repS:'אפשר לצלם את המסך הזה או להעתיק ולשלוח.',copy:'העתקה',copied:'הועתק ✔',clear:'איפוס הסימונים',back:'חזרה לסולם הקריאה',
+ s:{let:'אותיות (צריך לשמוע את שמות האותיות, כולל "כף סופית")',syl:'הברות',word:'מילים מנוקדות',homo:'מילים שנכתבות אותו דבר (בלי ניקוד אי אפשר לדעת)',verb:'אוכֵל או אוכֶל?',blank:'משפט עם מילה חסרה (צריך לשמוע הפסקה קצרה, לא "קו תחתון")',num:'מספרים וחשבון',punct:'גרש, מקף ומירכאות',emoji:'אמוג\'י ולוכסן (לא אמורים להישמע)',wbw:'משפט מילה־מילה',story:'סיפור קצר',fr:'צרפתית',en:'אנגלית'}},
+fr:{title:'Test de la voix de lecture',sub:'Appuie sur ▶, écoute, puis coche 👍 si c’est juste ou 👎 sinon. On saura ainsi exactement ce qui ne va pas sur cet appareil. Aucun texte ni prénom n’est envoyé : seulement le nom de la voix et la coche.',
+ dev:'Appareil et voix',noApi:'Ce navigateur ne sait pas lire à voix haute.',voices:'{n} voix sur l’appareil',none:'Le navigateur ne montre aucune liste de voix (fréquent sur Android) : on essaie quand même.',picked:'Voix choisie pour l’hébreu : {v}',noHe:'Aucune voix en hébreu dans la liste.',
+ set:'⚙️ Choisir la voix',how:'🔈 Ajouter une voix',re:'↻ Actualiser',name:'Voix',tag:'Code langue',as:'Sert pour',
+ sum:'Résumé',sum0:'Rien de coché pour l’instant.',sumL:'Avec nikoud : 👍 {a} 👎 {b} · Sans nikoud : 👍 {c} 👎 {d}',better0:'Avec assez de coches, le bon réglage pour cet appareil sera proposé ici.',betterN:'Sur cet appareil, la lecture avec nikoud sonne mieux.',betterP:'Sur cet appareil, la lecture sans nikoud sonne mieux.',useN:'Lire avec nikoud',useP:'Lire sans nikoud',useA:'Mode automatique',now:'Réglage actuel : {m}',mAuto:'automatique',mOn:'avec nikoud',mOff:'sans nikoud',
+ nik:'Avec nikoud',pl:'Sans nikoud',norm:'normal',slow:'🐢 lent',ok:'C’était juste',bad:'C’était faux',sent:'Envoyé au moteur :',
+ rep:'Rapport à envoyer',repS:'Fais une capture d’écran ou copie ce texte.',copy:'Copier',copied:'Copié ✔',clear:'Effacer les coches',back:'Retour à l’échelle de lecture',
+ s:{let:'Lettres (on doit entendre le NOM des lettres)',syl:'Syllabes',word:'Mots avec voyelles',homo:'Mots écrits pareil (sans nikoud, impossible de savoir)',verb:'« okhel » : il mange ou nourriture ?',blank:'Phrase à trou (on doit entendre une petite pause)',num:'Nombres et calcul',punct:'Guéresh, trait d’union, guillemets',emoji:'Émoji et barre oblique (ne doivent pas être lus)',wbw:'Phrase mot à mot',story:'Petite histoire',fr:'Français',en:'Anglais'}},
+en:{title:'Read-aloud voice check',sub:'Tap ▶, listen, then mark 👍 if it sounded right or 👎 if not. That tells us exactly what is wrong on this device. No text or name is sent: only the voice name and your mark.',
+ dev:'Device and voices',noApi:'This browser cannot read aloud.',voices:'{n} voices on the device',none:'The browser shows no voice list (common on Android): we try anyway.',picked:'Voice picked for Hebrew: {v}',noHe:'No Hebrew voice in the list.',
+ set:'⚙️ Choose the voice',how:'🔈 How to add a voice',re:'↻ Refresh',name:'Voice',tag:'Language tag',as:'Used for',
+ sum:'Summary',sum0:'Nothing marked yet.',sumL:'With nikud: 👍 {a} 👎 {b} · Without nikud: 👍 {c} 👎 {d}',better0:'With enough marks, the right setting for this device is suggested here.',betterN:'On this device, reading with nikud sounds better.',betterP:'On this device, reading without nikud sounds better.',useN:'Read with nikud',useP:'Read without nikud',useA:'Automatic mode',now:'Current setting: {m}',mAuto:'automatic',mOn:'with nikud',mOff:'without nikud',
+ nik:'With nikud',pl:'Without nikud',norm:'normal',slow:'🐢 slow',ok:'Sounded right',bad:'Sounded wrong',sent:'Sent to the engine:',
+ rep:'Report to send',repS:'Take a screenshot of this, or copy the text.',copy:'Copy',copied:'Copied ✔',clear:'Clear my marks',back:'Back to the Reading Ladder',
+ s:{let:'Letters (you should hear the letter NAMES, incl. "kaf sofit")',syl:'Syllables',word:'Vocalised words',homo:'Words spelled the same (impossible to tell without nikud)',verb:'"okhel": eats or food?',blank:'Sentence with a blank (you should hear a short pause)',num:'Numbers and sums',punct:'Geresh, hyphen, quotes',emoji:'Emoji and slash (must not be read)',wbw:'Sentence word by word',story:'Short story',fr:'French',en:'English'}}};
+/* n = vocalised form, p = what is on screen without nikud. Same number of words in both. */
+var SAMPLES=[
+ {id:'let',lang:'he',kind:'letter',n:'א ב ג ך ם ץ',p:'א ב ג ך ם ץ'},
+ {id:'syl',lang:'he',kind:'syl',n:'בָּ בִּי מוֹ לֶ',p:'בָּ בִּי מוֹ לֶ'},
+ {id:'word',lang:'he',kind:'word',n:'חָתוּל, כֶּלֶב, דֻּבִּי, מִטְרִיָּה, צְפַרְדֵּעַ.',p:'חתול, כלב, דובי, מטרייה, צפרדע.'},
+ {id:'homo',lang:'he',kind:'word',n:'סֵפֶר. סַפָּר. סִפֵּר.',p:'ספר. ספר. ספר.'},
+ {id:'verb',lang:'he',kind:'sentence',n:'הַיֶּלֶד אוֹכֵל אֹכֶל בַּבֹּקֶר.',p:'הילד אוכל אוכל בבוקר.'},
+ {id:'blank',lang:'he',kind:'sentence',n:'הֶחָתוּל שׁוֹתֶה ___ בַּבֹּקֶר.',p:'החתול שותה ___ בבוקר.'},
+ {id:'num',lang:'he',kind:'sentence',n:'3 + 4 = 7. יֵשׁ לִי 12 בַּלּוֹנִים וְעוֹד 150 כּוֹכָבִים.',p:'3 + 4 = 7. יש לי 12 בלונים ועוד 150 כוכבים.'},
+ {id:'punct',lang:'he',kind:'sentence',n:'גִּ\'ירָפָה אוֹכֶלֶת צִ\'יפְּס בְּבֵית־סֵפֶר וְאוֹמֶרֶת "שָׁלוֹם".',p:'ג\'ירפה אוכלת צ\'יפס בבית־ספר ואומרת "שלום".'},
+ {id:'emoji',lang:'he',kind:'sentence',n:'כָּל הַכָּבוֹד 🎉 ! אַתְּ/ה מוּכָן/ה לְשָׁלָב הַבָּא?',p:'כל הכבוד 🎉 ! את/ה מוכן/ה לשלב הבא?'},
+ {id:'wbw',lang:'he',kind:'sentence',words:true,n:'הַכֶּלֶב רָץ מַהֵר בַּגִּנָּה.',p:'הכלב רץ מהר בגינה.'},
+ {id:'story',lang:'he',kind:'story',n:'לְמִיצִי יֵשׁ כַּדּוּר אָדֹם. מִיצִי רָצָה אַחֲרֵי הַכַּדּוּר. הַכַּדּוּר נָפַל לַמַּיִם.',p:'למיצי יש כדור אדום. מיצי רצה אחרי הכדור. הכדור נפל למים.'},
+ {id:'fr',lang:'fr',kind:'sentence',n:'Le petit chat boit du lait ___ le matin. 3 + 4 = 7 !',p:null},
+ {id:'en',lang:'en',kind:'sentence',n:'The little cat drinks milk ___ in the morning. 3 + 4 = 7!',p:null}];
+var L=ls.get('annabelle-lang');if(!TX[L])L='he';
+var TAL={};try{var o=JSON.parse(ls.get(KEY)||'null');if(o&&typeof o==='object'&&!Array.isArray(o))for(var k in o){var a=o[k];if(Array.isArray(a)&&a.length===2&&k.length<40)TAL[k]=[Math.max(0,a[0]|0),Math.max(0,a[1]|0)]}}catch(e){}
+function T(k,o){var s=TX[L][k]||TX.en[k]||'';if(o)for(var a in o)s=s.replace('{'+a+'}',o[a]);return s}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+function S(){return window.Say&&window.Say.speak?window.Say:null}
+function wspans(e,txt){e.textContent='';e._w=[];String(txt).split(/\s+/).filter(Boolean).forEach(function(w,i){if(i)e.appendChild(document.createTextNode(' '));var s=el('span','w',w);e._w.push(s);e.appendChild(s)});return e}
+function mark(els,a,b){for(var i=0;i<els.length;i++)els[i].classList.toggle('rd',a>=0&&i>=a&&i<=b)}
+function dev(){var s=S(),tb=$('voices').querySelector('tbody');tb.textContent='';
+ if(!s||!s.state().api){$('devLine').textContent=T('noApi');$('pickLine').textContent='';return}
+ var all=s.allVoices(),st=s.state('he');$('devLine').textContent=(all.length?T('voices',{n:all.length}):T('none'))+' · '+st.platform+(st.probe?' · he: '+st.probe:'');
+ var pk={};['he','fr','en'].forEach(function(l){var v=s.voice(l);if(v)pk[l]=v.name});
+ $('pickLine').textContent=pk.he?T('picked',{v:pk.he}):(all.length?T('noHe'):'');
+ all.slice().sort(function(a,b){var x=['he','fr','en'].indexOf(a.as),y=['he','fr','en'].indexOf(b.as);return (x<0?9:x)-(y<0?9:y)}).forEach(function(v){
+  var tr=el('tr',pk[v.as]===v.name?'pick':'');tr.appendChild(el('td',null,(pk[v.as]===v.name?'★ ':'')+v.name));tr.appendChild(el('td',null,v.lang+(v.local?'':' · online')));tr.appendChild(el('td',null,['he','fr','en'].indexOf(v.as)>=0?v.as:'–'));tb.appendChild(tr)})}
+function tot(mode){var a=0,b=0;for(var k in TAL){var p=k.split('|');if(p[1]===mode){a+=TAL[k][0];b+=TAL[k][1]}}return[a,b]}
+function sum(){var n=tot('n'),p=tot('p'),any=n[0]+n[1]+p[0]+p[1],s=S();
+ $('sum').textContent=any?T('sumL',{a:n[0],b:n[1],c:p[0],d:p[1]}):T('sum0');
+ var sn=n[0]-n[1],sp=p[0]-p[1],hint=T('better0'),bt=$('sumBtns');bt.textContent='';
+ if(n[0]+n[1]>=3&&p[0]+p[1]>=3){if(sn>=sp+2)hint=T('betterN');else if(sp>=sn+2)hint=T('betterP')}
+ var cur=s?s.pref('nikud'):'auto';$('sumHint').textContent=hint+' '+T('now',{m:cur==='on'?T('mOn'):cur==='off'?T('mOff'):T('mAuto')});
+ if(s)[['auto','useA'],['on','useN'],['off','useP']].forEach(function(x){var b=el('button',cur===x[0]?'on':'',T(x[1]));b.setAttribute('data-set',x[0]);b.onclick=function(){s.pref('nikud',x[0]);sum();report()};bt.appendChild(b)});
+ report()}
+function report(){var s=S(),lines=[];lines.push('saytest '+new Date().toISOString().slice(0,10));lines.push('UA: '+navigator.userAgent);
+ if(s){var st=s.state('he');lines.push('platform='+st.platform+' voices='+st.voices+' probe.he='+(st.probe||'-')+' nikud='+s.pref('nikud')+' speed='+s.pref('speed'));
+  ['he','fr','en'].forEach(function(l){var v=s.voice(l);lines.push(l+': '+(v?v.name+' ['+v.lang+']':'(none listed)')+' can='+s.can(l))});
+  var he=s.voices('he');if(he.length>1)lines.push('he voices: '+he.map(function(v){return v.name+' ['+v.lang+'] '+v.score}).join('; '))}
+ Object.keys(TAL).sort().forEach(function(k){lines.push(k+'  ok='+TAL[k][0]+' bad='+TAL[k][1])});
+ $('rep').textContent=lines.join('\n')}
+function vote(key,ok,cell,meta){var t=TAL[key]||(TAL[key]=[0,0]);t[ok?0:1]++;ls.set(KEY,JSON.stringify(TAL));cell._ok.textContent='👍 '+t[0];cell._bad.textContent='👎 '+t[1];
+ var s=S();if(s)s.report(ok,meta);sum()}
+function build(){var box=$('samples');box.textContent='';var s=S();
+ SAMPLES.forEach(function(sm){var c=el('div','card');c.setAttribute('data-id',sm.id);c.appendChild(el('h2',null,T('s')[sm.id]));
+  var he=sm.lang==='he',tn=wspans(el('div','txt'+(he?'':' lat')),sm.n),tp=he&&sm.p!==sm.n?wspans(el('div','txt pl'),sm.p):null;
+  tn.setAttribute('lang',sm.lang);tn.setAttribute('dir',he?'rtl':'ltr');c.appendChild(tn);if(tp){tp.setAttribute('lang','he');tp.setAttribute('dir','rtl');c.appendChild(tp)}
+  var g=el('div','grid'),sent=el('div','sent');
+  (he?['n','p']:['n']).forEach(function(mode){[false,true].forEach(function(slow){
+   var key=sm.id+'|'+mode+'|'+(slow?'s':'f'),cell=el('div','cell'),t=TAL[key]||[0,0];cell.setAttribute('data-key',key);
+   var play=el('button','play','▶ '+(he?T(mode==='n'?'nik':'pl')+' · ':'')+T(slow?'slow':'norm'));
+   var v=el('div','v'),ok=el('button',null,'👍 '+t[0]),bad=el('button',null,'👎 '+t[1]);ok.setAttribute('aria-label',T('ok'));bad.setAttribute('aria-label',T('bad'));ok.title=T('ok');bad.title=T('bad');ok.disabled=bad.disabled=true;
+   cell._ok=ok;cell._bad=bad;
+   play.onclick=function(){if(!s)return;var els=(mode==='p'&&tp?tp:tn)._w,o={lang:sm.lang,kind:sm.kind,nikud:sm.n,plain:sm.p,mode:mode==='n'?'nikud':'plain',slow:slow,words:!!sm.words,level:2,
+     onword:function(a,b){mark(tn._w,-1,-1);if(tp)mark(tp._w,-1,-1);mark(els,a,b)}};
+    sent.textContent=T('sent')+' '+s.prep(mode==='n'||!sm.p?sm.n:sm.p,{lang:sm.lang,kind:sm.kind,nikud:mode==='n'});
+    s.speak(sm.p||sm.n,o);ok.disabled=bad.disabled=false};
+   var meta={id:sm.id,nikud:mode==='n',slow:slow};
+   ok.onclick=function(){vote(key,true,cell,meta)};bad.onclick=function(){vote(key,false,cell,meta)};
+   v.appendChild(ok);v.appendChild(bad);cell.appendChild(play);cell.appendChild(v);g.appendChild(cell)})});
+  c.appendChild(g);c.appendChild(sent);box.appendChild(c)})}
+function texts(){document.documentElement.lang=L;document.documentElement.dir=L==='he'?'rtl':'ltr';document.title=T('title');
+ $('tT').textContent='🔊 '+T('title');$('tSub').textContent=T('sub');$('tDev').textContent=T('dev');$('bSet').textContent=T('set');$('bHow').textContent=T('how');$('bRe').textContent=T('re');
+ $('thN').textContent=T('name');$('thL').textContent=T('tag');$('thA').textContent=T('as');$('tSum').textContent=T('sum');$('tRep').textContent=T('rep');$('tRepS').textContent=T('repS');
+ $('bCopy').textContent=T('copy');$('bClear').textContent=T('clear');$('bBack').textContent='◀ '+T('back');
+ var lg=$('langs');lg.textContent='';['he','fr','en'].forEach(function(l){var b=el('button',l===L?'on':'',l==='he'?'עב':l.toUpperCase());b.setAttribute('data-lang',l);b.onclick=function(){L=l;ls.set('annabelle-lang',l);all()};lg.appendChild(b)})}
+function all(){texts();dev();build();sum()}
+$('bSet').onclick=function(){var s=S();if(s)s.settings()};
+$('bHow').onclick=function(){var s=S();if(s)s.hint('he',{all:true})};
+$('bRe').onclick=function(){dev();sum()};
+$('bCopy').onclick=function(){var t=$('rep').textContent,b=$('bCopy');try{navigator.clipboard.writeText(t).then(function(){b.textContent=T('copied')},function(){})}catch(e){}};
+$('bClear').onclick=function(){TAL={};ls.set(KEY,'{}');all()};
+all();
+if(S())S().onchange(function(){dev();sum()});
+window.__saytest={tallies:function(){return TAL},samples:SAMPLES};
+})();
+</script>
+</body>
+</html>

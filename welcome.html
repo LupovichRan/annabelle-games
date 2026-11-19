@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1d1450">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/launcher-192.png">
-<title>ארץ המשחקים</title><script src="safe.js"></script><script src="kid.js"></script><script src="desktop.js"></script>
+<title>ארץ המשחקים</title><script src="safe.js"></script><script src="kid.js"></script><script src="desktop.js"></script><script src="say.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -172,7 +172,7 @@ function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cl
 function btn(cls,txt,fn){var b=el('button',cls,txt);b.type='button';if(fn)b.addEventListener('click',fn);return b}
 var TM=[],RAF=0,onSkip=null,onBack=null;
 function later(fn,ms){var id=setTimeout(fn,ms);TM.push(id);return id}
-function stopAll(){TM.forEach(clearTimeout);TM=[];cancelAnimationFrame(RAF);RAF=0;try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}
+function stopAll(){TM.forEach(clearTimeout);TM=[];cancelAnimationFrame(RAF);RAF=0;try{if(window.Say&&Say.stop)Say.stop();else window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}
 function show(nodes,o){o=o||{};stopAll();scr.textContent='';scr.classList.remove('in');nodes.forEach(function(n){if(n)scr.appendChild(n)});void scr.offsetWidth;scr.classList.add('in');
  onSkip=o.skip||null;onBack=o.back||null;skb.hidden=!onSkip;skb.textContent=o.skipT||t('skip');bk.hidden=!onBack;bk.textContent=o.backT||t('back');
  sp.textContent='';if(o.step!=null)for(var i=0;i<5;i++){var d=el('i',i<o.step?'ok':i===o.step?'on':'');sp.appendChild(d)}
@@ -321,11 +321,12 @@ var WORDS=[null,
  [['key','🔑'],['umbrella','☂️'],['rainbow','🌈'],['butterfly','🦋'],['scissors','✂️'],['bicycle','🚲'],['rocket','🚀'],['candle','🕯️'],['mountain','⛰️'],['turtle','🐢'],['strawberry','🍓'],['guitar','🎸']],
  [['lightning','⚡'],['anchor','⚓'],['telescope','🔭'],['volcano','🌋'],['microscope','🔬'],['hourglass','⏳'],['wrench','🔧'],['crown','👑'],['owl','🦉'],['whale','🐋'],['hedgehog','🦔'],['mushroom','🍄'],['envelope','✉️'],['magnet','🧲']],
  [['satellite','🛰️'],['tornado','🌪️'],['lobster','🦞'],['kangaroo','🦘'],['peacock','🦚'],['thermometer','🌡️'],['trumpet','🎺'],['violin','🎻'],['cactus','🌵'],['snail','🐌'],['rhinoceros','🦏'],['scorpion','🦂'],['ambulance','🚑'],['helicopter','🚁'],['broccoli','🥦']]];
-function speak(w){try{if(localStorage.getItem('annabelle-muted')==='1'||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
+/* read-aloud through say.js; a tap on the speaker always speaks, the automatic reading for young kids respects mute */
+function speak(w,auto){try{if(window.Say&&Say.speak){Say.speak(w,{lang:'en',kind:'word',level:2,auto:!!auto});return}if(localStorage.getItem('annabelle-muted')==='1'||!window.speechSynthesis)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u)}catch(e){}}
 ROUNDS.english=function(done,o){var hd=head('eT'),en=L==='en',age=P.age||8,lo=en?2:1,hi=en?5:4,start=clamp((age<=8?1:age<=12?2:3)+(en?1:0),lo,hi),used={};
- var can=false;try{can=!!window.speechSynthesis}catch(e){}
+ var can=false;try{can=window.Say&&Say.can?Say.can('en'):!!window.speechSynthesis}catch(e){}
  quiz(hd,o,5,start,lo,hi,function(b,qb){var pool=WORDS[b].filter(function(w){return !used[w[0]]});if(!pool.length)pool=WORDS[b];var w=pick(pool);used[w[0]]=1;
-  qb.textContent='';qb.className='qbox';qb.appendChild(el('span',null,w[0]));if(can){var s=btn('say','🔊',function(){speak(w[0])});s.setAttribute('aria-label','listen');qb.appendChild(s);hd.s.textContent=t('eS');if(age<=7)speak(w[0])}
+  qb.textContent='';qb.className='qbox';qb.appendChild(el('span',null,w[0]));if(can){var s=btn('say','🔊',function(){speak(w[0])});s.setAttribute('aria-label','listen');qb.appendChild(s);hd.s.textContent=t('eS');if(age<=7)speak(w[0],true)}
   var ops=[w[1]];shuffle(WORDS[b].slice()).forEach(function(x){if(ops.length<4&&ops.indexOf(x[1])<0)ops.push(x[1])});
   return {a:w[1],opts:shuffle(ops),emo:true}},function(est){done(clamp(Math.round(est)-(en?1:0),1,4))})};
 

@@ -161,6 +161,7 @@ p{margin:5px 0;font-size:clamp(14px,4vw,18px);line-height:1.35;font-weight:700}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/wordcity.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/wordcity-192.png"><meta name="apple-mobile-web-app-title" content="עיר המילים"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/wordcity-apple-180.png"><script src="pwa.js" data-app="wordcity" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#navSlot" data-menu="toMenu" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="say.js"></script>
 <script src="rewards.js" defer></script>
 </head>
 <body>
@@ -491,13 +492,20 @@ function tone(f,d,type,vol,when){if(muted)return;const a=ac();if(!a)return;try{c
 const SFX={click(){tone(520,.06,'square',.05)},tick(){tone(700,.07,'triangle',.1)},good(){tone(660,.1);tone(880,.12,'triangle',.12,.08);tone(1320,.18,'triangle',.1,.16)},bad(){tone(300,.16,'sine',.1);tone(240,.22,'sine',.09,.12)},combo(n){[0,1,2,3].forEach(i=>tone(520*Math.pow(1.19,i+n%3),.1,'square',.05,i*.06))},win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.24,'triangle',.13,i*.11))},star(i){tone(880+i*220,.22,'triangle',.13)},bonk(){tone(180,.12,'square',.08);tone(90,.2,'sawtooth',.05,.06)}};
 const MEL=[0,2,4,7,4,2,0,-3,0,4,7,9,7,4,2,0,5,7,9,12,9,7,5,2,4,2,0,-3,0,2,0,null];
 setInterval(()=>{if(muted||!music||!gest||document.hidden||(R&&R.paused))return;const n=MEL[musI%MEL.length];if(n!=null)tone(330*Math.pow(2,n/12),.24,'triangle',.03);if(musI%4===0)tone(110*Math.pow(2,[0,0,5,7][(musI>>3)%4]/12),.34,'sine',.045);musI++},260);
-const TTS={v:null,ok:false,log:0,
- scan(){let vs=[];try{vs=(window.speechSynthesis&&speechSynthesis.getVoices&&speechSynthesis.getVoices())||[]}catch(e){}const e=[].filter.call(vs,v=>/^en([-_]|$)/i.test(v.lang||''));const was=this.ok;this.v=e.filter(v=>/en[-_]US/i.test(v.lang))[0]||e.filter(v=>/en[-_]GB/i.test(v.lang))[0]||e[0]||null;this.ok=!!this.v&&!!window.SpeechSynthesisUtterance&&CFG.tts!==false;return was!==this.ok},
+/* read-aloud goes through say.js (voice choice, text clean-up, browser quirks); the old direct code is the fallback */
+const SAY=()=>window.Say&&Say.speak?Say:null;
+const TTS={v:null,log:0,_was:null,
+ scan(){let vs=[];try{vs=(window.speechSynthesis&&speechSynthesis.getVoices&&speechSynthesis.getVoices())||[]}catch(e){}const e=[].filter.call(vs,v=>/^en([-_]|$)/i.test(v.lang||''));this.v=e.filter(v=>/en[-_]US/i.test(v.lang))[0]||e.filter(v=>/en[-_]GB/i.test(v.lang))[0]||e[0]||null;const ok=this.ok,ch=this._was!==ok;this._was=ok;return ch},
+ get ok(){if(CFG.tts===false)return false;const S=SAY();return S?S.can('en'):!!this.v&&!!window.SpeechSynthesisUtterance},
  on(){return this.ok&&!muted},
- say(txt,force){if(!this.ok||!gest||(muted&&!force))return false;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.voice=this.v;u.lang=this.v.lang||'en-US';u.rate=EL()<2.5?.8:.92;speechSynthesis.speak(u);this.log++;return true}catch(e){return false}},
- stop(){try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}};
+ say(txt,force){if(!txt||!this.ok||!gest||(muted&&!force))return false;const S=SAY();
+  try{if(S){if(!S.speak(txt,{lang:'en',level:EL()<2.5?2:3,kind:/\s/.test(String(txt).trim())?'sentence':'word',auto:!force}))return false}
+   else{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.voice=this.v;u.lang=this.v.lang||'en-US';u.rate=EL()<2.5?.8:.92;speechSynthesis.speak(u)}
+   this.log++;return true}catch(e){return false}},
+ stop(){const S=SAY();if(S){S.stop();return}try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}};
 TTS.scan();
-try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{if(TTS.scan()&&cur==='scMenu')renderMenu()})}catch(e){}
+if(SAY())Say.onchange(()=>{if(TTS.scan()&&cur==='scMenu')renderMenu()});
+else try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{if(TTS.scan()&&cur==='scMenu')renderMenu()})}catch(e){}
 function track(ty,d){try{window.KidApp&&KidApp.track&&KidApp.track(ty,d)}catch(e){}}
 function award(o){try{const A=window.AnnabelleRewards;if(!A)return;o.game='wordcity';A.award(o)}catch(e){}}
 function flushR(){try{const A=window.AnnabelleRewards;A&&A.flush&&A.flush()}catch(e){}}
@@ -701,7 +709,7 @@ function renderMenu(){const c=$('cMenu');c.textContent='';const p=prof(),built=N
  mk('m4','📖',t('mBook'),seenCount()+'/'+W.length,openBook,'bBook');Rr.appendChild(md);
  if(SV.hi.length)Rr.appendChild(h('div',{cls:'hs'},[h('div',{cls:'hsT',text:'🏆 '+t('hiT')}),h('div',{cls:'hs1'},SV.hi.map((x,i)=>h('span',{text:(i+1)+'. '+x.s})))]));
  const lg=h('div',{id:'langs'},h('span',{id:'flags'},['he','fr','en'].map(l=>h('button',{cls:l===lang?'sel':'','data-lang':l,text:l==='he'?'עב':l.toUpperCase(),click:()=>{gest=true;setLang(l);SFX.click();renderMenu();hud()}}))));Rr.appendChild(lg);
- if(!TTS.ok)Rr.appendChild(h('p',{cls:'note',id:'noVoice',text:'🔇 '+t('noVoice')}));
+ if(!TTS.ok){const nv=h('p',{cls:'note',id:'noVoice',text:'🔇 '+t('noVoice')});if(SAY()&&CFG.tts!==false){nv.style.cursor='pointer';nv.addEventListener('click',()=>Say.hint('en',{all:true}))}Rr.appendChild(nv)}
  c.appendChild(L);c.appendChild(Rr)}
 function toMenu(){clearTimeout(pendT);if(R)R.done=true;Q=null;TTS.stop();closeAll();$('banner').classList.remove('on');$('fx').textContent='';renderMenu();show('scMenu')}
 window.toMenu=toMenu;

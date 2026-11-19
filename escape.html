@@ -149,6 +149,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 </style>
 <!--pwa--><link rel="manifest" href="manifests/escape.webmanifest"><meta name="theme-color" content="#ffd6b8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="בית העץ"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/escape-apple-180.png"><script src="pwa.js" data-app="escape" data-slots='[["#langS", "after"], ["#pause .card", "append"]]' defer></script><script src="nav.js" data-menuslot="#langS" data-pauseslot="#pause .card" data-relabel="#paHome" defer></script><script src="share.js" data-slot="#langS" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
+<script src="say.js"></script>
 <script src="rewards.js" defer></script>
 </head>
 <body>
@@ -467,10 +468,12 @@ function sfx(kind){ if(muted) return; try{ ctx=ctx||new (window.AudioContext||wi
   let t=ctx.currentTime; for(const [f,d] of notes){const o=ctx.createOscillator(),g=ctx.createGain();o.type=kind==='roar'?'sawtooth':'triangle';o.frequency.setValueAtTime(f,t);if(kind==='roar')o.frequency.exponentialRampToValueAtTime(60,t+d);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+d);t+=d;}
  }catch(e){} }
 const VLANG={he:'he',fr:'fr',en:'en'};
-function speak(text){ try{ if(muted||!('speechSynthesis' in window))return; const ss=window.speechSynthesis; ss.cancel();
+/* narration through say.js (automatic speech: silent while muted); the old direct code is the fallback */
+function speak(text){ try{ if(muted)return; if(window.Say&&Say.speak){Say.speak(text,{lang:VLANG[lang]||'he',kind:'ui',auto:true,pitch:1.3,rate:1.1});return;}
+  if(!('speechSynthesis' in window))return; const ss=window.speechSynthesis; ss.cancel();
   const v=ss.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith(VLANG[lang]) ); if(!v) return;
   const u=new SpeechSynthesisUtterance(text.replace(/[\p{Extended_Pictographic}\u2B50\u2606\uFE0F]/gu,'').replace(/___/g,'…'));u.voice=v;u.lang=v.lang;u.rate=.95;u.pitch=1.3;ss.speak(u);}catch(e){} }
-function stopSpeak(){try{if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}}
+function stopSpeak(){try{if(window.Say&&Say.stop)Say.stop();else if('speechSynthesis' in window)speechSynthesis.cancel();}catch(e){}}
 
 // ---------- state ----------
 let prog=(()=>{try{const p=JSON.parse(localStorage.getItem(PKEY)||'{}');return {completed:Math.min(TOT,Math.max(0,p.completed|0)),rs:(p.rs&&typeof p.rs==='object')?p.rs:{}};}catch(e){return {completed:0,rs:{}};}})();

@@ -133,7 +133,8 @@
     '#pt-panel .dots{display:flex;gap:14px;justify-content:center;direction:ltr;margin:4px 0}#pt-panel .dots i{width:18px;height:18px;border-radius:50%;border:3px solid #ff9f43}#pt-panel .dots i.f{background:#ff9f43}' +
     '#pt-panel .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;direction:ltr}#pt-panel .pad button{font-size:24px;min-height:54px;background:#fff0d6}' +
     '#pt-panel .msg{min-height:20px;text-align:center;font-weight:700;color:#b3261e;font-size:14px}#pt-panel .msg.ok{color:#2e7d32}' +
-    '#pt-panel .link{background:none;min-height:44px;text-decoration:underline;color:#7a5a3a;font-size:14px}';
+    '#pt-panel .link{background:none;min-height:44px;text-decoration:underline;color:#7a5a3a;font-size:14px}' +
+    '#pt-panel .pvh{font-size:13px;line-height:1.35;color:#6b5238;text-align:start}#pt-panel .stat.pvt{font-size:13.5px;line-height:1.35;text-align:start}#pt-panel .pvt b{font-size:13.5px}#pt-panel .pvb{display:grid;grid-template-columns:1fr 1fr;gap:6px}#pt-panel .pvb button{font-size:14.5px;padding:4px 6px;min-width:0}';
 
   var badge, toast, lockEl, panelEl, toastTimer;
   function el(tag, attrs, html) { var e = document.createElement(tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
@@ -349,8 +350,8 @@
     ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/],
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
     ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/],
-    ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/],['reading','📖','סולם הקריאה',/^annabelle-reading/],['thinking','🧩','חידות חשיבה',/^annabelle-thinking/],['city','🏙️','עיר החתולים',/^annabelle-city/]];
-  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry)$/;
+    ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/],['bagrut','🎓','מסלול הבגרות',/^annabelle-bagrut/],['reading','📖','סולם הקריאה',/^annabelle-reading/],['thinking','🧩','חידות חשיבה',/^annabelle-thinking/],['city','🏙️','עיר החתולים',/^annabelle-city/]];
+  var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
     var ks = allKeys(), rw = rd('annabelle-rewards', null);
@@ -387,8 +388,71 @@
       doReset(ids, all.checked); msg.className = 'msg ok'; msg.textContent = '✅ אופס! מרענן…'; go.disabled = true; setTimeout(function () { location.reload(); }, 900);
     };
   }
+  /* ---------- parent: evidence note, learning time today, privacy & personalisation (he / fr / en, follows 'annabelle-lang') ---------- */
+  var PX = {
+    he: {ev: '💡 מחקרים מראים ש־10–15 דקות ממוקדות ביום מספיקות לילדים צעירים. המגבלות שקבעתם נשמרות תמיד — שום דבר במשחקים לא דוחף לשחק מעבר להן.',
+      lt: '📚 זמן למידה היום', min: 'דק׳', back: 'חזרה', saved: 'נשמר ✓', ltDone: '✔ מספיק להיום', open: '🔒 פרטיות והתאמה אישית', title: 'פרטיות והתאמה אישית',
+      dev: '<b>מה נשמר במכשיר:</b> השם, הגיל, ההתקדמות, המטבעות וההגדרות — רק בדפדפן הזה. אין חשבון, אין פרסומות.',
+      sent: '<b>מה נשלח, באופן אנונימי:</b> מזהה אקראי, גיל, מגדר ואירועי שימוש (איזה משחק נפתח, שלב, משך). השם אף פעם לא נשלח.',
+      tel: 'נתוני שימוש אנונימיים', on: 'פעיל', off: 'כבוי',
+      diff: '<b>התאמת הקושי:</b> רמת המשחקים מתאימה את עצמה רק כדי שהילדים ילמדו ברמה שנכונה להם. היא נקבעת במכשיר, מהחימום הקצר ומהתשובות במשחקים — לא לצורך פרסום ולא לבניית פרופיל.',
+      band: 'התאמת התצוגה לגיל (לשחקן הנוכחי)', b: {'': 'אוטומטי', little: 'צעירים 4–7', kid: 'רגילה', teen: 'נוער 11+'},
+      bandH: 'אוטומטי = לפי הגיל שבפרופיל. לצעירים התצוגה רגועה יותר (החיה והמדבקות, בלי מספרי מטבעות); לנוער — נקייה יותר, עם תצוגת כישורים. המטבעות וההתקדמות נצברים תמיד, בכל תצוגה.'},
+    fr: {ev: '💡 Les études montrent que 10 à 15 minutes concentrées par jour suffisent aux jeunes enfants. Les limites que vous fixez sont toujours respectées : rien dans les jeux ne pousse à jouer plus longtemps.',
+      lt: '📚 Temps d’apprentissage aujourd’hui', min: 'min', back: 'Retour', saved: 'Enregistré ✓', ltDone: '✔ assez pour aujourd’hui', open: '🔒 Confidentialité et personnalisation', title: 'Confidentialité et personnalisation',
+      dev: '<b>Ce qui reste sur l’appareil :</b> le prénom, l’âge, la progression, les pièces et les réglages, uniquement dans ce navigateur. Pas de compte, pas de publicité.',
+      sent: '<b>Ce qui est envoyé, de façon anonyme :</b> un identifiant aléatoire, l’âge, le genre et des événements d’utilisation (jeu ouvert, niveau, durée). Le prénom n’est jamais envoyé.',
+      tel: 'Données d’utilisation anonymes', on: 'Activé', off: 'Désactivé',
+      diff: '<b>Difficulté adaptée :</b> le niveau des jeux s’ajuste uniquement pour que l’enfant apprenne à son niveau. Il est calculé sur l’appareil, à partir du petit échauffement et des réponses dans les jeux, jamais pour de la publicité ni pour établir un profil.',
+      band: 'Adapter la présentation à l’âge (joueur actuel)', b: {'': 'Automatique', little: 'Petits 4–7', kid: 'Classique', teen: 'Ados 11+'},
+      bandH: 'Automatique = selon l’âge du profil. Pour les petits, l’affichage est plus calme (le compagnon et les autocollants, sans compteurs de pièces) ; pour les ados, plus sobre, avec une vue des compétences. Les pièces et la progression continuent de compter dans tous les cas.'},
+    en: {ev: '💡 Research shows that 10–15 focused minutes a day are enough for young children. The limits you set are always respected: nothing in the games pushes for longer play.',
+      lt: '📚 Learning time today', min: 'min', back: 'Back', saved: 'Saved ✓', ltDone: '✔ plenty for today', open: '🔒 Privacy & personalisation', title: 'Privacy & personalisation',
+      dev: '<b>Stored on this device:</b> the name, age, progress, coins and settings, in this browser only. No account, no ads.',
+      sent: '<b>Sent, anonymously:</b> a random id, age, gender and usage events (which game was opened, level, duration). The name is never sent.',
+      tel: 'Anonymous usage data', on: 'On', off: 'Off',
+      diff: '<b>Adapted difficulty:</b> the level of the games adjusts only to help the child learn at the right level. It is worked out on the device, from the short warm-up and the answers in the games, never for advertising or profiling.',
+      band: 'Adapt the presentation to age (current player)', b: {'': 'Automatic', little: 'Little 4–7', kid: 'Classic', teen: 'Teen 11+'},
+      bandH: 'Automatic = from the age in the profile. For little ones the display is calmer (the pet and stickers, no coin counters); for teens it is cleaner, with a skills view. Coins and progress keep counting in every mode.'}
+  };
+  function plang() { var l = null; try { l = localStorage.getItem('annabelle-lang'); } catch (e) {} return l === 'fr' || l === 'en' ? l : 'he'; }
+  function px(k) { return PX[plang()][k]; }
+  function telOn() { try { return localStorage.getItem('annabelle-telemetry') !== '0'; } catch (e) { return true; } }
+  function bandPref() {
+    try { var R = window.AnnabelleRewards; if (R && R.bandPref) return R.bandPref(); } catch (e) {}
+    var b = rd('annabelle-rewards', {}).band; return b === 'little' || b === 'kid' || b === 'teen' ? b : '';
+  }
+  function setBand(b) { // per profile: kept in the rewards save of the current player
+    try { var R = window.AnnabelleRewards; if (R && R.setBand) { R.setBand(b); return; } } catch (e) {}
+    var o = rd('annabelle-rewards', null) || {}; o.band = b; wr('annabelle-rewards', o);
+  }
+  function learnMin() { // minutes on the learning pages today (measured by rewards.js)
+    try { var R = window.AnnabelleRewards; if (R && R.learnToday) { var x = R.learnToday(); return {min: x.min, done: x.done}; } } catch (e) {}
+    var lt = rd('annabelle-rewards', {}).lt, s = lt && lt.d === today() && lt.s > 0 ? Math.floor(lt.s) : 0; return {min: Math.floor(s / 60), done: s >= 600};
+  }
+  function privacyScreen(fromMath, note) {
+    var on = telOn(), bp = bandPref(), ltr = plang() !== 'he';
+    var card = shell('🔒 ' + esc(px('title')),
+      '<div class="stat pvt">' + px('dev') + '</div><div class="stat pvt">' + px('sent') + '</div>' +
+      '<div class="row"><span class="lbl">' + esc(px('tel')) + '</span><button type="button" data-a="tel" aria-pressed="' + on + '" class="' + (on ? 'pri' : 'soft') + '">' + esc(on ? px('on') : px('off')) + '</button></div>' +
+      '<div class="stat pvt">' + px('diff') + '</div>' +
+      '<div class="lbl" style="flex:none">' + esc(px('band')) + '</div><div class="row pvb">' + ['', 'little', 'kid', 'teen'].map(function (b) {
+        return '<button type="button" data-b="' + b + '" aria-pressed="' + (bp === b) + '" class="' + (bp === b ? 'pri' : 'soft') + '">' + esc(px('b')[b]) + '</button>'; }).join('') + '</div>' +
+      '<div class="pvh">' + esc(px('bandH')) + '</div><div class="msg ok">' + esc(note || '') + '</div>' +
+      '<div class="row"><button type="button" class="soft" data-a="back">' + esc(px('back')) + '</button></div>');
+    card.setAttribute('dir', ltr ? 'ltr' : 'rtl'); card.setAttribute('data-s', 'privacy');
+    card.querySelector('[data-a=tel]').onclick = function () {
+      var now = !telOn();
+      try { if (now) localStorage.removeItem('annabelle-telemetry'); else localStorage.setItem('annabelle-telemetry', '0'); } catch (e) {}
+      if (now) aud('privacy_changed', 'telemetry', {on: true}); // switching it off sends nothing, not even this
+      privacyScreen(fromMath, px('saved'));
+    };
+    card.querySelectorAll('[data-b]').forEach(function (b) { b.onclick = function () {
+      var v = b.getAttribute('data-b'); setBand(v); aud('band_changed', 'presentation', {band: v || 'auto'}); privacyScreen(fromMath, px('saved')); }; });
+    card.querySelector('[data-a=back]').onclick = function () { showPanel('', fromMath); };
+  }
   function showPanel(note, fromMath) {
-    var s = play(), p = par(), r = lockReason(), playedMin = Math.floor(s.seconds / 60), bed = p.bed;
+    var s = play(), p = par(), r = lockReason(), playedMin = Math.floor(s.seconds / 60), bed = p.bed, lm = learnMin();
     var lockedNow = r === 'parent' || r === 'bed';
     var card = shell('⚙️ ' + esc(t('panel')),
       '<div class="stat">' + esc(t('played')) + ': <b>' + playedMin + '</b> ' + esc(t('min')) + ' ' + esc(t('of')) + ' ' + Math.round(limitSec(s, p) / 60) + ' · ' + esc(t('left')) + ' <b>' + Math.ceil(left(s, p) / 60) + '</b></div>' +
@@ -398,6 +462,8 @@
       '<div class="row"><span class="lbl">🌙 ' + esc(t('bedtime')) + '</span><button type="button" data-a="bed" class="' + (bed.on ? 'pri' : 'soft') + '">' + esc(bed.on ? t('on') : t('off')) + '</button></div>' +
       '<div class="row" dir="ltr"><input type="time" data-a="from" value="' + esc(bed.from) + '" aria-label="' + esc(t('from')) + '"><span style="flex:0">→</span><input type="time" data-a="to" value="' + esc(bed.to) + '" aria-label="' + esc(t('to')) + '"></div>' +
       '<div class="msg ok">' + esc(note || '') + '</div>' +
+      '<div class="pvh" data-v="learn" dir="' + (plang() === 'he' ? 'rtl' : 'ltr') + '">' + (lm.min > 0 ? '<b>' + esc(px('lt')) + ': ' + lm.min + ' ' + esc(px('min')) + (lm.done ? ' · ' + esc(px('ltDone')) : '') + '</b><br>' : '') + esc(px('ev')) + '</div>' +
+      '<div class="row"><button type="button" class="soft" data-a="priv">' + esc(px('open')) + '</button></div>' +
       '<div class="row"><button type="button" class="soft" data-a="rst">🗑️ איפוס התקדמות</button></div>' +
       '<div class="row"><button type="button" class="' + (fromMath ? 'pri' : 'soft') + '" data-a="pin">' + esc(fromMath ? t('newpin') : t('chpin')) + '</button><button type="button" class="soft" data-a="done">' + esc(t('close')) + '</button></div>');
     function upd(fn, what) { var pp = par(), ss = play(); fn(pp, ss); wr(KPAR, pp); wr(KP, ss); render();
@@ -412,6 +478,7 @@
     card.querySelector('[data-a=bed]').onclick = function () { upd(function (pp) { pp.bed.on = !pp.bed.on; delete pp.skip; }, 'bedtime'); };
     ['from', 'to'].forEach(function (k) { card.querySelector('[data-a=' + k + ']').onchange = function (e) { var val = e.target.value; if (/^\d\d:\d\d$/.test(val)) upd(function (pp) { pp.bed[k] = val; delete pp.skip; }, 'bedtime-' + k); }; });
     card.querySelector('[data-a=rst]').onclick = function () { resetScreen(fromMath); };
+    card.querySelector('[data-a=priv]').onclick = function () { privacyScreen(fromMath); };
     card.querySelector('[data-a=pin]').onclick = function () { pinPad('create'); };
     card.querySelector('[data-a=done]').onclick = closePanel;
   }

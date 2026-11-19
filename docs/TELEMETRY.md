@@ -24,10 +24,37 @@ and has a "don't send the picture" box).
   `game_end` {sec, score, win, quit}. The game events are derived from the existing `AnnabelleRewards.award()` calls
   (`play` → `game_start`; `levelClear` / `star` → `level`; `win` / `score` → `game_end`). Games may add their own (`answer`, `onboard`, `net`, …).
   Batched every ~10 s and when the page is left; max 120 events per page view; offline rows wait in `localStorage annabelle-tq` (max 200).
+  Meta layer (`rewards.js` / `juice.js`): type `meta`, `data.k` says which element. Fixed words and small numbers only, never a name or free text.
+  | `k` | data | when |
+  |---|---|---|
+  | `streak` | `{n, shield}` or `{milestone, coins}` | first play of a day / a 3-7-14-30 day milestone |
+  | `streak_break` | `{len}` | once, when a streak of 2+ days can no longer continue (noticed the next time any page with rewards.js opens or the kid plays) |
+  | `streak_back` | `{gap}` (days since the last play day) | once, on the first play day after such a break |
+  | `chest` | `{i, kind, coins}` | a weekly chest was opened |
+  | `badge` | `{id, tier}` or `{title}` | badge earned (ids `m-*` = mastery badges) / title worn |
+  | `boost` | `{game}` | brain boost started |
+  | `pet` | `{a, stage, kind}` / `{stage, kind}` / `{kind}` | fed or cuddled / grew / kind switched |
+  | `level` | `{level, page}` | level-up celebration shown |
+  | `open` | `{what, band}` with `what` = `journey` \| `album` \| `badges` \| `pet` \| `road` \| `missions`, `band` = `little` \| `kid` \| `teen` | the kid opened / touched that element (once per page view each) |
+  | `choice` | `{what, v}`: `mission` (v = how many picked), `swap`, `chest` (v = chest index), `goal` (v = `l` \| `r` \| `b`) | the kid used one of the choices |
+  | `cap` | `{kind}`: `game` = this game's daily coin cap (80), `day` = the day's cap (200 little, 800 kid / teen) | a cap was reached ("that's plenty for today") |
+
+  Questions these answer: return after a broken streak = `streak_break` followed (or not) by `streak_back` for the same `kid`;
+  which element is used = `open` per `what` / `band` / `age`; "did a learning game follow a meta interaction" = a `game_start` with a
+  learning `game` (mathquest, wordcity, sciencelab, thinking, reading, bagrut) later in the same `sess` than an `open` row (no extra event).
+  ```sql
+  -- streak breaks and how many came back within 7 days
+  select count(*) as breaks, count(b.kid) as came_back from events a
+  left join lateral (select kid from events where type='meta' and data->>'k'='streak_back' and kid=a.kid and ts>a.ts and ts<a.ts+interval '7 days' limit 1) b on true
+  where a.type='meta' and a.data->>'k'='streak_break';
+  -- which meta element is opened, per presentation band
+  select data->>'band' as band, data->>'what' as what, count(*), count(distinct kid) as kids from events where type='meta' and data->>'k'='open' group by 1,2 order by 1,3 desc;
+  ```
 - **`audit`** – who did what. `kid, device, sess, actor ('kid'|'parent'|'system'), action, target, page, client_ts, detail`.
   Parent panel: `panel_opened` {via: pin|new-pin|math}, `pin_set`, `pin_changed`, `limits_changed` (target `daily-limit`, `bonus-time`,
   `today-reset`, `lock`, `unlock`, `bedtime`, `bedtime-from`, `bedtime-to`; detail = the resulting settings),
-  `progress_reset` (target = game ids or `all`). Reports: `report_sent` (target = the short report number).
+  `progress_reset` (target = game ids or `all`). Privacy card: `privacy_changed` (target `telemetry`, only when it is switched back on),
+  `band_changed` (target `presentation`, detail `{band: auto|little|kid|teen}`). Reports: `report_sent` (target = the short report number).
 - **`reports`** – bug / idea / fix requests. `kind ('bug'|'feature'|'fix'), note, page, url (cleaned), ua, viewport, lang, age, gender, ver,
   steps, state, screenshot_path, audio_path`, plus `status` (`new` → `seen` / `planned` / `done` / `rejected`) and `owner_note` for you.
   - `steps` = the reproduction trail: the last ≤ 80 actions before the dialog opened, each `{t (ms), k, p (page), d, n (repeat count), x (tap position on a canvas, %)}`
@@ -81,7 +108,8 @@ Open the folder of the day and click the file that starts with the report number
 device and sent later **without** picture and recording (`state.queued = true`).
 
 ## Switching telemetry off
-- One device (parent): set `localStorage` key `annabelle-telemetry` to `"0"` (browser console: `localStorage.setItem('annabelle-telemetry','0')`).
+- One device (parent): parent panel (⚙️ on the home page, PIN) → **Privacy & personalisation** → "Anonymous usage data: On / Off".
+  The switch writes the same key as before: `localStorage` key `annabelle-telemetry` = `"0"` (browser console: `localStorage.setItem('annabelle-telemetry','0')`).
   Then no event and no audit row is sent or queued; only a report that somebody explicitly sends still goes out.
   Remove the key (or set `"1"`) to switch it back on.
 - Everybody: remove `telemetry.js` and `feedback.js` from the loader at the end of `playtime.js` (each module is optional),

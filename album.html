@@ -50,6 +50,12 @@ h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 
 .bdg .e{font-size:40px;line-height:1.1}.bdg.t0{background:#ffffffb3;border-style:dashed;border-color:#d3c4ee}.bdg.t0 .e{filter:grayscale(1) opacity(.45)}.bdg b{font-size:15px}.bdg small{font-size:12.5px;line-height:1.2;font-weight:700}
 .bdg .md{position:absolute;top:6px;inset-inline-end:8px;font-size:20px}.bdg .bar{display:block;width:84%;height:7px;border-radius:5px;background:#0002;overflow:hidden;margin-top:2px}.bdg .bar u{display:block;height:100%;background:linear-gradient(90deg,#38d39f,#8bd45a)}
 .bdg.can{cursor:pointer}.bdg.on{border-color:#ffb84d;box-shadow:0 0 0 3px #ffd24d88,0 4px 0 #0001}
+/* mastery cards (what the kid can do): same card, green edge, shown before the older badges */
+.mbd{position:relative;border-radius:22px;border:3px solid #fff;background:var(--card,#fff);box-shadow:0 4px 0 #0001;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px 11px;font:inherit;font-weight:800;color:#3a2459;text-align:center;min-height:128px;cursor:default}
+.mbd .e{font-size:40px;line-height:1.1}.mbd.t0{background:#ffffffb3;border-style:dashed;border-color:#d3c4ee}.mbd.t0 .e{filter:grayscale(1) opacity(.45)}.mbd b{font-size:15px}.mbd small{font-size:12.5px;line-height:1.2;font-weight:700}
+.mbd .md{position:absolute;top:6px;inset-inline-end:8px;font-size:20px}.mbd .bar{display:block;width:84%;height:7px;border-radius:5px;background:#0002;overflow:hidden;margin-top:2px}.mbd .bar u{display:block;height:100%;background:linear-gradient(90deg,#38d39f,#8bd45a)}
+.mbd.can{cursor:pointer}.mbd.on{border-color:#ffb84d;box-shadow:0 0 0 3px #ffd24d88,0 4px 0 #0001}
+.mbd{border-color:#38d39f}.mbd.t0{border-color:#9adfc4}.mbd.on{border-color:#ffb84d}
 .gh{margin:14px 4px 6px;font-weight:900;font-size:clamp(16px,4.4vw,20px);color:#7c5cff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
 @media(min-width:1000px){.grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
@@ -86,7 +92,7 @@ html[data-th=galaxy]{--abg:radial-gradient(circle at 70% 0%,#3a1f6e,#07051a 60%)
 html[data-th=gold]{--abg:linear-gradient(#2e241a,#0d0a07);--atab:#2e241a}
 html[data-th] body{background:var(--abg) fixed}
 html[data-th] h1{color:#ffe14d;text-shadow:0 3px 0 #0006}
-html[data-th] .gh,html[data-th] #shopNote,html[data-th] #s-prof h2,html[data-th] #pfSt{color:#f0e9ff}
+html[data-th] .gh,html[data-th] #shopNote,html[data-th] #bdgBox>.note,html[data-th] #s-prof h2,html[data-th] #pfSt{color:#f0e9ff}
 html[data-th] .tabs{background:linear-gradient(var(--atab),#0000)}
 html[data-th] .stk.lock{background:#ffffffb3}
 </style>
@@ -140,17 +146,20 @@ var TX={
   stk:'סטיקרים',of:'מתוך',how:'איך משיגים?',ok:'הבנתי 👍',cats:{hat:'כובעים',bow:'צעיפים',glass:'משקפיים',color:'צבעים',bg:'רקעים'},buy:'קניתי!',need:'חסרים עוד {n} מטבעות',own:'שלי ✓',
   grp:{games:'משחקים ראשונים',wins:'ניצחונות',explore:'חקרנית',streak:'ימים ברצף',stars:'כוכבים',coins:'מטבעות',levels:'שלבים',combo:'קומבו',perfect:'מושלם',gift:'מתנות',shop:'קניות',misc:'עוד',rare:'נדירים ✨'},
   plays:'שיחקת',times:'פעמים',best:'שיא',stars:'כוכבים',play:'לשחק',pick:'לחצי על פריט כדי ללבוש',noItems:'',
-  t4:'🏅 תגים',bdH:'התגים והתארים שלי',bdHint:'לוחצים על תג שהושג כדי להציג אותו כתואר ליד השם בעמוד הבית',bdOn:'✔ התואר שלי',bdMax:'הושלם!',bdTitle:'התואר שלי: {t}',bdNo:'עוד לא נבחר תואר',skN:'🔥 {n} ימים ברצף',wkN:'🏆 השבוע: {n} XP',shield:'🛡️ מגן מוכן'},
+  t4:'🏅 תגים',bdH:'התגים והתארים שלי',bdHint:'לוחצים על תג שהושג כדי להציג אותו כתואר ליד השם בעמוד הבית',bdOn:'✔ התואר שלי',bdMax:'הושלם!',bdTitle:'התואר שלי: {t}',bdNo:'עוד לא נבחר תואר',skN:'🔥 {n} ימים ברצף',wkN:'🏆 השבוע: {n} XP',shield:'🛡️ מגן מוכן',
+  mH:'💪 הכישורים שלי',mHint:'תגי שליטה: מקבלים אותם על 3 כוכבים בשלבים של משחקי הלמידה — לא על כמות המשחק.',mCan:'✔ {t}',bdQ:'🏅 עוד תגים',skFresh:'✨ רצף חדש מתחיל היום',skBest:'🏅 השיא שלי: {n} ימים',stN:'⭐ {n} כוכבים'},
  fr:{ttl:'Mon album',ttlN:'L’album de {n}',t1:'🏷️ Autocollants',t2:'👗 Habits',t3:'🎮 Jeux',gT:'Cadeau du jour',open:'Touche pour ouvrir !',later:'Reviens demain pour un autre cadeau 🌙',streak:'jours de suite',youGot:'Tu as reçu',avN:'Mon chaton',
   stk:'autocollants',of:'sur',how:'Comment l’obtenir ?',ok:'Compris 👍',cats:{hat:'Chapeaux',bow:'Nœuds',glass:'Lunettes',color:'Couleurs',bg:'Fonds'},buy:'Acheté !',need:'Il manque {n} pièces',own:'À moi ✓',
   grp:{games:'Premiers jeux',wins:'Victoires',explore:'Exploratrice',streak:'Jours de suite',stars:'Étoiles',coins:'Pièces',levels:'Niveaux',combo:'Combos',perfect:'Parfait',gift:'Cadeaux',shop:'Boutique',misc:'Autres',rare:'Rares ✨'},
   plays:'Parties',times:'fois',best:'Record',stars:'étoiles',play:'Jouer',pick:'Touche un article pour le porter',noItems:'',
-  t4:'🏅 Badges',bdH:'Mes badges et titres',bdHint:'Touche un badge gagné pour l’afficher comme titre à côté de ton prénom sur la page d’accueil',bdOn:'✔ Mon titre',bdMax:'Terminé !',bdTitle:'Mon titre : {t}',bdNo:'Pas encore de titre choisi',skN:'🔥 {n} jours de suite',wkN:'🏆 Cette semaine : {n} XP',shield:'🛡️ bouclier prêt'},
+  t4:'🏅 Badges',bdH:'Mes badges et titres',bdHint:'Touche un badge gagné pour l’afficher comme titre à côté de ton prénom sur la page d’accueil',bdOn:'✔ Mon titre',bdMax:'Terminé !',bdTitle:'Mon titre : {t}',bdNo:'Pas encore de titre choisi',skN:'🔥 {n} jours de suite',wkN:'🏆 Cette semaine : {n} XP',shield:'🛡️ bouclier prêt',
+  mH:'💪 Ce que je sais faire',mHint:'Badges de maîtrise : on les gagne avec 3 étoiles dans les niveaux des jeux pour apprendre, pas en jouant beaucoup.',mCan:'✔ {t}',bdQ:'🏅 Autres badges',skFresh:'✨ Une nouvelle série commence aujourd’hui',skBest:'🏅 Mon record : {n} jours',stN:'⭐ {n} étoiles'},
  en:{ttl:'My Album',ttlN:'{n}’s Album',t1:'🏷️ Stickers',t2:'👗 Dress-up',t3:'🎮 Games',gT:'Daily gift',open:'Tap to open!',later:'Come back tomorrow for a new gift 🌙',streak:'days in a row',youGot:'You got',avN:'My kitten',
   stk:'stickers',of:'of',how:'How to get it?',ok:'Got it 👍',cats:{hat:'Hats',bow:'Bows & scarves',glass:'Glasses',color:'Colours',bg:'Backgrounds'},buy:'Bought!',need:'{n} more coins needed',own:'Mine ✓',
   grp:{games:'First plays',wins:'Wins',explore:'Explorer',streak:'Streaks',stars:'Stars',coins:'Coins',levels:'Levels',combo:'Combos',perfect:'Perfect',gift:'Gifts',shop:'Shopping',misc:'More',rare:'Rare ✨'},
   plays:'Played',times:'times',best:'Best',stars:'stars',play:'Play',pick:'Tap an item to wear it',noItems:'',
-  t4:'🏅 Badges',bdH:'My badges and titles',bdHint:'Tap an earned badge to show it as a title next to your name on the home page',bdOn:'✔ My title',bdMax:'Complete!',bdTitle:'My title: {t}',bdNo:'No title chosen yet',skN:'🔥 {n} days in a row',wkN:'🏆 This week: {n} XP',shield:'🛡️ shield ready'}
+  t4:'🏅 Badges',bdH:'My badges and titles',bdHint:'Tap an earned badge to show it as a title next to your name on the home page',bdOn:'✔ My title',bdMax:'Complete!',bdTitle:'My title: {t}',bdNo:'No title chosen yet',skN:'🔥 {n} days in a row',wkN:'🏆 This week: {n} XP',shield:'🛡️ shield ready',
+  mH:'💪 What I can do',mHint:'Mastery badges: earned with 3 stars on levels of the learning games, not by playing a lot.',mCan:'✔ {t}',bdQ:'🏅 More badges',skFresh:'✨ A new streak starts today',skBest:'🏅 My best: {n} days',stN:'⭐ {n} stars'}
 };
 var KA=window.KidApp;
 // the texts are written for a girl: kid.js adapts every string to the current kid
@@ -165,7 +174,7 @@ function head(){var l=R.lang(),t=L();document.documentElement.lang=l;document.do
 function gift(){var t=L(),s=R.dailyStatus(),ch=$('chest');
  $('days').innerHTML=s.days.map(function(d){return '<div class="d '+(d.got?'got':'')+(d.today?' today':'')+'">'+(d.got?'🔥':'·')+'</div>'}).join('');
  ch.className='chest '+(s.available?'ready':'off');
- $('gN').textContent=s.available?t.open:t.later+(s.streak?'  ·  🔥 '+s.streak+' '+t.streak:'');
+ $('gN').textContent=s.available?t.open:t.later+(s.streak&&!(R.band&&R.band()==='little')?'  ·  🔥 '+s.streak+' '+t.streak:'');
  $('gN').style.fontWeight=s.available?'900':'700'}
 function sparks(x,y,em){for(var i=0;i<14;i++){var e=document.createElement('div');e.className='spark';e.textContent=em[i%em.length];e.style.left=x+'px';e.style.top=y+'px';var a=Math.random()*6.28,r=60+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',Math.sin(a)*r-40+'px');document.body.appendChild(e);(function(el){setTimeout(function(){el.remove()},1000)})(e)}}
 $('chest').addEventListener('click',function(){var s=R.dailyStatus(),t=L();if(!s.available)return;var r=R.claimDaily();if(!r)return;var ch=$('chest'),b=ch.getBoundingClientRect();
@@ -198,28 +207,37 @@ function games(){var t=L(),st=R.get().stats,ids=Object.keys(R.GAMES);
  $('gamesBox').innerHTML=ids.map(function(g){var p=st.plays[g]||0,s=st.stars[g]||0,b=Math.max(st.best[g]||0,bestOf(g));
   return '<a class="gm" href="'+g+'.html"><span class="e">'+R.GAMES[g][0]+'</span><span>'+R.gname(g)+'</span><small>'+(p?t.plays+' '+p+' '+t.times:'—')+'</small><small>'+(s?'⭐ '+s:'')+(b?'  ·  '+t.best+' '+b:'')+'</small></a>'}).join('')}
 function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
-function badges(){var t=L(),box=$('bdgBox');box.textContent='';if(!R.badges)return;var ti=R.title(),sk=R.streak(),rd=R.road();
- var h=mk('div','gh',t.bdH);h.style.textAlign='center';box.appendChild(h);
- var sm=mk('div','bsum');sm.appendChild(mk('span',null,ti?t.bdTitle.replace('{t}',ti.text):t.bdNo));sm.appendChild(mk('span',null,t.skN.replace('{n}',sk.n)+(sk.shield?' · '+t.shield:'')));sm.appendChild(mk('span',null,t.wkN.replace('{n}',rd.xp)));box.appendChild(sm);
- var g=mk('div','bgs');R.badges().forEach(function(b){var c=mk('button','bdg t'+b.tier+(b.tier?' can':'')+(b.on?' on':''));c.type='button';c.dataset.b=b.id;c.disabled=!b.tier;c.setAttribute('aria-pressed',b.on?'true':'false');
-  if(b.medal)c.appendChild(mk('span','md',b.medal));c.appendChild(mk('span','e',b.e));c.appendChild(mk('b',null,b.name));c.appendChild(mk('small',null,b.on?t.bdOn:b.goal?b.desc:t.bdMax));
-  if(b.goal){var q=mk('span','bar'),u=mk('u');u.style.width=b.pct+'%';q.appendChild(u);c.appendChild(q);c.appendChild(mk('small',null,Math.min(b.val,b.goal)+'/'+b.goal+' · +'+b.coins+' 💰'))}
-  c.onclick=function(){if(!b.tier)return;R.setTitle(b.on?'':b.id);try{window.Juice&&Juice.sfx('tap')}catch(e){}badges()};g.appendChild(c)});box.appendChild(g);
+function badges(){var t=L(),box=$('bdgBox');box.textContent='';if(!R.badges)return;var ti=R.title(),sk=R.streak(),rd=R.road(),bd=R.band?R.band():'kid';
+ var sm=mk('div','bsum');sm.appendChild(mk('span',null,ti?t.bdTitle.replace('{t}',ti.text):t.bdNo));
+ if(bd==='little')sm.appendChild(mk('span',null,t.stN.replace('{n}',R.stars()))); // little band: stars, no streak / XP numbers
+ else{if(sk.n)sm.appendChild(mk('span',null,t.skN.replace('{n}',sk.n)+(sk.shield?' · '+t.shield:'')));else sm.appendChild(mk('span',null,t.skFresh)); // never a "0 days" or "lost" message
+  if(sk.best>1&&sk.best>sk.n)sm.appendChild(mk('span',null,t.skBest.replace('{n}',sk.best)));sm.appendChild(mk('span',null,t.wkN.replace('{n}',rd.xp)))}
+ function card(b,ms){var c=mk('button',(ms?'mbd':'bdg')+' t'+b.tier+(b.tier?' can':'')+(b.on?' on':''));c.type='button';c.dataset.b=b.id;c.disabled=!b.tier;c.setAttribute('aria-pressed',b.on?'true':'false');
+  if(b.medal)c.appendChild(mk('span','md',b.medal));c.appendChild(mk('span','e',b.e));c.appendChild(mk('b',null,b.name));if(ms&&b.game)c.appendChild(mk('small',null,b.game));
+  c.appendChild(mk('small',null,b.on?t.bdOn:ms&&b.tier?t.mCan.replace('{t}',b.can):b.goal?b.desc:t.bdMax));
+  if(b.goal){var q=mk('span','bar'),u=mk('u');u.style.width=b.pct+'%';q.appendChild(u);c.appendChild(q);c.appendChild(mk('small',null,Math.min(b.val,b.goal)+'/'+b.goal+(ms?'':' · +'+b.coins+' 💰')))}
+  c.onclick=function(){if(!b.tier)return;R.setTitle(b.on?'':b.id);try{window.Juice&&Juice.sfx('tap')}catch(e){}badges()};return c}
+ // mastery first: what the kid can do in the learning games (competence, no coins) ...
+ if(R.skills){var h0=mk('div','gh',t.mH);h0.style.textAlign='center';box.appendChild(h0);var g0=mk('div','bgs');g0.id='sklG';R.skills().forEach(function(b){g0.appendChild(card(b,true))});box.appendChild(g0);
+  var n0=mk('div','note',t.mHint);n0.style.cssText='text-align:center;margin-top:8px;font-size:13.5px';box.appendChild(n0)}
+ // ... then the titles and the older "how much" badges
+ var h=mk('div','gh',R.skills?t.bdQ:t.bdH);h.style.textAlign='center';box.appendChild(h);box.appendChild(sm);
+ var g=mk('div','bgs');R.badges().forEach(function(b){g.appendChild(card(b,false))});box.appendChild(g);
  var n=mk('div','note',t.bdHint);n.style.cssText='text-align:center;margin-top:10px';box.appendChild(n)}
-document.querySelector('.tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;tab=b.dataset.t;render(true)});
+document.querySelector('.tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;tab=b.dataset.t;if(tab==='bdg'&&R.opened)R.opened('badges');render(true)});
 function render(keepScroll){head();gift();avatars();
  [].forEach.call(document.querySelectorAll('.tab'),function(b){b.classList.toggle('sel',b.dataset.t===tab)});
  [].forEach.call(document.querySelectorAll('.sec'),function(s){s.classList.toggle('on',s.id==='s-'+tab)});
  if(tab==='stk')stickers();if(tab==='shop')shop();if(tab==='games')games();if(tab==='bdg')badges()}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('sheet').classList.contains('on'))$('sheet').classList.remove('on');else location.href='index.html'}});
-R.visitAlbum();
+R.visitAlbum();if(R.opened)R.opened('album');
 // stickers that arrived while playing glow once
 try{R.get().pend.forEach(function(p){if(p.t==='sticker')newIds[p.id]=1})}catch(e){}
 render();
 window.__album={render:render,setTab:function(t){tab=t;render()}};
 })();
 
-(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry)$/;
+(function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
 function q(i){return document.getElementById(i)}
 function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
 q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
@@ -232,7 +250,7 @@ q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true
 })();
 
 (function(){var MK='annabelle-profiles',DK='annabelle-profdata-',EM=['🐱','🦁','🐯','🐼','🦊','🐰'];
-var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry)$/;
+var KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family)$/;
 function q(i){return document.getElementById(i)}
 function meta(){var m=null;try{m=JSON.parse(localStorage.getItem(MK)||'null')}catch(e){}
  if(m&&Array.isArray(m.list))m.list=m.list.filter(function(p){return p&&typeof p.id==='string'});

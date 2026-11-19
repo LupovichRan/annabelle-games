@@ -8,6 +8,9 @@
        AnnabelleRewards.flush() (result / menu cards) or when the next page opens – never in the middle of a round.
      · a small UI sound kit (WebAudio), haptics (navigator.vibrate) – both silent when 'annabelle-muted' is '1' –
        and pulses / bursts on window.Vibe (the WebGL background) when it is there.
+   Presentation bands (AnnabelleRewards.band(), from the kid's age; a parent can fix one): "little" 4-7 = calm and play-first: no flying coins, no sound on every
+   earn, no level-up screen; the chip only comes with a banner and shows avatar + pet + stars. "teen" 11-18 = a cleaner chip (level, coins, streak), fewer particles,
+   a quieter level-up card. "kid" (8-10 and unknown age) = the classic behaviour.
    Parents' play-time limits always win: nothing is shown while the play-time lock is up.  prefers-reduced-motion: no particles, no confetti.
    API: window.Juice = { sfx(name), buzz(pattern), levelUp(level), confetti(n), burst(x, y), chip() }   sfx names: earn boost level quest badge chest pet tap */
 (function () {
@@ -22,15 +25,16 @@
   function lang() { var l = ls('annabelle-lang'); return l === 'fr' || l === 'en' ? l : 'he'; }
   function locked() { try { return !!(W.AnnabellePlaytime && W.AnnabellePlaytime.isLocked()); } catch (e) { return false; } }
   function G(f, m, x) { var K = W.KidApp; return K && K.g ? K.g(f, m, x) : f; }
+  function band() { try { return R && R.band ? R.band() : 'kid'; } catch (e) { return 'kid'; } }
   var TX = {
     he: {lv: 'רמה {n}!', up: G('עלית רמה!', 'עלית רמה!', 'עולים רמה!'), rank: 'תואר חדש: {t}', th: '🎨 ערכת נושא חדשה: {t}', use: '🎨 לעבור לערכת {t}', used: '✔ הערכה תחכה לך בעמוד הבית',
-      pet: '🐾 {t} — החיה שלך גדלה!', next: 'ברמה {n} נפתח: {t}', nextR: 'ברמה {n}: התואר {t}', yes: 'יש! 🎉', chip: 'רמה {n}',
+      pet: '🐾 {t} — החיה שלך גדלה!', next: 'ברמה {n} נפתח: {t}', nextR: 'ברמה {n}: התואר {t}', yes: 'יש! 🎉', ok: 'ממשיכים', chip: 'רמה {n}',
       themes: {ocean: 'אוקיינוס', jungle: 'ג׳ונגל', sunset: 'שקיעה', galaxy: 'גלקסיה', gold: 'זהב'}},
     fr: {lv: 'Niveau {n} !', up: 'Tu montes de niveau !', rank: 'Nouveau titre : {t}', th: '🎨 Nouveau thème : {t}', use: '🎨 Utiliser le thème {t}', used: '✔ Le thème t’attend sur la page d’accueil',
-      pet: '🐾 {t} — ton compagnon a grandi !', next: 'Au niveau {n} : {t}', nextR: 'Au niveau {n} : le titre {t}', yes: 'Youpi ! 🎉', chip: 'Niveau {n}',
+      pet: '🐾 {t} — ton compagnon a grandi !', next: 'Au niveau {n} : {t}', nextR: 'Au niveau {n} : le titre {t}', yes: 'Youpi ! 🎉', ok: 'Continuer', chip: 'Niveau {n}',
       themes: {ocean: 'Océan', jungle: 'Jungle', sunset: 'Coucher de soleil', galaxy: 'Galaxie', gold: 'Or'}},
     en: {lv: 'Level {n}!', up: 'Level up!', rank: 'New title: {t}', th: '🎨 New theme: {t}', use: '🎨 Switch to {t}', used: '✔ The theme is waiting on the home page',
-      pet: '🐾 {t} — your pet grew!', next: 'Level {n} unlocks: {t}', nextR: 'Level {n}: the title {t}', yes: 'Yay! 🎉', chip: 'Level {n}',
+      pet: '🐾 {t} — your pet grew!', next: 'Level {n} unlocks: {t}', nextR: 'Level {n}: the title {t}', yes: 'Yay! 🎉', ok: 'Continue', chip: 'Level {n}',
       themes: {ocean: 'Ocean', jungle: 'Jungle', sunset: 'Sunset', galaxy: 'Galaxy', gold: 'Gold'}}
   };
   function t(k) { return (TX[lang()] || TX.he)[k]; }
@@ -90,6 +94,9 @@
       '.jz-lv{position:absolute;bottom:-4px;right:-5px;min-width:17px;height:17px;padding:0 3px;border-radius:9px;background:#ff8a3d;color:#fff;font-size:11px;line-height:17px;text-align:center;box-shadow:0 0 0 2px #2a1d66;box-sizing:border-box}' +
       '.jz-tx{display:flex;flex-direction:column;gap:2px;align-items:flex-start}.jz-co{font-size:14px;display:inline-block}.jz-d{font-style:normal;font-size:11.5px;color:#ffe27a}' +
       '.jz-pet{width:28px;height:28px;flex:none;display:block}.jz-pet svg{width:28px;height:28px;display:block}.jz-bo{font-style:normal;font-size:11.5px;background:#38d39f;color:#06301f;border-radius:9px;padding:2px 6px;flex:none}' +
+      '#jz-chip.lt .jz-lv,#jz-chip.lt .jz-d,#jz-chip.lt .jz-bo,#jz-chip.tn .jz-pet{display:none!important}#jz-chip.lt .jz-ring{background:#ffffff38}#jz-chip.lt{padding-right:8px}' +
+      '#jz-chip.tn{border-radius:14px;background:#17142ff2;box-shadow:0 6px 18px #0006,inset 0 0 0 1px #ffffff40;font-weight:700}#jz-chip.tn .jz-lv{background:#7c6cff}#jz-chip.tn .jz-ring{background:conic-gradient(#8f7bff calc(var(--p,0)*1%),#ffffff30 0)}' +
+      '#jz-lv.tn .jz-big{animation:none;font-size:56px}#jz-lv.tn .jz-card{border-radius:18px;background:linear-gradient(160deg,#2b2466,#17122f)}#jz-lv.tn .jz-btn{background:#7c6cff;color:#fff;border-radius:12px}' +
       '.jz-p{position:fixed;left:0;top:0;z-index:2147482490;pointer-events:none;font:900 15px/1 Rubik,system-ui,Arial,sans-serif;color:#ffe27a;text-shadow:0 1px 0 #0008,0 0 6px #0006;will-change:transform,opacity}' +
       '.jz-hit{animation:jzb .32s ease}' +
       '#jz-lv{position:fixed;inset:0;z-index:2147482800;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:radial-gradient(circle at 50% 40%,#3b2a9af7,#120a33fa);' +
@@ -120,10 +127,12 @@
   }
   var avKey = '', petKey = '';
   function fillChip(delta) {
-    var L = R.level(), b = R.boost ? R.boost() : {on: false}, a = JSON.stringify(R.avatar());
+    var L = R.level(), b = R.boost ? R.boost() : {on: false}, a = JSON.stringify(R.avatar()), bd = band();
+    chip.classList.toggle('lt', bd === 'little'); chip.classList.toggle('tn', bd === 'teen');
     if (a !== avKey) { avKey = a; parts.av.innerHTML = R.avatarSVG(30); } // markup built by rewards.js from its own fixed tables
     parts.lv.textContent = L.level; parts.ring.style.setProperty('--p', L.pct);
-    parts.co.textContent = '💰 ' + R.coins();
+    if (bd === 'little') { parts.co.textContent = '⭐ ' + (R.stars ? R.stars() : 0); delta = ''; } // stars, not coin / XP numbers
+    else { var sn = 0; if (bd === 'teen') try { sn = R.streak().n; } catch (e) {} parts.co.textContent = '💰 ' + R.coins() + (sn > 1 ? '  🔥 ' + sn : ''); }
     parts.d.textContent = delta || ''; parts.d.style.display = delta ? '' : 'none';
     if (R.pet) { var p = R.pet(), pk = p.kind + p.stage + p.mood; if (pk !== petKey) { petKey = pk; parts.pet.innerHTML = R.petSVG(28); } }
     else parts.pet.style.display = 'none';
@@ -195,8 +204,9 @@
   function showEarn() {
     var a = acc; acc = {c: 0, x: 0, b: false};
     if ((a.c <= 0 && a.x <= 0) || locked() || !D.body) return;
+    var bd = band(); if (bd === 'little') return; // play first: nothing flies and nothing rings on every earn (the coins still count)
     var delta = (a.c > 0 ? '+' + a.c + ' 💰' : '') + (a.x > a.c ? (a.c > 0 ? ' · ' : '') + '+' + a.x + ' XP' + (a.b ? ' 🧠' : '') : '');
-    var target = HOME ? D.getElementById('pco') : ALBUM ? D.getElementById('coins') : null, n = Math.max(1, Math.min(6, Math.ceil(Math.max(a.c, a.x / 2) / 3)));
+    var target = HOME ? D.getElementById('pco') : ALBUM ? D.getElementById('coins') : null, n = Math.max(1, Math.min(bd === 'teen' ? 3 : 6, Math.ceil(Math.max(a.c, a.x / 2) / 3)));
     if (target) fly(n, a.b ? '✨' : '💰', target, function () { bump(target, 'jz-hit'); });
     else { var c = showChip(delta); if (c) fly(n, a.b ? '✨' : '💰', parts.co, function () { bump(chip, 'bump'); }); }
     sfx(a.b ? 'boost' : 'earn'); if (a.c >= 5) buzz(10);
@@ -233,12 +243,14 @@
       if (!R || HOME || !D.body) return false; // the home page has its own sheet
       n = Math.floor(+n) || 0; var L = R.level(); n = Math.min(Math.max(n, 1), L.level);
       if (lvEl || n <= lvShown || locked()) return false;
+      var bd = band();
+      if (bd === 'little') { lvShown = n; R.ackLevel && R.ackLevel(); homeSet('lv', n); return false; } // the little ones see their pet grow instead
       lvShown = n; R.ackLevel && R.ackLevel();
       var seen = homeState().lv, from = typeof seen === 'number' && seen < n ? seen : n - 1;
       if (!(typeof seen === 'number' && seen >= n)) homeSet('lv', n); // the home page will not celebrate the same level again
       css();
       var rk = R.rankOf ? R.rankOf(n) : {level: 1, e: L.e, title: L.title}, box = el('div'), card = el('div', 'jz-card');
-      box.id = 'jz-lv'; box.dir = lang() === 'he' ? 'rtl' : 'ltr'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', F(t('lv'), {n: n}));
+      box.id = 'jz-lv'; if (bd === 'teen') box.className = 'tn'; box.dir = lang() === 'he' ? 'rtl' : 'ltr'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', F(t('lv'), {n: n}));
       card.appendChild(el('span', 'jz-big', rk.e)); card.appendChild(el('small', null, t('up'))); card.appendChild(el('h2', null, F(t('lv'), {n: n})));
       card.appendChild(el('p', rk.level > from ? 'r' : null, rk.level > from ? F(t('rank'), {t: rk.title}) : rk.e + ' ' + rk.title));
       var un = THEMES.filter(function (x) { return x[2] > from && x[2] <= n; }), th = t('themes');
@@ -247,7 +259,7 @@
       var nx = THEMES.filter(function (x) { return x[2] > n; })[0];
       if (!un.length && L.next && (!nx || L.next.level <= nx[2])) card.appendChild(el('p', 'n', F(t('nextR'), {n: L.next.level, t: L.next.e + ' ' + L.next.title})));
       else if (!un.length && nx) card.appendChild(el('p', 'n', F(t('next'), {n: nx[2], t: nx[1] + ' ' + th[nx[0]]})));
-      var ok = el('button', 'jz-btn', t('yes')); ok.type = 'button'; ok.onclick = function (e) { e.stopPropagation(); closeLv(); };
+      var ok = el('button', 'jz-btn', bd === 'teen' ? t('ok') : t('yes')); ok.type = 'button'; ok.onclick = function (e) { e.stopPropagation(); closeLv(); };
       if (un.length) {
         var u = un[un.length - 1], ub = el('button', 'jz-btn s', F(t('use'), {t: th[u[0]]})); ub.type = 'button';
         ub.onclick = function (e) { e.stopPropagation(); homeSet('th', u[0]); ub.textContent = t('used'); ub.disabled = true; sfx('tap'); };
@@ -258,7 +270,7 @@
       ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup'].forEach(function (k) { box.addEventListener(k, function (e) { e.stopPropagation(); }); });
       D.body.appendChild(box); lvEl = box; void box.offsetWidth; box.classList.add('on');
       D.addEventListener('keydown', lvKey, true);
-      confetti(150, box); sfx('level'); buzz([30, 50, 30, 50, 90]); vibe(1, '#ffd24d', W.innerWidth / 2, W.innerHeight * .4);
+      confetti(bd === 'teen' ? 50 : 150, box); sfx('level'); buzz([30, 50, 30, 50, 90]); vibe(1, '#ffd24d', W.innerWidth / 2, W.innerHeight * .4);
       try { ok.focus({preventScroll: true}); } catch (e) {}
       lvT = setTimeout(closeLv, 12000); // it never stays in the way
       try { W.KidApp && W.KidApp.track && W.KidApp.track('meta', {k: 'level', level: n, page: page}); } catch (e) {}
@@ -270,12 +282,16 @@
   function onFlush(ev) {
     if (locked()) return;
     var x = W.innerWidth / 2, y = 60;
+    if (ev.band === 'little') { // one soft sound, no confetti, no rumble; the chip (avatar, pet, stars) keeps the banner company
+      if (ev.toasts) { sfx(ev.pet >= 0 || ev.back ? 'pet' : 'quest'); if (!HOME && !ALBUM) showChip('', 3600); setTimeout(function () { try { if (chip && chip.classList.contains('on')) place(); } catch (e) {} }, 520); }
+      return;
+    }
     if (ev.level && !HOME) return; // the celebration has its own fanfare
-    if (ev.badges || ev.milestone) { sfx('badge'); buzz([20, 40, 20, 40, 60]); vibe(.9, '#ffd24d', x, y); if (!calm() && ev.badges) confetti(60); }
+    if (ev.badges || ev.milestone) { sfx('badge'); buzz([20, 40, 20, 40, 60]); vibe(.9, '#ffd24d', x, y); if (!calm() && ev.badges && ev.band !== 'teen') confetti(60); }
     else if (ev.qall || ev.quests) { sfx('quest'); buzz([18, 30, 18]); vibe(.7, '#38d39f', x, y); }
     else if (ev.pet >= 0) { sfx('pet'); buzz(15); vibe(.6, '#ff9ec7', x, y); }
     else if (ev.boost) { sfx('boost'); buzz(15); vibe(.7, '#5ff0ff', x, y); }
-    else if (ev.streak || ev.stickers || ev.road) { sfx('quest'); buzz(12); vibe(.5, '#ff8a3d', x, y); }
+    else if (ev.streak || ev.stickers || ev.road || ev.back) { sfx('quest'); buzz(12); vibe(.5, '#ff8a3d', x, y); }
     else if (ev.toasts) sfx('earn');
     if (!HOME && !ALBUM && ev.toasts && (ev.boost || ev.streak)) showChip('', 3200);
     if (ev.toasts) setTimeout(function () { try { if (chip && chip.classList.contains('on')) place(); } catch (e) {} }, 520); // make room for the banner
