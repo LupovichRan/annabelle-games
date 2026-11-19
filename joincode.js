@@ -2,6 +2,8 @@
    Rooms are named <game prefix> + code on the PeerJS server, so we ask each game's name for that code and
    open the game that answers. Nothing is sent but a connect attempt that is closed straight away. */
 (function () {
+  // the form for the player (kid.js): girl | boy | neutral; neutral when there is no profile module
+  function kg(f, m, x) { try { var K = window.KidApp; return K && K.g ? K.g(f, m, x) : x; } catch (e) { return x; } }
   var GAMES = [["annabelle-fb-", "football.html", "⚽"], ["annabelle-tk-", "thunderkittens.html", "⚡"], ["annabelle-bowling-", "bowling.html", "🎳"], ["annabelle-ck-", "checkers.html", "♟️"], ["annabelle-ttt-", "tictactoe.html", "❌"], ["annabelle-cups-", "cups.html", "🥤"], ["annabelle-cats-", "cats.html", "🐱"], ["annabelle-funrun-", "funrun.html", "👟"], ["annabelle-pong-", "pong.html", "🏓"], ["annabelle-simon-", "simon.html", "🎶"], ["annabelle-carrace-", "carrace.html", "🏎️"], ["annabelle-tetris-", "tetris.html", "🧱"], ["annabelle-safari-", "safari.html", "📸"], ["annabelle-snake-", "snake.html", "🐯"], ["annabelle-crossing-", "crossing.html", "🐥"], ["annabelle-breakout-", "breakout.html", "🐾"], ["annabelle-invaders-", "invaders.html", "🚀"]];
   var tools = document.querySelector(".tools"); if (!tools) return;
   var css = document.createElement("style");
@@ -10,7 +12,7 @@
   var b = document.createElement("button"); b.id = "jcBtn"; b.className = "albbtn"; b.type = "button"; b.textContent = "🔑"; b.title = "הצטרפות לחדר עם קוד"; b.setAttribute("aria-label", "הצטרפות לחדר עם קוד");
   tools.insertBefore(b, tools.firstChild);
   var box = document.createElement("div"); box.id = "jcBox";
-  box.innerHTML = '<div id="jcCard"><h3>🔑 הצטרפות עם קוד</h3><p>הקלידי את 6 הספרות שחברה שלחה, ונפתח את המשחק הנכון</p><input id="jcIn" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="______"><div id="jcSt"></div><button id="jcGo" type="button">▶ הצטרפי</button><button id="jcX" type="button">סגירה</button></div>';
+  box.innerHTML = '<div id="jcCard"><h3>🔑 הצטרפות עם קוד</h3><p>' + kg('הקלידי את 6 הספרות שקיבלת', 'הקלד את 6 הספרות שקיבלת', 'הקלידו את 6 הספרות שקיבלתם') + ', ונפתח את המשחק הנכון</p><input id="jcIn" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="______"><div id="jcSt"></div><button id="jcGo" type="button">▶ ' + kg('הצטרפי', 'הצטרף', 'הצטרפו') + '</button><button id="jcX" type="button">סגירה</button></div>';
   document.body.appendChild(box);
   var $ = function (i) { return document.getElementById(i); }, peer = null, busy = 0;
   function st(m, c) { var e = $("jcSt"); e.textContent = m; e.style.color = c || "#333"; }
@@ -20,7 +22,7 @@
   function loadPeer() { return new Promise(function (res, rej) { if (window.Peer) return res(); var s = document.createElement("script"); s.src = "vendor/peerjs.min.js"; s.onload = function () { window.Peer ? res() : rej(); }; s.onerror = rej; document.head.appendChild(s); }); }
   function go() {
     var code = $("jcIn").value.replace(/\D/g, ""); if (code.length !== 6) { st("צריך 6 ספרות 🙂", "#c0392b"); return; }
-    stop(); var my = busy; st("מחפשת את החדר… ⏳");
+    stop(); var my = busy; st("מחפשים את החדר… ⏳");
     loadPeer().then(function () {
       if (my !== busy) return; var found = false, p = peer = new Peer(undefined, { config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] } });
       p.on("error", function () {});
@@ -29,11 +31,11 @@
         GAMES.forEach(function (g) {
           try {
             var c = p.connect(g[0] + code, { reliable: true });
-            c.on("open", function () { if (found || my !== busy) return; found = true; try { c.close(); } catch (e) {} st(g[2] + " מצאתי! פותחת…", "#27ae60"); setTimeout(function () { location.href = g[1] + "?room=" + code; }, 350); });
+            c.on("open", function () { if (found || my !== busy) return; found = true; try { c.close(); } catch (e) {} st(g[2] + " נמצא! פותחים…", "#27ae60"); setTimeout(function () { location.href = g[1] + "?room=" + code; }, 350); });
             c.on("error", function () {});
           } catch (e) {}
         });
-        setTimeout(function () { if (!found && my === busy) st("לא מצאתי חדר עם הקוד הזה. בדקי את הספרות, או שהחדר נסגר (הוא פתוח 5 דקות)", "#c0392b"); }, 12000);
+        setTimeout(function () { if (!found && my === busy) st("לא נמצא חדר עם הקוד הזה. " + kg("בדקי", "בדוק", "בדקו") + " את הספרות, או שהחדר נסגר (הוא פתוח 5 דקות)", "#c0392b"); }, 12000);
       });
     }).catch(function () { st("אין חיבור לאינטרנט", "#c0392b"); });
   }

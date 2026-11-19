@@ -5,11 +5,14 @@
      skill 1..4 overall · sk = {react, memory, math, english, device} each 1..4 · ob = ISO date when onboarding finished
      role (optional) 'adult' = a grown-up of the family (family.html): no age, no onboarding, skill 4 by default; absent = 'kid'
    Old profiles without the new fields stay valid (age unknown, gender "f", skill 2, onboarding offered).
+   'annabelle-profdata-_device' = 'n' | 'l' (device-level, written once, the first time this file runs on a device):
+     'n' = the device was born on the generic platform (no profile and no play data before) -> nobody is feminine by default here;
+     'l' = a legacy device (it had a profile or play data from the time every text was feminine) -> a profile without a gender stays "f".
    API (window.KidApp):
      kid() -> {id,name,emo,age,gender,kid,skill,sk,ob,role}      g(f, m, x) -> string for the kid's gender
      he(text) -> Hebrew text written in the feminine, turned masculine / neutral for the kid (word table, used by shared modules)
      gt(text) -> the same for a text in any of the three languages (rewards.js / pwa.js / album use it)
-     save(patch)   needsOnboarding()   level(subject)   applySkill() -> [keys written]   hasLegacy()
+     save(patch)   needsOnboarding()   level(subject)   applySkill() -> [keys written]   hasLegacy()   bornGeneric() -> bool
      newProfile(fields) -> id | null   brand(lang?)   title(lang?)   lang()   cleanName(s)   onChange(fn)
    telemetry.js adds KidApp.track / audit / report later: always call them as  KidApp.track && KidApp.track(...). */
 (function () {
@@ -66,6 +69,26 @@
     } catch (e) {}
     return false;
   }
+  /* ---------- legacy device or a device born on the generic platform? ----------
+     Decided ONCE, the first time this file runs on a device, before the page and rewards.js write anything, and never changed afterwards:
+     a visitor with empty storage who opens a game directly must stay neutral after the first play is recorded (hasLegacy() turns true then),
+     while a device that already had play data or a real profile keeps the feminine default of the legacy texts.
+     The key name matches the device-level KEEP lists of every module (like 'annabelle-profdata-_family'), so a profile switch or a reset keeps it. */
+  var GK = DK + '_device';
+  var BORN = (function () {
+    var v = lsGet(GK);
+    if (v === 'n' || v === 'l') return v === 'n';
+    var fresh = !hasLegacy();
+    if (fresh) { // any game save or collection of the old site = legacy as well
+      try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if ((/^annabelle-/.test(k) || /^soya-/.test(k)) && !KEEP.test(k)) { fresh = false; break; } } } catch (e) {}
+    }
+    if (fresh) { // a profile map is "nothing yet" only when it holds the single anonymous player this file creates itself
+      var raw = lsGet(MK), m = readMeta(), p = m && m.list.length === 1 ? m.list[0] : null;
+      if (raw !== null && !(p && !(typeof p.name === 'string' && p.name) && !p.ob && !p.gender && !p.role && p.age == null)) fresh = false;
+    }
+    lsSet(GK, fresh ? 'n' : 'l');
+    return fresh;
+  })();
   function agePrior(age) { return age == null ? 2 : age <= 5 ? 1 : age <= 9 ? 2 : 3; }
   function view(p, bare) {
     p = p || {};
@@ -76,8 +99,9 @@
       id: typeof p.id === 'string' ? p.id : 'p1', role: adult ? 'adult' : 'kid',
       name: typeof p.name === 'string' ? cleanName(p.name) : '',
       emo: cleanEmo(p.emo), age: adult ? null : age,
-      // an existing (old) profile is feminine, as every legacy text was; somebody who never had a profile is addressed neutrally
-      gender: p.gender === 'f' || p.gender === 'm' || p.gender === 'x' ? p.gender : (bare || adult ? 'x' : 'f'),
+      // an old profile of a LEGACY device is feminine, as every legacy text was; somebody who never had a profile, and everybody
+      // on a device born on the generic platform, is addressed neutrally until a gender is chosen
+      gender: p.gender === 'f' || p.gender === 'm' || p.gender === 'x' ? p.gender : (bare || adult || BORN ? 'x' : 'f'),
       kid: typeof p.kid === 'string' && UUID.test(p.kid) ? p.kid : '',
       skill: skill, sk: sk, ob: typeof p.ob === 'string' ? p.ob.slice(0, 30) : ''
     };
@@ -272,4 +296,5 @@
   K.count = function () { var m = readMeta(); return m ? m.list.length : 1; };
   K.onChange = function (f) { if (typeof f === 'function') listeners.push(f); };
   K.DIFF_TABLE = DIFF_TABLE;
+  K.bornGeneric = function () { return BORN; };
 })();

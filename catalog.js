@@ -92,7 +92,7 @@
   /* ---- thinking / puzzle ---- */
   g('cats', '🃏', 'puzzle', [4, 12], 1, 3, 'S', 'o', ['#5fd38d', '#2fb36a'], ['זוגות של חתולים', 'Mémoire des chats', 'Cat Memory'],
     ['הופכים קלפים ומוצאים זוגות של חתולים.', 'On retourne les cartes et on trouve les paires de chats.', 'Flip the cards and find the pairs of cats.'], ['memory', 'cats']);
-  g('hiddencats', '🔍', 'puzzle', [4, 12], 1, 4, 'M', '', ['#ff9ec7', '#c86dd7'], ['מצאי את החתולים', 'Trouve les chats', 'Find the Cats'],
+  g('hiddencats', '🔍', 'puzzle', [4, 12], 1, 4, 'M', '', ['#ff9ec7', '#c86dd7'], ['מצאו את החתולים', 'Trouve les chats', 'Find the Cats'],
     ['מחפשים בנחת חתולים שמתחבאים בציור.', 'On cherche tranquillement les chats cachés dans le dessin.', 'Look calmly for the cats hiding in the picture.'], ['search', 'cats']);
   g('escape', '🔑', 'puzzle', [6, 14], 1, 10, 'L', '', ['#4fd1c5', '#2b8a9e'], ['הבריחה מבית העץ', 'Évasion de la cabane', 'Treehouse Escape'],
     ['מוצאים רמזים, פותרים חידות ויוצאים מבית העץ.', 'On trouve des indices, on résout des énigmes et on sort de la cabane.', 'Find clues, solve riddles and get out of the treehouse.'], ['logic', 'story', 'search']);
