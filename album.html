@@ -20,7 +20,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .home{width:48px;height:48px;border-radius:50%;background:#fff;border:3px solid #a58bff;display:flex;align-items:center;justify-content:center;font-size:24px;text-decoration:none;box-shadow:0 4px 0 #0002;flex:none}
-h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 3px 0 #fff,0 5px 0 #ffb3d6;line-height:1.05;min-width:150px}
+h1{margin:0;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 3px 0 #fff,0 5px 0 #ffb3d6;line-height:1.05;min-width:150px}
 .pill{background:#fff;border-radius:999px;padding:6px 14px;font-weight:900;font-size:clamp(17px,4.6vw,22px);box-shadow:0 3px 0 #0002;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .langs{display:flex;gap:6px}.langs button{min-height:40px;padding:4px 12px;border-radius:999px;border:2px solid #cdbbff;background:#fff8;font-weight:800;font-size:14px}.langs button.sel{background:#fff;border-color:#7c5cff}
 .hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:stretch}
@@ -68,6 +68,7 @@ h1{margin:0;flex:1;font-size:clamp(24px,6.4vw,40px);color:#ff5aa5;text-shadow:0 
 .shopwrap{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
 @media(max-width:560px){.shopwrap{grid-template-columns:1fr;justify-items:center}}
 .shopwrap .me{position:sticky;top:70px}
+.shopwrap>div{min-width:0;max-width:100%}
 .it{border-radius:20px;border:3px solid #fff;background:var(--card);box-shadow:0 4px 0 #0001;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-weight:800;font-size:13px;min-height:100px;text-align:center}
 .it .e{font-size:34px;line-height:1}.it.on{border-color:#ff7ab8;background:#fff}.it.own .pr{color:#2fb36a}.pr{font-weight:900;font-size:15px}
 .it.shake{animation:shake .4s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -95,8 +96,87 @@ html[data-th] h1{color:#ffe14d;text-shadow:0 3px 0 #0006}
 html[data-th] .gh,html[data-th] #shopNote,html[data-th] #bdgBox>.note{color:#f0e9ff}
 html[data-th] .tabs{background:linear-gradient(var(--atab),#0000)}
 html[data-th] .stk.lock{background:#ffffffb3}
+/* ---------- CALM MODE (docs/CALM-UI.md; reference look: store.html). Default ON: localStorage 'annabelle-calm' !== '0'.
+   Paper background, flat white cards, one accent, nothing moves. One tab at a time; inside a tab only what the kid already has,
+   the rest behind one "show more" row. The gift is one plain row. Language, news, family, the calm switch, "report" and the
+   parents' reset live in the footer. Lively mode ('0') keeps the classic look above untouched. */
+html:not([data-calm="1"]) .calmOnly{display:none!important}
+[hidden]{display:none!important}
+html[data-calm="1"]{--ink:#2b3140;--card:#fff;--soft:#5a6272;--line:#e3ded4;--acc:#34639f;--acc-d:#284f82;--tint:#e8eef7;--ok:#2c6e52;background:#f5f2ec}
+html[data-calm="1"] .livelyOnly{display:none!important}
+html[data-calm="1"] *{animation:none!important}
+html[data-calm="1"] body{background:#f5f2ec;color:var(--ink);font-size:17px;line-height:1.45;padding:calc(12px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+html[data-calm="1"] :focus{outline:none}
+html[data-calm="1"] :focus-visible{outline:3px solid var(--acc);outline-offset:3px;border-radius:12px}
+html[data-calm="1"] .wrap{max-width:860px;gap:18px}
+html[data-calm="1"] .top{gap:12px;flex-wrap:nowrap}
+html[data-calm="1"] .home{width:48px;height:48px;border:1px solid var(--line);box-shadow:none;font-size:22px}
+html[data-calm="1"] .ttlw{flex:1;min-width:0}
+html[data-calm="1"] h1{font-size:24px;line-height:1.2;font-weight:700;color:var(--ink);text-shadow:none;min-width:0;overflow-wrap:anywhere}
+html[data-calm="1"] #sub{margin:0;color:var(--soft);font-size:15px}
+html[data-calm="1"] .pill{border:1px solid var(--line);box-shadow:none;font-weight:600;font-size:16px;padding:6px 12px}
+html[data-calm="1"] .top .langs{display:none}
+html[data-calm="1"] .hero{display:block}
+html[data-calm="1"] .hero .me{display:none}
+html[data-calm="1"] .gift{flex-direction:row;flex-wrap:wrap;align-items:center;text-align:start;gap:6px 12px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:none;padding:10px 14px;min-height:68px}
+html[data-calm="1"] .gift h2{font-size:17px;font-weight:600;flex:1 1 120px}
+html[data-calm="1"] .gift .days{display:none}
+html[data-calm="1"] .chest{font-size:17px;font-weight:700;line-height:1.2;filter:none;opacity:1;min-height:48px;padding:8px 18px;border-radius:16px;background:var(--acc);color:#fff;flex:none}
+html[data-calm="1"] .chest.off{display:none}
+html[data-calm="1"] .prize,html[data-calm="1"] .prize.on{font-size:16px;font-weight:600;color:var(--ok);flex:1 1 100%}
+html[data-calm="1"] .gift .note{flex:1 1 100%;font-size:15px;font-weight:400!important;color:var(--soft);opacity:1}
+html[data-calm="1"] .gift.done{min-height:0;padding:8px 14px;background:none;border-style:dashed}
+html[data-calm="1"] .gift.done h2{display:none}
+html[data-calm="1"] .tabs{position:static;gap:4px;background:#ebe6dc;border-radius:16px;padding:4px}
+html[data-calm="1"] .tab{min-height:48px;border:0;border-radius:13px;background:none;box-shadow:none;font-weight:600;font-size:clamp(13px,3.7vw,16px);color:var(--soft);line-height:1.2}
+html[data-calm="1"] .tab.sel{background:var(--card);color:var(--ink);box-shadow:0 1px 2px #2b314022}
+html[data-calm="1"] .gh{color:var(--ink);font-size:17px;font-weight:700;margin:16px 2px 8px}
+html[data-calm="1"] .gh.cnt{text-align:start!important;font-size:19px!important;margin-top:2px}
+html[data-calm="1"] .grid{gap:10px}
+html[data-calm="1"] .stk,html[data-calm="1"] .it,html[data-calm="1"] .gm,html[data-calm="1"] .bdg,html[data-calm="1"] .mbd{border:1px solid var(--line);border-radius:16px;box-shadow:none;background:var(--card);color:var(--ink);font-weight:600}
+html[data-calm="1"] .stk.lock,html[data-calm="1"] .bdg.t0,html[data-calm="1"] .mbd.t0{border-style:dashed;background:#fbf9f5}
+html[data-calm="1"] .stk.new{border-color:var(--acc);box-shadow:0 0 0 3px var(--tint)}
+html[data-calm="1"] .sc{border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:15px;min-height:48px;border-radius:14px}
+html[data-calm="1"] .shopcats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:0 0 10px}
+html[data-calm="1"] .sc{padding:4px 6px}
+html[data-calm="1"] .shopwrap{gap:12px}
+html[data-calm="1"] .sc.sel{background:var(--tint);border-color:var(--acc);color:var(--acc-d)}
+html[data-calm="1"] .shopwrap .me{position:static;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:none}
+html[data-calm="1"] .shopwrap .me svg{width:clamp(110px,30vw,160px);border-radius:16px}
+html[data-calm="1"] .it.on,html[data-calm="1"] .bdg.on,html[data-calm="1"] .mbd.on{border-color:var(--acc);background:var(--tint);box-shadow:none}
+html[data-calm="1"] .it.own .pr{color:var(--ok)}
+html[data-calm="1"] .bsum{justify-content:flex-start}
+html[data-calm="1"] .bsum span{border:1px solid var(--line);box-shadow:none;color:var(--ink);font-weight:600;border-radius:999px}
+html[data-calm="1"] .bdg .bar u,html[data-calm="1"] .mbd .bar u{background:var(--ok)}
+html[data-calm="1"] .note{color:var(--soft);opacity:1;font-weight:400;font-size:15px}
+html[data-calm="1"] #shopNote,html[data-calm="1"] #bdgBox>.note{color:var(--soft);text-align:start!important}
+html[data-calm="1"] .sheet{background:#2b314066}
+html[data-calm="1"] .sheet .c{border:1px solid var(--line);border-radius:24px;box-shadow:none;background:#f5f2ec}
+html[data-calm="1"] .sheet .e{font-size:64px}
+html[data-calm="1"] .sheet button{background:var(--acc);box-shadow:none;border-radius:16px;font-weight:700;min-height:52px}
+html[data-calm="1"] .spark{display:none}
+.rowb{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;text-align:start;font-weight:600;font-size:16px;color:var(--ink);text-decoration:none;margin-top:10px}
+.rowb .go{margin-inline-start:auto;color:var(--soft);flex:none}
+.rowb small{display:block;font-weight:400;font-size:14px;color:var(--soft)}
+.foot{max-width:860px;margin:26px auto 0;border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column}
+.foot .rowb{margin-top:10px}
+.foot .lgr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;color:var(--soft);font-size:15px}
+.foot .lgr button{min-height:44px;min-width:56px;padding:4px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:15px}
+.foot .lgr button.sel{background:var(--tint);border-color:var(--acc);color:var(--acc-d)}
+.foot .cm{display:flex;align-items:center;gap:12px;margin-top:14px}
+.foot .cm .tx{display:flex;flex-direction:column;min-width:0}.foot .cm .tx span{color:var(--soft);font-size:14px}
+.sw{width:64px;height:44px;border-radius:999px;background:#c9c3b7;position:relative;flex:none;border:0;padding:0}
+.sw::after{content:"";position:absolute;top:5px;inset-inline-start:5px;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003}
+.sw[aria-checked=true]{background:var(--ok)}
+.sw[aria-checked=true]::after{inset-inline-start:25px}
+#moreBox{display:flex;flex-direction:column}
+#newsL{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+#newsL li{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:15px}
+#newsL li i{font-style:normal;font-size:22px;flex:none}#newsL li small{display:block;color:var(--soft);font-size:14px}
+html[data-calm="1"] #s-fam,html[data-calm="1"] #s-rst{display:none!important}
 </style>
-<script>try{var _t=(JSON.parse(localStorage.getItem('annabelle-home')||'{}')||{}).th||'neon';if(_t!=='classic')document.documentElement.setAttribute('data-th',/^(neon|ocean|jungle|sunset|galaxy|gold)$/.test(_t)?_t:'neon')}catch(e){document.documentElement.setAttribute('data-th','neon')}</script>
+<script>var _calm=true;try{_calm=localStorage.getItem('annabelle-calm')!=='0'}catch(e){}document.documentElement.setAttribute('data-calm',_calm?'1':'0');
+if(!_calm)try{var _t=(JSON.parse(localStorage.getItem('annabelle-home')||'{}')||{}).th||'neon';if(_t!=='classic')document.documentElement.setAttribute('data-th',/^(neon|ocean|jungle|sunset|galaxy|gold)$/.test(_t)?_t:'neon')}catch(e){document.documentElement.setAttribute('data-th','neon')}</script>
 <!--pwa--><link rel="manifest" href="manifests/album.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/album-192.png"><meta name="apple-mobile-web-app-title" content="האלבום שלי"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/album-apple-180.png"><script src="pwa.js" data-app="album" data-slots='[]' defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="kid.js"></script>
@@ -106,7 +186,7 @@ html[data-th] .stk.lock{background:#ffffffb3}
 <div class="wrap">
   <div class="top">
     <a class="home" href="index.html" id="home" aria-label="home">🏠</a>
-    <h1 id="ttl"></h1>
+    <div class="ttlw" style="flex:1;min-width:150px"><h1 id="ttl"></h1><p id="sub" class="calmOnly"></p></div>
     <div class="pill" id="coins">💰 <b id="cn">0</b></div>
     <div class="langs" id="langs"></div>
   </div>
@@ -131,6 +211,18 @@ html[data-th] .stk.lock{background:#ffffffb3}
 </div>
 <div class="sec on" id="s-fam" style="display:block;margin-top:18px"><a id="famLink" href="family.html" class="note" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#4a2f6e;min-height:64px;background:#fffffff2;border-radius:18px;padding:10px 14px;box-shadow:0 3px 0 #0002"><span id="famE" style="font-size:36px">🏡</span><span style="flex:1;min-width:0"><b id="famT" style="display:block;font-size:18px">המשפחה שלנו</b><span id="famS" style="font-size:14px"></span></span><span id="famA" aria-hidden="true" style="font-size:22px">←</span></a></div>
 <div class="sec on" id="s-rst" style="display:block;margin-top:18px"><div class="note" style="text-align:center"><button id="rstOpen" style="font-size:16px;padding:10px 16px;border-radius:14px;border:2px solid #ccc;background:#fff;cursor:pointer;font-family:inherit">🗑️ איפוס התקדמות (להורים)</button></div></div>
+<footer class="foot calmOnly" id="foot">
+  <button class="rowb" id="moreB" type="button" aria-expanded="false" aria-controls="moreBox"><span aria-hidden="true" style="font-size:22px">☰</span><span id="moreT"></span><span class="go" aria-hidden="true">▾</span></button>
+  <div id="moreBox" hidden>
+  <a class="rowb" id="famLink2" href="family.html"><span id="famE2" aria-hidden="true" style="font-size:26px">🏡</span><span><span id="famT2"></span><small id="famS2"></small></span><span class="go" aria-hidden="true">›</span></a>
+  <button class="rowb" id="newsB" type="button" aria-expanded="false" aria-controls="newsL"><span aria-hidden="true" style="font-size:22px">📰</span><span id="newsT"></span><span class="go" aria-hidden="true">▾</span></button>
+  <ul id="newsL" hidden></ul>
+  <div class="lgr"><span id="lgT"></span><span class="langs" id="langs2" style="display:flex;gap:8px"></span></div>
+  <div class="cm"><button class="sw" id="calmSw" role="switch" type="button"></button><div class="tx"><b id="calmT" style="font-weight:600"></b><span id="calmS"></span></div></div>
+  <button class="rowb" id="repB" type="button"><span aria-hidden="true" style="font-size:22px">🐞</span><span id="repT"></span></button>
+  <button class="rowb" id="rstOpen2" type="button"><span aria-hidden="true" style="font-size:22px">🗑️</span><span id="rstT2"></span></button>
+  </div>
+</footer>
 <div class="sheet" id="rstSheet"><div class="c"><div class="e">🗑️</div><h3>איפוס התקדמות</h3><p id="rstQ"></p><input id="rstIn" inputmode="numeric" maxlength="3" style="font-size:26px;width:100px;text-align:center;border:3px solid #ffb84d;border-radius:12px;padding:6px;direction:ltr"><p id="rstSt" style="min-height:22px;font-weight:700"></p>
 <button id="rstA" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#e67e22;color:#fff;cursor:pointer;font-family:inherit">🎁 איפוס האלבום (מטבעות, מדבקות, פריטים)</button>
 <button id="rstB" style="display:block;margin:6px auto;font-size:17px;padding:10px 14px;border-radius:12px;border:0;background:#c0392b;color:#fff;cursor:pointer;font-family:inherit">🧹 איפוס הכול (גם שלבים וכוכבים במשחקים)</button>
@@ -147,19 +239,28 @@ var TX={
   grp:{games:'משחקים ראשונים',wins:'ניצחונות',explore:'חקרנית',streak:'ימים ברצף',stars:'כוכבים',coins:'מטבעות',levels:'שלבים',combo:'קומבו',perfect:'מושלם',gift:'מתנות',shop:'קניות',misc:'עוד',rare:'נדירים ✨'},
   plays:'שיחקת',times:'פעמים',best:'שיא',stars:'כוכבים',play:'לשחק',pick:'לחצי על פריט כדי ללבוש',noItems:'',
   t4:'🏅 תגים',bdH:'התגים והתארים שלי',bdHint:'לוחצים על תג שהושג כדי להציג אותו כתואר ליד השם בעמוד הבית',bdOn:'✔ התואר שלי',bdMax:'הושלם!',bdTitle:'התואר שלי: {t}',bdNo:'עוד לא נבחר תואר',skN:'🔥 {n} ימים ברצף',wkN:'🏆 השבוע: {n} XP',shield:'🛡️ מגן מוכן',
-  mH:'💪 הכישורים שלי',mHint:'תגי שליטה: מקבלים אותם על 3 כוכבים בשלבים של משחקי הלמידה — לא על כמות המשחק.',mCan:'✔ {t}',bdQ:'🏅 עוד תגים',skFresh:'✨ רצף חדש מתחיל היום',skBest:'🏅 השיא שלי: {n} ימים',stN:'⭐ {n} כוכבים'},
+  mH:'💪 הכישורים שלי',mHint:'תגי שליטה: מקבלים אותם על 3 כוכבים בשלבים של משחקי הלמידה — לא על כמות המשחק.',mCan:'✔ {t}',bdQ:'🏅 עוד תגים',skFresh:'✨ רצף חדש מתחיל היום',skBest:'🏅 השיא שלי: {n} ימים',stN:'⭐ {n} כוכבים',
+  openB:'🎁 פתיחה',noStk:'עוד אין סטיקרים. משחקים – והם מגיעים.',moreStk:'כל הסטיקרים ({n})',less:'להציג פחות',noGm:'המשחקים ששיחקת יופיעו כאן.',moreGm:'כל המשחקים ({n})',moreBd:'עוד {n} תגים להשיג',noBd:'התגים שתשיגי יופיעו כאן.',
+  more:'עוד',news:'מה חדש',noNews:'אין חדשות כרגע.',lg:'שפה',calm:'🍃 מצב רגוע',calmOn:'פועל – פחות תנועה ופחות רעש בכל האתר.',calmOff:'כבוי – יותר תנועה ואפקטים.',rep:'דיווח על תקלה או רעיון',rst:'איפוס התקדמות (להורים)',
+  rstH:'איפוס התקדמות',rstQ:'כדי לוודא שזה מבוגר: כמה זה {a} + {b} ?',rstA:'🎁 איפוס האלבום (מטבעות, מדבקות, פריטים)',rstB:'🧹 איפוס הכול (גם שלבים וכוכבים במשחקים)',rstX:'ביטול',rstBad:'התשובה לא נכונה, נסו שוב',rstOk:'✅ אופס! מתחילים מחדש'},
  fr:{ttl:'Mon album',ttlN:'L’album de {n}',t1:'🏷️ Autocollants',t2:'👗 Habits',t3:'🎮 Jeux',gT:'Cadeau du jour',open:'Touche pour ouvrir !',later:'Reviens demain pour un autre cadeau 🌙',streak:'jours de suite',youGot:'Tu as reçu',avN:'Mon chaton',
   stk:'autocollants',of:'sur',how:'Comment l’obtenir ?',ok:'Compris 👍',cats:{hat:'Chapeaux',bow:'Nœuds',glass:'Lunettes',color:'Couleurs',bg:'Fonds'},buy:'Acheté !',need:'Il manque {n} pièces',own:'À moi ✓',
   grp:{games:'Premiers jeux',wins:'Victoires',explore:'Exploratrice',streak:'Jours de suite',stars:'Étoiles',coins:'Pièces',levels:'Niveaux',combo:'Combos',perfect:'Parfait',gift:'Cadeaux',shop:'Boutique',misc:'Autres',rare:'Rares ✨'},
   plays:'Parties',times:'fois',best:'Record',stars:'étoiles',play:'Jouer',pick:'Touche un article pour le porter',noItems:'',
   t4:'🏅 Badges',bdH:'Mes badges et titres',bdHint:'Touche un badge gagné pour l’afficher comme titre à côté de ton prénom sur la page d’accueil',bdOn:'✔ Mon titre',bdMax:'Terminé !',bdTitle:'Mon titre : {t}',bdNo:'Pas encore de titre choisi',skN:'🔥 {n} jours de suite',wkN:'🏆 Cette semaine : {n} XP',shield:'🛡️ bouclier prêt',
-  mH:'💪 Ce que je sais faire',mHint:'Badges de maîtrise : on les gagne avec 3 étoiles dans les niveaux des jeux pour apprendre, pas en jouant beaucoup.',mCan:'✔ {t}',bdQ:'🏅 Autres badges',skFresh:'✨ Une nouvelle série commence aujourd’hui',skBest:'🏅 Mon record : {n} jours',stN:'⭐ {n} étoiles'},
+  mH:'💪 Ce que je sais faire',mHint:'Badges de maîtrise : on les gagne avec 3 étoiles dans les niveaux des jeux pour apprendre, pas en jouant beaucoup.',mCan:'✔ {t}',bdQ:'🏅 Autres badges',skFresh:'✨ Une nouvelle série commence aujourd’hui',skBest:'🏅 Mon record : {n} jours',stN:'⭐ {n} étoiles',
+  openB:'🎁 Ouvrir',noStk:'Pas encore d’autocollants. Joue, et ils arrivent.',moreStk:'Tous les autocollants ({n})',less:'Afficher moins',noGm:'Les jeux auxquels tu as joué apparaîtront ici.',moreGm:'Tous les jeux ({n})',moreBd:'Encore {n} badges à gagner',noBd:'Les badges que tu gagnes apparaîtront ici.',
+  more:'Plus',news:'Quoi de neuf',noNews:'Rien de nouveau pour l’instant.',lg:'Langue',calm:'🍃 Mode calme',calmOn:'Activé – moins de mouvement et de bruit sur tout le site.',calmOff:'Désactivé – plus de mouvement et d’effets.',rep:'Signaler un bug ou une idée',rst:'Remise à zéro (parents)',
+  rstH:'Remise à zéro',rstQ:'Pour vérifier que c’est un adulte : combien font {a} + {b} ?',rstA:'🎁 Remettre l’album à zéro (pièces, autocollants, articles)',rstB:'🧹 Tout remettre à zéro (aussi les niveaux et les étoiles des jeux)',rstX:'Annuler',rstBad:'Ce n’est pas la bonne réponse, réessayez',rstOk:'✅ C’est fait. On recommence'},
  en:{ttl:'My Album',ttlN:'{n}’s Album',t1:'🏷️ Stickers',t2:'👗 Dress-up',t3:'🎮 Games',gT:'Daily gift',open:'Tap to open!',later:'Come back tomorrow for a new gift 🌙',streak:'days in a row',youGot:'You got',avN:'My kitten',
   stk:'stickers',of:'of',how:'How to get it?',ok:'Got it 👍',cats:{hat:'Hats',bow:'Bows & scarves',glass:'Glasses',color:'Colours',bg:'Backgrounds'},buy:'Bought!',need:'{n} more coins needed',own:'Mine ✓',
   grp:{games:'First plays',wins:'Wins',explore:'Explorer',streak:'Streaks',stars:'Stars',coins:'Coins',levels:'Levels',combo:'Combos',perfect:'Perfect',gift:'Gifts',shop:'Shopping',misc:'More',rare:'Rare ✨'},
   plays:'Played',times:'times',best:'Best',stars:'stars',play:'Play',pick:'Tap an item to wear it',noItems:'',
   t4:'🏅 Badges',bdH:'My badges and titles',bdHint:'Tap an earned badge to show it as a title next to your name on the home page',bdOn:'✔ My title',bdMax:'Complete!',bdTitle:'My title: {t}',bdNo:'No title chosen yet',skN:'🔥 {n} days in a row',wkN:'🏆 This week: {n} XP',shield:'🛡️ shield ready',
-  mH:'💪 What I can do',mHint:'Mastery badges: earned with 3 stars on levels of the learning games, not by playing a lot.',mCan:'✔ {t}',bdQ:'🏅 More badges',skFresh:'✨ A new streak starts today',skBest:'🏅 My best: {n} days',stN:'⭐ {n} stars'}
+  mH:'💪 What I can do',mHint:'Mastery badges: earned with 3 stars on levels of the learning games, not by playing a lot.',mCan:'✔ {t}',bdQ:'🏅 More badges',skFresh:'✨ A new streak starts today',skBest:'🏅 My best: {n} days',stN:'⭐ {n} stars',
+  openB:'🎁 Open',noStk:'No stickers yet. Play, and they will come.',moreStk:'All stickers ({n})',less:'Show less',noGm:'The games you have played will show here.',moreGm:'All games ({n})',moreBd:'{n} more badges to earn',noBd:'The badges you earn will show here.',
+  more:'More',news:'What’s new',noNews:'Nothing new right now.',lg:'Language',calm:'🍃 Calm mode',calmOn:'On – less motion and noise across the site.',calmOff:'Off – more motion and effects.',rep:'Report a bug or an idea',rst:'Reset progress (parents)',
+  rstH:'Reset progress',rstQ:'To check this is a grown-up: what is {a} + {b} ?',rstA:'🎁 Reset the album (coins, stickers, items)',rstB:'🧹 Reset everything (also levels and stars in the games)',rstX:'Cancel',rstBad:'That is not the right answer, try again',rstOk:'✅ Done. Starting fresh'}
 };
 var KA=window.KidApp;
 // the texts are written for a girl: kid.js adapts every string to the current kid
@@ -167,25 +268,42 @@ var KA=window.KidApp;
 function L(){return TX[R?R.lang():'he']}
 function ttl(){var t=L(),n=KA?KA.kid().name:'';return n?t.ttlN.replace('{n}',n):t.ttl}
 var tab='stk',shopCat='hat',newIds={};
+// calm mode (docs/CALM-UI.md): the default; '0' = the classic lively album. OPEN = which "show more" rows the kid opened (this visit only).
+var CALM=document.documentElement.getAttribute('data-calm')==='1',OPEN={};
+function moreRow(label,key,open){return '<button type="button" class="rowb" data-more="'+key+'" aria-expanded="'+(open?'true':'false')+'"><span>'+label+'</span><span class="go" aria-hidden="true">'+(open?'▴':'▾')+'</span></button>'}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-more]');if(!b)return;var k=b.getAttribute('data-more');OPEN[k]=!OPEN[k];render(true);var n=document.querySelector('[data-more="'+k+'"]');if(n)try{n.focus({preventScroll:true})}catch(x){}});
 if(!R){document.body.innerHTML='<p style="padding:30px;font-size:22px">rewards.js missing</p>';return}
-function langs(){var l=R.lang();$('langs').innerHTML=[['he','עברית'],['fr','FR'],['en','EN']].map(function(x){return '<button data-l="'+x[0]+'" class="'+(x[0]===l?'sel':'')+'">'+x[1]+'</button>'}).join('')}
-$('langs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;try{localStorage.setItem('annabelle-lang',b.dataset.l)}catch(x){}location.reload()});
-function head(){var l=R.lang(),t=L();document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';document.title=ttl();$('ttl').textContent=ttl();$('t1').textContent=t.t1;$('t2').textContent=t.t2;$('t3').textContent=t.t3;$('t4').textContent=t.t4;$('gT').textContent=t.gT;$('avN').textContent=t.avN;try{var _lv=R.level();$('avN').textContent=_lv.e+' '+({he:'רמה ',fr:'Niveau ',en:'Level '}[l])+_lv.level+' · '+_lv.title}catch(e){};$('shX').textContent=t.ok;$('cn').textContent=R.coins();langs()}
+function langs(){var l=R.lang(),h=[['he','עברית'],['fr','FR'],['en','EN']].map(function(x){return '<button data-l="'+x[0]+'" class="'+(x[0]===l?'sel':'')+'"'+(x[0]===l?' aria-pressed="true"':'')+'>'+x[1]+'</button>'}).join('');$('langs').innerHTML=h;$('langs2').innerHTML=h}
+function pickLang(e){var b=e.target.closest('button');if(!b)return;try{localStorage.setItem('annabelle-lang',b.dataset.l)}catch(x){}location.reload()}
+$('langs').addEventListener('click',pickLang);$('langs2').addEventListener('click',pickLang);
+function head(){var l=R.lang(),t=L();document.documentElement.lang=l;document.documentElement.dir=l==='he'?'rtl':'ltr';document.title=ttl();$('ttl').textContent=ttl();$('t1').textContent=t.t1;$('t2').textContent=t.t2;$('t3').textContent=t.t3;$('t4').textContent=t.t4;$('gT').textContent=t.gT;$('avN').textContent=t.avN;try{var _lv=R.level();$('avN').textContent=_lv.e+' '+({he:'רמה ',fr:'Niveau ',en:'Level '}[l])+_lv.level+' · '+_lv.title}catch(e){};$('shX').textContent=t.ok;$('cn').textContent=R.coins();langs();
+ $('sub').textContent=$('avN').textContent;$('coins').setAttribute('aria-label',R.coins()+' '+({he:'מטבעות',fr:'pièces',en:'coins'}[l]));if(CALM&&R.band&&R.band()==='little')$('coins').style.display='none';
+ $('moreT').textContent=t.more;$('newsT').textContent=t.news;$('lgT').textContent=t.lg;$('repT').textContent=t.rep;$('rstT2').textContent=t.rst;$('calmT').textContent=t.calm;$('calmS').textContent=CALM?t.calmOn:t.calmOff;$('calmSw').setAttribute('aria-checked',CALM?'true':'false');$('calmSw').setAttribute('aria-label',t.calm)}
 function gift(){var t=L(),s=R.dailyStatus(),ch=$('chest');
  $('days').innerHTML=s.days.map(function(d){return '<div class="d '+(d.got?'got':'')+(d.today?' today':'')+'">'+(d.got?'🔥':'·')+'</div>'}).join('');
  ch.className='chest '+(s.available?'ready':'off');
+ if(CALM){ch.textContent=t.openB;ch.setAttribute('aria-label',t.gT);ch.parentNode.classList.toggle('done',!s.available&&!$('prize').classList.contains('on'))}
  $('gN').textContent=s.available?t.open:t.later+(s.streak&&!(R.band&&R.band()==='little')?'  ·  🔥 '+s.streak+' '+t.streak:'');
  $('gN').style.fontWeight=s.available?'900':'700'}
-function sparks(x,y,em){for(var i=0;i<14;i++){var e=document.createElement('div');e.className='spark';e.textContent=em[i%em.length];e.style.left=x+'px';e.style.top=y+'px';var a=Math.random()*6.28,r=60+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',Math.sin(a)*r-40+'px');document.body.appendChild(e);(function(el){setTimeout(function(){el.remove()},1000)})(e)}}
+function sparks(x,y,em){if(CALM)return;for(var i=0;i<14;i++){var e=document.createElement('div');e.className='spark';e.textContent=em[i%em.length];e.style.left=x+'px';e.style.top=y+'px';var a=Math.random()*6.28,r=60+Math.random()*120;e.style.setProperty('--dx',Math.cos(a)*r+'px');e.style.setProperty('--dy',Math.sin(a)*r-40+'px');document.body.appendChild(e);(function(el){setTimeout(function(){el.remove()},1000)})(e)}}
 $('chest').addEventListener('click',function(){var s=R.dailyStatus(),t=L();if(!s.available)return;var r=R.claimDaily();if(!r)return;var ch=$('chest'),b=ch.getBoundingClientRect();
- ch.className='chest open';ch.textContent='🎉';sparks(b.left+b.width/2,b.top+b.height/2,['✨','💰','⭐','💖']);
+ ch.className='chest open';if(CALM)ch.className='chest off';else ch.textContent='🎉';sparks(b.left+b.width/2,b.top+b.height/2,['✨','💰','⭐','💖']);
  var p=$('prize'),sk=r.sticker?R.catalog().filter(function(x){return x.id===r.sticker})[0]:null;
  p.innerHTML=t.youGot+' 💰 +'+r.coins+(sk?'  '+sk.e+' <small>'+R.t(sk.n)+'</small>':'');p.className='prize on';
  if(sk)newIds[sk.id]=1;(r.extra||[]).forEach(function(i){newIds[i]=1});
+ if(CALM){render(true);R.flush();return}
  setTimeout(function(){ch.textContent='🎁';render();R.flush()},1700)});
 function stickers(){var t=L(),cat=R.stickers(),box=$('stkBox'),have=cat.filter(function(s){return s.earned}).length,groups={},order=[];
  cat.forEach(function(s){if(!groups[s.g]){groups[s.g]=[];order.push(s.g)}groups[s.g].push(s)});
- var h='<div class="gh" style="text-align:center;font-size:clamp(18px,5vw,24px)">'+have+' '+t.of+' '+cat.length+' '+t.stk+'</div>';
+ var h='<div class="gh cnt" style="text-align:center;font-size:clamp(18px,5vw,24px)">'+have+' '+t.of+' '+cat.length+' '+t.stk+'</div>';
+ function tile(s){return '<button class="stk '+(s.earned?'':'lock')+(newIds[s.id]?' new':'')+'" data-id="'+s.id+'"><span class="e">'+s.e+'</span><span>'+(s.earned?R.t(s.n):'???')+'</span></button>'}
+ if(CALM){ // the kid's own stickers first; the ones still to find behind one row
+  // first the kid's newest six; one row opens the whole album (all of the kid's stickers, then the ones still to find, by group)
+  var mine=cat.filter(function(s){return s.earned}).sort(function(a,b){return (newIds[b.id]?1:0)-(newIds[a.id]?1:0)||b.at-a.at}),top=OPEN.stk?mine:mine.slice(0,6);
+  h+=mine.length?'<div class="grid">'+top.map(tile).join('')+'</div>':'<p class="note">'+t.noStk+'</p>';
+  if(cat.length>top.length||OPEN.stk){h+=moreRow(OPEN.stk?t.less:t.moreStk.replace('{n}',cat.length),'stk',OPEN.stk);
+   if(OPEN.stk){order.forEach(function(g){var l=groups[g].filter(function(s){return !s.earned});if(l.length)h+='<div class="gh">'+(t.grp[g]||g)+'</div><div class="grid">'+l.map(tile).join('')+'</div>'});h+=moreRow(t.less,'stk',true)}}
+  box.innerHTML=h;return}
  order.forEach(function(g){h+='<div class="gh">'+(t.grp[g]||g)+'</div><div class="grid">'+groups[g].map(function(s){return '<button class="stk '+(s.earned?'':'lock')+(newIds[s.id]?' new':'')+'" data-id="'+s.id+'"><span class="e">'+(s.earned?s.e:s.e)+'</span><span>'+(s.earned?R.t(s.n):'???')+'</span></button>'}).join('')+'</div>'});
  box.innerHTML=h}
 $('stkBox').addEventListener('click',function(e){var b=e.target.closest('.stk');if(!b)return;var s=R.catalog().filter(function(x){return x.id===b.dataset.id})[0],has=R.has(s.id),t=L();
@@ -203,8 +321,13 @@ $('items').addEventListener('click',function(e){var b=e.target.closest('.it');if
  else{b.classList.add('shake');$('shopNote').textContent=t.need.replace('{n}',it.price-R.coins());setTimeout(function(){b.classList.remove('shake')},450);return}
  render(true)});
 function bestOf(g){try{var v=localStorage.getItem('annabelle-'+g+'-best');if(v===null)return 0;var n=Number(v);if(isFinite(n))return n;var o=JSON.parse(v);if(o&&typeof o==='object'){var m=o.best!=null?o.best:o.score;return isFinite(Number(m))?Number(m):0}}catch(e){}return 0}
-function games(){var t=L(),st=R.get().stats,ids=Object.keys(R.GAMES);
- $('gamesBox').innerHTML=ids.map(function(g){var p=st.plays[g]||0,s=st.stars[g]||0,b=Math.max(st.best[g]||0,bestOf(g));
+function games(){var t=L(),st=R.get().stats,ids=Object.keys(R.GAMES),box=$('gamesBox'),tail='',old=document.getElementById('gmMore');if(old)old.remove();
+ if(CALM){ // the games the kid played (most played first); the whole list behind one row
+  var all=ids.length,mine=ids.filter(function(g){return st.plays[g]>0}).sort(function(a,b){return st.plays[b]-st.plays[a]});
+  tail=(mine.length?'':'<p class="note">'+t.noGm+'</p>')+moreRow(OPEN.gm?t.less:t.moreGm.replace('{n}',all),'gm',OPEN.gm);
+  if(OPEN.gm){ids=mine.concat(ids.filter(function(g){return !(st.plays[g]>0)}))}else ids=mine.slice(0,6);
+  var d=document.createElement('div');d.id='gmMore';d.innerHTML=tail;box.parentNode.appendChild(d)}
+ box.innerHTML=ids.map(function(g){var p=st.plays[g]||0,s=st.stars[g]||0,b=Math.max(st.best[g]||0,bestOf(g));
   return '<a class="gm" href="'+g+'.html"><span class="e">'+R.GAMES[g][0]+'</span><span>'+R.gname(g)+'</span><small>'+(p?t.plays+' '+p+' '+t.times:'—')+'</small><small>'+(s?'⭐ '+s:'')+(b?'  ·  '+t.best+' '+b:'')+'</small></a>'}).join('')}
 function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function badges(){var t=L(),box=$('bdgBox');box.textContent='';if(!R.badges)return;var ti=R.title(),sk=R.streak(),rd=R.road(),bd=R.band?R.band():'kid';
@@ -218,6 +341,14 @@ function badges(){var t=L(),box=$('bdgBox');box.textContent='';if(!R.badges)retu
   if(b.goal){var q=mk('span','bar'),u=mk('u');u.style.width=b.pct+'%';q.appendChild(u);c.appendChild(q);c.appendChild(mk('small',null,Math.min(b.val,b.goal)+'/'+b.goal+(ms?'':' · +'+b.coins+' 💰')))}
   c.onclick=function(){if(!b.tier)return;R.setTitle(b.on?'':b.id);try{window.Juice&&Juice.sfx('tap')}catch(e){}badges()};return c}
  // mastery first: what the kid can do in the learning games (competence, no coins) ...
+ if(CALM){ // what the kid has earned or started; the rest behind one row
+  var sk=R.skills?R.skills():[],bl=R.badges(),has=function(b){return b.tier>0||b.val>0},hid=sk.concat(bl).filter(function(b){return !has(b)}).length,all=!!OPEN.bdg;
+  var seq=sk.map(function(b){return [b,true]}).concat(bl.map(function(b){return [b,false]}));if(!all){seq=seq.filter(function(x){return has(x[0])}).sort(function(a,b){return b[0].tier-a[0].tier}).slice(0,6);hid=sk.length+bl.length-seq.length}
+  box.appendChild(sm);var shown=0,g1=mk('div','bgs');g1.id='sklG';seq.forEach(function(x){g1.appendChild(card(x[0],x[1]));shown++});
+  if(shown)box.appendChild(g1);else box.appendChild(mk('p','note',t.noBd));
+  if(shown&&bl.some(function(b){return b.tier>0})){var n1=mk('div','note',t.bdHint);n1.style.marginTop='10px';box.appendChild(n1)}
+  if(hid||all){var w=mk('div');w.innerHTML=moreRow(all?t.less:t.moreBd.replace('{n}',hid),'bdg',all);box.appendChild(w)}
+  return}
  if(R.skills){var h0=mk('div','gh',t.mH);h0.style.textAlign='center';box.appendChild(h0);var g0=mk('div','bgs');g0.id='sklG';R.skills().forEach(function(b){g0.appendChild(card(b,true))});box.appendChild(g0);
   var n0=mk('div','note',t.mHint);n0.style.cssText='text-align:center;margin-top:8px;font-size:13.5px';box.appendChild(n0)}
  // ... then the titles and the older "how much" badges
@@ -234,18 +365,31 @@ R.visitAlbum();if(R.opened)R.opened('album');
 // stickers that arrived while playing glow once
 try{R.get().pend.forEach(function(p){if(p.t==='sticker')newIds[p.id]=1})}catch(e){}
 render();
-window.__album={render:render,setTab:function(t){tab=t;render()}};
+// footer (calm mode): the news list of rewards.js, the calm switch, "report"
+function drawNews(){var ul=$('newsL'),t=L(),list=R.news?R.news():[];ul.textContent='';
+ if(!list.length){var li0=mk('li',null,t.noNews);ul.appendChild(li0);return}
+ list.forEach(function(n){var li=mk('li'),i=mk('i',null,n.e),d=mk('span',null,n.title);i.setAttribute('aria-hidden','true');if(n.text)d.appendChild(mk('small',null,n.text));li.appendChild(i);li.appendChild(d);ul.appendChild(li)})}
+$('newsB').addEventListener('click',function(){var ul=$('newsL'),op=ul.hidden;ul.hidden=!op;this.setAttribute('aria-expanded',op?'true':'false');this.querySelector('.go').textContent=op?'▴':'▾';if(op){drawNews();if(R.newsSeen)R.newsSeen()}});
+// everything that is not the album itself sits behind one "More" row: family, news, language, calm mode, report, the parents' reset
+$('moreB').addEventListener('click',function(){var bx=$('moreBox'),op=bx.hidden;bx.hidden=!op;this.setAttribute('aria-expanded',op?'true':'false');this.querySelector('.go').textContent=op?'▴':'▾'});
+$('calmSw').addEventListener('click',function(){try{localStorage.setItem('annabelle-calm',CALM?'0':'1')}catch(e){}try{KA&&KA.track&&KA.track('calm',{on:!CALM,from:'album'})}catch(e){}location.reload()});
+$('repB').addEventListener('click',function(){try{if(KA&&KA.report)KA.report()}catch(e){}});
+window.addEventListener('storage',function(e){if(e.key==='annabelle-calm')location.reload()});
+window.__albumRT=L();
+window.__album={render:render,setTab:function(t){tab=t;render()},calm:CALM,open:OPEN};
 })();
 
 (function(){var a,b,KEEP=/^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime.*|parent|profiles|profdata-.*|device|tq|telemetry|say|saytest|family.*)$/;
 function q(i){return document.getElementById(i)}
-function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent='כדי לוודא שזה מבוגר: כמה זה '+a+' + '+b+' ?';q('rstIn').value='';q('rstSt').textContent=''}
-q('rstOpen').onclick=function(){ask();q('rstSheet').classList.add('on')};
+var RT=window.__albumRT||{},tx=function(k,d){return RT[k]||d};
+function ask(){a=2+Math.floor(Math.random()*8);b=3+Math.floor(Math.random()*7);q('rstQ').textContent=tx('rstQ','כדי לוודא שזה מבוגר: כמה זה {a} + {b} ?').replace('{a}',a).replace('{b}',b);q('rstIn').value='';q('rstSt').textContent=''}
+(function(){var h=q('rstSheet').querySelector('h3');if(h)h.textContent=tx('rstH',h.textContent);q('rstA').textContent=tx('rstA',q('rstA').textContent);q('rstB').textContent=tx('rstB',q('rstB').textContent);q('rstX').textContent=tx('rstX',q('rstX').textContent);q('rstOpen').textContent='🗑️ '+tx('rst','איפוס התקדמות (להורים)');q('rstIn').setAttribute('aria-label',tx('rstH','איפוס התקדמות'))})();
+q('rstOpen').onclick=q('rstOpen2').onclick=function(){ask();q('rstSheet').classList.add('on');try{q('rstIn').focus()}catch(e){}};
 q('rstX').onclick=function(){q('rstSheet').classList.remove('on')};
-function doit(all){if(parseInt(q('rstIn').value,10)!==a+b){ask();q('rstSt').textContent='התשובה לא נכונה, נסו שוב';q('rstSt').style.color='#c0392b';return}
+function doit(all){if(parseInt(q('rstIn').value,10)!==a+b){ask();q('rstSt').textContent=tx('rstBad','התשובה לא נכונה, נסו שוב');q('rstSt').style.color='#c0392b';return}
  try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(!/^annabelle-/.test(k)&&!/^soya-/.test(k))continue;if(all?!KEEP.test(k):k==='annabelle-rewards')ks.push(k)}
  ks.forEach(function(k){localStorage.removeItem(k)})}catch(e){}
- q('rstSt').style.color='#27ae60';q('rstSt').textContent='✅ אופס! מתחילים מחדש';setTimeout(function(){location.reload()},900)}
+ q('rstSt').style.color='#27ae60';q('rstSt').textContent=tx('rstOk','✅ אופס! מתחילים מחדש');setTimeout(function(){location.reload()},900)}
 q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true)};
 })();
 
@@ -254,7 +398,8 @@ q('rstA').onclick=function(){doit(false)};q('rstB').onclick=function(){doit(true
 var l='he',f=null;try{l=localStorage.getItem('annabelle-lang')||'he';f=(JSON.parse(localStorage.getItem('annabelle-family')||localStorage.getItem('annabelle-profdata-_family')||'null')||{}).fam}catch(e){}
 var t=T[l]||T.he,q=function(i){return document.getElementById(i)},n=f&&typeof f.name==='string'?f.name.slice(0,24):'';
 if(f&&f.crest&&typeof f.crest.a==='string'&&f.crest.a)q('famE').textContent=f.crest.a.slice(0,8);
-q('famT').textContent=n?(l==='fr'?'Famille '+n:l==='en'?'The '+n+' family':'משפחת '+n):t[0];q('famS').textContent=t[1];q('famA').textContent=l==='he'?'←':'→';q('famLink').setAttribute('aria-label',t[0])})();
+q('famT').textContent=n?(l==='fr'?'Famille '+n:l==='en'?'The '+n+' family':'משפחת '+n):t[0];q('famS').textContent=t[1];q('famA').textContent=l==='he'?'←':'→';q('famLink').setAttribute('aria-label',t[0]);
+q('famE2').textContent=q('famE').textContent;q('famT2').textContent=q('famT').textContent;q('famS2').textContent=t[1]})();
 </script>
 </body>
 </html>

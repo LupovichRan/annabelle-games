@@ -1,4 +1,12 @@
 /* Kids platform – in-app reports: a small movable "🐞" button on every screen (or F8, or KidApp.report()).
+   CALM MODE (docs/CALM-UI.md, localStorage 'annabelle-calm' !== '0', the default): the button is a small, pale tab on a side edge.
+     · it is placed once, on the spot that covers no control, no text and (when possible) no canvas, and it stays there: it only moves
+       when the page changed under it and it would now cover a control;
+     · while a game is being played it goes away: rewards.js says so (window event 'annabelle-play'), and input on a <canvas> counts too.
+       It leaves 4 s after the last interaction near it and comes back on the result / menu (flush), on pause (Escape, P, window blur),
+       after 8 s without input, at the top of a scrolled page, on a long press on an empty part of the page, and on keyboard focus;
+     · F8 and KidApp.report() always open the dialog, also while the tab is away. No animation, no badge. Dragging still works.
+   Lively mode ('annabelle-calm' = '0') keeps the round button exactly as before.
    Flow: remember the trail + game state -> take a picture of the screen as it is -> open the dialog
    (bug / idea / fix request, a note and/or a voice note of max 20 s, "don't send the picture") -> Send.
    Loaded by playtime.js after kid.js and telemetry.js; works (with its own tiny sender) when either is missing.
@@ -201,6 +209,13 @@
   var css = '#fb-btn{all:revert;box-sizing:border-box;position:fixed;z-index:2147482900;width:36px;height:36px;border-radius:999px;border:1.5px solid rgba(90,59,26,.35);background:rgba(255,248,230,.6);' +
     'font:18px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding:0;margin:0;display:flex;align-items:center;justify-content:center;opacity:.5;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 1px 4px rgba(0,0,0,.18);transition:opacity .2s}' +
     '#fb-btn:hover,#fb-btn:focus-visible,#fb-btn.drag{opacity:1}#fb-btn:focus-visible{outline:3px solid #4b6bd6;outline-offset:2px}#fb-btn.drag{cursor:grabbing;transform:scale(1.15)}#fb-btn[hidden]{display:none}' +
+    /* calm mode: a 44 px target whose visible part is a pale 24 px tab on the edge; nothing moves, nothing glows */
+    '#fb-btn.q{width:44px;height:44px;border:0;border-radius:0;background:none;box-shadow:none;font-size:15px;opacity:.72;filter:grayscale(.55);transition:none}' +
+    '#fb-btn.q::before{content:"";position:absolute;z-index:-1;top:3px;bottom:3px;width:24px;background:rgba(255,255,255,.78);border:1px solid rgba(43,49,64,.2)}' +
+    '#fb-btn.q[data-side=r]{justify-content:flex-end;padding-right:4px}#fb-btn.q[data-side=r]::before{right:0;border-right:0;border-radius:10px 0 0 10px}' +
+    '#fb-btn.q[data-side=l]{justify-content:flex-start;padding-left:4px}#fb-btn.q[data-side=l]::before{left:0;border-left:0;border-radius:0 10px 10px 0}' +
+    '#fb-btn.q[data-side=f]::before{left:9px;right:9px;top:6px;bottom:6px;width:auto;border-radius:10px}' +
+    '#fb-btn.q:hover,#fb-btn.q:focus-visible,#fb-btn.q.drag{opacity:1;filter:none;transform:none}#fb-btn.q.away{opacity:0;pointer-events:none}#fb-btn.q.away:focus-visible{opacity:1;pointer-events:auto}' +
     '#fb-dlg :is(div,span,button,textarea,label,h3,p,input,audio,canvas,b){all:revert;box-sizing:border-box}' +
     '#fb-dlg [hidden]{display:none!important}#fb-dlg{position:fixed;inset:0;z-index:2147483150;display:flex;align-items:center;justify-content:center;background:rgba(20,16,40,.6);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;touch-action:manipulation;padding:8px;box-sizing:border-box}' +
     '#fb-dlg .card{background:#fffaf0;color:#3a2a17;border-radius:22px;padding:12px 14px;width:min(100%,440px);max-height:100%;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:9px;font-size:16px;line-height:1.3;text-align:start}' +
@@ -226,10 +241,13 @@
   function pageKey() { return location.pathname.split('/').pop() || 'index.html'; }
   function loadPos() { try { var p = JSON.parse(localStorage.getItem(KPOS) || '{}')[pageKey()]; if (p && p.length === 2 && isFinite(p[0]) && isFinite(p[1])) return p; } catch (e) {} return null; }
   function savePos(p) { try { var o = JSON.parse(localStorage.getItem(KPOS) || '{}'); if (!o || typeof o !== 'object') o = {}; o[pageKey()] = p; localStorage.setItem(KPOS, JSON.stringify(o)); } catch (e) {} }
+  function calm() { try { return localStorage.getItem('annabelle-calm') !== '0'; } catch (e) { return true; } }
+  var Q = false;                           // calm look in use (set when the button is made, follows the 'annabelle-calm' switch)
   function setXY(x, y) {
-    var m = 4, w = 36;
+    var m = Q ? 0 : 4, w = Q ? 44 : 36;
     x = Math.max(m, Math.min(innerWidth - w - m, x)); y = Math.max(m, Math.min(innerHeight - w - m, y));
     btn.style.left = Math.round(x) + 'px'; btn.style.top = Math.round(y) + 'px';
+    if (Q) btn.setAttribute('data-side', x <= 1 ? 'l' : x >= innerWidth - w - 1 ? 'r' : 'f');
   }
   function busyRects() {
     var out = [], list = document.querySelectorAll('button,a[href],input,select,textarea,[role=button],[onclick],.btn,.act,#pt-badge');
@@ -241,8 +259,52 @@
     }
     return out;
   }
-  function place() {
+  /* calm mode: what a 44 px tab at (x, y) would cover. 1000 per control, 40 per sampled point (of 9) on text,
+     30 on a canvas (+60 in its lower part, where touch controls live), 8 on a picture. 0 = free. */
+  function textAt(e, x, y) {
+    try {
+      for (var n = e.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType !== 3 || !/\S/.test(n.nodeValue)) continue;
+        var rg = document.createRange(); rg.selectNodeContents(n); var rs = rg.getClientRects();
+        for (var i = 0; i < rs.length; i++) if (x >= rs[i].left - 4 && x <= rs[i].right + 4 && y >= rs[i].top - 2 && y <= rs[i].bottom + 2) return true;
+      }
+    } catch (err) {}
+    return false;
+  }
+  function cover(x, y, hits) {
+    var w = 44, pad = 4, sc = 0, j;
+    for (j = 0; j < hits.length; j++) { var r = hits[j]; if (r.left < x + w + pad && r.right > x - pad && r.top < y + w + pad && r.bottom > y - pad) sc += 1000; }
+    var pts = [], o3 = [6, 22, 38]; for (j = 0; j < 9; j++) pts.push([x + o3[j % 3], y + o3[(j / 3) | 0]]);   // a 3 x 3 grid inside the target
+    for (j = 0; j < pts.length; j++) {
+      var px = Math.max(1, Math.min(innerWidth - 2, pts[j][0])), py = Math.max(1, Math.min(innerHeight - 2, pts[j][1])), els = [];
+      try { els = document.elementsFromPoint(px, py) || []; } catch (err) {}
+      for (var k = 0; k < els.length && k < 6; k++) {
+        var e = els[k]; if (e === btn || e.id === 'pt-badge' || (dlg && dlg.contains(e))) continue;
+        var tg = e.tagName, cs = getComputedStyle(e);
+        if (tg === 'CANVAS') { if (cs.pointerEvents === 'none' || e.id === 'vibe-bg' || +cs.opacity === 0) continue; var cr = e.getBoundingClientRect(); sc += 30 + (py > cr.top + cr.height * 0.6 ? 60 : 0); break; }   // effect layers (confetti, background) are not the game
+        if (tg === 'IMG' || tg === 'VIDEO' || tg === 'svg' || tg === 'SVG') { sc += 8; break; }
+        if (textAt(e, px, py)) { sc += 40; break; }
+        if (cs.pointerEvents === 'none') continue;           // overlays that let taps through: look below them
+        if (tg === 'HTML' || tg === 'BODY') break;
+        var bg = cs.backgroundColor; if (cs.backgroundImage !== 'none' || (bg && bg !== 'transparent' && !/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg))) break; // an opaque box hides what is below
+      }
+    }
+    return sc;
+  }
+  function placeCalm(force) {
+    var vw = innerWidth, vh = innerHeight, w = 44, hits = busyRects();
+    if (userPos) { setXY(userPos[0] * vw - 22, userPos[1] * vh - 22); return; }
+    if (!force && btn.style.left) { if (cover(btn.offsetLeft, btn.offsetTop, hits) < 40) return; }   // it stays where it is unless it now covers something
+    var ys = [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.8, 0.12, 0.9], rtl = (document.documentElement.getAttribute('dir') || '') === 'rtl', best = null, bs = 1e9;
+    for (var i = 0; i < ys.length; i++) for (var s2 = 0; s2 < 2; s2++) {
+      var x = (s2 === 0) === rtl ? 0 : vw - w, y = Math.round(ys[i] * vh - 22), sc = cover(x, y, hits) + i * 2 + s2;   // the end side first (left in Hebrew): the home / back buttons sit at the start side
+      if (sc < bs) { bs = sc; best = [x, y]; }
+    }
+    setXY(best[0], best[1]);
+  }
+  function place(force) {
     if (!btn || btn.hidden || btn.classList.contains('drag')) return;
+    if (Q) return placeCalm(force === true);
     if (userPos) return setXY(userPos[0] * innerWidth - 18, userPos[1] * innerHeight - 18);
     var vw = innerWidth, vh = innerHeight, m = 4, w = 36, R = vw - w - m, B = vh - w - m, hits = busyRects(), pad = 6;
     var ys = [0.5, 0.38, 0.62, 0.27, 0.73, 0.16, 0.84], cand = [], i;
@@ -257,10 +319,50 @@
   }
   var placeT = 0;
   function placeSoon(ms) { clearTimeout(placeT); placeT = setTimeout(place, ms || 60); }
+
+  /* ---------- calm mode: away while a game is played, back at a pause ---------- */
+  var playing = false, lastNear = 0, lastInput = 0, awayT = 0, lp = null, scrolled = false;
+  function isAway() { return !!btn && btn.classList.contains('away'); }
+  function back() { clearTimeout(awayT); if (btn && isAway()) { btn.classList.remove('away'); if (Q) place(); } }
+  function away() { if (btn && Q && playing && !dlg && !opening && !btn.classList.contains('drag') && document.activeElement !== btn) btn.classList.add('away'); }
+  function awaySoon() { clearTimeout(awayT); if (!Q || !playing) return; awayT = setTimeout(function () { if (Date.now() - lastNear >= 3900) away(); else awaySoon(); }, 4000); }
+  function near(e) { if (!btn) return false; var r = btn.getBoundingClientRect(); return e.clientX > r.left - 70 && e.clientX < r.right + 70 && e.clientY > r.top - 70 && e.clientY < r.bottom + 70; }
+  function setPlaying(on) { if (playing === !!on) { if (on && !isAway()) awaySoon(); return; } playing = !!on; if (playing) awaySoon(); else back(); }
+  function onInput(e) {                  // every pointerdown / keydown of the page (capture phase)
+    var now = Date.now(), t = e.target; lastInput = now;
+    if (btn && (t === btn || (e.type === 'pointerdown' && near(e)))) { lastNear = now; return; }
+    if (!Q || dlg) return;
+    if (e.type === 'keydown') {
+      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P' || e.key === 'Pause') { setPlaying(false); return; }
+      if (e.key === 'Tab') return;
+    }
+    var onCanvas = t && t.tagName === 'CANVAS';
+    if (e.type === 'keydown' && !onCanvas && /^(Arrow|[wasdWASD ]$)/.test(e.key || '')) { var c = document.querySelector('canvas'); if (c) { var cr = c.getBoundingClientRect(); onCanvas = cr.width * cr.height > innerWidth * innerHeight * 0.2; } }
+    if (onCanvas && !playing) { playing = true; }                                         // no signal from the page: playing on a canvas counts
+    if (playing && !isAway() && now - lastNear >= 4000) away();
+    if (e.type === 'pointerdown') {     // a long press on an empty part of the page brings the tab back
+      clearTimeout(lp && lp.h); lp = null;
+      if (isAway() && t && t.closest && !t.closest('canvas,button,a,input,select,textarea,[role=button],[onclick]')) { var x0 = e.clientX, y0 = e.clientY; lp = {x: x0, y: y0, h: setTimeout(function () { lp = null; lastNear = Date.now(); back(); awaySoon(); }, 700)}; }
+    }
+  }
+  function lpEnd(e) { if (lp && (e.type !== 'pointermove' || Math.abs(e.clientX - lp.x) + Math.abs(e.clientY - lp.y) > 12)) { clearTimeout(lp.h); lp = null; } }
+  function watch() {
+    window.addEventListener('annabelle-play', function (e) { setPlaying(!!(e && e.detail && e.detail.on)); });
+    window.addEventListener('pointerdown', onInput, true); window.addEventListener('keydown', onInput, true);
+    ['pointerup', 'pointercancel', 'pointermove'].forEach(function (ev) { window.addEventListener(ev, lpEnd, true); });
+    window.addEventListener('blur', function () { if (Q) setPlaying(false); });
+    document.addEventListener('visibilitychange', function () { if (Q) setPlaying(false); });
+    window.addEventListener('scroll', function () { var y = window.pageYOffset || 0; if (y > 40) scrolled = true; else if (y <= 2 && scrolled) { scrolled = false; if (Q) { lastNear = Date.now(); back(); awaySoon(); } } }, {passive: true});
+    setInterval(function () { if (Q && isAway() && Date.now() - lastInput > 8000) { lastNear = Date.now() - 2000; back(); playing = false; } }, 1000);   // idle: the kid stopped playing
+    function mode() { var q = calm(); if (!btn || q === Q) return; Q = q; btn.classList.toggle('q', Q); btn.classList.remove('away'); btn.removeAttribute('data-side'); btn.style.left = btn.style.top = ''; playing = false; place(true); }
+    window.addEventListener('annabelle-calm', mode);
+    window.addEventListener('storage', function (e) { if (e.key === 'annabelle-calm') mode(); });
+  }
   function makeButton() {
     if (btn || !document.body) return;
     var st = el('style', {id: 'fb-style'}); st.textContent = css; (document.head || document.documentElement).appendChild(st);
     btn = el('button', {id: 'fb-btn', type: 'button', 'aria-label': t('btn'), title: t('btn') + ' (F8)', 'data-html2canvas-ignore': 'true'}, '🐞');
+    Q = calm(); if (Q) btn.className = 'q';
     userPos = loadPos();
     document.body.appendChild(btn);
     var down = null;
@@ -279,17 +381,21 @@
       try { btn.releasePointerCapture(e.pointerId); } catch (err) {}
       if (d.moved) {
         btn.classList.remove('drag'); btn._drag = Date.now();
-        userPos = [(btn.offsetLeft + 18) / innerWidth, (btn.offsetTop + 18) / innerHeight]; savePos(userPos);
+        var h = Q ? 22 : 18;
+        if (Q) { if (btn.offsetLeft < 30) setXY(0, btn.offsetTop); else if (btn.offsetLeft > innerWidth - 74) setXY(innerWidth, btn.offsetTop); }   // near a side: back to a tab on that edge
+        userPos = [(btn.offsetLeft + h) / innerWidth, (btn.offsetTop + h) / innerHeight]; savePos(userPos);
       }
     }
     btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up);
     btn.addEventListener('click', function (e) { e.preventDefault(); if (btn._drag && Date.now() - btn._drag < 400) return; open(); });
     btn.addEventListener('keydown', function (e) { e.stopPropagation(); }); btn.addEventListener('keyup', function (e) { e.stopPropagation(); });
+    btn.addEventListener('focus', function () { lastNear = Date.now(); back(); });
     shield(btn);
-    place(); placeSoon(600); setTimeout(place, 2000);
-    window.addEventListener('resize', function () { placeSoon(80); });
+    place(true); placeSoon(600); setTimeout(place, 2000);
+    window.addEventListener('resize', function () { if (Q && !userPos && btn) btn.style.left = ''; placeSoon(80); });
     document.addEventListener('click', function () { placeSoon(450); }, true);
     window.addEventListener('storage', function (e) { if (e.key === 'annabelle-lang' && btn) { btn.setAttribute('aria-label', t('btn')); btn.title = t('btn') + ' (F8)'; } });
+    watch();
   }
 
   /* ---------- the dialog ---------- */
@@ -300,7 +406,7 @@
     var steps = []; try { steps = K.trail ? K.trail() : []; } catch (e) {}
     var state = null; try { state = hookState(); } catch (e) {}
     ctx = {steps: steps, hook: state, vw: innerWidth, vh: innerHeight, focus: document.activeElement, shot: null};
-    if (btn) { btn.textContent = '⏳'; btn.classList.add('drag'); }
+    if (btn) { btn.textContent = '⏳'; btn.classList.add('drag'); btn.classList.remove('away'); }
     capture().then(function (c) { ctx.shot = c; }, function () {}).then(function () {
       opening = false;
       if (btn) { btn.textContent = '🐞'; btn.classList.remove('drag'); btn.hidden = true; }
@@ -317,8 +423,8 @@
     if (dlg._url) try { URL.revokeObjectURL(dlg._url); } catch (e) {}
     clearTimeout(dlg._auto);
     dlg.remove(); dlg = null;
-    if (btn) { btn.hidden = false; place(); }
-    var f = ctx && ctx.focus; ctx = null;
+    if (btn) { btn.hidden = false; lastNear = Date.now(); place(); awaySoon(); }
+    var f = ctx && ctx.focus; ctx = null; if (Q && f === btn) f = null;   // calm: the tab does not keep the keyboard, so it can step aside again
     try { if (f && f.focus && f !== document.body && document.contains(f)) f.focus(); else if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
   }
   function focusables() { return dlg ? [].slice.call(dlg.querySelectorAll('button,textarea,input,audio[controls]')).filter(function (e) { return !e.disabled && e.offsetParent !== null; }) : []; }

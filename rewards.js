@@ -42,6 +42,12 @@
      ENOUGH:   coins from play are capped per game per day (80) and per day overall (little 200, kid / teen 800: only marathon play ever meets it);
                reaching a cap says kindly, once, that it is plenty for today. More play then earns nothing, so there is no reason to grind.
                learnToday() -> {sec, min, goal, done}: visible, active time on the learning pages today (soft goal 10 min for little / kid; never a deficit).
+     CALM MODE (docs/CALM-UI.md; localStorage 'annabelle-calm' !== '0', the default):  quiet() -> bool.  In calm mode flush() shows at most ONE small,
+               still banner at a time and only for a new sticker / badge / level / pet stage (two per flush, the second one is "and N more");
+               coins, quests, streaks, caps ... are not shown as banners. In BOTH modes every message is kept in a small list inside the save
+               ('news': the last 20, sanitised like 'pend'):  news() -> [{t, e, title, text, at, seen, pending, important}] newest first (plain text,
+               in the current language; pending = not flushed yet),  newsSeen() marks them as read and returns how many were unread.
+               window event 'annabelle-play' {detail:{on:bool, game}}: on = a run started (award event 'play'), off = flush() (result / menu).
      TELEMETRY (KidApp.track('meta', {k, ...}), numbers and fixed words only): streak chest badge boost pet level, plus
                streak_break {len} · streak_back {gap} · open {what, band} (opened(what): journey album badges pet road missions) · choice {what, v} · cap {kind}.
    ───────────────────────────────────────────────────────────────────────────────────────── */
@@ -120,7 +126,7 @@
       daily: {last: '', streak: 0, best: 0, count: 0, days: []}, own: {}, av: {color: 'orange', hat: '', bow: '', glass: '', bg: 'sky'}, pend: [],
       lv: 1, rec: [], q: {day: '', ids: [], off: [], n: 3, sw: 0, pk: 0, g: {}, c: {}, done: {}, all: false}, ch: [],
       mv: 0, ps: {last: '', n: 0, best: 0, sh: '', sd: '', ms: {}, bk: 0, wb: ''}, wk: {id: '', xp: 0, cl: {}, rc: null}, bo: {until: 0, d: {}}, bd: {}, ti: '', pet: {k: 'cat', fed: '', pat: '', n: 0, st: -1},
-      band: '', wg: 'r', lt: {d: '', s: 0}};
+      band: '', wg: 'r', lt: {d: '', s: 0}, news: [], ns: 0};
   }
   var S = null;
   function sane(o) { // accept anything from localStorage, rebuild a valid state
@@ -139,8 +145,9 @@
       if (o.own && typeof o.own === 'object') for (var i in o.own) if (SHOP_BY[i] && o.own[i]) f.own[i] = 1;
       var a = o.av && typeof o.av === 'object' ? o.av : {};
       ['color', 'hat', 'bow', 'glass', 'bg'].forEach(function (p) { var v = a[p]; if (v === '' || (typeof v === 'string' && SHOP_BY[p + ':' + v] && (f.own[p + ':' + v] || SHOP_BY[p + ':' + v].price === 0))) f.av[p] = v; });
-      if (Array.isArray(o.pend)) f.pend = o.pend.filter(function (p) { return p && (p.t === 'sticker' && STK_BY[p.id] || p.t === 'coins' && isNum(p.n) || p.t === 'level' && isNum(p.n) || p.t === 'quest' && QUEST_BY[p.id] || p.t === 'qall' || p.t === 'chal' && isGame(p.g) && typeof p.n === 'string' ||
-        (p.t === 'streak' || p.t === 'ms' || p.t === 'pet' || p.t === 'road' || p.t === 'back') && isNum(p.n) || p.t === 'boost' || p.t === 'cap' && (p.k === 'g' || p.k === 'd') || p.t === 'badge' && BADGE_BY[p.id] && isNum(p.n)); }).slice(-30);
+      if (Array.isArray(o.pend)) f.pend = o.pend.filter(pendOk).slice(-30);
+      if (Array.isArray(o.news)) f.news = o.news.map(function (p) { return newsClean(p, p && p.at); }).filter(Boolean).slice(-NEWS_MAX); // the small "news" list: rebuilt field by field
+      f.ns = clampInt(o.ns, 0, 1e13);
       // platform layer: player level, recently played, daily quests, friend challenges
       f.lv = clampInt(o.lv, 0, 9999) || levelOf(f.earned);
       if (Array.isArray(o.rec)) f.rec = o.rec.filter(function (g, i, r) { return isGame(g) && g !== 'retro' && r.indexOf(g) === i; }).slice(0, 8);
@@ -156,6 +163,21 @@
       saneMeta(f, o, s);
     } catch (e) { return fresh(); }
     return f;
+  }
+  function pendOk(p) {
+    return !!(p && (p.t === 'sticker' && STK_BY[p.id] || p.t === 'coins' && isNum(p.n) || p.t === 'level' && isNum(p.n) || p.t === 'quest' && QUEST_BY[p.id] || p.t === 'qall' || p.t === 'chal' && isGame(p.g) && typeof p.n === 'string' ||
+      (p.t === 'streak' || p.t === 'ms' || p.t === 'pet' || p.t === 'road' || p.t === 'back') && isNum(p.n) || p.t === 'boost' || p.t === 'cap' && (p.k === 'g' || p.k === 'd') || p.t === 'badge' && BADGE_BY[p.id] && isNum(p.n)));
+  }
+  var NEWS_MAX = 20;
+  function newsClean(p, at) { // one entry of the news list: only known fields, bounded
+    if (!pendOk(p)) return null;
+    var o = {t: p.t, at: clampInt(at, 0, 1e13)};
+    if (p.t === 'sticker' || p.t === 'quest' || p.t === 'badge') o.id = p.id;
+    if (p.t === 'chal') { o.g = p.g; o.n = cleanName(p.n) || '?'; if (p.c === 0) o.c = 0; }
+    else if (isNum(p.n)) o.n = clampInt(p.n, 0, 1e7);
+    if (p.t === 'cap') o.k = p.k;
+    if (p.t === 'streak' && p.sh) o.sh = 1;
+    return o;
   }
   var DAY_RE = /^\d{4}-\d{1,2}-\d{1,2}$/, WK_RE = /^\d{4}-W\d{2}$/;
   var MAST = {mathquest: 1, wordcity: 1, sciencelab: 1, thinking: 1, reading: 1, bagrut: 1}, SKILL_RE = /^[a-z0-9_.-]{1,24}$/i; // learning games that can show mastery
@@ -784,7 +806,7 @@
       if (!o || typeof o !== 'object') return {coins: 0, stickers: []};
       var game = typeof o.game === 'string' && /^[a-z0-9_-]{1,30}$/i.test(o.game) && !(o.game in Object.prototype) ? o.game : 'misc', ev = String(o.event || 'play'), c = 0;
       var st = S.stats, td = today(), first = !st.plays[game], real = isGame(game) && game !== 'retro', boosted = boostLeft() > 0, xp0 = S.earned, co0 = S.coins;
-      if (ev === 'play' || ev === 'firstPlay') { st.plays[game] = (st.plays[game] || 0) + 1; }
+      if (ev === 'play' || ev === 'firstPlay') { st.plays[game] = (st.plays[game] || 0) + 1; signal(true, game); }
       else if (ev === 'win') { st.wins[game] = (st.wins[game] || 0) + 1; st.winsTotal++; c = DEFAULT_COINS.win; if (real && (o.online === true || window.__arOnline === true)) st.onl++; }
       else if (ev === 'levelClear') { if (isNum(o.level)) st.levelMax = Math.max(st.levelMax, clampInt(o.level, 0, 9999)); c = DEFAULT_COINS.levelClear; if (!st.plays[game]) st.plays[game] = 1; if (LEARN[game]) st.lrn++; }
       else if (ev === 'star') { var n = clampInt(o.stars, 0, 3); if (n > 0) { st.stars[game] = (st.stars[game] || 0) + n; st.starsTotal += n; if (LEARN[game]) st.lrn += n; c = 2 * n; if (n === 3) { st.perfects++; c += 5; if (MAST[game]) st.m3[game] = (st.m3[game] || 0) + 1; } } }
@@ -957,6 +979,10 @@
     st.textContent = '.ar-toast{position:fixed;left:50%;width:max-content;top:max(10px,env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:2147482000;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:min(92vw,420px);' +
       'padding:10px 18px 10px 14px;border-radius:26px;background:linear-gradient(135deg,#fff7d6,#ffe1f0);border:3px solid #ffb84d;box-shadow:0 8px 0 #0002,0 10px 24px #0004;color:#5b3b8c;font:800 17px/1.15 Rubik,"Varela Round",Arial,sans-serif;opacity:0;transition:transform .45s cubic-bezier(.2,1.4,.4,1),opacity .25s}' +
       '.ar-toast.on{transform:translate(-50%,0);opacity:1}.ar-toast .e{font-size:38px;line-height:1;filter:drop-shadow(0 2px 0 #0002)}.ar-toast small{display:block;font-size:13px;font-weight:700;opacity:.8}' +
+      /* calm mode: one small still card, top or bottom edge (data-at), a short fade and nothing else */
+      '.ar-toast.q{top:auto;bottom:auto;transform:translateX(-50%);gap:10px;max-width:min(92vw,360px);padding:8px 14px;border-radius:14px;background:#fff;border:1px solid #e3ded4;box-shadow:0 2px 8px #2b314022;color:#2b3140;font-weight:600;font-size:15px;line-height:1.3;transition:opacity .15s linear}' +
+      '.ar-toast.q.on{transform:translateX(-50%)}.ar-toast.q[data-at=top]{top:max(10px,env(safe-area-inset-top))}.ar-toast.q[data-at=bottom]{bottom:max(10px,env(safe-area-inset-bottom))}' +
+      '.ar-toast.q .e{font-size:22px;filter:none}.ar-toast.q small{font-size:13px;font-weight:500;color:#5a6272;opacity:1}' +
       '.ar-toast.tn{background:#1f1a44f5;color:#fff;border:2px solid #8f7bff;border-radius:16px;box-shadow:0 8px 24px #0006;font-weight:700;font-size:16px;transition:transform .3s ease,opacity .25s}.ar-toast.tn .e{font-size:28px;filter:none}';
     document.head.appendChild(st);
   }
@@ -980,14 +1006,103 @@
     void toastEl.offsetWidth; toastEl.classList.add('on');
     setTimeout(function () { toastEl.classList.remove('on'); setTimeout(cb, 500); }, ms);
   }
+  /* ---------- calm mode (docs/CALM-UI.md): the quiet banner, the play signal, the news list ---------- */
+  function quiet() { return lsGet('annabelle-calm') !== '0'; }
+  function signal(on, game) { try { window.dispatchEvent(new CustomEvent('annabelle-play', {detail: {on: !!on, game: game || ''}})); } catch (e) {} }
+  function busyAt(r) { // how many controls of the page a banner at rect r would sit on
+    var n = 0, list = document.querySelectorAll('button,a[href],input,select,textarea,[role=button],[onclick]');
+    for (var i = 0; i < list.length; i++) {
+      var b = list[i].getBoundingClientRect(); if (b.width < 2 || b.height < 2 || b.bottom <= r.top || b.top >= r.bottom || b.right <= r.left || b.left >= r.right) continue;
+      var cs = getComputedStyle(list[i]); if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+      n++;
+    }
+    return n;
+  }
+  function showQuiet(d, ms, cb) { // d = {e, a, b} plain text; built with textContent only
+    addStyle();
+    if (!toastEl) { toastEl = document.createElement('div'); toastEl.setAttribute('role', 'status'); toastEl.setAttribute('aria-live', 'polite'); document.body.appendChild(toastEl); }
+    toastEl.dir = lang() === 'he' ? 'rtl' : 'ltr'; toastEl.className = 'ar-toast q'; toastEl.textContent = '';
+    var e = document.createElement('span'); e.className = 'e'; e.setAttribute('aria-hidden', 'true'); e.textContent = d.e;
+    var tx = document.createElement('span'); tx.appendChild(document.createTextNode(d.a));
+    if (d.b) { var sm = document.createElement('small'); sm.textContent = d.b; tx.appendChild(sm); }
+    toastEl.appendChild(e); toastEl.appendChild(tx);
+    var at = 'top';
+    try { toastEl.setAttribute('data-at', 'top'); var n1 = busyAt(toastEl.getBoundingClientRect()); if (n1) { toastEl.setAttribute('data-at', 'bottom'); if (busyAt(toastEl.getBoundingClientRect()) < n1) at = 'bottom'; } } catch (x) {}
+    toastEl.setAttribute('data-at', at);
+    void toastEl.offsetWidth; toastEl.classList.add('on');
+    setTimeout(function () { toastEl.classList.remove('on'); setTimeout(cb, 200); }, ms);
+  }
+  var NEWS_IMP = {sticker: 1, badge: 1, level: 1, pet: 1}, NEWS_LITTLE = {sticker: 1, badge: 1, pet: 1, quest: 1, qall: 1, road: 1, back: 1, cap: 1};
+  function describe(p, little) { // {e, a, b} in plain text for one message; null = nothing to say in this band
+    var t = p.t, n = clampInt(p.n, 0, 1e7);
+    if (little && (!NEWS_LITTLE[t] || t === 'badge' && !(BADGE_BY[p.id] && BADGE_BY[p.id].m) || t === 'cap' && p.k !== 'd')) return null;
+    if (t === 'sticker') { var s = STK_BY[p.id]; return s ? {e: s.e, a: T(TXT.new), b: T(s.n)} : null; }
+    if (t === 'coins') return n > 0 ? {e: '💰', a: '+' + n + ' ' + T(TXT.coins), b: ''} : null;
+    if (t === 'level') { var L = Math.max(1, n), r = rankOf(L); return {e: r[1], a: T(TXT.level).replace('{n}', L), b: T(r[2])}; }
+    if (t === 'quest') { var q = QUEST_BY[p.id]; return q ? {e: '✅', a: T(little ? TXT.questL : TXT.quest), b: T(q.t)} : null; }
+    if (t === 'qall') return {e: little ? '✅' : '🎉', a: T(little ? TXT.questL : TXT.qall), b: ''};
+    if (t === 'chal') return isGame(p.g) ? {e: '🏆', a: T(TXT.chal).replace('{n}', cleanName(p.n) || '?'), b: gname(p.g)} : null;
+    if (t === 'streak') return {e: '🔥', a: T(TXT.streak).replace('{n}', n), b: T(p.sh ? TXT.shield : TXT.streakS)};
+    if (t === 'ms') { var mc = 0; STREAK_MS.forEach(function (m) { if (m[0] === n) mc = m[1]; }); return {e: '🔥', a: T(TXT.ms).replace('{n}', n), b: mc ? '💰 +' + mc : ''}; }
+    if (t === 'back') return little ? {e: '🐾', a: T(TXT.backL), b: ''} : {e: '👋', a: T(TXT.back), b: T(TXT.backS).replace('{n}', Math.max(1, n))};
+    if (t === 'cap') return little ? {e: '🌙', a: T(TXT.capL), b: T(TXT.capLS)} : p.k === 'd' ? {e: '🌙', a: T(TXT.capD).replace(/ 🌙$/, ''), b: T(TXT.capDS)} : {e: '👏', a: T(TXT.capG).replace(/ 👏$/, ''), b: T(TXT.capGS)};
+    if (t === 'badge') {
+      var B = BADGE_BY[p.id], tr = clampInt(p.n, 1, 3); if (!B) return null;
+      return B.m ? {e: B.e, a: TG(TXT.mast), b: T(B.d).replace('{n}', B.th[tr - 1]) + (isGame(B.m) ? ' · ' + gname(B.m) : '') + ' ' + MEDAL[tr]} : {e: B.e, a: T(TXT.badge), b: TG(B.n) + ' ' + MEDAL[tr]};
+    }
+    if (t === 'boost') return {e: '🧠', a: T(TXT.boost), b: T(TXT.boostS).replace('{n}', BOOST_MS / 60000)};
+    if (t === 'pet') return {e: n === 1 ? '🐣' : '🐾', a: T(n === 1 ? TXT.petH : TXT.pet), b: T(PET_N[S.pet.k][Math.min(n, PET_XP.length - 1)])};
+    if (t === 'road') return little ? {e: '🎁', a: T(TXT.roadL), b: ''} : {e: '🎁', a: T(TXT.road), b: T(TXT.roadS)};
+    return null;
+  }
+  function noteNews(p) { // append one message to the news list (coins of the same day are summed, a level is listed once)
+    var o = newsClean(p, nowMs()); if (!o) return;
+    var last = S.news[S.news.length - 1];
+    if (o.t === 'coins') {
+      if (o.n < 1) return;
+      for (var i = S.news.length - 1; i >= 0; i--) if (S.news[i].t === 'coins') { if (dayKey(new Date(S.news[i].at)) === dayKey(new Date(o.at))) { o.n = clampInt(S.news[i].n + o.n, 0, 1e7); S.news.splice(i, 1); } break; }
+    }
+    if (o.t === 'level' && S.news.some(function (x) { return x.t === 'level' && x.n === o.n; })) return;
+    if (o.t === 'cap' && last && last.t === 'cap' && last.k === o.k) { last.at = o.at; return; }
+    S.news.push(o); if (S.news.length > NEWS_MAX) S.news = S.news.slice(-NEWS_MAX);
+  }
+  var heldQ = [];                        // calm banners that waited for a level card (this page view only; they are in the news anyway)
+  function runQuiet(qi, little) {
+    if (!qi.length) return false;
+    if (little) qi = qi.slice(0, 1);
+    else if (qi.length > 2) qi = [qi[0], {e: '📰', a: T(TXT.more).replace('{n}', qi.length - 1).replace(/^[a-z]/, function (m) { return m.toUpperCase(); }), b: ''}];
+    flushing = true;
+    (function nextQ(i) { if (i >= qi.length) { flushing = false; if (reflush) { reflush = false; flush(); } return; } showQuiet(qi[i], little ? 3800 : 3400, function () { nextQ(i + 1); }); })(0);
+    return true;
+  }
+  function news() {
+    if (!S) load();
+    var little = band() === 'little', out = [], coins = 0, at = nowMs();
+    function put(p, pending) {
+      var d = describe(p, little); if (!d) return;
+      out.push({t: p.t, e: d.e, title: d.a, text: d.b || '', at: p.at, seen: !pending && p.at <= S.ns, pending: !!pending, important: !!NEWS_IMP[p.t]});
+    }
+    S.news.forEach(function (p) { put(p, false); });
+    S.pend.forEach(function (p) { if (p.t === 'coins') { coins += clampInt(p.n, 0, 1e7); return; } if (p.t === 'level' && S.news.some(function (x) { return x.t === 'level' && x.n === p.n; })) return; var o = newsClean(p, at); if (o) put(o, true); });
+    if (coins > 0) put({t: 'coins', n: coins, at: at}, true);
+    return out.reverse();
+  }
+  function newsSeen() {
+    if (!S) load();
+    var n = S.news.filter(function (p) { return p.at > S.ns; }).length, top = S.news.reduce(function (m, p) { return Math.max(m, p.at); }, 0);
+    if (top > S.ns) { S.ns = top; save(); }
+    return n;
+  }
   function flush() {
     try {
       if (!S) load();
-      if (!S.pend.length || !document.body) return false;
+      signal(false);
+      if (!S.pend.length || !document.body) { if (heldQ.length && document.body && !flushing && quiet()) { var hq = heldQ; heldQ = []; return runQuiet(hq, band() === 'little'); } return false; }
       var J = window.Juice, home = /(^|\/)(index\.html)?$/.test(location.pathname), bd = band(), little = bd === 'little', jl = !!(J && typeof J.levelUp === 'function') && !home && !little;
-      if (little && S.pend.some(function (p) { return p.t === 'level'; })) { S.pend = S.pend.filter(function (p) { return p.t !== 'level'; }); save(); if (!S.pend.length) return false; } // little band: the pet growing is the celebration
-      if (flushing && !(jl && S.pend.every(function (p) { return p.t === 'level'; }))) { reflush = true; return false; } // shown right after the banners that are on screen
-      if (jl && S.pend.every(function (p) { return p.t === 'level'; })) { try { J.levelUp(S.pend.reduce(function (m, p) { return Math.max(m, clampInt(p.n, 1, 9999)); }, 1)); } catch (e) {} return false; }
+      if (little && S.pend.some(function (p) { return p.t === 'level'; })) { S.pend.forEach(function (p) { if (p.t === 'level') noteNews(p); }); S.pend = S.pend.filter(function (p) { return p.t !== 'level'; }); save(); if (!S.pend.length) return false; } // little band: the pet growing is the celebration
+      var lvOnly = jl && !quiet() && S.pend.every(function (p) { return p.t === 'level'; }); // (calm mode: a level is a quiet banner like the others, see below)
+      if (flushing && !lvOnly) { reflush = true; return false; } // shown right after the banners that are on screen
+      if (lvOnly) { try { J.levelUp(S.pend.reduce(function (m, p) { return Math.max(m, clampInt(p.n, 1, 9999)); }, 1)); } catch (e) {} return false; }
       var q = S.pend.slice(), coins = 0, stk = [], pre = [], lvMax = 0, qs = [], qall = false, chs = [], sk = null, msN = 0, bdg = [], bst = false, petN = -1, roadN = 0, bk = null, capK = '';
       q.forEach(function (p) {
         if (p.t === 'coins') coins += p.n;
@@ -1042,7 +1157,20 @@
         if (capK) { if (pre.length >= max) pre.length = max - 1; pre.push(one(capK === 'd' ? '🌙' : '👏', T(capK === 'd' ? TXT.capD : TXT.capG).replace(/ (👏|🌙)$/, ''), T(capK === 'd' ? TXT.capDS : TXT.capGS))); }
       }
       // the home page celebrates a new level with its own sheet; elsewhere juice.js does (it keeps the entry until it could show it)
+      q.forEach(function (p) { if (p.t !== 'coins' && p.t !== 'level') noteNews(p); }); if (lvMax) noteNews({t: 'level', n: lvMax}); if (coins > 0) noteNews({t: 'coins', n: coins});
       S.pend = lvMax && jl ? [{t: 'level', n: lvMax}] : []; save();
+      var calm = quiet(), qi = [];
+      if (calm) { // calm mode: only what matters (a sticker, a badge, a level, the pet), small and one at a time; everything else stays in news()
+        stk.forEach(function (s) { qi.push(describe({t: 'sticker', id: s.id}, little)); });
+        bdg.forEach(function (p) { qi.push(describe(p, little)); });
+        // the level: juice.js is asked first. In calm mode it shows no card over a game (it returns false): then the level is one of the quiet banners.
+        // If a card of juice.js did open, one thing at a time: the banners wait for the next pause of this page view (they are in news() anyway).
+        var lvCard = false; if (lvMax && jl) { try { lvCard = J.levelUp(lvMax) !== false; } catch (e) {} }
+        if (lvMax && !little && !home && !lvCard && !document.querySelector('.lvup,#jz-lv')) { qi.unshift(describe({t: 'level', n: lvMax}, false)); if (jl && S.pend.length) { S.pend = S.pend.filter(function (p) { return p.t !== 'level'; }); save(); } } // said once
+        if (petN >= 0 && !home) qi.push(describe({t: 'pet', n: petN}, little));
+        qi = heldQ.concat(qi.filter(Boolean)); heldQ = [];
+        if (lvCard) { heldQ = qi; qi = []; }
+      }
       if (pre.length > max) pre.length = max;
       if (!little) {
         stk.slice(0, 3).forEach(function (s) { items.push(one(s.e, T(TXT.new), T(s.n))); });
@@ -1051,7 +1179,8 @@
         else if (items.length && coins >= 3) items[0] = items[0].replace('</small>', ' · 💰 +' + coins + '</small>');
       }
       items = pre.concat(items);
-      emit({t: 'flush', band: bd, level: little ? 0 : lvMax, quests: qs.length, qall: qall, streak: sk && !little ? sk.n : 0, back: !!bk, milestone: little ? 0 : msN, badges: little ? bdg.filter(function (p) { return BADGE_BY[p.id].m; }).length : bdg.length, boost: bst && !little, pet: petN, road: roadN, stickers: stk.length, coins: little ? 0 : coins, cap: capK, toasts: items.length});
+      emit({t: 'flush', band: bd, level: little ? 0 : lvMax, quests: qs.length, qall: qall, streak: sk && !little ? sk.n : 0, back: !!bk, milestone: little ? 0 : msN, badges: little ? bdg.filter(function (p) { return BADGE_BY[p.id].m; }).length : bdg.length, boost: bst && !little, pet: petN, road: roadN, stickers: stk.length, coins: little ? 0 : coins, cap: capK, toasts: calm ? Math.min(qi.length, little ? 1 : 2) : items.length, quiet: calm});
+      if (calm) return runQuiet(qi, little);
       if (lvMax && jl) { try { J.levelUp(lvMax); } catch (e) {} }
       if (!items.length) return false;
       flushing = true; if (!(J && J.sfx)) chime();
@@ -1105,7 +1234,8 @@
     learnToday: learnToday, stars: function () { if (!S) load(); return S.stats.starsTotal; }, _learnAdd: learnAdd,
     pet: pet, petCare: petCare, petKind: petKind, petSVG: petSVG, rankOf: function (L) { var r = rankOf(clampInt(L, 1, 9999)); return {level: r[0], e: r[1], title: T(r[2])}; },
     pending: function (t) { if (!S) load(); return S.pend.filter(function (p) { return !t || p.t === t; }).map(function (p) { return JSON.parse(JSON.stringify(p)); }); },
-    ackLevel: function () { if (!S) load(); var k = S.pend.length; S.pend = S.pend.filter(function (p) { return p.t !== 'level'; }); if (S.pend.length !== k) save(); },
+    ackLevel: function () { if (!S) load(); var k = S.pend.length; S.pend.forEach(function (p) { if (p.t === 'level') noteNews(p); }); S.pend = S.pend.filter(function (p) { return p.t !== 'level'; }); if (S.pend.length !== k) save(); },
+    quiet: quiet, news: news, newsSeen: newsSeen,
     _reload: function () { load(); }, _reset: function () { S = fresh(); save(); }
   };
   load();
@@ -1116,7 +1246,7 @@
     // inside a game: remind the player of a friend's open challenge for this game (never blocks play)
     try {
       var c = isGame(id) && S ? S.ch.filter(function (x) { return x.g === id && !x.won; })[0] : null;
-      if (c) setTimeout(function () { if (!flushing && document.body) showToast('<span class="e">⚔️</span><span>' + T(TXT.chalGo).replace('{n}', escH(cleanName(c.n))) + '<small>' + c.s + ' ' + T(TXT.pts) + '</small></span>', 3400, function () {}); }, 1600);
+      if (c && !quiet()) setTimeout(function () { if (!flushing && document.body) showToast('<span class="e">⚔️</span><span>' + T(TXT.chalGo).replace('{n}', escH(cleanName(c.n))) + '<small>' + c.s + ' ' + T(TXT.pts) + '</small></span>', 3400, function () {}); }, 1600);
     } catch (e) {}
   }
   window.addEventListener('pageshow', function (e) { if (e.persisted) { load(); listeners.forEach(function (f) { try { f(); } catch (x) {} }); } }, true);
