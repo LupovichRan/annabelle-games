@@ -63,6 +63,88 @@ and has a "don't send the picture" box).
     (`window.__<page>.state()`), trimmed to a few KB, as it was just before the dialog opened.
   - `ver` = the service-worker cache name (same as `VERSION` in `sw.js`), or `dev` when no service worker is installed yet.
 
+## Online play diagnostics (event `net`)
+Sent by `net1v1.js` (every online 1-v-1 game) and `joincode.js` (the 🔑 on the home page) at each stage of getting two phones
+together, so a failed connection tells **where** it stopped. Anonymous: fixed words and small numbers only, **never** a room code,
+the link secret, the game secret, a peer id, an IP address / ICE candidate or a name (text values are cut down to letters, `_ , -`).
+At most 40 `net` events per page view (+8 kept in reserve for `ok` / `fail`); long waits are thinned out (try 1, 2, 3, 5, 8, 10, 20…).
+
+`data` = `{game, role, ev, ms, a, k, pwa}` plus, when it applies, `n, ice, cand, err, hid, gap, sig, via`:
+- `role` `host` (opened the room) | `guest` (joins by link or code) · `ms` = milliseconds since this attempt began (room created / join started)
+- `k` = a random 8-letter label of this attempt (a new one for every "create room" / join; unrelated to the room) · `a` = its number on this page view
+- `pwa` = running as an installed app · `n` = counter (try number, registration number…) · `err` = a short reason word
+- `ice` = ICE state · `cand` = which kinds of own candidates were gathered: `host`, `srflx` (STUN worked), `relay` (TURN worked) – kinds only
+- `hid` = ms the page was in the background · `gap` = longest pause of the page's own timers meanwhile (≈ `hid` means the browser froze the page;
+  ≈ 1000 means it kept running) · `sig` = 1 when the signalling socket still looked alive on return
+
+| `ev` | role | meaning |
+|---|---|---|
+| `create` | host | "create a room" pressed |
+| `sig_open` | both | registered on the signalling server (PeerJS cloud); host: the room code is on screen now |
+| `share` | host | an invite button was pressed; `via` = `wa` (WhatsApp link) \| `api` (system share sheet) |
+| `bg` / `fg` | both | the page went to the background / came back (`hid`, `gap`, `sig`; `err: frozen` when the browser reported a freeze). Only before the match, or after 5 s away during one |
+| `sig_lost` / `sig_back` | both | the signalling socket dropped (`err` = PeerJS error type) / is registered again (`n` = how many times) |
+| `join_try` | guest | connection attempt number `n` to the room |
+| `peer_unavailable` | guest | the signalling server says the room owner is not registered right now (`n` = how many times so far) |
+| `conn_in` | host | a connection request arrived (`n`) |
+| `conn_open` | both | the WebRTC data channel opened |
+| `ice` | both | ICE state changed: `connected` / `completed` / `disconnected` / `failed`, with `cand` |
+| `appr_shown` / `appr_yes` / `appr_no` | host | approval card for a typed code: shown (`hid: 1` = while the page was in the background) / accepted / declined (`err: timeout` after 60 s) |
+| `refuse` | host | a join was refused: `err` = `secret` (wrong invitation) \| `busy` (somebody else is being approved) |
+| `retry` | guest | "try again" pressed, or the page came back to the front while still joining |
+| `ok` | both | the match started (`ice`, `cand`) |
+| `fail` | both | the attempt ended without a match; `err` = `no_host` (the room never answered) · `timeout` (the server knew the room, the phone never answered) · `dropped` (line opened and closed 3 times) · `rejected` (room full / wrong invitation / declined) · `appr_timeout` / `appr_closed` (waited for approval) · `start_bad` (the two phones run different versions) · `expired` (host: 5 minutes passed) · `back` (the kid pressed Back) · `no_script` · a PeerJS error type |
+| `code_try` / `code_found` / `code_none` | guest (`game: home`) | 🔑 on the home page: asked / found the game (`ms`) / no room answered |
+
+The same lines (as short texts like `g1 join_try +3.2s n=2`) are the `k: "net"` steps of a bug report's `steps`, and the last 10 are in
+`state.hook.net` of a report sent from a game page.
+
+```sql
+-- every connection attempt of the last 7 days: how far it got and why it ended (one line per attempt)
+create or replace view net_attempts as
+select data->>'k' as attempt, min(game) as game, min(data->>'role') as role, min(sess) as sess, min(kid::text) as kid, min(ver) as ver, min(env) as env,
+       min(client_ts::timestamptz) as started, max(client_ts::timestamptz) as ended,
+       bool_or(data->>'ev' = 'ok') as connected,
+       (array_agg(data->>'ev' order by (data->>'ms')::bigint desc) filter (where data->>'ev' not in ('fail','bg','fg','retry','share')))[1] as last_stage,
+       max(data->>'err') filter (where data->>'ev' = 'fail') as fail_reason,
+       max((data->>'n')::int) filter (where data->>'ev' = 'join_try') as tries,
+       max((data->>'n')::int) filter (where data->>'ev' = 'peer_unavailable') as owner_missing,
+       max((data->>'hid')::bigint) filter (where data->>'ev' = 'fg') as away_ms,
+       max((data->>'gap')::bigint) filter (where data->>'ev' = 'fg') as frozen_ms,
+       min((data->>'sig')::int) filter (where data->>'ev' = 'fg') as socket_alive_on_return,
+       string_agg(distinct data->>'cand', ' | ') as candidates,
+       string_agg(distinct data->>'via', ',') as shared_via,
+       bool_or((data->>'pwa')::boolean) as pwa,
+       string_agg(data->>'ev' || coalesce(':' || (data->>'err'), '') || coalesce(':' || (data->>'ice'), ''), ' > ' order by (data->>'ms')::bigint) as stages
+from events where type = 'net' and data ? 'k' and data->>'k' <> '' and ts > now() - interval '7 days'
+group by data->>'k';
+
+-- per FAILED attempt of a friend: the last stage reached on her side, next to the room owner's attempt of the same game at that time
+-- (rooms are never identified, so the two sides are matched by game and time; with few players that is the same room)
+select g.started, g.game, g.ver as guest_ver, g.last_stage as guest_last, g.fail_reason as guest_why, g.tries, g.owner_missing, g.candidates as guest_cand,
+       h.last_stage as host_last, h.fail_reason as host_why, h.away_ms as host_away_ms, h.frozen_ms as host_frozen_ms, h.socket_alive_on_return, h.shared_via, h.pwa as host_pwa, h.candidates as host_cand, h.ver as host_ver,
+       g.stages as guest_stages, h.stages as host_stages
+from net_attempts g
+left join net_attempts h on h.role = 'host' and h.game = g.game and h.started <= g.ended and h.ended >= g.started - interval '6 minutes'
+where g.role = 'guest' and not g.connected and g.env = 'prod'
+order by g.started desc;
+
+-- rooms that nobody reached at all (the friend's phone sent nothing: the link was not opened, or the page did not start there)
+select h.* from net_attempts h
+where h.role = 'host' and not h.connected and h.env = 'prod'
+  and not exists (select 1 from net_attempts g where g.role = 'guest' and g.game = h.game and g.started between h.started and h.ended + interval '1 minute')
+order by h.started desc;
+```
+How to read it: `owner_missing` high + host `away_ms` large → the room owner's phone was away / lost its place (was the page frozen? `frozen_ms`);
+guest `timeout` with host `conn_in` but no `conn_open`, `ice:failed`, candidates without `srflx` / `relay` → the two networks need a relay (TURN, see below);
+host `appr_shown` without `appr_yes` → the approval card was not answered; `start_bad` → one phone still runs an old version; no guest row at all → look at
+`page_view` / `error` events of the friend's device at that time.
+
+**Relay (TURN).** There is no shared relay at the moment (the free `openrelay.metered.ca` one was shut down), so two phones whose networks both
+refuse direct connections (typically mobile data on one side and a strict Wi-Fi on the other) cannot be connected. `net1v1.js` reads an optional
+`localStorage annabelle-turn` (a JSON array of `RTCIceServer`) that is put in front of the STUN servers; a server-side way to hand out short-lived
+relay credentials is the proper fix.
+
 ## Ready-made views
 - `stats_daily` – per day: kids, sessions, game_starts, game_ends, errors
 - `stats_games` – per game: starts, kids, avg_seconds, errors, last_seen
