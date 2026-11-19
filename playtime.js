@@ -34,7 +34,15 @@
   function wr(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function play() { var s = rd(KP, null); if (!s || s.date !== today()) s = {date: today(), seconds: 0, extra: 0, last: 0}; return s; }
-  function par() { var p = rd(KPAR, {}); if (!(p.limit >= MIN_LIMIT && p.limit <= MAX_LIMIT)) p.limit = DEFAULT_LIMIT_MIN; if (!p.bed) p.bed = {on: false, from: '20:30', to: '07:00'}; return p; }
+  // teens (13+), grown-ups and the exam-prep page get no DEFAULT daily limit: a full mock exam is 3.5 hours. A limit a parent set explicitly still applies to everyone.
+  function freeByDefault() {
+    try {
+      if (/(^|\/)bagrut\.html$/.test(location.pathname)) return true;
+      var d = JSON.parse(localStorage.getItem('annabelle-profiles') || 'null'), c = d && d.list && d.list.filter(function (x) { return x && x.id === d.cur; })[0];
+      return !!c && (c.role === 'adult' || (typeof c.age === 'number' && c.age >= 13));
+    } catch (e) { return false; }
+  }
+  function par() { var p = rd(KPAR, {}); if (!(p.limit >= MIN_LIMIT && p.limit <= MAX_LIMIT)) { p.limit = DEFAULT_LIMIT_MIN; p.free = freeByDefault(); } else p.free = false; if (!p.bed) p.bed = {on: false, from: '20:30', to: '07:00'}; return p; }
   function limitSec(s, p) { return p.limit * 60 + (s.extra || 0); }
   function left(s, p) { s = s || play(); p = p || par(); return Math.max(0, limitSec(s, p) - s.seconds); }
   function hm(t) { var a = String(t || '').split(':'); return (+a[0] || 0) * 60 + (+a[1] || 0); }
@@ -51,7 +59,7 @@
     var p = par(), s = play();
     if (p.lock) return 'parent';
     var b = bedInfo(p); if (b.in && !(p.skip && p.skip > Date.now())) return 'bed';
-    if (left(s, p) <= 0) return 'time';
+    if (!p.free && left(s, p) <= 0) return 'time';
     return '';
   }
 
@@ -178,6 +186,8 @@
   document.addEventListener('click', function () { setTimeout(function () { if (badge && !badge.classList.contains('tuck')) placeBadge(); }, 400); }, true);
   function renderBadge() {
     if (!badge) return; var s = play(), p = par(), l = left(s, p);
+    if (p.free) { badge.textContent = IS_LAUNCHER ? '⚙️' : ''; badge.title = ''; badge.style.display = IS_LAUNCHER ? '' : 'none'; return; }
+    badge.style.display = '';
     badge.textContent = '⏰ ' + fmtLeft(l) + (IS_LAUNCHER ? ' ⚙️' : '');
     badge.title = t('left') + ' ' + Math.ceil(l / 60) + ' ' + t('min');
     badge.setAttribute('aria-label', badge.title);
@@ -246,7 +256,7 @@
       var l = left(s, p);
       WARN.forEach(function (w, i) {
         var f = i ? 'w1' : 'w5';
-        if (l <= w && l > 0 && !s[f] && limitSec(s, p) > w) { s[f] = 1; if (i === 0) s.w5 = 1; showToast(t(f)); }
+        if (!p.free && l <= w && l > 0 && !s[f] && limitSec(s, p) > w) { s[f] = 1; if (i === 0) s.w5 = 1; showToast(t(f)); }
       });
       wr(KP, s);
     } else if (s.date !== (rd(KP, {}).date)) wr(KP, s);       // midnight rollover

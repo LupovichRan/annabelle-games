@@ -175,7 +175,7 @@ details.rv[open]{padding-bottom:12px}
 @media(max-width:899px){.tgrid,.two{display:flex;flex-direction:column;gap:10px}}
 @media(max-width:380px){#app{padding:12px 12px 8px}.rich{font-size:16px}.opt{font-size:16px}.ring{width:96px;height:96px}#brand b{font-size:14px}}
 </style>
-<!--pwa--><link rel="manifest" href="manifests/bagrut.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/bagrut-192.png"><meta name="apple-mobile-web-app-title" content="מסלול הבגרות"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/bagrut-apple-180.png"><script src="pwa.js" data-app="bagrut" data-slots='[["#foot", "append"]]' defer></script><script src="nav.js" data-menuslot="#navSlot" data-menu="toMenu" defer></script><!--/pwa-->
+<!--pwa--><link rel="manifest" href="manifests/bagrut.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/bagrut-192.png"><meta name="apple-mobile-web-app-title" content="מסלול הבגרות"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/bagrut-apple-180.png"><script src="pwa.js" data-app="bagrut" data-slots='[["#foot", "append"]]' defer></script><script src="nav.js" data-menuslot="#navSlot" data-menu="toMenu" defer></script><script src="share.js" data-manual="1" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="rewards.js" defer></script>
 </head>
@@ -1192,6 +1192,7 @@ mFormD:['חיפוש + תרגול כרטיסיות','Recherche + cartes mémoire'
 mProg:['התקדמות ותגים','Progrès et badges','Progress & badges'],
 mProgD:['מפת מוכנות, תאריך בחינה, תוכנית שבועית','Carte de préparation, date d’examen, plan de la semaine','Readiness map, exam date, weekly plan'],
 mAbout:['על הכלי','À propos','About'],
+shareT:['שיתוף המסלול','Partager ce parcours','Share this track'],
 mAboutD:['מה יש כאן ומה חשוב לדעת','Ce que contient l’outil','What this is and what to know'],
 t1:['חימום','Échauffement','Warm-up'],t2:['רמת בגרות','Niveau examen','Exam level'],t3:['אתגר','Défi','Challenge'],
 part1:['שאלון 581 · השנה','Questionnaire 581 · cette année','Paper 581 · this year'],
@@ -1302,7 +1303,8 @@ const BADGES=[
  ['diag','🧭',['נקודת פתיחה','Point de départ','Starting point']],['s3','🔥',['3 ימים ברצף','3 jours de suite','3-day streak']],['s7','📅',['7 ימים ברצף','7 jours de suite','7-day streak']],['s30','🏅',['30 ימים ברצף','30 jours de suite','30-day streak']],
  ['c100','🎯',['100 תשובות נכונות','100 bonnes réponses','100 correct answers']],['c500','💎',['500 תשובות נכונות','500 bonnes réponses','500 correct answers']],['m1','🧠',['נושא בשליטה (85+)','Un thème maîtrisé (85+)','A topic mastered (85+)']],['m3','👑',['שלושה נושאים בשליטה','Trois thèmes maîtrisés','Three topics mastered']],
  ['mock1','📝',['מבחן ראשון','Première épreuve','First mock']],['mock85','🏆',['מבחן מעל 85','Épreuve au-dessus de 85','Mock above 85']],['fix10','🩹',['10 טעויות תוקנו','10 erreurs corrigées','10 mistakes fixed']],['form','📐',['כל הנוסחאות בראש','Toutes les formules en tête','All formulas memorised']]];
-let lang=ls.get('annabelle-lang')||'he';if(LI[lang]==null)lang='he';
+let lang=ls.get('annabelle-lang');if(!lang){const lm=/[?&]lang=(he|fr|en)(?:&|$)/.exec(location.search);if(lm){lang=lm[1];ls.set('annabelle-lang',lang)}} /* a shared link may carry the language; it only counts for a visitor who has none yet */
+lang=lang||'he';if(LI[lang]==null)lang='he';
 function kidRaw(){try{if(window.KidApp&&typeof KidApp.kid==='function'){const k=KidApp.kid();if(k&&typeof k==='object')return k}}catch(e){}return{}}
 function Gs(f,m,x){try{if(window.KidApp&&typeof KidApp.g==='function'){const r=KidApp.g(f,m,x);if(typeof r==='string'&&r)return r}}catch(e){}return f}
 function gx(s){return String(s).replace(/\[\[([^|\]]+)\|([^|\]]+)\|([^\]]+)\]\]/g,(m,f,ma,x)=>Gs(f,ma,x))}
@@ -1440,10 +1442,12 @@ function goHome(){if(EX&&scr==='exam'){EX.paused=true;persistEx()}if(sess&&!sess
  tile('📚',T('mTopics'),T('mTopicsD'),goTopics,'tlTopics');tile('⏱',T('mExam'),T('mExamD'),goExam,'tlExam');tile('📒',T('mNb'),T('mNbD',{n:SV.nb.filter(z=>!z.fx).length}),goNotebook,'tlNb');
  tile('📐',T('mForm'),T('mFormD'),()=>goForms(),'tlForm');tile('📈',T('mProg'),T('mProgD'),goProgress,'tlProg');tile('ℹ️',T('mAbout'),T('mAboutD'),about,'tlAbout');
  if(SV.diag&&!SV.ex){const d=el('button','tile');d.type='button';d.id='tlDiag';d.style.minHeight='56px';d.style.gridColumn='1 / -1';d.appendChild(el('b',null,'🧭 '+T('diagT')));d.addEventListener('click',()=>startSess('diag'));gr.appendChild(d)}
- rc.appendChild(gr);g.appendChild(lc);g.appendChild(rc);a.appendChild(g)});renderFoot()}
+ rc.appendChild(gr);rc.appendChild(shareBtn('ghost full','shareHome'));g.appendChild(lc);g.appendChild(rc);a.appendChild(g)});renderFoot()}
+/* "share this track": opens the share sheet of share.js (a standalone link to this page; no name, no score, no progress in it) */
+function shareBtn(cls,id){const b=btn(cls,'📤 '+T('shareT'),()=>{try{window.AnnabelleShare&&AnnabelleShare.open({from:b})}catch(e){}});b.id=id;b.dataset.share='1';b.setAttribute('aria-haspopup','dialog');return b}
 function renderFoot(){const f=$('foot');Array.from(f.querySelectorAll('.lg')).forEach(x=>x.remove());[['he','עברית'],['fr','Français'],['en','English']].forEach(l=>{const b=el('button','lg'+(lang===l[0]?' on':''),l[1]);b.type='button';b.dataset.lang=l[0];b.addEventListener('click',()=>{setLang(l[0]);goHome()});f.insertBefore(b,f.firstChild)})}
 window.toMenu=function(){if(sess&&scr==='play'&&!sess.over)confirmBox(T('quitQ'),T('quitY'),T('stay'),goHome);else goHome()};
-function about(){overlay(c=>{c.appendChild(el('h2','h1',T('mAbout')));['a1','a2','a5','a4','a3'].forEach((k,i)=>{const p=el('p','sm',T(k));p.style.margin='10px 0';if(k==='a2'){p.className='slip';p.id='aboutNote'}c.appendChild(p)});const r=el('div','acts');r.appendChild(btn('',T('close'),closeOv));c.appendChild(r)})}
+function about(){overlay(c=>{c.appendChild(el('h2','h1',T('mAbout')));['a1','a2','a5','a4','a3'].forEach((k,i)=>{const p=el('p','sm',T(k));p.style.margin='10px 0';if(k==='a2'){p.className='slip';p.id='aboutNote'}c.appendChild(p)});const r=el('div','acts');r.appendChild(shareBtn('ghost','shareAbout'));r.appendChild(btn('',T('close'),closeOv));c.appendChild(r)})}
 function topicRow(t,fn){const p=SV.tp[t.id]||{m:0,n:0,tier:1},b=el('button','trow');b.type='button';b.dataset.topic=t.id;b.appendChild(el('span','ic',t.ic));const mid=el('div');mid.style.minWidth='0';
  const nm=el('div','nm',TL(t.n));mid.appendChild(nm);mid.appendChild(el('div','xs mut',TL(t.s)));const r=el('div','row');r.style.marginTop='5px';const bar=el('div','bar '+barCls(p.m)),i=el('i');i.style.width=Math.round(p.m)+'%';bar.appendChild(i);r.appendChild(bar);
  r.appendChild(el('span','chip'+(t.part===2?' n':''),t.part===2?T('nextYear'):tierName(p.tier)));mid.appendChild(r);b.appendChild(mid);b.appendChild(el('span','pc',p.n?Math.round(p.m)+'':'–'));if(fn)b.addEventListener('click',fn);return b}
