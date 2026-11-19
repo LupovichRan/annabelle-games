@@ -107,9 +107,9 @@
     } catch (e) { return Promise.resolve({ok: false, status: 0}); }
   }
   var COLS = {
-    events: ['kid', 'device', 'sess', 'type', 'client_ts', 'page', 'game', 'age', 'gender', 'lang', 'ver', 'data'],
-    audit: ['kid', 'device', 'sess', 'actor', 'action', 'target', 'page', 'client_ts', 'detail'],
-    reports: ['kid', 'device', 'sess', 'kind', 'note', 'client_ts', 'page', 'url', 'ua', 'viewport', 'lang', 'age', 'gender', 'ver', 'steps', 'state', 'screenshot_path', 'audio_path']
+    events: ['kid', 'device', 'sess', 'type', 'client_ts', 'page', 'game', 'age', 'gender', 'lang', 'ver', 'env', 'data'],
+    audit: ['kid', 'device', 'sess', 'actor', 'action', 'target', 'page', 'client_ts', 'env', 'detail'],
+    reports: ['kid', 'device', 'sess', 'kind', 'note', 'client_ts', 'page', 'url', 'ua', 'viewport', 'lang', 'age', 'gender', 'ver', 'env', 'steps', 'state', 'screenshot_path', 'audio_path']
   };
   function shape(table, row) {           // same keys on every row of a batch, nothing unexpected
     var o = {}, c = COLS[table];
@@ -174,7 +174,20 @@
       if (keep.length) store(stored().concat(keep));
     });
   }
-  function base() { var k = kid(); return {kid: k.kid, device: device(), sess: sess(), age: k.age, gender: k.gender, lang: lang(), page: page(), ver: version(), client_ts: new Date().toISOString()}; }
+  // Where a row comes from, so development and automated tests never pollute the real statistics:
+  // 'qa'  = an automated browser (navigator.webdriver) or a device switched to QA mode (open any page with ?qa=1; ?qa=0 switches back)
+  // 'dev' = served from a developer machine (localhost / file) ; 'prod' = a real visitor on the public site
+  var ENV = (function () {
+    try {
+      var m = /[?&]qa=([01])(?:&|$)/.exec(location.search);
+      if (m) { if (m[1] === '1') localStorage.setItem('kidapp-qa', '1'); else localStorage.removeItem('kidapp-qa'); }
+      if (navigator.webdriver || localStorage.getItem('kidapp-qa') === '1') return 'qa';
+      var h = location.hostname;
+      if (!h || h === 'localhost' || h === '0.0.0.0' || h === '[::1]' || /^127\./.test(h) || /^(10|192\.168)\./.test(h) || location.protocol === 'file:') return 'dev';
+    } catch (e) {}
+    return 'prod';
+  })();
+  function base() { var k = kid(); return {env: ENV, kid: k.kid, device: device(), sess: sess(), age: k.age, gender: k.gender, lang: lang(), page: page(), ver: version(), client_ts: new Date().toISOString()}; }
   function small(obj, max) {             // plain JSON object under max bytes, names scrubbed
     if (obj == null || typeof obj !== 'object') obj = obj == null ? {} : {v: obj};
     var s; try { s = scrub(JSON.stringify(obj)); } catch (e) { return {}; }
@@ -188,7 +201,7 @@
       sentOnPage++;
       var b = base();
       enqueue('events', {kid: b.kid, device: b.device, sess: b.sess, type: String(type).slice(0, 40), client_ts: b.client_ts, page: b.page,
-        game: String(game || (data && data.game) || gameId()).slice(0, 40), age: b.age, gender: b.gender, lang: b.lang, ver: ver || null, data: small(data, 3000)});
+        game: String(game || (data && data.game) || gameId()).slice(0, 40), age: b.age, gender: b.gender, lang: b.lang, ver: ver || null, env: ENV, data: small(data, 3000)});
       return true;
     } catch (e) { return false; }
   }
@@ -197,7 +210,7 @@
       if (!on() || !action) return false;
       var b = base();
       enqueue('audit', {kid: b.kid, device: b.device, sess: b.sess, actor: actor === 'parent' || actor === 'system' ? actor : 'kid', action: String(action).slice(0, 60),
-        target: target == null ? null : scrub(target).slice(0, 120), page: b.page, client_ts: b.client_ts, detail: small(detail, 3000)});
+        target: target == null ? null : scrub(target).slice(0, 120), page: b.page, client_ts: b.client_ts, env: ENV, detail: small(detail, 3000)});
       note('audit', String(action).slice(0, 40));
       flushSoon();                         // rare and important: do not wait for the next batch
       return true;
@@ -335,7 +348,7 @@
   K.track = track; K.audit = audit;
   K.trail = function () { return trail.map(function (e) { var o = {}; for (var k in e) o[k] = e[k]; return o; }); };
   K.telemetryOn = on;
-  K._tel = {url: URL0, key: KEY, base: base, post: post, upload: upload, shape: shape, flush: flush, enqueue: enqueue, version: version, cleanUrl: cleanUrl, scrub: scrub, note: note, on: on, small: small};
+  K._tel = {env: ENV, url: URL0, key: KEY, base: base, post: post, upload: upload, shape: shape, flush: flush, enqueue: enqueue, version: version, cleanUrl: cleanUrl, scrub: scrub, note: note, on: on, small: small};
 
   pageView();
   tryHook();

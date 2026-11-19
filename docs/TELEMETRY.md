@@ -92,3 +92,19 @@ device and sent later **without** picture and recording (`state.queued = true`).
 - Add `kid.js`, `telemetry.js`, `feedback.js`, `vendor/html2canvas.min.js` to the `FILES` list of `sw.js` so they work offline from the first visit
   (they are cached at runtime after their first use anyway).
 - The 🐞 button position is remembered per page in `localStorage kidapp-fbpos` (not part of profile snapshots).
+
+## Real players vs. testing (the `env` column)
+
+Every row in `events`, `reports` and `audit` carries `env`:
+
+- `prod`: a real visitor on the public site.
+- `qa`: an automated browser (`navigator.webdriver`, which is how our Playwright tests run) or a device switched to QA mode. Switch a phone or laptop to QA mode by opening any page once with `?qa=1` (for example `index.html?qa=1`); `?qa=0` switches it back.
+- `dev`: the site served from a developer machine (localhost, a private network address or a file).
+
+The views `events_real`, `reports_real` and `audit_real` hold only `prod` rows from devices that are not listed in `test_devices`. The dashboard reads those views, so it shows real players only.
+
+To hide a device after the fact (for example a family phone that was used for testing before QA mode was switched on), add its device id, which is shown in the `device` column, in the SQL editor:
+
+```sql
+insert into public.test_devices (device, note) values ('<device id>', 'dad''s phone');
+```

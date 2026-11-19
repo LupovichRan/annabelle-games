@@ -470,7 +470,7 @@
       scroll: Math.round(window.pageYOffset || 0), tel: !(K.telemetryOn && !K.telemetryOn()), hook: ctx && ctx.hook || null};
     var row = {kid: b.kid, device: b.device, sess: b.sess, kind: o.kind, note: o.note || null, client_ts: new Date().toISOString(), page: b.page,
       url: S.cleanUrl(location.href), ua: String(navigator.userAgent || '').slice(0, 300), viewport: ((ctx ? ctx.vw : innerWidth) + 'x' + (ctx ? ctx.vh : innerHeight) + '@' + (Math.round((window.devicePixelRatio || 1) * 100) / 100)).slice(0, 40),
-      lang: b.lang, age: b.age, gender: b.gender, ver: (S.version ? S.version() : b.ver) || 'dev', steps: trimSteps(ctx && ctx.steps, 24000), state: state, screenshot_path: null, audio_path: null};
+      lang: b.lang, age: b.age, gender: b.gender, ver: (S.version ? S.version() : b.ver) || 'dev', env: S.env || (navigator.webdriver ? 'qa' : 'prod'), steps: trimSteps(ctx && ctx.steps, 24000), state: state, screenshot_path: null, audio_path: null};
     function later() {
       row.screenshot_path = row.audio_path = null; row.state.shot = o.hadShot ? 'offline' : 'none'; row.state.voice = false; row.state.queued = true;
       row.steps = trimSteps(row.steps, 12000);
