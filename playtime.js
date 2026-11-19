@@ -349,7 +349,7 @@
     ['snake','🐯','זנב הנמר',/^annabelle-retro-snake/],['crossing','🐥','מעבר החיות',/^annabelle-retro-crossing/],
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
     ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/],
-    ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/]];
+    ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/],['thinking','🧩','חידות חשיבה',/^annabelle-thinking/],['city','🏙️','עיר החתולים',/^annabelle-city/]];
   var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
@@ -416,17 +416,18 @@
     card.querySelector('[data-a=done]').onclick = closePanel;
   }
 
-  /* ---------- shared platform modules, on every page, in this order: kid profile, telemetry, report button ----------
+  /* ---------- shared platform modules, on every page, in this order: kid profile, telemetry, report button,
+     then the ambience (vibe.js: WebGL background) and the game-feel layer (juice.js: player chip, level-up celebration) ----------
      Each one is optional (a missing file is skipped). While the page is still being parsed they are written into the
      document so kid.js runs before the page's own scripts; otherwise they are appended (ordered, non-blocking). */
   (function () {
     if (window.__kidMods) return; window.__kidMods = 1;
     var base = ''; try { base = me && me.getAttribute('src') ? me.getAttribute('src').replace(/[^\/]*$/, '') : ''; } catch (e) {}
     if (/["<>\s]/.test(base)) base = '';
-    var mods = ['kid.js', 'telemetry.js', 'feedback.js'], wrote = false;
+    var mods = ['kid.js', 'telemetry.js', 'feedback.js', 'vibe.js', 'juice.js'], wrote = false;
     try {
       if (me && document.currentScript === me && document.readyState === 'loading' && !me.async && !me.defer && me.type !== 'module') {
-        document.write('<script src="' + base + 'kid.js"><\/script><script src="' + base + 'telemetry.js"><\/script><script src="' + base + 'feedback.js" defer><\/script>');
+        document.write('<script src="' + base + 'kid.js"><\/script><script src="' + base + 'telemetry.js"><\/script><script src="' + base + 'feedback.js" defer><\/script><script src="' + base + 'vibe.js" defer><\/script><script src="' + base + 'juice.js" defer><\/script>');
         wrote = true;
       }
     } catch (e) {}
