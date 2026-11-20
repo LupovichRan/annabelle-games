@@ -174,6 +174,7 @@
     return best;
   }
   function showChip(delta, ms) {
+    if (W.AnnabelleSolo && W.AnnabelleSolo.on) return false; // solo mode (nav.js): one game, nothing floats over it
     if (!D.body || locked() || quiet()) return null; // calm mode: no floating chip
     buildChip(); fillChip(delta);
     if (!chip.classList.contains('on')) place();
@@ -257,6 +258,7 @@
   }
   function lvKey(e) { if (!lvEl) return; if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); closeLv(); } }
   function levelUp(n) {
+    if (W.AnnabelleSolo && W.AnnabelleSolo.on) return false; // solo mode: the pending level stays pending (not consumed unseen); the home page shows it
     try {
       if (!R || HOME || !D.body) return false; // the home page has its own sheet
       n = Math.floor(+n) || 0; var L = R.level(); n = Math.min(Math.max(n, 1), L.level);

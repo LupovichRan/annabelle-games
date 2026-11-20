@@ -17,6 +17,8 @@
    (home page / album flush automatically).
    Other API: get(), coins(), spend(n)->bool, stickers() , has(id), catalog(), dailyStatus(), claimDaily(), shop(), buy(id), equip(id,on),
               avatar() -> {color,hat,bow,glass,bg}, avatarSVG(px, cfg?), lang(), t(obj), GAMES, onChange(fn).
+   GENDER:  a text that addresses or describes the player is [feminine, masculine, neutral] inside catalog() / stickers() / shop() (n, d): always show
+              it through t(obj) – it picks the language and the form for the CURRENT profile at render time. Only ids are ever stored.
    Storage: localStorage 'annabelle-rewards' = {v:1, coins, earned, st:{stickerId:ts}, stats:{...}, daily:{last,streak,best,count,days:[]}, own:{itemId:1}, av:{...}, pend:[...] }
    Per-game progress keys read by album.html (if a game writes them): 'annabelle-<game>-best' (number or JSON), games may also keep their own.
    Test hook: window.__annabelleToday = 'YYYY-M-D' overrides "today" (daily gift);  window.__annabelleNow = ms overrides the clock of the brain boost.
@@ -60,7 +62,17 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function lang() { var l = lsGet('annabelle-lang') || 'he'; return l === 'fr' || l === 'en' ? l : 'he'; }
-  function T(o) { if (!o) return ''; var s = typeof o === 'string' ? o : (o[lang()] || o.he || ''), K = window.KidApp; return K && K.gt ? K.gt(s) : s; } // texts are written for a girl; kid.js adapts them
+  /* Every text that addresses or describes the player is written explicitly in three forms: [feminine, masculine, neutral].
+     The form is picked at RENDER time for the CURRENT profile (profiles can be switched): nothing about gender is ever stored in the save,
+     sticker / badge / quest ids are the only thing kept. A plain string is the same for everybody. */
+  function G3(v) {
+    if (!Array.isArray(v)) return v == null ? '' : String(v);
+    var K = window.KidApp;
+    try { if (K && K.g) return v.length > 2 ? K.g(v[0], v[1], v[2]) : K.g(v[0], v[1]); } catch (e) {} // [f, m] only: KidApp writes the neutral form (חוקר/ת)
+    return v[0];
+  }
+  function T(o) { if (!o) return ''; return G3(typeof o === 'string' || Array.isArray(o) ? o : (o[lang()] || o.he || '')); }
+  function V3(f, m, x, rest) { return [f + rest, m + rest, x + rest]; } // one sentence, three verb forms
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function dayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function today() { return typeof window.__annabelleToday === 'string' ? window.__annabelleToday : dayKey(); }
@@ -80,7 +92,7 @@
     escape: ['🔑', 'הבריחה מבית העץ', 'Évasion de la cabane', 'Treehouse Escape'],
     fishing: ['🎣', 'מסע הדיג', 'La pêche', 'Fishing Trip'],
     football: ['⚽', 'כדורגל חתולים', 'Foot des chats', 'Cat Football'],
-    hiddencats: ['🔍', 'מצאי את החתולים', 'Trouve les chats', 'Find the Cats'],
+    hiddencats: ['🔍', 'מצאו את החתולים', 'Trouve les chats', 'Find the Cats'],
     lionking: ['🦁', 'הרפתקת האריה הקטן', 'Aventure du petit lion', "Little Lion's Adventure"],
     magic: ['🎩', 'קסם הקלפים', 'Magie des cartes', 'Card Magic'],
     magic2: ['😺', 'קסם החתולים', 'Magie des chats', 'Magic Cats'],
@@ -118,7 +130,11 @@
     city: ['🏙️', 'עיר החתולים', "Chat-Ville", 'Kitty City'],
     retro: ['🕹️', 'פינת הרטרו', 'Coin rétro', 'Retro Corner']
   };
-  function gname(id) { var g = GAMES[id]; return g ? T(g[{he: 1, fr: 2, en: 3}[lang()]]) : id; }
+  // a game title that is itself gendered (the same forms the home page shows through catalog.js)
+  var GN3 = {breakout: {he: ['שוברת הכלובים', 'שובר הכלובים', 'שובר/ת הכלובים']}};
+  var LIDX = {he: 1, fr: 2, en: 3};
+  function gn3(id, l) { var o = GN3[id], v = (o && o[l]) || GAMES[id][LIDX[l]]; return Array.isArray(v) ? v : [v, v, v]; }
+  function gname(id) { var g = GAMES[id], l = lang(); return g ? G3((GN3[id] && GN3[id][l]) || g[LIDX[l]]) : id; }
 
   /* ---------- state ---------- */
   function fresh() {
@@ -225,8 +241,13 @@
   /* ---------- platform layer: player level (XP = coins ever earned), daily quests, friend challenges ---------- */
   function levelOf(xp) { return Math.max(1, Math.floor((1 + Math.sqrt(1 + 0.4 * Math.max(0, +xp || 0))) / 2)); }
   function needFor(L) { return 10 * L * (L - 1); }
-  var RANKS = [[1, '🐱', {he: 'גורה סקרנית', fr: 'Chaton curieux', en: 'Curious Kitten'}], [3, '🐈', {he: 'חתולת רחוב זריזה', fr: 'Chat des rues', en: 'Street Cat'}], [5, '⭐', {he: 'ציידת כוכבים', fr: "Chasseuse d'étoiles", en: 'Star Hunter'}],
-    [8, '🐯', {he: 'נמרה צעירה', fr: 'Jeune tigresse', en: 'Young Tiger'}], [12, '🦁', {he: 'לביאה אמיצה', fr: 'Lionne courageuse', en: 'Brave Lioness'}], [16, '👑', {he: "מלכת הג'ונגל", fr: 'Reine de la jungle', en: 'Jungle Queen'}], [21, '🐉', {he: 'אגדת החתולים', fr: 'Légende des chats', en: 'Cat Legend'}]];
+  var RANKS = [[1, '🐱', {he: ['גורה סקרנית', 'גור סקרן', 'גור סקרן'], fr: 'Chaton curieux', en: 'Curious Kitten'}],
+    [3, '🐈', {he: ['חתולת רחוב זריזה', 'חתול רחוב זריז', 'חתול רחוב זריז'], fr: 'Chat des rues', en: 'Street Cat'}],
+    [5, '⭐', {he: ['ציידת כוכבים', 'צייד כוכבים', 'ציידי כוכבים'], fr: ["Chasseuse d'étoiles", "Chasseur d'étoiles", "Chasse aux étoiles"], en: 'Star Hunter'}],
+    [8, '🐯', {he: ['נמרה צעירה', 'נמר צעיר', 'נמר צעיר'], fr: ['Jeune tigresse', 'Jeune tigre', 'Jeune tigre'], en: 'Young Tiger'}],
+    [12, '🦁', {he: ['לביאה אמיצה', 'אריה אמיץ', 'לב אריה'], fr: ['Lionne courageuse', 'Lion courageux', 'Cœur de lion'], en: ['Brave Lioness', 'Brave Lion', 'Lionheart']}],
+    [16, '👑', {he: ["מלכת הג'ונגל", "מלך הג'ונגל", "כתר הג'ונגל"], fr: ['Reine de la jungle', 'Roi de la jungle', 'Couronne de la jungle'], en: ['Jungle Queen', 'Jungle King', 'Jungle Champion']}],
+    [21, '🐉', {he: 'אגדת החתולים', fr: 'Légende des chats', en: 'Cat Legend'}]];
   function rankOf(L) { var r = RANKS[0]; RANKS.forEach(function (x) { if (L >= x[0]) r = x; }); return r; }
   function level() {
     if (!S) load();
@@ -248,16 +269,16 @@
   var HIDDEN = {retro: 1, runner3d: 1}; // no tile of their own on the home page
   var QUEST_COINS = 15, QUEST_BONUS = 25;
   var QUESTS = [
-    {id: 'play3', e: '🎮', goal: 3, t: {he: 'שחקי ב-3 משחקים שונים', fr: 'Joue à 3 jeux différents', en: 'Play 3 different games'}},
-    {id: 'win2', e: '🏆', goal: 2, t: {he: 'נצחי פעמיים', fr: 'Gagne 2 fois', en: 'Win twice'}},
-    {id: 'star5', e: '⭐', goal: 5, t: {he: 'אספי 5 כוכבים', fr: 'Récolte 5 étoiles', en: 'Collect 5 stars'}},
-    {id: 'lvl3', e: '🚩', goal: 3, t: {he: 'סיימי 3 שלבים', fr: 'Termine 3 niveaux', en: 'Clear 3 levels'}},
-    {id: 'retro', e: '🕹️', goal: 1, t: {he: 'שחקי במשחק מפינת הרטרו', fr: 'Joue à un jeu du coin rétro', en: 'Play a Retro Corner game'}},
-    {id: 'mind', e: '🧩', goal: 1, t: {he: 'שחקי במשחק חשיבה', fr: 'Joue à un jeu de réflexion', en: 'Play a thinking game'}},
-    {id: 'sport', e: '⚽', goal: 1, t: {he: 'שחקי במשחק ספורט או אקשן', fr: "Joue à un jeu de sport ou d'action", en: 'Play a sports or action game'}},
-    {id: 'perfect', e: '🎯', goal: 1, t: {he: 'קבלי 3 כוכבים בשלב אחד', fr: 'Obtiens 3 étoiles dans un niveau', en: 'Get 3 stars in one stage'}},
-    {id: 'coin30', e: '💰', goal: 30, t: {he: 'הרוויחי 30 מטבעות במשחקים', fr: 'Gagne 30 pièces en jouant', en: 'Earn 30 coins by playing'}},
-    {id: 'new1', e: '✨', goal: 1, t: {he: 'נסי משחק שעוד לא שיחקת בו', fr: "Essaie un jeu que tu n'as jamais joué", en: 'Try a game you have never played'}}
+    {id: 'play3', e: '🎮', goal: 3, t: {he: V3('שחקי', 'שחק', 'שחקו', ' ב-3 משחקים שונים'), fr: 'Joue à 3 jeux différents', en: 'Play 3 different games'}},
+    {id: 'win2', e: '🏆', goal: 2, t: {he: V3('נצחי', 'נצח', 'נצחו', ' פעמיים'), fr: 'Gagne 2 fois', en: 'Win twice'}},
+    {id: 'star5', e: '⭐', goal: 5, t: {he: V3('אספי', 'אסוף', 'אספו', ' 5 כוכבים'), fr: 'Récolte 5 étoiles', en: 'Collect 5 stars'}},
+    {id: 'lvl3', e: '🚩', goal: 3, t: {he: V3('סיימי', 'סיים', 'סיימו', ' 3 שלבים'), fr: 'Termine 3 niveaux', en: 'Clear 3 levels'}},
+    {id: 'retro', e: '🕹️', goal: 1, t: {he: V3('שחקי', 'שחק', 'שחקו', ' במשחק מפינת הרטרו'), fr: 'Joue à un jeu du coin rétro', en: 'Play a Retro Corner game'}},
+    {id: 'mind', e: '🧩', goal: 1, t: {he: V3('שחקי', 'שחק', 'שחקו', ' במשחק חשיבה'), fr: 'Joue à un jeu de réflexion', en: 'Play a thinking game'}},
+    {id: 'sport', e: '⚽', goal: 1, t: {he: V3('שחקי', 'שחק', 'שחקו', ' במשחק ספורט או אקשן'), fr: "Joue à un jeu de sport ou d'action", en: 'Play a sports or action game'}},
+    {id: 'perfect', e: '🎯', goal: 1, t: {he: V3('קבלי', 'קבל', 'קבלו', ' 3 כוכבים בשלב אחד'), fr: 'Obtiens 3 étoiles dans un niveau', en: 'Get 3 stars in one stage'}},
+    {id: 'coin30', e: '💰', goal: 30, t: {he: V3('הרוויחי', 'הרוויח', 'הרוויחו', ' 30 מטבעות במשחקים'), fr: 'Gagne 30 pièces en jouant', en: 'Earn 30 coins by playing'}},
+    {id: 'new1', e: '✨', goal: 1, t: {he: ['נסי משחק שעוד לא שיחקת בו', 'נסה משחק שעוד לא שיחקת בו', 'נסו משחק שעוד לא שיחקתם בו'], fr: "Essaie un jeu auquel tu n'as jamais joué", en: 'Try a game you have never played'}}
   ];
   // the little band (4-7) gets ONE simple picture mission, chosen among three
   var LQUESTS = [
@@ -376,55 +397,87 @@
     CAT.push(s); STK_BY[id] = s;
   }
   // 1) first play of each game (26)
-  var GS = {critters: 'חברה של יצורים', bagrut: 'מוכנה לבגרות', reading: 'תולעת ספרים', city: 'בעלת בית', thinking: 'מוח על', mathquest: 'אלופת החשבון', wordcity: 'אלופת המילים', sciencelab: 'מדענית צעירה', funrun: 'אלופת התעלולים', carrace: 'נהגת מרוצים', bubbles: 'מגלת בועות', cats: 'זוגית זוגות', checkers: 'מלכת הדמקה', cups: 'עין הנץ', digrod: 'חופרת בשריר', escape: 'בורחת מהעץ', fishing: 'דייגית צעירה', football: 'כוכבת הכדורגל', hiddencats: 'עין הבולשת', lionking: 'אריה קטן', magic: 'קוסמת קלפים', magic2: 'קוסמת חתולים', minesweeper: 'גננית חתולים', pacman: 'טיגריס רעב', runner: 'רצה בסוואנה', runner3d: 'רצה ב-3D', soya: 'חברה של סויה', soyahome: 'בית של סויה', streetcats: 'חתולת שכונה', thunderkittens: 'לוחמת ברק', towerdefense: 'שומרת המאורה', bowling: 'כוכבת באולינג', tictactoe: 'מלכת איקס עיגול', hole: 'חור רעבתן', fishy: 'דג גדול', kitchen: 'שפית חתולית', invaders: 'מצילה בחלל', tetris: 'מלכת הקוביות', breakout: 'פותחת הכלובים', snake: 'זנב הנמר', crossing: 'שומרת המעבר', pong: 'אלופת הפינג־פונג', safari: 'צלמת ספארי', simon: 'מנצחת המקהלה', retro: 'מבקרת בפינת הרטרו'};
-  var GSF = {critters: 'Amie des créatures', bagrut: 'Prête pour le Bagrout', reading: 'Rat de bibliothèque', city: 'Jeune propriétaire', thinking: 'Super cerveau', mathquest: 'As des maths', wordcity: 'As des mots', sciencelab: 'Jeune scientifique', funrun: 'Reine des farces', carrace: 'Pilote de course', bubbles: 'Reine des bulles', cats: 'Maître des paires', checkers: 'Reine des dames', cups: 'Œil de lynx', digrod: 'Super muscles', escape: 'Évadée', fishing: 'Jeune pêcheuse', football: 'Star du foot', hiddencats: 'Détective', lionking: 'Petit lion', magic: 'Magicienne', magic2: 'Magie des chats', minesweeper: 'Jardinière', pacman: 'Tigre affamé', runner: 'Coureuse', runner3d: 'Coureuse 3D', soya: 'Amie de Soya', soyahome: 'Maison de Soya', streetcats: 'Chat du quartier', thunderkittens: 'Guerrière', towerdefense: 'Gardienne', bowling: 'Star du bowling', tictactoe: 'Reine du morpion', hole: 'Gouffre gourmand', fishy: 'Gros poisson', kitchen: 'Cheffe chat', invaders: 'Sauveteuse de l\'espace', tetris: 'Reine des blocs', breakout: 'Ouvre-cages', snake: 'Queue de tigre', crossing: 'Gardienne du passage', pong: 'Championne de ping-pong', safari: 'Photographe safari', simon: 'Cheffe de chorale', retro: 'Visiteuse rétro'};
-  var GSE = {critters: 'Critter Friend', bagrut: 'Exam Ready', reading: 'Bookworm', city: 'City Builder', thinking: 'Master Mind', mathquest: 'Math Champion', wordcity: 'Word Champion', sciencelab: 'Young Scientist', funrun: 'Prank Champion', carrace: 'Race Driver', bubbles: 'Bubble Queen', cats: 'Memory Master', checkers: 'Checkers Queen', cups: 'Eagle Eye', digrod: 'Super Muscles', escape: 'Escape Artist', fishing: 'Young Angler', football: 'Football Star', hiddencats: 'Cat Detective', lionking: 'Little Lion', magic: 'Card Magician', magic2: 'Cat Magician', minesweeper: 'Garden Hero', pacman: 'Hungry Tiger', runner: 'Savanna Runner', runner3d: '3D Runner', soya: 'Soya\'s Friend', soyahome: 'Soya\'s Home', streetcats: 'Street Cat', thunderkittens: 'Lightning Fighter', towerdefense: 'Den Guardian', bowling: 'Bowling Star', tictactoe: 'Tic-Tac-Queen', hole: 'Hungry Hole', fishy: 'Big Fish', kitchen: 'Chef Cat', invaders: 'Space Rescuer', tetris: 'Block Queen', breakout: 'Cage Opener', snake: 'Tiger Tail', crossing: 'Crossing Guard', pong: 'Pong Champion', safari: 'Safari Photographer', simon: 'Choir Conductor', retro: 'Retro Visitor'};
+  // names: a plain string is the same for everybody; [feminine, masculine, neutral] describes the player
+  var GS = {critters: ['חברה של יצורים', 'חבר של יצורים', 'חברים של יצורים'], bagrut: ['מוכנה לבגרות', 'מוכן לבגרות', 'מוכנים לבגרות'], reading: 'תולעת ספרים', city: ['בעלת בית', 'בעל בית', 'בעלי בית'], thinking: 'מוח על',
+    mathquest: ['אלופת החשבון', 'אלוף החשבון', 'אלופי החשבון'], wordcity: ['אלופת המילים', 'אלוף המילים', 'אלופי המילים'], sciencelab: ['מדענית צעירה', 'מדען צעיר', 'מדענים צעירים'],
+    funrun: ['אלופת התעלולים', 'אלוף התעלולים', 'אלופי התעלולים'], carrace: ['נהגת מרוצים', 'נהג מרוצים', 'נהגי מרוצים'], bubbles: ['מגלת בועות', 'מגלה בועות', 'מגלי בועות'], cats: ['מלכת הזוגות', 'מלך הזוגות', 'אלופי הזוגות'],
+    checkers: ['מלכת הדמקה', 'מלך הדמקה', 'אלופי הדמקה'], cups: 'עין הנץ', digrod: ['חופרת בשריר', 'חופר בשריר', 'חופרים בשריר'], escape: ['בורחת מהעץ', 'בורח מהעץ', 'בורחים מהעץ'],
+    fishing: ['דייגית צעירה', 'דייג צעיר', 'דייגים צעירים'], football: ['כוכבת הכדורגל', 'כוכב הכדורגל', 'כוכבי הכדורגל'], hiddencats: ['עין הבולשת', 'עין הבלש', 'עיני בלשים'], lionking: 'אריה קטן',
+    magic: ['קוסמת קלפים', 'קוסם קלפים', 'קוסמי קלפים'], magic2: ['קוסמת חתולים', 'קוסם חתולים', 'קוסמי חתולים'], minesweeper: ['גננית חתולים', 'גנן חתולים', 'גנני חתולים'], pacman: 'טיגריס רעב',
+    runner: ['רצה בסוואנה', 'רץ בסוואנה', 'רצים בסוואנה'], runner3d: ['רצה ב-3D', 'רץ ב-3D', 'רצים ב-3D'], soya: ['חברה של סויה', 'חבר של סויה', 'חברים של סויה'], soyahome: 'בית של סויה',
+    streetcats: ['חתולת שכונה', 'חתול שכונה', 'חתולי שכונה'], thunderkittens: ['לוחמת ברק', 'לוחם ברק', 'לוחמי ברק'], towerdefense: ['שומרת המאורה', 'שומר המאורה', 'שומרי המאורה'],
+    bowling: ['כוכבת באולינג', 'כוכב באולינג', 'כוכבי באולינג'], tictactoe: ['מלכת איקס עיגול', 'מלך איקס עיגול', 'אלופי איקס עיגול'], hole: 'חור רעבתן', fishy: 'דג גדול',
+    kitchen: ['שפית חתולית', 'שף חתולי', 'שפים חתוליים'], invaders: ['מצילה בחלל', 'מציל בחלל', 'מצילים בחלל'], tetris: ['מלכת הקוביות', 'מלך הקוביות', 'אלופי הקוביות'],
+    breakout: ['פותחת הכלובים', 'פותח הכלובים', 'פותחי הכלובים'], snake: 'זנב הנמר', crossing: ['שומרת המעבר', 'שומר המעבר', 'שומרי המעבר'], pong: ['אלופת הפינג־פונג', 'אלוף הפינג־פונג', 'אלופי הפינג־פונג'],
+    safari: ['צלמת ספארי', 'צלם ספארי', 'צלמי ספארי'], simon: ['מנצחת המקהלה', 'מנצח המקהלה', 'מנצחי המקהלה'], retro: ['מבקרת בפינת הרטרו', 'מבקר בפינת הרטרו', 'מבקרים בפינת הרטרו']};
+  var GSF = {critters: ['Amie des créatures', 'Ami des créatures', 'Ami·e des créatures'], bagrut: ['Prête pour le Bagrout', 'Prêt pour le Bagrout', 'Cap sur le Bagrout'], reading: 'Rat de bibliothèque', city: 'Jeune propriétaire', thinking: 'Super cerveau',
+    mathquest: 'As des maths', wordcity: 'As des mots', sciencelab: 'Jeune scientifique', funrun: ['Reine des farces', 'Roi des farces', 'As des farces'], carrace: 'Pilote de course',
+    bubbles: ['Reine des bulles', 'Roi des bulles', 'As des bulles'], cats: ['Reine des paires', 'Roi des paires', 'As des paires'], checkers: ['Reine des dames', 'Roi des dames', 'As des dames'], cups: 'Œil de lynx', digrod: 'Super muscles',
+    escape: ['Évadée', 'Évadé', 'Évasion réussie'], fishing: ['Jeune pêcheuse', 'Jeune pêcheur', 'As de la pêche'], football: 'Star du foot', hiddencats: 'Détective', lionking: 'Petit lion',
+    magic: ['Magicienne', 'Magicien', 'As de la magie'], magic2: 'Magie des chats', minesweeper: ['Jardinière', 'Jardinier', 'Main verte'], pacman: 'Tigre affamé',
+    runner: ['Coureuse', 'Coureur', 'Sprint de la savane'], runner3d: ['Coureuse 3D', 'Coureur 3D', 'Sprint 3D'], soya: ['Amie de Soya', 'Ami de Soya', 'Ami·e de Soya'], soyahome: 'Maison de Soya', streetcats: 'Chat du quartier',
+    thunderkittens: ['Guerrière', 'Guerrier', 'Force de la foudre'], towerdefense: ['Gardienne', 'Gardien', 'Garde de la tanière'], bowling: 'Star du bowling', tictactoe: ['Reine du morpion', 'Roi du morpion', 'As du morpion'],
+    hole: 'Gouffre gourmand', fishy: 'Gros poisson', kitchen: ['Cheffe chat', 'Chef chat', 'Chef·fe chat'], invaders: ["Sauveteuse de l'espace", "Sauveteur de l'espace", "Secours de l'espace"],
+    tetris: ['Reine des blocs', 'Roi des blocs', 'As des blocs'], breakout: 'Ouvre-cages', snake: 'Queue de tigre', crossing: ['Gardienne du passage', 'Gardien du passage', 'Garde du passage'],
+    pong: ['Championne de ping-pong', 'Champion de ping-pong', 'As du ping-pong'], safari: 'Photographe safari', simon: ['Cheffe de chorale', 'Chef de chorale', 'Chef·fe de chorale'], retro: ['Visiteuse rétro', 'Visiteur rétro', 'Visite rétro']};
+  var GSE = {critters: 'Critter Friend', bagrut: 'Exam Ready', reading: 'Bookworm', city: 'City Builder', thinking: 'Master Mind', mathquest: 'Math Champion', wordcity: 'Word Champion', sciencelab: 'Young Scientist', funrun: 'Prank Champion', carrace: 'Race Driver',
+    bubbles: ['Bubble Queen', 'Bubble King', 'Bubble Champion'], cats: 'Memory Master', checkers: ['Checkers Queen', 'Checkers King', 'Checkers Champion'], cups: 'Eagle Eye', digrod: 'Super Muscles', escape: 'Escape Artist', fishing: 'Young Angler',
+    football: 'Football Star', hiddencats: 'Cat Detective', lionking: 'Little Lion', magic: 'Card Magician', magic2: 'Cat Magician', minesweeper: 'Garden Hero', pacman: 'Hungry Tiger', runner: 'Savanna Runner', runner3d: '3D Runner',
+    soya: 'Soya\'s Friend', soyahome: 'Soya\'s Home', streetcats: 'Street Cat', thunderkittens: 'Lightning Fighter', towerdefense: 'Den Guardian', bowling: 'Bowling Star', tictactoe: ['Tic-Tac-Queen', 'Tic-Tac-King', 'Tic-Tac-Champ'],
+    hole: 'Hungry Hole', fishy: 'Big Fish', kitchen: 'Chef Cat', invaders: 'Space Rescuer', tetris: ['Block Queen', 'Block King', 'Block Champion'], breakout: 'Cage Opener', snake: 'Tiger Tail', crossing: 'Crossing Guard',
+    pong: 'Pong Champion', safari: 'Safari Photographer', simon: 'Choir Conductor', retro: 'Retro Visitor'};
   Object.keys(GAMES).forEach(function (g) {
-    add('g-' + g, GAMES[g][0], GS[g], GSF[g], GSE[g], 'שחקי ב' + GAMES[g][1] + ' בפעם הראשונה', 'Joue à ' + GAMES[g][2] + ' pour la première fois', 'Play ' + GAMES[g][3] + ' for the first time',
+    var nh = gn3(g, 'he');
+    add('g-' + g, GAMES[g][0], GS[g], GSF[g], GSE[g], ['שחקי ב' + nh[0] + ' בפעם הראשונה', 'שחק ב' + nh[1] + ' בפעם הראשונה', 'שחקו ב' + nh[2] + ' בפעם הראשונה'], 'Joue à ' + GAMES[g][2] + ' pour la première fois', 'Play ' + GAMES[g][3] + ' for the first time',
       (function (id) { return function (s) { return (s.stats.plays[id] || 0) >= 1; }; })(g), 'games');
   });
   // 2) wins
-  [[1, '🏆', 'ניצחון ראשון', 'Première victoire', 'First win'], [5, '🥇', 'חמישה ניצחונות', 'Cinq victoires', 'Five wins'], [25, '👑', 'מלכת הניצחונות', 'Reine des victoires', 'Victory queen'], [100, '🌟', 'אלופה', 'Championne', 'Champion']].forEach(function (w) {
-    add('w' + w[0], w[1], w[2], w[3], w[4], 'נצחי ' + w[0] + ' פעמים', 'Gagne ' + w[0] + ' fois', 'Win ' + w[0] + ' times', function (s) { return s.stats.winsTotal >= w[0]; }, 'wins');
+  [[1, '🏆', 'ניצחון ראשון', 'Première victoire', 'First win'], [5, '🥇', 'חמישה ניצחונות', 'Cinq victoires', 'Five wins'],
+    [25, '👑', ['מלכת הניצחונות', 'מלך הניצחונות', 'אלופי הניצחונות'], ['Reine des victoires', 'Roi des victoires', 'As des victoires'], ['Victory queen', 'Victory king', 'Victory champion']],
+    [100, '🌟', ['אלופה', 'אלוף', 'אליפות'], ['Championne', 'Champion', 'Champion·ne'], 'Champion']].forEach(function (w) {
+    add('w' + w[0], w[1], w[2], w[3], w[4], V3('נצחי', 'נצח', 'נצחו', w[0] > 1 ? ' ' + w[0] + ' פעמים' : ' פעם אחת'), 'Gagne ' + w[0] + ' fois', w[0] > 1 ? 'Win ' + w[0] + ' times' : 'Win once', function (s) { return s.stats.winsTotal >= w[0]; }, 'wins');
   });
   // 3) explorer: distinct games played
-  [[3, '🧭', 'חוקרת קטנה', 'Petite exploratrice', 'Little explorer'], [10, '🗺️', 'חוקרת גדולה', 'Grande exploratrice', 'Big explorer'], [20, '🚀', 'חוקרת על', 'Super exploratrice', 'Super explorer']].forEach(function (w) {
-    add('x' + w[0], w[1], w[2], w[3], w[4], 'שחקי ב-' + w[0] + ' משחקים שונים', 'Joue à ' + w[0] + ' jeux différents', 'Play ' + w[0] + ' different games', function (s) { return Object.keys(s.stats.plays).filter(function (g) { return s.stats.plays[g] > 0; }).length >= w[0]; }, 'explore');
+  [[3, '🧭', ['חוקרת קטנה', 'חוקר קטן', 'חוקרים קטנים'], ['Petite exploratrice', 'Petit explorateur', 'Petite exploration'], 'Little explorer'],
+    [10, '🗺️', ['חוקרת גדולה', 'חוקר גדול', 'חוקרים גדולים'], ['Grande exploratrice', 'Grand explorateur', 'Grande exploration'], 'Big explorer'],
+    [20, '🚀', ['חוקרת על', 'חוקר על', 'חוקרי על'], ['Super exploratrice', 'Super explorateur', 'Super exploration'], 'Super explorer']].forEach(function (w) {
+    add('x' + w[0], w[1], w[2], w[3], w[4], V3('שחקי', 'שחק', 'שחקו', ' ב-' + w[0] + ' משחקים שונים'), 'Joue à ' + w[0] + ' jeux différents', 'Play ' + w[0] + ' different games', function (s) { return Object.keys(s.stats.plays).filter(function (g) { return s.stats.plays[g] > 0; }).length >= w[0]; }, 'explore');
   });
   // 4) daily streak
   [[3, '🔥', 'שלושה ימים ברצף', 'Trois jours de suite', 'Three days in a row'], [7, '🌈', 'שבוע שלם', 'Une semaine entière', 'A whole week'], [14, '💎', 'שבועיים ברצף', 'Deux semaines', 'Two weeks'], [30, '🐉', 'חודש של קסם', 'Un mois magique', 'A magic month']].forEach(function (w) {
-    add('s' + w[0], w[1], w[2], w[3], w[4], 'פתחי את המתנה היומית ' + w[0] + ' ימים ברצף', 'Ouvre le cadeau du jour ' + w[0] + ' jours de suite', 'Open the daily gift ' + w[0] + ' days in a row', function (s) { return s.daily.best >= w[0]; }, 'streak');
+    add('s' + w[0], w[1], w[2], w[3], w[4], V3('פתחי', 'פתח', 'פתחו', ' את המתנה היומית ' + w[0] + ' ימים ברצף'), 'Ouvre le cadeau du jour ' + w[0] + ' jours de suite', 'Open the daily gift ' + w[0] + ' days in a row', function (s) { return s.daily.best >= w[0]; }, 'streak');
   });
   // 5) stars
   [[10, '⭐', 'עשרה כוכבים', 'Dix étoiles', 'Ten stars'], [50, '💫', 'חמישים כוכבים', 'Cinquante étoiles', 'Fifty stars'], [150, '🌠', 'מאה וחמישים כוכבים', 'Cent cinquante étoiles', '150 stars']].forEach(function (w) {
-    add('t' + w[0], w[1], w[2], w[3], w[4], 'אספי ' + w[0] + ' כוכבים', 'Récolte ' + w[0] + ' étoiles', 'Collect ' + w[0] + ' stars', function (s) { return s.stats.starsTotal >= w[0]; }, 'stars');
+    add('t' + w[0], w[1], w[2], w[3], w[4], V3('אספי', 'אסוף', 'אספו', ' ' + w[0] + ' כוכבים'), 'Récolte ' + w[0] + ' étoiles', 'Collect ' + w[0] + ' stars', function (s) { return s.stats.starsTotal >= w[0]; }, 'stars');
   });
   // 6) coins earned
   [[100, '💰', 'אוצר קטן', 'Petit trésor', 'Small treasure'], [500, '💰', 'אוצר גדול', 'Grand trésor', 'Big treasure'], [2000, '🏴‍☠️', 'אוצר הפיראטים', 'Trésor de pirates', 'Pirate treasure']].forEach(function (w) {
-    add('c' + w[0], w[1], w[2], w[3], w[4], 'הרוויחי ' + w[0] + ' מטבעות', 'Gagne ' + w[0] + ' pièces', 'Earn ' + w[0] + ' coins', function (s) { return s.earned >= w[0]; }, 'coins');
+    add('c' + w[0], w[1], w[2], w[3], w[4], V3('הרוויחי', 'הרוויח', 'הרוויחו', ' ' + w[0] + ' מטבעות'), 'Gagne ' + w[0] + ' pièces', 'Earn ' + w[0] + ' coins', function (s) { return s.earned >= w[0]; }, 'coins');
   });
   // 7) levels / combos / perfect
   [[5, '🐣', 'שלב 5', 'Niveau 5', 'Level 5'], [10, '🐥', 'שלב 10', 'Niveau 10', 'Level 10'], [20, '🦅', 'שלב 20', 'Niveau 20', 'Level 20']].forEach(function (w) {
-    add('l' + w[0], w[1], w[2], w[3], w[4], 'הגיעי לשלב ' + w[0] + ' בכל משחק', 'Atteins le niveau ' + w[0] + ' dans un jeu', 'Reach level ' + w[0] + ' in any game', function (s) { return s.stats.levelMax >= w[0]; }, 'levels');
+    add('l' + w[0], w[1], w[2], w[3], w[4], V3('הגיעי', 'הגע', 'הגיעו', ' לשלב ' + w[0] + ' בכל משחק'), 'Atteins le niveau ' + w[0] + ' dans un jeu', 'Reach level ' + w[0] + ' in any game', function (s) { return s.stats.levelMax >= w[0]; }, 'levels');
   });
   [[3, '✨', 'קומבו קטן', 'Petit combo', 'Small combo'], [6, '🎆', 'קומבו גדול', 'Grand combo', 'Big combo'], [12, '🌋', 'קומבו אדיר', 'Combo géant', 'Huge combo']].forEach(function (w) {
-    add('k' + w[0], w[1], w[2], w[3], w[4], 'עשי קומבו של ' + w[0], 'Fais un combo de ' + w[0], 'Make a combo of ' + w[0], function (s) { return s.stats.comboMax >= w[0]; }, 'combo');
+    add('k' + w[0], w[1], w[2], w[3], w[4], V3('עשי', 'עשה', 'עשו', ' קומבו של ' + w[0]), 'Fais un combo de ' + w[0], 'Make a combo of ' + w[0], function (s) { return s.stats.comboMax >= w[0]; }, 'combo');
   });
-  [[1, '🎯', 'מושלמת', 'Parfait', 'Perfect'], [5, '🏅', 'חמש פעמים מושלמת', 'Cinq fois parfait', 'Perfect x5'], [20, '🎖️', 'מושלמת מושלמת', 'Super parfait', 'Super perfect']].forEach(function (w) {
-    add('p' + w[0], w[1], w[2], w[3], w[4], 'קבלי 3 כוכבים ' + (w[0] > 1 ? w[0] + ' פעמים' : 'בשלב'), 'Obtiens 3 étoiles ' + (w[0] > 1 ? w[0] + ' fois' : 'dans un niveau'), 'Get 3 stars ' + (w[0] > 1 ? w[0] + ' times' : 'in a stage'), function (s) { return s.stats.perfects >= w[0]; }, 'perfect');
+  [[1, '🎯', ['מושלמת', 'מושלם', 'מושלם'], 'Parfait', 'Perfect'], [5, '🏅', ['חמש פעמים מושלמת', 'חמש פעמים מושלם', 'חמש פעמים מושלם'], 'Cinq fois parfait', 'Perfect x5'], [20, '🎖️', ['מושלמת מושלמת', 'מושלם מושלם', 'מושלם מושלם'], 'Super parfait', 'Super perfect']].forEach(function (w) {
+    add('p' + w[0], w[1], w[2], w[3], w[4], V3('קבלי', 'קבל', 'קבלו', ' 3 כוכבים ' + (w[0] > 1 ? w[0] + ' פעמים' : 'בשלב')), 'Obtiens 3 étoiles ' + (w[0] > 1 ? w[0] + ' fois' : 'dans un niveau'), 'Get 3 stars ' + (w[0] > 1 ? w[0] + ' times' : 'in a stage'), function (s) { return s.stats.perfects >= w[0]; }, 'perfect');
   });
-  [[5, '⭐', 'שחקנית רמה 5', 'Joueuse niveau 5', 'Player level 5'], [10, '🐯', 'שחקנית רמה 10', 'Joueuse niveau 10', 'Player level 10'], [20, '👑', 'שחקנית רמה 20', 'Joueuse niveau 20', 'Player level 20']].forEach(function (w) {
-    add('pl' + w[0], w[1], w[2], w[3], w[4], 'הגיעי לרמת שחקנית ' + w[0], 'Atteins le niveau de joueuse ' + w[0], 'Reach player level ' + w[0], function (s) { return levelOf(s.earned) >= w[0]; }, 'levels');
+  [[5, '⭐'], [10, '🐯'], [20, '👑']].forEach(function (w) {
+    add('pl' + w[0], w[1], ['שחקנית רמה ' + w[0], 'שחקן רמה ' + w[0], 'רמת משחק ' + w[0]], ['Joueuse niveau ' + w[0], 'Joueur niveau ' + w[0], 'Niveau de jeu ' + w[0]], 'Player level ' + w[0],
+      ['הגיעי לרמת שחקנית ' + w[0], 'הגע לרמת שחקן ' + w[0], 'הגיעו לרמת משחק ' + w[0]], ['Atteins le niveau de joueuse ' + w[0], 'Atteins le niveau de joueur ' + w[0], 'Atteins le niveau de jeu ' + w[0]], 'Reach player level ' + w[0], function (s) { return levelOf(s.earned) >= w[0]; }, 'levels');
   });
-  [[5, '📋', 'חמש משימות', 'Cinq missions', 'Five quests'], [30, '🗓️', 'אלופת המשימות', 'Championne des missions', 'Quest champion']].forEach(function (w) {
-    add('q' + w[0], w[1], w[2], w[3], w[4], 'השלימי ' + w[0] + ' משימות יומיות', 'Termine ' + w[0] + ' missions du jour', 'Complete ' + w[0] + ' daily quests', function (s) { return (s.stats.quests || 0) >= w[0]; }, 'misc');
+  [[5, '📋', 'חמש משימות', 'Cinq missions', 'Five quests'], [30, '🗓️', ['אלופת המשימות', 'אלוף המשימות', 'אלופי המשימות'], ['Championne des missions', 'Champion des missions', 'As des missions'], 'Quest champion']].forEach(function (w) {
+    add('q' + w[0], w[1], w[2], w[3], w[4], V3('השלימי', 'השלם', 'השלימו', ' ' + w[0] + ' משימות יומיות'), 'Termine ' + w[0] + ' missions du jour', 'Complete ' + w[0] + ' daily quests', function (s) { return (s.stats.quests || 0) >= w[0]; }, 'misc');
   });
   // 8) gifts / shop / album
-  add('d1', '🎁', 'מתנה ראשונה', 'Premier cadeau', 'First gift', 'פתחי מתנה יומית', 'Ouvre un cadeau du jour', 'Open a daily gift', function (s) { return s.stats.gifts >= 1; }, 'gift');
-  add('d10', '🎀', 'עשר מתנות', 'Dix cadeaux', 'Ten gifts', 'פתחי 10 מתנות יומיות', 'Ouvre 10 cadeaux', 'Open 10 daily gifts', function (s) { return s.stats.gifts >= 10; }, 'gift');
-  add('b1', '🛍️', 'קניה ראשונה', 'Premier achat', 'First purchase', 'קני משהו בחנות הלבוש', 'Achète un article à la boutique', 'Buy something in the dress-up shop', function (s) { return s.stats.bought >= 1; }, 'shop');
-  add('b5', '👗', 'ארון מלא', 'Garde-robe pleine', 'Full wardrobe', 'קני 5 פריטים', 'Achète 5 articles', 'Buy 5 items', function (s) { return s.stats.bought >= 5; }, 'shop');
-  add('a1', '📖', 'מבקרת באלבום', "Visiteuse de l'album", 'Album visitor', 'בקרי באלבום', "Visite l'album", 'Visit the album', function (s) { return s.stats.albumVisits >= 1; }, 'misc');
+  add('d1', '🎁', 'מתנה ראשונה', 'Premier cadeau', 'First gift', V3('פתחי', 'פתח', 'פתחו', ' מתנה יומית'), 'Ouvre un cadeau du jour', 'Open a daily gift', function (s) { return s.stats.gifts >= 1; }, 'gift');
+  add('d10', '🎀', 'עשר מתנות', 'Dix cadeaux', 'Ten gifts', V3('פתחי', 'פתח', 'פתחו', ' 10 מתנות יומיות'), 'Ouvre 10 cadeaux', 'Open 10 daily gifts', function (s) { return s.stats.gifts >= 10; }, 'gift');
+  add('b1', '🛍️', 'קניה ראשונה', 'Premier achat', 'First purchase', V3('קני', 'קנה', 'קנו', ' משהו בחנות הלבוש'), 'Achète un article à la boutique', 'Buy something in the dress-up shop', function (s) { return s.stats.bought >= 1; }, 'shop');
+  add('b5', '👗', 'ארון מלא', 'Garde-robe pleine', 'Full wardrobe', V3('קני', 'קנה', 'קנו', ' 5 פריטים'), 'Achète 5 articles', 'Buy 5 items', function (s) { return s.stats.bought >= 5; }, 'shop');
+  add('a1', '📖', ['מבקרת באלבום', 'מבקר באלבום', 'ביקור באלבום'], ["Visiteuse de l'album", "Visiteur de l'album", "Visite de l'album"], 'Album visitor', V3('בקרי', 'בקר', 'בקרו', ' באלבום'), "Visite l'album", 'Visit the album', function (s) { return s.stats.albumVisits >= 1; }, 'misc');
   // 9) rare chest-only stickers (6)
   [['r-unicorn', '🦄', 'חתול חד קרן', 'Chat licorne', 'Unicorn cat'], ['r-rainbow', '🌈', 'קשת בענן', 'Arc-en-ciel', 'Rainbow'], ['r-clover', '🍀', 'תלתן המזל', 'Trèfle porte-bonheur', 'Lucky clover'], ['r-saturn', '🪐', 'חתול החלל', 'Chat de l\'espace', 'Space cat'], ['r-cupcake', '🧁', 'קאפקייק', 'Cupcake', 'Cupcake'], ['r-crown', '🔱', 'שרביט הקסם', 'Sceptre magique', 'Magic scepter']].forEach(function (w) {
     add(w[0], w[1], w[2], w[3], w[4], 'מתנה נדירה – מופיעה לפעמים בתיבת המתנה היומית', 'Cadeau rare – sort parfois du coffre du jour', 'Rare gift – sometimes found in the daily chest', null, 'rare');
@@ -442,7 +495,7 @@
   shopAdd('color', 'cream', '🟡', 15, 'קרם', 'Crème', 'Cream'); shopAdd('color', 'black', '⚫', 25, 'שחור', 'Noir', 'Black'); shopAdd('color', 'white', '🤍', 25, 'לבן', 'Blanc', 'White');
   shopAdd('color', 'pink', '💗', 35, 'ורוד', 'Rose', 'Pink'); shopAdd('color', 'blue', '💙', 35, 'כחול', 'Bleu', 'Blue'); shopAdd('color', 'purple', '💜', 45, 'סגול', 'Violet', 'Purple');
   shopAdd('hat', 'party', '🎉', 12, 'כובע מסיבה', 'Chapeau de fête', 'Party hat'); shopAdd('hat', 'crown', '👑', 60, 'כתר', 'Couronne', 'Crown');
-  shopAdd('hat', 'top', '🎩', 40, 'צילינדר', 'Haut-de-forme', 'Top hat'); shopAdd('hat', 'chef', '👨‍🍳', 30, 'כובע שפית', 'Toque', 'Chef hat');
+  shopAdd('hat', 'top', '🎩', 40, 'צילינדר', 'Haut-de-forme', 'Top hat'); shopAdd('hat', 'chef', '👨‍🍳', 30, ['כובע שפית', 'כובע שף', 'כובע שף'], 'Toque', 'Chef hat');
   shopAdd('hat', 'flower', '🌸', 20, 'פרח', 'Fleur', 'Flower'); shopAdd('hat', 'cap', '🧢', 25, 'כובע מצחייה', 'Casquette', 'Cap'); shopAdd('hat', 'wizard', '🧙', 70, 'כובע קוסמים', 'Chapeau de magicien', 'Wizard hat');
   shopAdd('bow', 'red', '🎀', 10, 'פפיון אדום', 'Nœud rouge', 'Red bow'); shopAdd('bow', 'blue', '🦋', 14, 'פפיון כחול', 'Nœud bleu', 'Blue bow');
   shopAdd('bow', 'scarf', '🧣', 28, 'צעיף', 'Écharpe', 'Scarf'); shopAdd('bow', 'bell', '🔔', 22, 'פעמון', 'Clochette', 'Bell');
@@ -460,11 +513,7 @@
     t.setUTCDate(t.getUTCDate() + 4 - dn);
     var y = t.getUTCFullYear(); return y + '-W' + pad(Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7));
   }
-  function TG(o) { // text with gender forms: a string, or [feminine, masculine, neutral?]
-    if (!o) return ''; var v = o[lang()] || o.he, K = window.KidApp;
-    if (Array.isArray(v)) return K && K.g ? (v.length > 2 ? K.g(v[0], v[1], v[2]) : K.g(v[0], v[1])) : v[0];
-    return v;
-  }
+  function TG(o) { return T(o); } // (kept as a name: the texts that were three-form from the start)
   function meta(k, d) { try { var K = window.KidApp; d = d || {}; d.k = k; if (K && K.track) K.track('meta', d); } catch (e) {} }
   // presentation band (research: gamification motivates far less at primary age than in middle / high school)
   function bandOf(age) { return isNum(age) && age >= 4 && age <= 7 ? 'little' : isNum(age) && age >= 11 && age <= 18 ? 'teen' : 'kid'; }
@@ -769,7 +818,7 @@
     bonus: {he: 'בונוס', fr: 'bonus', en: 'bonus'},
     chal: {he: 'ניצחת את האתגר של {n}!', fr: 'Tu as battu le défi de {n} !', en: "You beat {n}'s challenge!"},
     chalGo: {he: 'האתגר של {n}', fr: 'Le défi de {n}', en: "{n}'s challenge"},
-    pts: {he: 'נקודות — נראה אותך עוברת!', fr: 'points à battre !', en: 'points to beat!'},
+    pts: {he: ['נקודות — נראה אותך עוברת!', 'נקודות — נראה אותך עובר!', 'נקודות — נראה אתכם עוברים!'], fr: 'points à battre !', en: 'points to beat!'},
     streak: {he: '{n} ימים ברצף!', fr: '{n} jours de suite !', en: '{n} days in a row!'},
     streakS: {he: 'כל הכבוד על ההתמדה', fr: 'Bravo pour ta régularité', en: 'Great going'},
     shield: {he: '🛡️ המגן שמר על הרצף אתמול', fr: '🛡️ Le bouclier a gardé ta série hier', en: '🛡️ The shield kept your streak yesterday'},

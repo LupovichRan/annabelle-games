@@ -2,14 +2,16 @@
 (function(){
   var r=document.documentElement, p=document.createElement('div');
   p.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding-bottom:env(safe-area-inset-bottom,0px);padding-top:env(safe-area-inset-top,0px)';
-  var dbg=+(localStorage.getItem('annabelle-debug-sab')||0);
+  // storage can be blocked (private mode, sandboxed frame): the page must still get its insets
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  var dbg=+(ls('annabelle-debug-sab')||0);
   function up(){
     if(!p.parentNode&&document.body) document.body.appendChild(p);
     var cs=p.parentNode?getComputedStyle(p):null, b=cs?parseFloat(cs.paddingBottom)||0:0;
-    var standalone=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||navigator.standalone||localStorage.getItem('annabelle-debug-standalone')==='1';
+    var standalone=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: minimal-ui)').matches||navigator.standalone||ls('annabelle-debug-standalone')==='1';
     var extra=standalone?10:4;
     // Edge-to-edge only if the page really reaches the bottom of the screen (under the system bar).
-    var android=/Android/i.test(navigator.userAgent)||localStorage.getItem('annabelle-debug-android')==='1';
+    var android=/Android/i.test(navigator.userAgent)||ls('annabelle-debug-android')==='1';
     var e2e=standalone&&android&&screen.height&&Math.abs(screen.height-innerHeight)<=8;
     if(b<8&&e2e) b=48;
     extra=b>0?6:4;

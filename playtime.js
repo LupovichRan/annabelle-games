@@ -71,21 +71,55 @@
   }
 
   /* ---------- texts ---------- */
+  // he / fr / en (follows 'annabelle-lang'). A value [feminine, masculine, neutral] speaks to the kid: the form is picked for the
+  // current profile each time it is shown (g3). Everything else is for parents, or the same for everybody.
   var T = {
-    he: {left: 'נשארו', min: 'דק׳', w5: 'עוד 5 דקות נגמר זמן המשחק להיום – כדאי לסיים בקרוב! 🐱', w1: 'נשארה דקה אחת! זמן להגיד לילה טוב למשחק 🦁',
-      time: ['זמן המשחק להיום נגמר!', 'כל הכבוד ששיחקת! בואי נחזור מחר 🌙'], bed: ['שעת שינה!', 'גם האריה הולך לישון. לילה טוב, נתראה מחר 🌙'], parent: ['המשחקים נעולים כרגע', 'ההורים נעלו את המשחקים. תשאלי אותם 💛'],
+    he: {left: 'נשארו', min: 'דק׳',
+      time: ['זמן המשחק להיום נגמר!', ['כל הכבוד ששיחקת! בואי נחזור מחר 🌙', 'כל הכבוד ששיחקת! בוא נחזור מחר 🌙', 'כל הכבוד על המשחק! נחזור מחר 🌙']],
+      bed: ['שעת שינה!', 'גם האריה הולך לישון. לילה טוב, נתראה מחר 🌙'],
+      parent: ['המשחקים נעולים כרגע', ['ההורים נעלו את המשחקים. תשאלי אותם 💛', 'ההורים נעלו את המשחקים. תשאל אותם 💛', 'ההורים נעלו את המשחקים. אפשר לשאול אותם 💛']],
       parentLink: 'הורים', panel: 'פאנל הורים', played: 'שוחק היום', of: 'מתוך', limit: 'מגבלה יומית', plus: '+15 דק׳ להיום', reset: 'איפוס היום',
       lock: '🔒 לנעול עכשיו', unlock: '🔓 לפתוח נעילה', bedtime: 'שעת שינה', on: 'פעיל', off: 'כבוי', from: 'מ־', to: 'עד', chpin: 'שינוי קוד', close: 'סגירה',
       create: 'יצירת קוד הורים (4 ספרות)', confirm: 'הקלידו שוב את הקוד', enter: 'קוד הורים', mismatch: 'הקודים לא תואמים, נסו שוב', wrong: 'קוד שגוי', wait: 'יותר מדי ניסיונות. נסו שוב בעוד', sec: 'שנ׳',
-      forgot: 'שכחתי את הקוד', math: 'שאלת הורים', check: 'בדיקה', newpin: 'הגדרת קוד חדש', saved: 'נשמר ✓', back: 'חזרה'}
+      forgot: 'שכחתי את הקוד', math: 'שאלת הורים', check: 'בדיקה', newpin: 'הגדרת קוד חדש', saved: 'נשמר ✓', back: 'חזרה', del: 'מחיקה', ok: 'אישור', answer: 'התשובה',
+      rst: 'איפוס התקדמות', rstInfo: 'בחרו אילו משחקים לאפס. כוכבים, שלבים שנפתחו ושיאים של המשחק יימחקו. מטבעות ומדבקות באלבום נשארים, אלא אם בוחרים "הכל".',
+      rstAll: 'הכל (כולל מטבעות, מדבקות ופריטים)', rstGo: '🗑️ איפוס', rstNone: 'לא נבחר כלום', rstSureAll: 'בטוחים? כל ההתקדמות תימחק. לחצו שוב לאישור',
+      rstSure: 'בטוחים? {n} משחקים יאופסו. לחצו שוב לאישור', rstYes: '⚠️ כן, לאפס', rstDone: '✅ אופס! מרענן…'},
+    fr: {left: 'Reste', min: 'min',
+      time: ['Le temps de jeu d’aujourd’hui est fini !', 'Bravo, tu as bien joué ! On se retrouve demain 🌙'],
+      bed: ['C’est l’heure de dormir !', 'Le lion va se coucher lui aussi. Bonne nuit, à demain 🌙'],
+      parent: ['Les jeux sont fermés pour le moment', 'Tes parents ont fermé les jeux. Demande-leur 💛'],
+      parentLink: 'Parents', panel: 'Espace parents', played: 'Joué aujourd’hui\u00a0', of: 'sur', limit: 'Limite par jour', plus: '+15 min aujourd’hui', reset: 'Remettre à zéro',
+      lock: '🔒 Fermer maintenant', unlock: '🔓 Rouvrir', bedtime: 'Heure du coucher', on: 'Activé', off: 'Désactivé', from: 'De', to: 'À', chpin: 'Changer le code', close: 'Fermer',
+      create: 'Créer le code parents (4 chiffres)', confirm: 'Tapez le code encore une fois', enter: 'Code parents', mismatch: 'Les codes sont différents, réessayez', wrong: 'Code incorrect', wait: 'Trop d’essais. Réessayez dans', sec: 's',
+      forgot: 'J’ai oublié le code', math: 'Question pour les parents', check: 'Vérifier', newpin: 'Choisir un nouveau code', saved: 'Enregistré ✓', back: 'Retour', del: 'Effacer', ok: 'Valider', answer: 'La réponse',
+      rst: 'Effacer la progression', rstInfo: 'Choisissez les jeux à remettre à zéro. Les étoiles, les niveaux ouverts et les records du jeu seront effacés. Les pièces et les autocollants de l’album restent, sauf avec « Tout ».',
+      rstAll: 'Tout (pièces, autocollants et objets compris)', rstGo: '🗑️ Effacer', rstNone: 'Rien n’est choisi', rstSureAll: 'Sûr ? Toute la progression sera effacée. Touchez encore pour confirmer',
+      rstSure: 'Sûr ? {n} jeux seront remis à zéro. Touchez encore pour confirmer', rstYes: '⚠️ Oui, effacer', rstDone: '✅ Effacé ! Actualisation…'},
+    en: {left: 'Time left:', min: 'min',
+      time: ['Play time is over for today!', 'Well played! See you tomorrow 🌙'],
+      bed: ['Bedtime!', 'The lion is going to sleep too. Good night, see you tomorrow 🌙'],
+      parent: ['The games are locked for now', 'Your parents locked the games. Ask them 💛'],
+      parentLink: 'Parents', panel: 'Parent panel', played: 'Played today', of: 'of', limit: 'Daily limit', plus: '+15 min today', reset: 'Reset today',
+      lock: '🔒 Lock now', unlock: '🔓 Unlock', bedtime: 'Bedtime', on: 'On', off: 'Off', from: 'From', to: 'To', chpin: 'Change code', close: 'Close',
+      create: 'Create a parent code (4 digits)', confirm: 'Type the code again', enter: 'Parent code', mismatch: 'The codes do not match, try again', wrong: 'Wrong code', wait: 'Too many tries. Try again in', sec: 's',
+      forgot: 'I forgot the code', math: 'Question for parents', check: 'Check', newpin: 'Set a new code', saved: 'Saved ✓', back: 'Back', del: 'Delete', ok: 'OK', answer: 'The answer',
+      rst: 'Reset progress', rstInfo: 'Choose which games to reset. The stars, unlocked levels and high scores of the game will be erased. Coins and album stickers stay, unless you choose "Everything".',
+      rstAll: 'Everything (coins, stickers and items too)', rstGo: '🗑️ Reset', rstNone: 'Nothing is chosen', rstSureAll: 'Sure? All progress will be erased. Tap again to confirm',
+      rstSure: 'Sure? {n} games will be reset. Tap again to confirm', rstYes: '⚠️ Yes, reset', rstDone: '✅ Reset! Refreshing…'}
   };
-  // the two warnings follow the site language (he / fr / en); Hebrew is gender-neutral here
+  // the two warnings (he / fr / en); the Hebrew is the same for everybody
   var WT = {he: {w5: 'עוד 5 דקות נגמר זמן המשחק להיום – כדאי לסיים בקרוב! 🐱', w1: 'נשארה דקה אחת! זמן להגיד לילה טוב למשחק 🦁'},
     fr: {w5: 'Encore 5 minutes de jeu pour aujourd’hui : c’est bientôt fini ! 🐱', w1: 'Il reste une minute ! On dit au revoir au jeu 🦁'},
     en: {w5: '5 minutes of play time left for today – time to wrap up soon! 🐱', w1: 'One minute left! Time to say good night to the game 🦁'}};
-  function warnText(k) { var s = (WT[plang()] || WT.he)[k]; try { var K = window.KidApp; if (K && K.gt) s = K.gt(s); } catch (e) {} return s; }
-  function L() { return 'he'; }
-  function t(k) { return T[L()][k]; }
+  function warnText(k) { return (WT[plang()] || WT.he)[k]; }
+  function L() { return plang(); }
+  function gen() { try { var K = window.KidApp; return K && K.kid ? K.kid().gender : ''; } catch (e) { return ''; } }
+  function g3(v) { // [feminine, masculine, neutral] -> the form for the current kid (neutral when the profile module is missing)
+    if (!Array.isArray(v)) return v;
+    var G = gen(); return G === 'f' ? v[0] : G === 'm' ? v[1] : v[2];
+  }
+  function t(k) { return g3((T[L()] || T.he)[k]); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
 
   /* ---------- freeze the game while locked: audio, animation frames, input ---------- */
@@ -167,7 +201,7 @@
 
   var badge, toast, lockEl, panelEl, toastTimer;
   function el(tag, attrs, html) { var e = document.createElement(tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
-  function dir() { return 'rtl'; }
+  function dir() { return plang() === 'he' ? 'rtl' : 'ltr'; }
   function setupUI() {
     if (badge) return;
     document.head.appendChild(el('style', {id: 'pt-style'}, css));
@@ -280,7 +314,7 @@
     var stars = ''; for (var i = 0; i < 14; i++) stars += '<span class="star" style="left:' + ((i * 37) % 97) + '%;top:' + ((i * 23) % 45) + '%;font-size:' + (8 + (i % 3) * 5) + 'px;animation-delay:' + (i % 5) * .4 + 's">✦</span>';
     var key = reason === 'bed' ? 'bed' : reason === 'parent' ? 'parent' : 'time';
     lockEl.innerHTML = stars + '<div dir="' + dir() + '" style="display:flex;flex-direction:column;align-items:center;gap:8px">' + LION +
-      '<h2>' + esc(T[l][key][0]) + '</h2><p>' + esc(T[l][key][1]) + '</p>' + '</div>' +
+      '<h2>' + esc(g3(T[l][key][0])) + '</h2><p>' + esc(g3(T[l][key][1])) + '</p>' + '</div>' +
       '<button id="pt-plink" type="button">🔒 ' + esc(t('parentLink')) + '</button>';
     lockEl.dataset.reason = reason; lockEl.classList.toggle('q', calm());
     lockEl.querySelector('#pt-plink').addEventListener('click', function (e) { e.stopPropagation(); openPanel(); });
@@ -288,7 +322,7 @@
   function applyLock() {
     var r = lockReason(), want = !!r;
     if (want && !locked) { locked = true; freeze(); }
-    if (want) { if (!lockEl || lockEl.dataset.reason !== r || lockEl.dataset.lang !== L()) { renderLock(r); lockEl.dataset.lang = L(); } }
+    if (want) { var lk = L() + gen(); if (!lockEl || lockEl.dataset.reason !== r || lockEl.dataset.lang !== lk) { renderLock(r); lockEl.dataset.lang = lk; } }
     else if (locked) { locked = false; if (lockEl) { lockEl.remove(); lockEl = null; } unfreeze(); }
     renderBadge();
   }
@@ -353,7 +387,7 @@
     var title = mode === 'create' ? t('create') : mode === 'confirm' ? t('confirm') : t('enter');
     var keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, '⌫', 0, '✓'];
     var card = shell('🔐 ' + esc(title), '<div class="dots"><i></i><i></i><i></i><i></i></div><div class="msg"></div>' +
-      '<div class="pad">' + keys.map(function (k) { return '<button type="button" data-k="' + k + '">' + k + '</button>'; }).join('') + '</div>' +
+      '<div class="pad">' + keys.map(function (k) { return '<button type="button" data-k="' + k + '"' + (k === '⌫' ? ' aria-label="' + esc(t('del')) + '"' : k === '✓' ? ' aria-label="' + esc(t('ok')) + '"' : '') + '>' + k + '</button>'; }).join('') + '</div>' +
       (mode === 'enter' ? '<button type="button" class="link" data-a="forgot">' + esc(t('forgot')) + '</button>' : ''));
     var v = '', msg = card.querySelector('.msg'), dots = card.querySelectorAll('.dots i'), busy = false;
     function show() { dots.forEach(function (d, i) { d.classList.toggle('f', i < v.length); }); }
@@ -386,7 +420,7 @@
   }
   function mathQ() {
     var a = 12 + Math.floor(Math.random() * 87), b = 12 + Math.floor(Math.random() * 87);
-    var card = shell('🧮 ' + esc(t('math')), '<div class="ptbig" dir="ltr">' + a + ' × ' + b + ' = ?</div><input type="number" inputmode="numeric" autocomplete="off" aria-label="answer"><div class="msg"></div>' +
+    var card = shell('🧮 ' + esc(t('math')), '<div class="ptbig" dir="ltr">' + a + ' × ' + b + ' = ?</div><input type="number" inputmode="numeric" autocomplete="off" aria-label="' + esc(t('answer')) + '"><div class="msg"></div>' +
       '<div class="row"><button type="button" class="soft" data-a="back">' + esc(t('back')) + '</button><button type="button" class="pri" data-a="ok">' + esc(t('check')) + '</button></div>');
     var inp = card.querySelector('input');
     card.querySelector('[data-a=back]').onclick = function () { openPanel(); };
@@ -408,6 +442,18 @@
     ['pong','🏓','פינג־פונג כפות',/^annabelle-retro-pong/],['safari','📸','ספארי צילום',/^annabelle-retro-safari/],['simon','🎶','מקהלת החיות',/^annabelle-retro-simon/],
     ['funrun','👟','מרוץ התעלולים',/^annabelle-funrun/],['carrace','🏎️','מרוץ מכוניות החתולים',/^annabelle-carrace/],
     ['mathquest','🧮','מסע החשבון',/^annabelle-mathquest/],['wordcity','🔤','עיר המילים',/^annabelle-wordcity/],['sciencelab','🔬','מעבדת המדע',/^annabelle-sciencelab/],['critters','🐾','עולם היצורים',/^annabelle-critters/],['bagrut','🎓','מסלול הבגרות',/^annabelle-bagrut/],['reading','📖','סולם הקריאה',/^annabelle-reading/],['thinking','🧩','חידות חשיבה',/^annabelle-thinking/],['city','🏙️','עיר החתולים',/^annabelle-city/]];
+  var RGN = { // [fr, en]: the titles of the games (the Hebrew list above keeps its short parent wording)
+    bubbles: ['Bulles de chats', 'Cat Bubbles'], cats: ['Mémoire des chats', 'Cat Memory'], checkers: ['Dames des chats', 'Cat Checkers'], cups: ['Où est la balle ?', 'Cup Shuffle'], digrod: ['La Canne Muscle', 'Muscle Rod Dig'],
+    escape: ['Évasion de la cabane', 'Treehouse Escape'], fishing: ['La pêche', 'Fishing Trip'], fishy: ['Petit Poisson Gourmand', 'Hungry Fishy'], football: ['Foot des chats', 'Cat Football'], hiddencats: ['Trouve les chats', 'Find the Cats'],
+    hole: ['Le Gouffre Gourmand', 'Hungry Hole'], kitchen: ['Le Resto des Chats', 'Cat Kitchen'], lionking: ['Aventure du petit lion', "Little Lion's Adventure"], magic: ['Magie des cartes', 'Card Magic'], magic2: ['Magie des chats', 'Magic Cats'],
+    minesweeper: ['Jardin des chats', 'Cat Garden'], pacman: ['Le tigre gourmand', 'Hungry Tiger'], runner: ['Course dans la savane', 'Savanna Run'], runner3d: ['Savane 3D', 'Savanna Run 3D'], soya: ['Soya le chat', 'Soya the Cat'],
+    soyahome: ['Soya à la maison', 'Soya at Home'], streetcats: ['Chats du quartier', 'Street Cats'], thunderkittens: ['Guerriers de la Foudre', 'Lightning Kittens'], tictactoe: ['Morpion des chats', 'Cat Tic-Tac-Toe'],
+    towerdefense: ['Gardiens de la tanière', 'Tiger Den Defense'], bowling: ['Bowling des chats', 'Bowling Cats'], invaders: ['Envahisseurs', 'Space Rescue'], tetris: ['Tetris des chats', 'Kitty Blocks'], breakout: ['Casse-cages', 'Cage Breaker'],
+    snake: ['Queue de tigre', 'Tiger Tail'], crossing: ['Passage des animaux', 'Animal Crossing'], pong: ['Ping-pong des pattes', 'Paw Pong'], safari: ['Safari photo', 'Photo Safari'], simon: ['La chorale des animaux', 'Animal Choir'],
+    funrun: ['La course aux farces', 'Prank Race'], carrace: ['Course de karts des chats', 'Kitty Kart Race'], mathquest: ['La quête des maths', 'Math Quest'], wordcity: ['La ville des mots', 'Word City'],
+    sciencelab: ['Le labo des sciences', 'Science Lab'], critters: ["Le monde des créatures", 'Critter World'], bagrut: ["Objectif Bagrout", 'Bagrut Track'], reading: ["L'échelle de lecture", 'Reading Ladder'],
+    thinking: ["Défis de logique", 'Thinking Lab'], city: ["Chat-Ville", 'Kitty City']};
+  function rgName(g) { var l = plang(), n = RGN[g[0]]; return l === 'he' || !n ? g[2] : n[l === 'fr' ? 0 : 1]; }
   var KEEPK = /^annabelle-(lang|muted|music|turn|desk|installed|pwa.*|playtime|parent|launcher|profiles|profdata-.*|device|tq|telemetry|say|saytest|family.*)$/;
   function allKeys() { var ks = []; try { for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} return ks; }
   function doReset(ids, everything) {
@@ -427,22 +473,22 @@
     if (ids.some(function (x) { return RT.test('annabelle-retro-' + x); }) && !allKeys().some(function (k) { return RT.test(k); })) try { localStorage.removeItem('annabelle-retro-zoo'); localStorage.removeItem('annabelle-retro-hub'); } catch (e) {}
   }
   function resetScreen(fromMath) {
-    var card = shell('🗑️ ' + 'איפוס התקדמות',
-      '<div class="stat" style="font-size:14px">בחרו אילו משחקים לאפס. כוכבים, שלבים שנפתחו ושיאים של המשחק יימחקו. מטבעות ומדבקות באלבום נשארים, אלא אם בוחרים "הכל".</div>' +
-      '<label class="row" style="font-weight:800"><input type="checkbox" data-all style="flex:none;width:22px;height:22px"><span class="lbl">הכל (כולל מטבעות, מדבקות ופריטים)</span></label>' +
-      '<div data-list style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:42dvh;overflow:auto">' + RG.map(function (g) { return '<label style="display:flex;align-items:center;gap:6px;font-size:15px;padding:4px"><input type="checkbox" data-g="' + g[0] + '" style="flex:none;width:20px;height:20px"><span>' + g[1] + ' ' + esc(g[2]) + '</span></label>'; }).join('') + '</div>' +
+    var card = shell('🗑️ ' + esc(t('rst')),
+      '<div class="stat" style="font-size:14px">' + esc(t('rstInfo')) + '</div>' +
+      '<label class="row" style="font-weight:800"><input type="checkbox" data-all style="flex:none;width:22px;height:22px"><span class="lbl">' + esc(t('rstAll')) + '</span></label>' +
+      '<div data-list style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:42dvh;overflow:auto">' + RG.map(function (g) { return '<label style="display:flex;align-items:center;gap:6px;font-size:15px;padding:4px"><input type="checkbox" data-g="' + g[0] + '" style="flex:none;width:20px;height:20px"><span>' + g[1] + ' ' + esc(rgName(g)) + '</span></label>'; }).join('') + '</div>' +
       '<div class="msg" data-m></div>' +
-      '<div class="row"><button type="button" class="pri" data-a="go" style="background:#c0392b">🗑️ איפוס</button><button type="button" class="soft" data-a="cancel">' + esc(t('back')) + '</button></div>');
+      '<div class="row"><button type="button" class="pri" data-a="go" style="background:#c0392b">' + esc(t('rstGo')) + '</button><button type="button" class="soft" data-a="cancel">' + esc(t('back')) + '</button></div>');
     var all = card.querySelector('[data-all]'), boxes = [].slice.call(card.querySelectorAll('[data-g]')), msg = card.querySelector('[data-m]'), step = 0;
     all.onchange = function () { boxes.forEach(function (b) { b.checked = false; b.disabled = all.checked; }); };
     card.querySelector('[data-a=cancel]').onclick = function () { showPanel('', fromMath); };
     var go = card.querySelector('[data-a=go]');
     go.onclick = function () {
       var ids = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.getAttribute('data-g'); });
-      if (!all.checked && !ids.length) { msg.textContent = 'לא נבחר כלום'; return; }
-      if (step === 0) { step = 1; msg.textContent = all.checked ? 'בטוחים? כל ההתקדמות תימחק. לחצו שוב לאישור' : 'בטוחים? ' + ids.length + ' משחקים יאופסו. לחצו שוב לאישור'; go.textContent = '⚠️ כן, לאפס'; return; }
+      if (!all.checked && !ids.length) { msg.textContent = t('rstNone'); return; }
+      if (step === 0) { step = 1; msg.textContent = all.checked ? t('rstSureAll') : t('rstSure').replace('{n}', ids.length); go.textContent = t('rstYes'); return; }
       aud('progress_reset', all.checked ? 'all' : ids.join(',').slice(0, 120), {all: all.checked, games: ids, count: ids.length});
-      doReset(ids, all.checked); msg.className = 'msg ok'; msg.textContent = '✅ אופס! מרענן…'; go.disabled = true; setTimeout(function () { location.reload(); }, 900);
+      doReset(ids, all.checked); msg.className = 'msg ok'; msg.textContent = t('rstDone'); go.disabled = true; setTimeout(function () { location.reload(); }, 900);
     };
   }
   /* ---------- parent: evidence note, learning time today, privacy & personalisation (he / fr / en, follows 'annabelle-lang') ---------- */
@@ -523,7 +569,7 @@
       sec('', '<div class="row"><span class="lbl">🌙 ' + esc(t('bedtime')) + '</span><button type="button" data-a="bed" aria-pressed="' + !!bed.on + '" class="' + (bed.on ? 'pri' : 'soft') + '">' + esc(bed.on ? t('on') : t('off')) + '</button></div>' +
         '<div class="row" dir="ltr"><input type="time" data-a="from" value="' + esc(bed.from) + '" aria-label="' + esc(t('from')) + '"><span style="flex:0">→</span><input type="time" data-a="to" value="' + esc(bed.to) + '" aria-label="' + esc(t('to')) + '"></div>') +
       sec(px('sMore'), '<div class="row"><button type="button" class="soft" data-a="priv">' + esc(px('open')) + '</button></div>' +
-        '<div class="row"><button type="button" class="soft" data-a="rst">🗑️ איפוס התקדמות</button><button type="button" class="' + (fromMath ? 'pri' : 'soft') + '" data-a="pin">' + esc(fromMath ? t('newpin') : t('chpin')) + '</button></div>') +
+        '<div class="row"><button type="button" class="soft" data-a="rst">🗑️ ' + esc(t('rst')) + '</button><button type="button" class="' + (fromMath ? 'pri' : 'soft') + '" data-a="pin">' + esc(fromMath ? t('newpin') : t('chpin')) + '</button></div>') +
       '</div></div>' +
       '<div class="msg ok">' + esc(note || '') + '</div>' +
       '<div class="pvh" data-v="learn" dir="' + (plang() === 'he' ? 'rtl' : 'ltr') + '">' + (lm.min > 0 ? '<b>' + esc(px('lt')) + ': ' + lm.min + ' ' + esc(px('min')) + (lm.done ? ' · ' + esc(px('ltDone')) : '') + '</b><br>' : '') + esc(px('ev')) + '</div>' +

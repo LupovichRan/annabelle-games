@@ -23,12 +23,17 @@
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; refresh(); });
   window.addEventListener('appinstalled', function () { installed = true; deferred = null; refresh(); });
 
+  // A value [feminine, masculine, neutral] speaks to the kid; tt() picks the form for the current profile each time a text is shown.
   var T = {
-    he: {btn: 'הוסיפי למסך הבית', launcherHint: 'גם כל משחק אפשר להוסיף לבד – פתחי אותו ולחצי 📲',
-      tIOS: 'הוספה למסך הבית', ios: ['לחצי על כפתור השיתוף <b class="pwa-share">⬆︎</b> בתחתית ספארי (ריבוע עם חץ למעלה)', 'גללי ובחרי <b>„הוספה למסך הבית”</b>', 'לחצי <b>„הוסף”</b> – והמשחק יופיע עם אייקון משלו!'],
-      iosNote: 'נפתח מתוך וואטסאפ? קודם פתחי את הקישור בספארי.',
-      tAnd: 'הוספה למסך הבית', and: ['פתחי את תפריט הדפדפן <b>⋮</b> (שלוש נקודות למעלה)', 'בחרי <b>„התקנת אפליקציה”</b> או <b>„הוספה למסך הבית”</b>', 'אשרי – והמשחק יופיע עם אייקון משלו!'],
-      andNote: 'נפתח מתוך וואטסאפ? קודם פתחי את הקישור בכרום.', ok: 'הבנתי 👍'},
+    he: {btn: ['הוסיפי למסך הבית', 'הוסף למסך הבית', 'הוספה למסך הבית'], launcherHint: ['גם כל משחק אפשר להוסיף לבד – פתחי אותו ולחצי 📲', 'גם כל משחק אפשר להוסיף לבד – פתח אותו ולחץ 📲', 'גם כל משחק אפשר להוסיף לבד – פותחים אותו ולוחצים 📲'],
+      tIOS: 'הוספה למסך הבית', ios: [['לחצי על כפתור השיתוף <b class="pwa-share">⬆︎</b> בתחתית ספארי (ריבוע עם חץ למעלה)', 'לחץ על כפתור השיתוף <b class="pwa-share">⬆︎</b> בתחתית ספארי (ריבוע עם חץ למעלה)', 'לוחצים על כפתור השיתוף <b class="pwa-share">⬆︎</b> בתחתית ספארי (ריבוע עם חץ למעלה)'],
+        ['גללי ובחרי <b>„הוספה למסך הבית”</b>', 'גלול ובחר <b>„הוספה למסך הבית”</b>', 'גוללים ובוחרים <b>„הוספה למסך הבית”</b>'],
+        ['לחצי <b>„הוסף”</b> – והמשחק יופיע עם אייקון משלו!', 'לחץ <b>„הוסף”</b> – והמשחק יופיע עם אייקון משלו!', 'לוחצים <b>„הוסף”</b> – והמשחק יופיע עם אייקון משלו!']],
+      iosNote: ['נפתח מתוך וואטסאפ? קודם פתחי את הקישור בספארי.', 'נפתח מתוך וואטסאפ? קודם פתח את הקישור בספארי.', 'נפתח מתוך וואטסאפ? קודם פותחים את הקישור בספארי.'],
+      tAnd: 'הוספה למסך הבית', and: [['פתחי את תפריט הדפדפן <b>⋮</b> (שלוש נקודות למעלה)', 'פתח את תפריט הדפדפן <b>⋮</b> (שלוש נקודות למעלה)', 'פותחים את תפריט הדפדפן <b>⋮</b> (שלוש נקודות למעלה)'],
+        ['בחרי <b>„התקנת אפליקציה”</b> או <b>„הוספה למסך הבית”</b>', 'בחר <b>„התקנת אפליקציה”</b> או <b>„הוספה למסך הבית”</b>', 'בוחרים <b>„התקנת אפליקציה”</b> או <b>„הוספה למסך הבית”</b>'],
+        ['אשרי – והמשחק יופיע עם אייקון משלו!', 'אשר – והמשחק יופיע עם אייקון משלו!', 'מאשרים – והמשחק יופיע עם אייקון משלו!']],
+      andNote: ['נפתח מתוך וואטסאפ? קודם פתחי את הקישור בכרום.', 'נפתח מתוך וואטסאפ? קודם פתח את הקישור בכרום.', 'נפתח מתוך וואטסאפ? קודם פותחים את הקישור בכרום.'], ok: 'הבנתי 👍'},
     fr: {btn: "Installer l'appli", launcherHint: "Chaque jeu peut aussi être installé seul : ouvre-le et touche 📲",
       tIOS: "Ajouter à l'écran d'accueil", ios: ['Touche le bouton Partager <b class="pwa-share">⬆︎</b> en bas de Safari (carré avec une flèche)', "Choisis <b>« Sur l'écran d'accueil »</b>", 'Touche <b>« Ajouter »</b> – le jeu a sa propre icône !'],
       iosNote: "Ouvert depuis WhatsApp ? Ouvre d'abord le lien dans Safari.",
@@ -41,8 +46,13 @@
       andNote: 'Opened from WhatsApp? Open the link in Chrome first.', ok: 'Got it 👍'}
   };
   function lang() { var l = 'he'; try { l = localStorage.getItem('annabelle-lang') || 'he'; } catch (e) {} return T[l] ? l : 'he'; }
-  // the Hebrew texts are written for a girl; kid.js turns them masculine / neutral for the current kid
-  function tt() { var t = T[lang()], K = window.KidApp, o = {}, k; if (!K || !K.gt) return t; for (k in t) o[k] = Array.isArray(t[k]) ? t[k].map(K.gt) : K.gt(t[k]); return o; }
+  function g3(v) { // [feminine, masculine, neutral]; without the profile module: neutral
+    var K = window.KidApp, G = '';
+    try { if (K && K.kid) G = K.kid().gender; } catch (e) {}
+    return G === 'f' ? v[0] : G === 'm' ? v[1] : v[2];
+  }
+  function form(v) { return Array.isArray(v) && v.length === 3 && typeof v[0] === 'string' ? g3(v) : v; }
+  function tt() { var t = T[lang()], o = {}, k; for (k in t) o[k] = k === 'ios' || k === 'and' ? t[k].map(form) : form(t[k]); return o; }
 
   var css = 'button.pwa-btn.pwa-btn.pwa-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 16px;margin:6px auto 0;' +
     'border-radius:999px;border:2px solid #7c5cff;background:#fff;color:#5b3b8c;font:800 15px/1.1 "Rubik","Varela Round",Arial,sans-serif;' +
