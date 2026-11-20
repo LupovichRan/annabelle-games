@@ -410,7 +410,7 @@
         else { if (!NET.gameOn) { NET.jr = NET.jnow = null; LAST = null; clearTimeout(NET.tm); $("n1Now").style.display = "none"; diag("ok", { ice: DG.ice, cand: candStr() }, true); } sfx.join(); setPaused(false); hideLob(); NET.gameOn = true; NET.over = false; NET.myRe = NET.oppRe = false; opts.onGuestStart(c, d.r === 2); }
         return;
       }
-      if (ty === "rematch" && NET.gameOn) { sfx.click(); NET.oppRe = true; maybeRematch(); return; }
+      if (ty === "rematch" && NET.gameOn) { if (!NET.over) return; /* a rematch wish only counts once the match is over (a stray one mid-match must not pre-approve the next) */ sfx.click(); NET.oppRe = true; maybeRematch(); return; }
       if (ty === "bye") { var had = NET.gameOn; if (had) sfx.drop(); netClose(); setPaused(false); if (had) { if (opts.onLeft) opts.onLeft(); } else lobFail("bye"); return; }
       if (ty === "ping" || ty === "hello" || ty === "start" || ty === "rematch") return;
       if (NET.gameOn && opts.onData) opts.onData(d);
