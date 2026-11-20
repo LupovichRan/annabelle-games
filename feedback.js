@@ -259,47 +259,112 @@
     }
     return out;
   }
-  /* calm mode: what a 44 px tab at (x, y) would cover. 1000 per control, 40 per sampled point (of 9) on text,
-     30 on a canvas (+60 in its lower part, where touch controls live), 8 on a picture. 0 = free. */
-  function textAt(e, x, y) {
+  /* calm mode: the real boxes of everything under a candidate 44 px tab. Collected once per placement:
+     - text: Range.getClientRects of every visible text node; controls: buttons, links, inputs, [onclick], cursor:pointer boxes;
+     - canvases (effect layers do not count) and pictures. Boxes hidden behind an opaque overlay do not count. */
+  function seen(e, cache) {
+    var v = cache.get(e); if (v !== undefined) return v;
+    try { v = e.checkVisibility ? e.checkVisibility({checkOpacity: true, checkVisibilityCSS: true}) : true; } catch (err) { v = true; }
+    cache.set(e, v); return v;
+  }
+  function onTop(e, r) {      // false when something else (an overlay) is the topmost thing at the middle of the box
+    var cx = Math.round((r.left + r.right) / 2), cy = Math.round((r.top + r.bottom) / 2);
+    if (cx < 0 || cy < 0 || cx >= innerWidth || cy >= innerHeight) return true;
     try {
-      for (var n = e.firstChild; n; n = n.nextSibling) {
-        if (n.nodeType !== 3 || !/\S/.test(n.nodeValue)) continue;
-        var rg = document.createRange(); rg.selectNodeContents(n); var rs = rg.getClientRects();
-        for (var i = 0; i < rs.length; i++) if (x >= rs[i].left - 4 && x <= rs[i].right + 4 && y >= rs[i].top - 2 && y <= rs[i].bottom + 2) return true;
+      if (getComputedStyle(e).pointerEvents === 'none') return true;
+      var t = document.elementFromPoint(cx, cy); if (!t || t === btn || t === e || e.contains(t) || t.contains(e) || t.tagName === 'HTML') return true;
+      return false;
+    } catch (err) { return true; }
+  }
+  function sense() {
+    var out = [], vw = innerWidth, vh = innerHeight, cache = new Map(), i, e, r, n;
+    function skip(e) { return e === btn || (btn && btn.contains(e)) || (dlg && dlg.contains(e)); }
+    function inView(r) { return r.width >= 1 && r.height >= 1 && r.right > 0 && r.left < vw && r.bottom > 0 && r.top < vh; }
+    /* controls */
+    var list = document.querySelectorAll('button,a[href],input,select,textarea,summary,label,[role=button],[role=checkbox],[role=switch],[role=tab],[role=link],[role=menuitem],[onclick],[tabindex]:not([tabindex="-1"]),.btn,.act,#pt-badge');
+    for (i = 0; i < list.length && out.length < 1500; i++) {
+      e = list[i]; if (skip(e)) continue; r = e.getBoundingClientRect();
+      if (!inView(r) || (r.width * r.height > vw * vh * 0.6 && !/^(BUTTON|A|INPUT|SELECT|TEXTAREA)$/.test(e.tagName))) continue;   // a page-wide click surface is not a control
+      if (!seen(e, cache) || !onTop(e, r)) continue;
+      out.push({l: r.left, t: r.top, r: r.right, b: r.bottom, k: 1});
+    }
+    /* anything else that looks tappable */
+    try {
+      var all = document.body.querySelectorAll('*'), cnt = 0;
+      for (i = 0; i < all.length && cnt < 4000; i++) {
+        e = all[i]; if (e.nodeType !== 1 || skip(e)) continue; cnt++;
+        r = e.getBoundingClientRect(); if (!inView(r) || r.width * r.height > vw * vh * 0.6) continue;
+        if (getComputedStyle(e).cursor !== 'pointer') continue;
+        var p = e.parentElement; if (p && p !== document.body && getComputedStyle(p).cursor === 'pointer') continue;
+        if (!seen(e, cache) || !onTop(e, r)) continue;
+        out.push({l: r.left, t: r.top, r: r.right, b: r.bottom, k: 1});
       }
     } catch (err) {}
-    return false;
-  }
-  function cover(x, y, hits) {
-    var w = 44, pad = 4, sc = 0, j;
-    for (j = 0; j < hits.length; j++) { var r = hits[j]; if (r.left < x + w + pad && r.right > x - pad && r.top < y + w + pad && r.bottom > y - pad) sc += 1000; }
-    var pts = [], o3 = [6, 22, 38]; for (j = 0; j < 9; j++) pts.push([x + o3[j % 3], y + o3[(j / 3) | 0]]);   // a 3 x 3 grid inside the target
-    for (j = 0; j < pts.length; j++) {
-      var px = Math.max(1, Math.min(innerWidth - 2, pts[j][0])), py = Math.max(1, Math.min(innerHeight - 2, pts[j][1])), els = [];
-      try { els = document.elementsFromPoint(px, py) || []; } catch (err) {}
-      for (var k = 0; k < els.length && k < 6; k++) {
-        var e = els[k]; if (e === btn || e.id === 'pt-badge' || (dlg && dlg.contains(e))) continue;
-        var tg = e.tagName, cs = getComputedStyle(e);
-        if (tg === 'CANVAS') { if (cs.pointerEvents === 'none' || e.id === 'vibe-bg' || +cs.opacity === 0) continue; var cr = e.getBoundingClientRect(); sc += 30 + (py > cr.top + cr.height * 0.6 ? 60 : 0); break; }   // effect layers (confetti, background) are not the game
-        if (tg === 'IMG' || tg === 'VIDEO' || tg === 'svg' || tg === 'SVG') { sc += 8; break; }
-        if (textAt(e, px, py)) { sc += 40; break; }
-        if (cs.pointerEvents === 'none') continue;           // overlays that let taps through: look below them
-        if (tg === 'HTML' || tg === 'BODY') break;
-        var bg = cs.backgroundColor; if (cs.backgroundImage !== 'none' || (bg && bg !== 'transparent' && !/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg))) break; // an opaque box hides what is below
+    /* text */
+    try {
+      var tw = document.createTreeWalker(document.body, 4, null), rg = document.createRange(), tn = 0;
+      while ((n = tw.nextNode()) && tn < 6000) {
+        if (!/\S/.test(n.nodeValue)) continue; tn++;
+        var pe = n.parentElement; if (!pe || skip(pe) || /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION)$/.test(pe.tagName)) continue;
+        if (!seen(pe, cache)) continue;
+        rg.selectNodeContents(n); var rs = rg.getClientRects(), first = true;
+        for (var j = 0; j < rs.length; j++) {
+          r = rs[j]; if (!inView(r)) continue;
+          if (first) { first = false; if (!onTop(pe, r)) break; }
+          out.push({l: r.left, t: r.top, r: r.right, b: r.bottom, k: 1});
+        }
       }
+    } catch (err) {}
+    /* canvases and pictures */
+    var cs2 = document.querySelectorAll('canvas,img,video,svg');
+    for (i = 0; i < cs2.length; i++) {
+      e = cs2[i]; if (skip(e) || e.ownerSVGElement) continue; r = e.getBoundingClientRect(); if (!inView(r)) continue;
+      if (e.tagName === 'CANVAS') {
+        var cs = getComputedStyle(e); if (cs.pointerEvents === 'none' || e.id === 'vibe-bg' || +cs.opacity === 0 || !seen(e, cache)) continue;
+        out.push({l: r.left, t: r.top, r: r.right, b: r.bottom, k: 2});     // effect layers (confetti, background) are not the game
+      } else if (seen(e, cache)) out.push({l: r.left, t: r.top, r: r.right, b: r.bottom, k: 3});
+    }
+    return out;
+  }
+  /* what a 44 px tab at (x, y) would cover, margin included. 1000 + the covered area per text/control box, 30 per canvas
+     (+60 in its lower part, where touch controls live), 8 per picture. 0 = free. */
+  function cover(x, y, boxes, pad) {
+    var w = 44, pad = pad == null ? 4 : pad, sc = 0, L = x - pad, T = y - pad, R = x + w + pad, B = y + w + pad;
+    for (var j = 0; j < boxes.length; j++) {
+      var r = boxes[j]; if (r.l >= R || r.r <= L || r.t >= B || r.b <= T) continue;
+      if (r.k === 1) sc += 1000 + Math.max(0, Math.min(r.r, x + w) - Math.max(r.l, x)) * Math.max(0, Math.min(r.b, y + w) - Math.max(r.t, y)) / 4;
+      else if (r.k === 2) sc += 30 + (y + 22 > r.t + (r.b - r.t) * 0.6 ? 60 : 0);
+      else sc += 8;
     }
     return sc;
   }
   function placeCalm(force) {
-    var vw = innerWidth, vh = innerHeight, w = 44, hits = busyRects();
+    var vw = innerWidth, vh = innerHeight, w = 44;
     if (userPos) { setXY(userPos[0] * vw - 22, userPos[1] * vh - 22); return; }
-    if (!force && btn.style.left) { if (cover(btn.offsetLeft, btn.offsetTop, hits) < 40) return; }   // it stays where it is unless it now covers something
-    var ys = [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.8, 0.12, 0.9], rtl = (document.documentElement.getAttribute('dir') || '') === 'rtl', best = null, bs = 1e9;
-    for (var i = 0; i < ys.length; i++) for (var s2 = 0; s2 < 2; s2++) {
-      var x = (s2 === 0) === rtl ? 0 : vw - w, y = Math.round(ys[i] * vh - 22), sc = cover(x, y, hits) + i * 2 + s2;   // the end side first (left in Hebrew): the home / back buttons sit at the start side
-      if (sc < bs) { bs = sc; best = [x, y]; }
+    var boxes = sense(), cur = btn.style.left ? cover(btn.offsetLeft, btn.offsetTop, boxes, 0) : -1;
+    if (!force && cur === 0) return;                  // it stays where it is unless it now covers something
+    var rtl = false; try { rtl = (document.documentElement.getAttribute('dir') || getComputedStyle(document.body).direction) === 'rtl' || getComputedStyle(document.documentElement).direction === 'rtl'; } catch (e) {}
+    var xs = rtl ? [0, vw - w] : [vw - w, 0], cand = [], i, s2, y;       // the end side first (left in Hebrew): the home / back buttons sit at the start side
+    for (y = 6; y <= vh - w - 6; y += 6) for (s2 = 0; s2 < 2; s2++) cand.push([xs[s2], y, s2]);
+    for (s2 = 0; s2 < 2; s2++) cand.push([xs[s2], vh - w, s2]);
+    var best = null, bs = 1e9, free = false, pads = [4, 0], pi;
+    for (pi = 0; pi < pads.length && !free; pi++) for (i = 0; i < cand.length; i++) {       // a few px of air first; if nothing has it, just no overlap
+      var c = cand[i], sc = cover(c[0], c[1], boxes, pads[pi]);
+      if (sc >= 1000) continue;
+      sc += c[2] * 6 + Math.abs(c[1] + 22 - vh / 2) / vh * 10;           // free spots: end side, near the middle
+      if (sc < bs) { bs = sc; best = c; free = true; }
     }
+    if (!free) {          // nowhere free: the bottom-end corner area (above any bottom bar), the least covered
+      bs = 1e9;
+      for (i = 0; i < cand.length; i++) {
+        var d = cand[i]; if (d[1] < vh * 0.72) continue;
+        var s3 = cover(d[0], d[1], boxes) + d[2] * 40 + (vh - w - d[1]) * 0.3;
+        if (s3 < bs) { bs = s3; best = d; }
+      }
+      if (!best) best = [xs[0], vh - w - 6, 0];
+      if (cur >= 0 && cur <= cover(best[0], best[1], boxes, 0) && !force) return;
+    }
+    if (cur >= 0 && btn.offsetLeft === best[0] && btn.offsetTop === best[1]) return;
     setXY(best[0], best[1]);
   }
   function place(force) {
@@ -394,6 +459,16 @@
     place(true); placeSoon(600); setTimeout(place, 2000);
     window.addEventListener('resize', function () { if (Q && !userPos && btn) btn.style.left = ''; placeSoon(80); });
     document.addEventListener('click', function () { placeSoon(450); }, true);
+    /* the page changes under the tab (layout, menus, scrolling): look again, debounced, and move only when it now covers something */
+    var recheckT = 0, scrollT = 0;
+    function recheck(ms) { if (!Q || recheckT) return; recheckT = setTimeout(function () { recheckT = 0; if (btn && !btn.hidden && !isAway() && !dlg && !document.hidden) place(); }, ms || 350); }
+    window.addEventListener('scroll', function () { clearTimeout(scrollT); scrollT = setTimeout(function () { recheck(10); }, 180); }, {passive: true, capture: true});
+    try { if (window.ResizeObserver) new ResizeObserver(function () { recheck(350); }).observe(document.documentElement); } catch (err) {}
+    try {
+      if (window.MutationObserver) new MutationObserver(function (recs) {
+        for (var i = 0; i < recs.length; i++) { var tg = recs[i].target; if (tg === btn || (btn && btn.contains(tg)) || (dlg && dlg.contains(tg)) || (tg.nodeType === 1 && /^(fb-style|fb-dlg)$/.test(tg.id))) continue; recheck(350); return; }
+      }).observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'open', 'dir', 'lang']});
+    } catch (err) {}
     window.addEventListener('storage', function (e) { if (e.key === 'annabelle-lang' && btn) { btn.setAttribute('aria-label', t('btn')); btn.title = t('btn') + ' (F8)'; } });
     watch();
   }
