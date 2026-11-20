@@ -600,10 +600,19 @@
     if (window.__kidMods) return; window.__kidMods = 1;
     var base = ''; try { base = me && me.getAttribute('src') ? me.getAttribute('src').replace(/[^\/]*$/, '') : ''; } catch (e) {}
     if (/["<>\s]/.test(base)) base = '';
-    var mods = ['kid.js', 'telemetry.js', 'feedback.js', 'vibe.js', 'juice.js'], wrote = false;
+    // vibe.js (the WebGL ambience, 40 KB) never boots in calm mode (the site default), so it is not even downloaded then;
+    // it is fetched the first time the 'annabelle-calm' event turns calm off (see the listener below).
+    var calmNow = true; try { calmNow = localStorage.getItem('annabelle-calm') !== '0'; } catch (e) {}
+    var mods = ['kid.js', 'telemetry.js', 'feedback.js', 'juice.js'], wrote = false;
+    if (!calmNow) mods.splice(3, 0, 'vibe.js');
+    function loadVibe() {
+      if (window.Vibe || window.__vibeAsked) return; window.__vibeAsked = 1;
+      try { var s = document.createElement('script'); s.src = base + 'vibe.js'; (document.head || document.documentElement).appendChild(s); } catch (e) {}
+    }
+    try { window.addEventListener('annabelle-calm', function () { var c = true; try { c = localStorage.getItem('annabelle-calm') !== '0'; } catch (e) {} if (!c) loadVibe(); }); } catch (e) {}
     try {
       if (me && document.currentScript === me && document.readyState === 'loading' && !me.async && !me.defer && me.type !== 'module') {
-        document.write('<script src="' + base + 'kid.js"><\/script><script src="' + base + 'telemetry.js"><\/script><script src="' + base + 'feedback.js" defer><\/script><script src="' + base + 'vibe.js" defer><\/script><script src="' + base + 'juice.js" defer><\/script>');
+        document.write('<script src="' + base + 'kid.js"><\/script><script src="' + base + 'telemetry.js"><\/script><script src="' + base + 'feedback.js" defer><\/script>' + (calmNow ? '' : '<script src="' + base + 'vibe.js" defer><\/script>') + '<script src="' + base + 'juice.js" defer><\/script>');
         wrote = true;
       }
     } catch (e) {}
