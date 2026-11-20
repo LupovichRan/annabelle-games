@@ -17,7 +17,7 @@ Each rule says what to do, where it comes from, and how the shop does it.
 
 ### 1. Five main choices or fewer per screen
 - **Source:** COGA 4.6.3 *Avoid Too Much Content*: "five or less main choices on each screen"; extra links go in the footer.
-- **Shop:** 3 tabs; one view at a time. "My games" has 2 buttons above the list. "For you" shows at most 3 ideas.
+- **Shop:** 3 tabs; one view at a time. "My games" has 2 buttons above the list (a third, "Choose my games", appears from 7 games up and replaces the one-time trim offer once that is answered). Level-ups and other news never pop over a game in calm mode: they wait as one quiet line on the home screen and one small card at the result screen. "For you" shows at most 3 ideas.
   Browsing shows one category at a time (6 chips), never all shelves at once. The calm-mode switch lives in the footer.
 - **Home page:** show only the kid's library (6–9 tiles), one "add games" entry to the shop, and move everything else
   (album, challenges, themes, family board, language) behind one profile/menu button.
