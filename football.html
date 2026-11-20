@@ -64,18 +64,6 @@ canvas#cv{display:block;border-radius:14px;box-shadow:0 6px 0 #1d6a2e;touch-acti
 .penmode #stick{display:none}.penmode #pad{justify-content:center}.penmode #kickBtn{width:128px;height:128px;font-size:20px;background:linear-gradient(#ffd54a,#f2a900);box-shadow:0 6px 0 #a87400;color:#4a3300}
 .big.p{background:linear-gradient(#c58cf0,#9050c8);box-shadow:0 4px 0 #5e2e8a}
 .big.b{background:linear-gradient(#5ac8ff,#2a8fd0);box-shadow:0 4px 0 #1b6a9c}
-#netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s}
-#lobby{justify-content:center;gap:12px;padding:10px;overflow:auto}
-.lobpane{display:none;flex-direction:column;align-items:center;gap:10px}
-.lobpane.on{display:flex}
-#lobCode{font-size:clamp(40px,13vw,72px);font-weight:900;letter-spacing:.12em;color:#2fa04a;direction:ltr;text-shadow:0 4px 0 #0002;line-height:1}
-#lobIn{width:min(80vw,300px);height:70px;border-radius:18px;border:3px solid #2fa04a;background:#fff;text-align:center;font:900 34px Rubik,Arial;color:#2c4a1c;letter-spacing:.12em;direction:ltr;user-select:text;-webkit-user-select:text}
-#lobCd{font-weight:900;font-size:26px;color:#2fa04a;direction:ltr;min-height:32px}#lobCd.low{color:#e23b3b;animation:pulse2 .6s infinite alternate}@keyframes pulse2{to{transform:scale(1.12)}}
-#lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px}
-#weak{position:fixed;left:50%;top:14%;transform:translateX(-50%);background:#fff8dc;border:2px solid #f2a900;border-radius:999px;padding:3px 12px;font-weight:800;font-size:14px;z-index:15;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 2px 0 #0002;animation:wk 1.6s infinite alternate}
-#weak.on{display:block}@keyframes wk{from{opacity:.75}to{opacity:1}}
-#appr,#npause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008}#appr{z-index:45}#npause{z-index:40}#appr.on,#npause.on{display:flex}
-#appr .card,#npause .card{background:#e9ffd9;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2,#npause h2{margin:0;font-size:22px;color:#2fa04a}#apprN{font-size:64px;font-weight:900;color:#2fa04a;letter-spacing:.1em;direction:ltr;line-height:1}
 .dance{display:inline-block;animation:dn .6s infinite alternate}@keyframes dn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 .sub2{font-size:14px;opacity:.85;text-align:center;margin:-4px 0 2px;min-height:18px}
 #adv{width:100%;max-width:460px;text-align:center}#adv summary{cursor:pointer;font-weight:700;font-size:14px;opacity:.85;list-style:none;padding:4px}#adv summary::-webkit-details-marker{display:none}#adv[open]{background:#ffffff80;border-radius:14px;padding-bottom:8px}
@@ -88,14 +76,15 @@ canvas#cv{display:block;border-radius:14px;box-shadow:0 6px 0 #1d6a2e;touch-acti
 kbd{background:#fff;border:1px solid #2fa04a;border-radius:5px;padding:0 5px;font:700 12px monospace}
 
 /* ===== desktop fit (laptop & big monitors) ===== */
-@media (min-width:1100px) and (min-height:780px){html.desk #menu>*,html.desk #lobby>*{zoom:1.15}}
-@media (min-width:1100px) and (min-height:860px){html.desk #menu>*,html.desk #lobby>*{zoom:1.45}}
-@media (min-width:1500px) and (min-height:1000px){html.desk #menu>*,html.desk #lobby>*{zoom:1.7}}
+@media (min-width:1100px) and (min-height:780px){html.desk #menu>*{zoom:1.15}}
+@media (min-width:1100px) and (min-height:860px){html.desk #menu>*{zoom:1.45}}
+@media (min-width:1500px) and (min-height:1000px){html.desk #menu>*{zoom:1.7}}
 html.desk .screen{overflow-y:auto}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/football.webmanifest"><meta name="theme-color" content="#d9f5c8"><link rel="icon" type="image/png" sizes="192x192" href="icons/football-192.png"><meta name="apple-mobile-web-app-title" content="כדורגל חתולים"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="icons/football-apple-180.png"><script src="pwa.js" data-app="football" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#overNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="rewards.js" defer></script>
+<script src="net1v1.js"></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -121,26 +110,15 @@ html.desk .screen{overflow-y:auto}
   <div class="lbl2" id="tShirt" style="display:none"></div><div id="cupRow"></div>
   <div id="best" style="font-size:14px;opacity:.8"></div>
 </section>
-<section class="screen" id="lobby">
-  <h1 id="lobT"></h1>
-  <div class="heads">📱🐱📱</div>
-  <div class="row" id="lobMain"><button class="big" id="bCreate"></button><button class="big p" id="bJoin"></button></div>
-  <div class="lobpane" id="lobCreate"><div style="font-weight:800" id="lobCodeL"></div><div id="lobCode"></div><a class="big" id="lobWa" target="_blank" rel="noopener"></a><div id="lobWait"></div><div id="lobCd"></div></div>
-  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="6" autocomplete="off"><button class="big" id="bGo"></button></div>
-  <div id="lobStatus"></div>
-  <button class="big g" id="lobBack"></button>
-</section>
 <section class="screen" id="game">
-  <div class="bar"><button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button><div class="pill" id="hud"></div><i id="netDot" aria-hidden="true"></i><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="padBtn" aria-label="controls">🎮</button><div style="width:48px;flex:0 0 auto"></div></div>
+  <div class="bar"><button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button><div class="pill" id="hud"></div><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><button class="iconbtn" id="padBtn" aria-label="controls">🎮</button><div style="width:48px;flex:0 0 auto"></div></div>
   <div id="wrap"><canvas id="cv"></canvas></div>
   <div id="pad"><div id="stick"><span class="arr" style="top:5px;left:50%;margin-left:-6px">▲</span><span class="arr" style="bottom:5px;left:50%;margin-left:-6px">▼</span><span class="arr" style="left:7px;top:50%;margin-top:-9px">◀</span><span class="arr" style="right:7px;top:50%;margin-top:-9px">▶</span><div id="thumb"></div></div><button id="kickBtn"></button></div>
 </section>
 <div id="over"><div class="card"><h2 id="overT"></h2><div id="overS" style="font-size:44px"></div><div id="overD" style="font-weight:700"></div><button class="big g" id="againBtn"></button><div id="overNav"></div></div></div>
-<div id="npause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="npauseT"></h2><div id="npauseS" style="font-weight:700"></div><button class="big g" id="npauseLeave"></button></div></div>
-<div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big g" id="apprYes"></button><button class="big s" id="apprNo"></button></div></div></div>
-<div id="weak"></div><div id="toast"></div><div id="hint"></div>
+<div id="toast"></div><div id="hint"></div>
 <canvas id="conf"></canvas>
-<script>document.addEventListener("visibilitychange",()=>{if(document.hidden)window.__hidAt=Date.now()});
+<script>
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
@@ -301,7 +279,7 @@ function drawMenu(){
  $("tDiff").textContent=t("diff");$("bMatch").textContent=t("match");$("bPen").textContent=t("pen");$("bStreak").textContent=t("streakB");
  $("tChat").textContent=t("chatT");$("chatRow").innerHTML=["0","1"].map(k=>`<button class="lang ${(chatOn()?"1":"0")===k?"sel":""}" data-chat="${k}">${t("chat"+k)}</button>`).join("");
  $("tTeam").textContent=t("teamT");$("teamD").textContent=t("teamD"+teamSize());$("advT").textContent=t("advT");$("teamRow").innerHTML=[1,2,3,4].map(k=>`<button class="lang ${k===teamSize()?"sel":""}" data-team="${k}">${t("team"+k)}</button>`).join("");
- $("bOnline").textContent=t("onlineB");onlineLang();
+ $("bOnline").textContent=t("onlineB");if(NV)NV.drawLang();
  $("diffRow").innerHTML=["easy","normal","hard"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}">${t(k)}</button>`).join("");
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");
  const b=+ls.get("annabelle-football-best")||0,cp=cupGet();const tp=topGet(),pw=proWins();$("best").style.whiteSpace="pre-line";$("best").textContent=[(b?"🏆 "+b:"")+(cp.cups?"  ·  "+t("cupBest")+" 🥇×"+cp.cups:"")+(pw?"  ·  🔥×"+pw:""),tp.length?"🎯 "+tp.join(" · "):""].filter(Boolean).join("\n");
@@ -319,7 +297,7 @@ document.addEventListener("click",e=>{
  const SH=e.target.closest("[data-shirt]");if(SH&&+SH.dataset.shirt<cupGet().shirts){ls.set("annabelle-football-shirt",SH.dataset.shirt);SFX.click();drawMenu()}
  if(D){diff=D.dataset.diff;if(diff==="hard")ls.set("annabelle-football-hard","1");else{ls.set("annabelle-football-diff",diff);ls.set("annabelle-football-hard","0")}SFX.click();drawMenu()}
 });
-window.toMenu=function(){netLeave();weakHide();crowdStop();G=null;document.documentElement.classList.remove("penmode");$("over").classList.remove("on");stopConf();show("menu");drawMenu();$("hint").innerHTML=""};
+window.toMenu=function(){if(NV)NV.leaveToMenu();crowdStop();G=null;document.documentElement.classList.remove("penmode");$("over").classList.remove("on");stopConf();show("menu");drawMenu();$("hint").innerHTML=""};
 /* ---------- canvas / geometry (logical 600x900, portrait) ---------- */
 const FW=600,FH=900,OX=110,OY=110,LW=FW+2*OX,LH=FH+2*OY,cv=$("cv"),cx=cv.getContext("2d");
 const PX0=30,PX1=570,PY0=70,PY1=830,GX0=205,GX1=395,GD=46; // pitch + goal mouth + goal depth
@@ -472,7 +450,7 @@ function startMatch(online,cfg){ // online: true = this is the HOST of an online
   cpu:{x:FW/2,y:MID-120,vx:0,vy:0,r:30*SZ,ang:Math.PI/2,silly:0,sillyKind:"",sillyT:rr(P.sillyEvery),react:0,tx:FW/2,ty:MID-120,sleep:false,dash:0,cool:0,tilt:0},
   mates:buildMates(TS,SZ,GKO),
   ball:{x:FW/2,y:(PY0+PY1)/2,vx:0,vy:0,r:16},parts:[],msgT:0};
- if(on){G.sb=[];G.off=null;G.base=null;G.lastN=0;G.jit=0;G.dly=DELAY;G.sm=0;G.weak=false;weakHide();NET.t0=performance.now();NET.last=Date.now();NET.lastSnap=0;NET.lx=0;NET.ly=0;NET.lt=0;NET.dashCool=0;NET.myRe=NET.oppRe=false}
+ if(on){G.sb=[];G.off=null;G.base=null;G.lastN=0;G.jit=0;G.dly=DELAY;G.sm=0;NS.t0=performance.now();NS.lastSnap=0;NS.lx=0;NS.ly=0;NS.lt=0;NS.dashCool=0}
  ptr=null;show("game");setHint();updHud();SFX.whistle();toast(t("kickoff")+(on?" "+t(guest?"youG":"youO"):""),on?2000:1200,true);crowdStart();applyPad();loop();
  RW()&&RW().award({game:"football",event:"play"});
  if(cupR>=0){toast(t("crnd")+" "+(cupR+1)+"/4 · "+t("opp")[cupR],1800,true);SFX.cupIn()}
@@ -745,7 +723,7 @@ function cpuThink(dt){
 }
 function endMatch(){
  const g=G;if(g.over)return;g.over=true;SFX.final();
- if(g.online)netSend({t:"over",s:[g.s[0],g.s[1]]});
+ if(g.online){netSend({t:"over",s:[g.s[0],g.s[1]]});if(NV)NV.setOver(true)}
  showOver(g);
 }
 function showOver(g){ // result card, always from MY point of view
@@ -901,7 +879,7 @@ function render(){
   const {me,cpu,ball}=G;
   for(const m of G.mates){const o=m.team===0?{c:"#f7b267",d:"#c96a14",shirt:m.role==="gk"?"#f2c94c":"#e23b3b"}:{c:"#b9c0c7",d:"#6b737c",shirt:m.role==="gk"?"#2fb36a":"#4a90e2"};
    drawKitten(m.x,m.y,m.r,o.c,o.d,m.ang,{stripes:m.team===0,shirt:o.shirt,glove:m.role==="gk",run:Math.hypot(m.vx,m.vy)>40&&!m.sleep,sleep:m.sleep,tilt:m.dive?m.dive*(m.vx>=0?.8:-.8):0,emoji:m.silly>0?({fly:"🦋",sleep:"💤",lost:"❓",sneeze:"🤧"})[m.sillyKind]:""})}
-  const weakOpp=G.online&&G.weak; // the friend's line is weak: their kitten dozes off for a moment
+  const weakOpp=G.online&&!!(NV&&NV.NET.weak); // the friend's line is weak: their kitten dozes off for a moment
   if(G.online&&!G.guest)drawKitten(cpu.x,cpu.y,cpu.r,"#9aa3ad","#6b737c",cpu.ang,{stripes:true,shirt:"#4a90e2",tilt:cpu.tilt,run:!weakOpp&&Math.hypot(cpu.vx,cpu.vy)>40,sleep:weakOpp,emoji:weakOpp?"💤":cpu.dash>0?"💨":""});
   else if(G.online)drawKitten(cpu.x,cpu.y,cpu.r,"#9aa3ad","#6b737c",cpu.ang,{stripes:true,shirt:"#4a90e2",tilt:cpu.tilt,run:Math.hypot(cpu.vx,cpu.vy)>40,emoji:cpu.dash>0?"💨":""});
   else drawKitten(cpu.x,cpu.y,cpu.r,"#9aa3ad","#6b737c",cpu.ang,{stripes:true,shirt:G.oppShirt,run:Math.hypot(cpu.vx,cpu.vy)>40&&!cpu.sleep,sleep:cpu.sleep,emoji:cpu.silly>0?({fly:"🦋",sleep:"💤",lost:"❓",sneeze:"🤧"})[cpu.sillyKind]:"",tilt:cpu.silly>0&&cpu.sillyKind==="lost"?Math.sin(performance.now()/120)*.3:0});
@@ -937,7 +915,7 @@ function showPause(){$("overT").textContent=t("paused");$("overS").textContent="
 function hidePause(){$("over").classList.remove("on");$("againBtn").textContent=t("again");delete $("againBtn").dataset.mode;last=performance.now()}
 $("pauseBtn").addEventListener("click",()=>{SFX.click();doPause(!G.pause)});
 $("againBtn").addEventListener("click",()=>{SFX.click();if($("againBtn").dataset.mode==="resume"){doPause(false);return}
- if(G&&G.online){if(!G.over||NET.myRe)return;NET.myRe=true;$("againBtn").textContent=t("waitRe");if(NET.host)maybeRematch();else netSend({t:"rematch"});return}
+ if(G&&G.online){if(!G.over||!NV||NV.myRe||!NV.gameOn)return;NV.rematch();$("againBtn").textContent=t("waitRe");return}
  const m=G&&G.mode,dm=$("againBtn").dataset.mode,cr=G&&G.cup;$("over").classList.remove("on");stopConf();$("overD").style.whiteSpace="";
  if(dm==="cupnext"){const c=cupGet();startCup(c.done>=4?0:c.done);return}if(dm==="cupretry"){startCup(cr);return}
  m==="pen"?startPen(!!(G&&G.streak)):startMatch()});
@@ -955,7 +933,7 @@ let joy=null; // {x,y} -1..1 while the thumb is held
 function applyPad(){document.documentElement.classList.toggle("padon",padOn);$("padBtn").classList.toggle("on",padOn);$("padBtn").title=t("padHint");if(G&&G.mode==="match"&&padOn)ptr=null;updKick();fit()}
 function updKick(){document.documentElement.classList.toggle("penmode",!!(G&&G.mode==="pen"));$("kickBtn").innerHTML=G&&G.mode==="pen"?t(["padStop0","padStop1","padStop2"][Math.min(2,G.stage||0)]):t("padKick")}
 function doDash(){if(!G||G.pause||G.netp||G.over)return;
- if(G.guest){const n=performance.now();if(n>NET.dashCool&&G.state==="play"){NET.dashCool=n+900;SFX.dash();try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}netSend({t:"in",x:NET.lx,y:NET.ly,d:1,q:++NET.iq})}return}
+ if(G.guest){const n=performance.now();if(n>NS.dashCool&&G.state==="play"){NS.dashCool=n+900;SFX.dash();try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}netSend({t:"in",x:NS.lx,y:NS.ly,d:1,q:++NS.iq})}return}
  if(G.mode==="match"){if(G.me.cool<=0&&G.state==="play"){G.me.dash=.28;G.me.cool=.9;SFX.dash();ev("da",0);try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}}}else penAction()}
 (function(){
  const st=$("stick"),th=$("thumb");let id=null;
@@ -976,7 +954,7 @@ addEventListener("keydown",e=>{
  const k=e.key.length===1?e.key.toLowerCase():e.key,menu=$("menu").classList.contains("active"),btn=e.target&&e.target.closest&&e.target.closest("button,a");
  if(k==="m"){muted=!muted;ls.set("annabelle-muted",muted?"1":"0");updMute();if(muted)crowdStop();else if(G&&!G.pause&&!G.over)crowdStart();return}
  if(menu){if(k==="1"){e.preventDefault();$("bMatch").click()}else if(k==="2"){e.preventDefault();$("bPen").click()}else if(k==="3"){e.preventDefault();$("bOnline").click()}else if(k==="4"){e.preventDefault();$("bCup").click()}else if(k==="5"){e.preventDefault();$("bStreak").click()}else if((k==="Enter"||k===" ")&&!btn){e.preventDefault();$("bMatch").click()}return}
- if(!G){if(k==="Escape"&&$("lobby").classList.contains("active")){e.preventDefault();toMenu()}return}
+ if(!G){if(k==="Escape"&&$("n1Lob")&&$("n1Lob").classList.contains("show")){e.preventDefault();toMenu()}return}
  if(k==="Escape"||k==="p"){e.preventDefault();if($("over").classList.contains("on")&&!G.pause){toMenu()}else doPause(!G.pause);return}
  if($("over").classList.contains("on")){if((k==="Enter"||k===" ")&&!btn){e.preventDefault();$("againBtn").click()}return}
  if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key))e.preventDefault();
@@ -997,26 +975,14 @@ function confetti(){
  (function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cfR=requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})();
 }
 function stopConf(){cancelAnimationFrame(cfR);const c=$("conf");c.getContext("2d").clearRect(0,0,c.width,c.height)}
-/* ---------- online 1-vs-1: WebRTC via PeerJS (room code or invitation link) ----------
+/* ---------- online 1-vs-1: the shared module net1v1.js does the connection (room code + secret link, host approval, HMAC reconnect, lobby) ----------
    The HOST runs the whole match (host-authoritative). The friend's phone only sends its joystick/keys (direction vector + dash)
    and draws the snapshots it gets back (turned 180 degrees, so the friend's own goal is at the bottom).
    Everything from the network is untrusted: it is validated and rebuilt, never used as-is. */
-const ROOM_SECS=300,DELAY=110;
-const NET={waitCode:null,rs:null,cand:null,joinSec:null,key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,code:"",myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0,
- t0:0,lastSnap:0,sn:0,lx:0,ly:0,lt:0,dashCool:0,rinT:0,rinN:0,pauseT:0,tok:200,tokT:0,rec:false,rinQ:-1,iq:0,wt:null,wi:-1};
-const SOFT=4000,HARD=20000;   // quiet for 4 s: "weak connection" pill (the match keeps going); quiet for 20 s: hard pause with a Leave button
-const PEER_SRC="vendor/peerjs.min.js";
-/* ICE servers. STUN finds a direct route; TURN relays the game when there is none (two phones on mobile data / strict Wi-Fi).
-   The free public relay below is shared and best-effort: for a rock-solid game put your own TURN credentials in
-   localStorage["annabelle-turn"] as a JSON array of ICE servers (e.g. from a free metered.ca / Cloudflare TURN account). */
-function iceServers(){
- let own=null;try{own=JSON.parse(localStorage.getItem("annabelle-turn")||"null")}catch(e){}
- const base=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
-  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:80?transport=tcp","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
- return Array.isArray(own)&&own.length?[...own,...base]:base}
-const PEER_CFG={config:{iceServers:iceServers(),iceCandidatePoolSize:2}};
-const PID="annabelle-fb-";
-function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
+const DELAY=110;var NV=null;
+const NS={t0:0,lastSnap:0,sn:0,lx:0,ly:0,lt:0,dashCool:0,rinT:0,rinN:0,pauseT:0,tok:200,tokT:0,rinQ:-1,iq:0};   // this page's own counters for snapshots / input
+function netSend(o){if(NV)NV.send(o)}
+function showLobby(){if(NV)NV.showLobby()}
 // --- validation: every number / array from the network is checked and rebuilt ---
 const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
 const num=(x,lo,hi)=>typeof x==="number"&&x>=lo&&x<=hi;          // NaN and Infinity fail
@@ -1032,151 +998,6 @@ function cleanSnap(d,nm){
  for(const q of d.e){if(!Array.isArray(q)||q.length!==3||typeof q[0]!=="string"||!EVCODES.has(q[0])||!num(q[1],-1e4,1e4)||!num(q[2],-1e4,1e4))return null;e.push([q[0],q[1],q[2]])}
  return {n:d.n,ht:d.h,s:[d.s[0],d.s[1]],tm:d.tm,st:d.st,p:d.p,j:d.j,a,b,bl,m,e,fired:false};
 }
-const rnd=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>b.toString(16).padStart(2,"0")).join("");
-async function hmac(key,msg){const e=new TextEncoder(),k=await crypto.subtle.importKey("raw",e.encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC",k,e.encode(msg))),b=>b.toString(16).padStart(2,"0")).join("")}
-function onlineLang(){
- const set=(id,k)=>{const e=$(id);if(e)e.textContent=t(k)};
- set("lobT","lobT");set("bCreate","create");set("bJoin","join");set("lobCodeL","codeIs");set("lobInL","enter");set("bGo","go");set("lobBack","back");set("npauseLeave","leave");
- set("apprT","apprT");set("apprS","apprS");set("apprYes","apprYes");set("apprNo","apprNo");set("lobWa","share");set("lobWait","waitF");
- if(NET.paused&&G&&G.online){$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
-}
-function setPaused(on){ // connection lost (on) / back (off): the match is frozen on both sides
- if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();
- NET.paused=on;if(G)G.netp=on;$("npause").classList.toggle("on",on);
- if(on){rollSet(0);$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
- else{clearTimeout(NET.rt);NET.rt=null;last=performance.now()}
-}
-// --- connection plumbing (same as the online checkers: secret in the invitation link, host approval for typed codes, HMAC for reconnects) ---
-function stopCd(){clearInterval(NET.cd);NET.cd=null;$("lobCd").textContent="";$("lobCd").classList.remove("low")}
-function startCd(gen){
- stopCd();const end=Date.now()+ROOM_SECS*1000;
- const tick=()=>{if(gen!==NET.gen){stopCd();return}const left=Math.max(0,Math.round((end-Date.now())/1000));
-  $("lobCd").textContent=t("roomLeft")+" "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");$("lobCd").classList.toggle("low",left<=30);
-  if(left<=0){lobFail();$("lobStatus").textContent=t("expired")}};
- tick();NET.cd=setInterval(tick,500);
-}
-function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.myRe=NET.oppRe=false;NET.paused=false;NET.rec=false;weakHide();NET.key=null;NET.waitCode=null;NET.rs=null;NET.cand=null;NET.joinSec=null;$("appr").classList.remove("on");$("npause").classList.remove("on");NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
-function netLeave(){ // leaving on purpose: tell the friend (so they don't wait)
- const c=NET.conn,p=NET.peer;if(G&&G.online)netSend({t:"bye"});NET.conn=null;NET.peer=null;netClose();if(G)G.netp=false;
- setTimeout(()=>{try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}},400);
-}
-function netSend(o){try{if(NET.conn&&NET.conn.open)NET.conn.send(o)}catch(e){}}
-function lobPane(w){["lobMain","lobCreate","lobJoin"].forEach(id=>{const e=$(id);if(id==="lobMain")e.style.display=w==="main"?"":"none";else e.classList.toggle("on",id===w)})}
-function showLobby(){netClose();$("lobStatus").textContent="";lobPane("main");show("lobby")}
-function lobFail(){netClose();$("lobStatus").textContent=t("failC");lobPane("main")}
-function hostPeer(code,gen,resume){
- const p=new Peer(PID+code,PEER_CFG);NET.peer=p;
- p.on("open",()=>{if(gen!==NET.gen)return;NET.host=true;NET.code=code;
-  if(resume==="wait"){$("lobStatus").textContent="";return}     // same room (same code and secret), just back online
-  if(resume)return;
-  NET.rs=rnd(16);NET.waitCode=code;
-  $("lobCode").textContent=code;const url=location.origin+location.pathname+"?room="+code+"&s="+NET.rs;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
-  $("lobStatus").textContent="";lobPane("lobCreate");startCd(gen)});
- p.on("disconnected",()=>{if(gen!==NET.gen||p.destroyed)return;if(NET.waitCode&&!(G&&G.online))hostRecover();else try{p.reconnect()}catch(e){}});
- p.on("connection",c=>{if(gen!==NET.gen)return;
-  if(!NET.key){ // fresh room: the first friend in is accepted (the room code is the secret, valid only for the countdown)
-   if(NET.conn||(G&&G.online)||NET.pend.size>=4){try{c.close()}catch(e){}return}
-   c.fresh=true;attach(c,gen,true);
-  }else{ // a game exists: only someone who proves they know the game secret can (re)connect
-   if(NET.pend.size>=3){try{c.close()}catch(e){}return}
-   attach(c,gen,true);
-  }});
- p.on("error",e=>{if(gen!==NET.gen)return;
-  if(NET.waitCode&&!(G&&G.online)){ // the room is open and waiting for the friend: never throw it away because the connection hiccupped
-   if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online)){try{p.destroy()}catch(x){}hostPeer(NET.waitCode,gen,"wait")}},2000)}
-   else hostRecover();
-   return}
-  if(G&&G.online){ // mid-match: a signalling hiccup never ends the match (the friend is connected peer-to-peer); only a lost id is retried
-   if(e&&e.type==="unavailable-id"&&NET.rec){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.rec){try{p.destroy()}catch(x){}hostPeer(NET.code,gen,true)}},3000)}
-   return}
-  if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
-}
-function hostRecover(force){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
- if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
- if(!force&&p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
- try{p&&p.destroy()}catch(e){}                        // a half-dead peer: start a fresh one with the SAME id
- $("lobStatus").textContent=t("reconn");
- clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
-}
-function createRoom(){
- netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
- loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
-}
-function joinRoom(code,sec){
- netClose();const gen=NET.gen;NET.code=code;NET.joinSec=sec||null;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
- loadPeer().then(()=>{if(gen!==NET.gen)return;
-  const p=new Peer(undefined,PEER_CFG);NET.peer=p;let cur=null,attempt=0;
-  const joined=()=>NET.conn&&NET.conn.open;
-  const go=()=>{if(gen!==NET.gen||joined())return;attempt++;
-   if(attempt>4){lobFail();return}
-   $("lobStatus").textContent=t("conn")+(attempt>1?" ("+attempt+"/4)":"");
-   if(cur){try{cur.close()}catch(e){}}
-   NET.host=false;cur=p.connect(PID+code,{reliable:true});attach(cur,gen);
-   clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!joined())go()},13000)};
-  p.on("open",()=>{if(gen===NET.gen)go()});
-  p.on("error",e=>{if(gen!==NET.gen||(G&&G.online))return;const ty=e&&e.type;
-   if(ty==="peer-unavailable"||ty==="webrtc"||ty==="negotiation"||ty==="socket-error"||ty==="socket-closed"){clearTimeout(NET.tm);NET.tm=setTimeout(go,3000)}   // host may just be waking up: try again shortly
-   else lobFail()});
- }).catch(()=>{if(gen===NET.gen)lobFail()});
-}
-function admit(c){ // host: this connection is the friend
- if(NET.cand&&NET.cand!==c){try{NET.cand.close()}catch(e){}}NET.cand=null;$("appr").classList.remove("on");
- if(NET.conn||!c.open)return;c.authed=true;NET.pend.delete(c);clearTimeout(c.to);c.fin()}
-function askApproval(c){
- c.pair=String(10+crypto.getRandomValues(new Uint32Array(1))[0]%90);clearTimeout(c.to);c.to=setTimeout(()=>{if(NET.cand===c){try{c.close()}catch(e){}}},60000);
- try{c.send({t:"pair",n:c.pair})}catch(e){}
- $("apprN").textContent=c.pair;$("appr").classList.add("on");SFX.join();
- $("apprYes").onclick=()=>{SFX.click();if(NET.cand===c)admit(c)};
- $("apprNo").onclick=()=>{SFX.click();NET.cand=null;$("appr").classList.remove("on");try{c.close()}catch(e){}};
-}
-function attach(c,gen,pending){
- c.myN=rnd(16);if(c.authed===undefined)c.authed=false;
- if(pending)NET.pend.add(c);else NET.conn=c;
- let opened=false;
- const finish=()=>{if(gen!==NET.gen)return;NET.pend.delete(c);clearTimeout(c.to);
-  if(NET.conn&&NET.conn!==c){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
-  NET.conn=c;NET.last=Date.now();clearTimeout(NET.tm);NET.rec=false;NET.rinQ=-1;
-  if(NET.host){if(G&&G.online&&!G.guest)hostResume();else startOnlineHost()}else netSend({t:"hello"})};
- const op=()=>{if(opened||gen!==NET.gen)return;opened=true;
-  c.to=setTimeout(()=>{if(!c.authed){NET.pend.delete(c);try{c.close()}catch(e){}}},10000);
-  if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
-  else if(!NET.host){try{c.send({t:"join",s:NET.joinSec})}catch(e){}}};
- c.fin=finish;
- const watchIce=()=>{const pc=c.peerConnection;if(!pc||c._w)return;c._w=1;
-  pc.addEventListener("iceconnectionstatechange",()=>{const st=pc.iceConnectionState;clearTimeout(c.iceT);
-   if(st==="failed"||st==="closed"){gone()}
-   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},15000)}})};
- setTimeout(watchIce,0);setTimeout(watchIce,800);
- c.on("open",()=>{watchIce();op()});
- c.on("data",async d=>{
-  try{
-  if(gen!==NET.gen||!d||typeof d!=="object")return;
-  if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
-  if(d.t==="pr"&&NET.key&&typeof d.h==="string"){if(c.authed)return;const want=await hmac(NET.key,"R"+(NET.host?"g":"h")+c.myN);if(gen!==NET.gen)return;if(d.h===want){c.authed=true;finish()}else{NET.pend.delete(c);try{c.close()}catch(e){}}return}
-  if(c.fresh&&NET.host&&!NET.key){ // room still open: invitation link (secret) joins directly, a typed code needs the host's approval
-   if(d.t!=="join")return;
-   const sec=typeof d.s==="string"&&/^[0-9a-f]{32}$/.test(d.s)?d.s:null;
-   if(NET.conn){try{c.close()}catch(e){}return}
-   if(sec&&NET.rs&&sec===NET.rs){admit(c)}
-   else if(!sec&&!NET.cand){NET.cand=c;askApproval(c)}
-   else{try{c.close()}catch(e){}}
-   return}
-  if(!c.authed&&!NET.host&&d.t==="pair"&&!NET.key&&typeof d.n==="string"&&/^\d{2}$/.test(d.n)){$("lobStatus").textContent=t("pairMsg").replace("N",d.n);clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!NET.key)lobFail()},70000);return}
-  if(!c.authed){ // first contact of a joining friend: take the game secret from the host's first "start"
-   if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanCfg(d)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
-   return}
-  if(NET.conn!==c)return;
-  NET.last=Date.now();onNetData(d)
-  }catch(e){}});
- const gone=()=>{NET.pend.delete(c);if(NET.cand===c){NET.cand=null;$("appr").classList.remove("on")}if(gen===NET.gen&&NET.conn===c)onNetClose()};
- c.on("close",gone);c.on("error",gone);
- if(c.open)op();
-}
-// --- match start / resume ---
-const startMsg=r=>({t:"start",k:NET.key,ts:G.ts,df:G.df,gk:G.gk?1:0,r});
-function startOnlineHost(){stopCd();NET.waitCode=null;SFX.join();if(!NET.key)NET.key=rnd(16);NET.sn=0;startMatch(true);netSend(startMsg(0))}
-function hostResume(){weakHide();setPaused(false);NET.lastSnap=0;netSend(startMsg(1));hostSnapNow()}
-function maybeRematch(){if(NET.host&&NET.myRe&&NET.oppRe&&NET.conn){NET.myRe=NET.oppRe=false;startOnlineHost()}}
 // --- host: snapshots out, friend's input in ---
 const SKI=["fly","sleep","lost","sneeze"];
 function sendSnap(){
@@ -1184,28 +1005,27 @@ function sendSnap(){
  const b=g.ball,bs=Math.hypot(b.vx,b.vy);
  const m=g.mates.map(o=>[q(o.x),q(o.y),q2(o.ang),o.silly>0?Math.max(1,SKI.indexOf(o.sillyKind)+1):0,Math.hypot(o.vx,o.vy)>40&&!o.sleep?1:0,Math.round((o.dive||0)*100)*(o.vx<0?-1:1)]);
  const e=g.ev;g.ev=[];
- netSend({t:"snap",n:++NET.sn,h:Math.round(performance.now()-NET.t0),s:[g.s[0],g.s[1]],tm:q2(Math.max(0,g.time)),st:g.state==="kick"?0:g.state==="play"?1:2,p:g.pause?1:0,j:g.jmp?1:0,a:st(g.me),b:st(g.cpu),bl:[q(b.x),q(b.y),q2(b.rot||0),Math.round(bs),Math.round(b.vx),Math.round(b.vy)],m,e});
+ netSend({t:"snap",n:++NS.sn,h:Math.round(performance.now()-NS.t0),s:[g.s[0],g.s[1]],tm:q2(Math.max(0,g.time)),st:g.state==="kick"?0:g.state==="play"?1:2,p:g.pause?1:0,j:g.jmp?1:0,a:st(g.me),b:st(g.cpu),bl:[q(b.x),q(b.y),q2(b.rot||0),Math.round(bs),Math.round(b.vx),Math.round(b.vy)],m,e});
  g.jmp=false;
 }
-function clogged(){const dc=NET.conn&&NET.conn.dataChannel;return !!(dc&&dc.bufferedAmount>60000)}   // do not queue snapshots behind a stalled line
-function hostSnapNow(){if(G&&G.online&&!G.guest&&NET.conn&&NET.conn.open&&!NET.paused&&!G.over&&!clogged()){NET.lastSnap=performance.now();sendSnap()}}
-function hostSnapTick(now){if(!NET.conn||!NET.conn.open||NET.paused||G.over)return;if(now-NET.lastSnap<(G.pause?100:48))return;NET.lastSnap=now;if(!clogged())sendSnap()}
+function clogged(){const dc=NV.NET.conn&&NV.NET.conn.dataChannel;return !!(dc&&dc.bufferedAmount>60000)}   // do not queue snapshots behind a stalled line
+function hostSnapNow(){if(G&&G.online&&!G.guest&&NV.NET.conn&&NV.NET.conn.open&&!NV.paused&&!G.over&&!clogged()){NS.lastSnap=performance.now();sendSnap()}}
+function hostSnapTick(now){if(!NV.NET.conn||!NV.NET.conn.open||NV.paused||G.over)return;if(now-NS.lastSnap<(G.pause?100:48))return;NS.lastSnap=now;if(!clogged())sendSnap()}
 function onInput(d){ // the friend's joystick / keys, as a direction vector in field coordinates, + dash
- const n=performance.now();if(n-NET.rinT>1000){NET.rinT=n;NET.rinN=0}if(++NET.rinN>90)return;   // rate limit
- if(!num(d.x,-1.5,1.5)||!num(d.y,-1.5,1.5)||!int(d.q,0,1e9)||d.q<=NET.rinQ)return;NET.rinQ=d.q;
- if(G.weak)weakHide();if(NET.paused&&NET.conn)netResume();
+ const n=performance.now();if(n-NS.rinT>1000){NS.rinT=n;NS.rinN=0}if(++NS.rinN>90)return;   // rate limit
+ if(!num(d.x,-1.5,1.5)||!num(d.y,-1.5,1.5)||!int(d.q,0,1e9)||d.q<=NS.rinQ)return;NS.rinQ=d.q;
+ 
  let x=d.x,y=d.y;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
  G.rin={x,y,at:n};
- if(d.d===1&&!G.pause&&!NET.paused&&!G.over&&G.state==="play"&&G.cpu.cool<=0){G.cpu.dash=.28;G.cpu.cool=.9;SFX.dash();ev("da",1)}
+ if(d.d===1&&!G.pause&&!NV.paused&&!G.over&&G.state==="play"&&G.cpu.cool<=0){G.cpu.dash=.28;G.cpu.cool=.9;SFX.dash();ev("da",1)}
 }
 // --- guest: snapshots in -> interpolated render; input out ---
 const L1=(p,q,f)=>p+(q-p)*f,LA=(p,q,f)=>{let d=q-p;d=Math.atan2(Math.sin(d),Math.cos(d));return p+d*f};
 const KIND=["","fly","sleep","lost","sneeze"];
 function rxSnap(cs){
  const g=G,now=performance.now();
- NET.tok=Math.min(200,NET.tok+(now-NET.tokT)*.04);NET.tokT=now;if(NET.tok<1)return;NET.tok--;   // flood guard (a burst after a stall is fine, a flood is not)
+ NS.tok=Math.min(200,NS.tok+(now-NS.tokT)*.04);NS.tokT=now;if(NS.tok<1)return;NS.tok--;   // flood guard (a burst after a stall is fine, a flood is not)
  if(cs.n<=g.lastN)return;g.lastN=cs.n;                         // late / duplicated / out-of-order snapshot: ignore
- if(G.weak)weakHide();
  const smp=now-cs.ht;if(g.off===null||smp<g.off)g.off=smp;else g.off+=(smp-g.off)*.02;
  if(g.lastRx!==undefined){const j=Math.abs((now-g.lastRx)-(cs.ht-g.lastHt));g.jit=Math.max(j,g.jit*.985)}   // jitter: how far the arrival gaps differ from the sending gaps
  g.lastRx=now;g.lastHt=cs.ht;
@@ -1215,7 +1035,8 @@ function pauseSync(on){ // the host's pause flag decides
  if(on===G.pause)return;G.pause=on;if(on){crowdStop();showPause()}else{hidePause();crowdStart()}
 }
 function applyDiscrete(s,late){
- const g=G;g.s=s.s;g.time=s.tm;g.state=["kick","play","goal"][s.st];
+ const g=G;if(g.over)return;   // the final score came with "over": a snapshot that is still in the buffer must not put the older score back
+ g.s=s.s;g.time=s.tm;g.state=["kick","play","goal"][s.st];
  pauseSync(!!s.p);
  if(!late)for(const e of s.e)playFx(e[0],e[1],e[2]);
  updHud();
@@ -1223,7 +1044,7 @@ function applyDiscrete(s,late){
 function setStr(o,a,b,f){o.x=L1(a[0],b[0],f);o.y=L1(a[1],b[1],f);o.vx=a[2];o.vy=a[3];o.ang=LA(a[4],b[4],f);o.dash=a[5]}
 function guestStep(now,dt){
  const g=G,sb=g.sb;
- if(!NET.paused&&sb.length&&g.off!==null){
+ if(!NV.paused&&sb.length&&g.off!==null){
   // adaptive render delay: grows (slowly, never rewinding the picture) when snapshots arrive unevenly, shrinks back when the line is calm
   const tgt=Math.max(DELAY,Math.min(220,DELAY+g.jit*1.3));g.dly+=Math.max(-dt*20,Math.min(dt*80,tgt-g.dly));
   const rt=now-g.off-g.dly;let ai=0;
@@ -1253,106 +1074,41 @@ function guestStep(now,dt){
  guestInput(now);
 }
 function guestInput(now){ // my keys / joystick / tap-to-run target -> a direction vector in the HOST's field coordinates (my view is turned around, so both axes flip)
- if(!NET.conn||!NET.conn.open||NET.paused||G.pause||G.over)return;
+ if(!NV.NET.conn||!NV.NET.conn.open||NV.paused||G.pause||G.over)return;
  let x=0,y=0,ix=0,iy=0;if(keys.ArrowLeft||keys.a)ix-=1;if(keys.ArrowRight||keys.d)ix+=1;if(keys.ArrowUp||keys.w)iy-=1;if(keys.ArrowDown||keys.s)iy+=1;
  if(ix||iy){const l=Math.hypot(ix,iy);x=-ix/l;y=-iy/l;ptr=null}
  else if(joy&&(joy.x||joy.y)){x=-joy.x;y=-joy.y;ptr=null}
  else if(ptr){const c=G.cpu,dx=ptr.x-c.x,dy=ptr.y-c.y,d=Math.hypot(dx,dy);if(d>6){const s=Math.min(1,d*9/300);x=dx/d*s;y=dy/d*s}}
  x=Math.round(x*100)/100;y=Math.round(y*100)/100;
- if((Math.abs(x-NET.lx)>.02||Math.abs(y-NET.ly)>.02)&&now-NET.lt>=33||now-NET.lt>=200){NET.lx=x;NET.ly=y;NET.lt=now;
-  const dc=NET.conn.dataChannel;if(dc&&dc.bufferedAmount>20000)return;   // the line is clogged: do not pile up stale input (the next keep-alive carries the latest)
-  netSend({t:"in",x,y,q:++NET.iq})}
+ if((Math.abs(x-NS.lx)>.02||Math.abs(y-NS.ly)>.02)&&now-NS.lt>=33||now-NS.lt>=200){NS.lx=x;NS.ly=y;NS.lt=now;
+  const dc=NV.NET.conn.dataChannel;if(dc&&dc.bufferedAmount>20000)return;   // the line is clogged: do not pile up stale input (the next keep-alive carries the latest)
+  netSend({t:"in",x,y,q:++NS.iq})}
 }
 function showLeft(){ // the friend left on purpose
- if(!G)return;G.over=true;crowdStop();setPaused(false);
+ if(!G)return;G.over=true;G.netp=false;crowdStop();
  $("overT").textContent=t("left");$("overS").textContent="👋";$("overD").textContent="";$("againBtn").style.display="none";delete $("againBtn").dataset.mode;$("over").classList.add("on");
 }
-function onNetData(d){
- if(!d||typeof d!=="object")return;
- if(d.t==="start"&&!NET.host){
-  const c=cleanCfg(d);if(!c||d.k!==NET.key)return;
-  if(d.r===1&&G&&G.guest&&!G.over){G.sb=[];G.off=null;G.lastN=0;weakHide();setPaused(false)}   // same match, the connection is back
-  else{SFX.join();setPaused(false);startMatch("guest",c)}
- }
- else if(d.t==="snap"&&!NET.host&&G&&G.guest&&!G.over){const cs=cleanSnap(d,G.mates.length);if(cs){if(NET.paused&&NET.conn)netResume();rxSnap(cs)}}
- else if(d.t==="in"&&NET.host&&G&&G.online&&!G.guest&&!G.over)onInput(d);
- else if(d.t==="pause"&&NET.host&&G&&G.online&&!G.guest&&!G.over&&typeof d.on==="boolean"){const n=performance.now();if(n-NET.pauseT>250){NET.pauseT=n;doPause(d.on)}}
- else if(d.t==="over"&&!NET.host&&G&&G.guest&&!G.over&&Array.isArray(d.s)&&d.s.length===2&&int(d.s[0],0,99)&&int(d.s[1],0,99)){
-  G.over=true;G.s=[d.s[0],d.s[1]];updHud();pauseSync(false);SFX.final();showOver(G)}
- else if(d.t==="rematch"&&NET.host&&G&&G.online&&G.over){SFX.click();NET.oppRe=true;maybeRematch()}
- else if(d.t==="bye"){const had=G&&G.online;if(had)SFX.drop();netClose();setPaused(false);if(had)showLeft();else lobFail()}
+function onNetData(d){ // only after net1v1 authenticated the friend; still treated as hostile: types, ranges, order, who is the host
+ if(!d||typeof d!=="object"||!G||!G.online||G.over)return;const host=NV.host;
+ if(d.t==="snap"&&!host&&G.guest){const cs=cleanSnap(d,G.mates.length);if(cs)rxSnap(cs)}
+ else if(d.t==="in"&&host&&!G.guest)onInput(d);
+ else if(d.t==="pause"&&host&&!G.guest&&typeof d.on==="boolean"){const n=performance.now();if(n-NS.pauseT>250){NS.pauseT=n;doPause(d.on)}}
+ else if(d.t==="over"&&!host&&G.guest&&Array.isArray(d.s)&&d.s.length===2&&int(d.s[0],0,99)&&int(d.s[1],0,99)){
+  G.over=true;NV.setOver(true);G.s=[d.s[0],d.s[1]];updHud();pauseSync(false);SFX.final();showOver(G)}
 }
-// --- connection trouble: forgiving tiers. 0-4 s quiet: nothing visible. 4-20 s: "weak connection" pill, the match keeps running (host: the friend's kitten keeps its last input, then stops; guest: last snapshot is extrapolated a little).
-//     20 s+: hard pause with a Leave button. Meanwhile we reconnect quietly; any valid data / a re-authenticated connection clears everything at once.
-function onNetClose(){ // the connection itself is gone (closed / ICE failed): reconnect quietly; the clock decides when it becomes a hard pause
- if(!G||!G.online){if(NET.conn||NET.peer)lobFail();return}
- const c=NET.conn;NET.conn=null;try{c&&c.close()}catch(e){}
- if(G.over){netClose();showLeft();return}
- startRecover();
-}
-function startRecover(){if(!G||!G.online||G.over)return;NET.rec=true;if(NET.host)hostLoop();else guestLoop()}
-function hardLost(){setPaused(true);weakHide(true);if(NET.conn)onNetClose();else if(!NET.rec)startRecover()}
-function netResume(){ // data is flowing again after a hard pause that never closed the connection
- if(!NET.paused)return;setPaused(false);NET.rec=false;weakHide(true);
- if(G.guest){G.sb=[];G.off=null;G.lastN=0}else{NET.lastSnap=0;hostSnapNow()}
-}
-function weakLine(){const L=t("weakL");NET.wi=(NET.wi+1+Math.random()*(L.length-1)|0)%L.length;const e=$("weak"),r=cv.getBoundingClientRect();e.textContent=L[NET.wi];
- if(r.width>0){e.style.top=(r.top+r.height*.075)+"px";e.style.left=(r.left+r.width/2)+"px"}e.style.maxWidth=Math.max(160,(r.width||innerWidth)-16)+"px"}
-function weakSet(on){if(!G||on===!!G.weak)return;G.weak=on;if(on){weakLine();$("weak").classList.add("on");clearInterval(NET.wt);NET.wt=setInterval(weakLine,3500);SFX.huh()}else weakHide()}
-function weakHide(keepFlag){clearInterval(NET.wt);NET.wt=null;$("weak").classList.remove("on");if(G)G.weak=false}
-function guestLoop(){
- clearTimeout(NET.rt);if(!NET.rec||NET.host||!G||!G.online)return;const gen=NET.gen;
- function tryConnect(){if(gen!==NET.gen||!NET.rec||!NET.peer)return;if(NET.conn&&NET.conn.open)return;
-  if(NET.conn){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
-  try{attach(NET.peer.connect(PID+NET.code,{reliable:true}),gen)}catch(e){}}
- function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
-  if(!p||p.destroyed||p.disconnected||!p.open){
-   try{p&&p.destroy()}catch(e){}
-   loadPeer().then(()=>{if(gen!==NET.gen||!NET.rec)return;const np=new Peer(undefined,PEER_CFG);NET.peer=np;
-    np.on("open",()=>{if(gen===NET.gen&&NET.rec)tryConnect()});np.on("error",()=>{})}).catch(()=>{});
-  }else tryConnect();
-  NET.rt=setTimeout(go,4500)}
- go();
-}
-function hostLoop(){ // keep the room's peer alive so the friend can come back with the secret
- clearTimeout(NET.rt);if(!NET.rec||!NET.host||!G||!G.online)return;const gen=NET.gen;
- (function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
-  if(!p||p.destroyed){loadPeer().then(()=>{if(gen===NET.gen&&NET.rec&&(!NET.peer||NET.peer.destroyed))hostPeer(NET.code,gen,true)}).catch(()=>{})}
-  else if(p.disconnected){try{p.reconnect()}catch(e){}}
-  NET.rt=setTimeout(go,4500)})();
-}
-function netKick(){ // phone woke up / network is back: retry right away
- if(NET.waitCode&&!(G&&G.online)){const lg=Date.now()-(window.__hidAt||Date.now())>2500;window.__hidAt=0;hostRecover(lg);return}
- if(!G||!G.online)return;
- if(NET.rec){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
- else netSend({t:"ping"});
-}
-function netQ(){ // connection quality dot: green = data flowing, amber = quiet for a few seconds, red = hard pause
- const d=$("netDot");if(!d)return;if(!G||!G.online){d.style.display="none";return}
- const a=NET.paused?9e9:Date.now()-NET.last;d.style.display="";d.style.background=a<SOFT?"#2fb36a":a<HARD?"#f2c94c":"#e23b3b";d.title=a<SOFT?"🟢":a<HARD?"🟡":"🔴"}
-let hbN=0;
-setInterval(()=>{const now=Date.now();
- if(NET.tickAt&&now-NET.tickAt>3000)NET.last=now;                   // OUR timers were frozen (phone asleep / app in background): that says nothing about the friend
- NET.tickAt=now;netQ();
- if(!G||!G.online){weakHide();return}
- if(++hbN%4===0)netSend({t:"ping"});
- if(document.hidden||G.over)return;
- const q=now-NET.last;
- if(NET.paused){if(NET.conn&&NET.conn.open&&q<2500)netResume();return}
- if(q>HARD)hardLost();else weakSet(q>SOFT);
-},500);
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){NET.last=Date.now();NET.tickAt=Date.now();netKick()}});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
-$("npauseLeave").addEventListener("click",()=>{SFX.click();toMenu()});
-$("bCreate").addEventListener("click",()=>{SFX.click();createRoom()});
-$("bJoin").addEventListener("click",()=>{SFX.click();lobPane("lobJoin");$("lobStatus").textContent="";$("lobIn").value="";$("lobIn").focus()});
-$("bGo").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===6){SFX.click();joinRoom(c)}});
-$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6)});
-$("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
-{const U=new URLSearchParams(location.search),q=U.get("room")||"",sc=/^[0-9a-f]{32}$/.test(U.get("s")||"")?U.get("s"):null;
- if(q||U.has("s"))try{history.replaceState(null,"",location.pathname)}catch(e){}
- if(/^\d{6}$/.test(q))setTimeout(()=>{showLobby();joinRoom(q,sc)},0)}
+function netFresh(){ // the line is back: the guest forgets its old snapshots, the host sends a fresh one at once
+ if(!G||!G.online||G.over)return;if(G.guest){G.sb=[];G.off=null;G.lastN=0}else{NS.lastSnap=0;hostSnapNow()}}
+NV=window.Net1v1?Net1v1({pid:"annabelle-fb-",shareTxt:{he:TX.he.shareTxt,fr:TX.fr.shareTxt,en:TX.en.shareTxt},
+ sfx:{join:()=>SFX.join(),click:()=>SFX.click(),drop:()=>SFX.drop(),back:()=>SFX.back(),huh:()=>SFX.huh()},
+ hideMenu(){},showMenu(){toMenu()},
+ makeStart(){return {ts:G.ts,df:G.df,gk:G.gk?1:0}},cleanStart:cleanCfg,
+ onHostStart(){NS.sn=0;NS.rinQ=-1;startMatch(true)},
+ onGuestStart(c){startMatch("guest",c)},
+ onResume(){if(G&&G.online&&!G.guest)NS.rinQ=-1;netFresh()},   // the same match, the connection is back (after the mutual HMAC proof)
+ onData:onNetData,onLeft:showLeft,
+ onPause(on){if(G)G.netp=!!on;if(on)rollSet(0);else{last=performance.now();netFresh()}}}):null;
 /* debug hooks for automated tests */
-updKick();window.__fb={get G(){return G},PRE,startMatch,startPen,shoot,get diff(){return diff},NET,cleanSnap,playFx,fx};
+updKick();window.__fb={get G(){return G},PRE,startMatch,startPen,shoot,get diff(){return diff},get NET(){return NV&&NV.NET},get NT(){return NV},NS,cleanSnap,playFx,fx};
 updMute();drawMenu();applyPad();
 </script>
 </body>

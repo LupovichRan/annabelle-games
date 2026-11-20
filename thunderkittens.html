@@ -70,22 +70,11 @@ canvas#cv{display:block;max-width:100%;max-height:100%;touch-action:none}
 kbd{background:#ffffff22;border:1px solid #fff6;border-radius:5px;padding:0 5px;font:700 12px monospace}
 
 /* online */
-.lobpane{display:none;flex-direction:column;align-items:center;gap:10px}.lobpane.on{display:flex}
-#lobby{justify-content:safe center;gap:12px;padding:10px;overflow:auto;background:radial-gradient(circle at 50% 20%,#4b2a8c,#1b1633 70%)}
-#lobCode{font-size:clamp(40px,13vw,72px);font-weight:900;letter-spacing:.12em;color:#ffe14d;direction:ltr;text-shadow:0 4px 0 #0006;line-height:1}
-#lobIn{width:min(80vw,300px);height:70px;border-radius:18px;border:3px solid #ffe14d;background:#fff;text-align:center;font:900 34px Rubik,Arial;color:#2c2150;letter-spacing:.12em;direction:ltr;user-select:text;-webkit-user-select:text}
-#lobCd{font-weight:900;font-size:26px;color:#9fe0ff;direction:ltr;min-height:32px}#lobCd.low{color:#ff7a7a;animation:pulse2 .6s infinite alternate}@keyframes pulse2{to{transform:scale(1.12)}}
-#lobStatus,#lobWait{font-weight:800;font-size:18px;text-align:center;min-height:24px;max-width:90vw}
 a.big{display:flex;align-items:center;justify-content:center;text-decoration:none}
-#weak{position:fixed;left:50%;top:14%;transform:translateX(-50%);background:#fff8dc;color:#4a3300;border:2px solid #f2a900;border-radius:999px;padding:3px 12px;font-weight:800;font-size:14px;z-index:15;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 2px 0 #0002;animation:wk 1.6s infinite alternate}
-#weak.on{display:block}@keyframes wk{from{opacity:.75}to{opacity:1}}
-#appr,#npause{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0008}#appr{z-index:45}#npause{z-index:40}#appr.on,#npause.on{display:flex}
-#appr .card,#npause .card{background:#2c2150;border:3px solid #ffe14d;border-radius:22px;padding:18px;text-align:center;max-width:90vw;display:flex;flex-direction:column;gap:10px;align-items:center}#appr h2,#npause h2{margin:0;font-size:22px;color:#ffe14d}#apprN{font-size:64px;font-weight:900;color:#ffe14d;letter-spacing:.1em;direction:ltr;line-height:1}
 .dance{display:inline-block;animation:dn .6s infinite alternate}@keyframes dn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
-#netDot{display:none;width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid #fff;box-shadow:0 1px 0 #0003;transition:background .4s}
 
 /* big laptop / desktop windows: scale menus up */
-@media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){#menu,#pick,#lobby{zoom:1.2}}
+@media (hover:hover) and (pointer:fine) and (min-width:1100px) and (min-height:760px){#menu,#pick{zoom:1.2}}
 .big.t{background:linear-gradient(#ffe066,#f2b600);color:#5a3d00;box-shadow:0 4px 0 #a87400}
 #diffRow{gap:6px}#diffRow .lang{padding:4px 10px;font-size:15px}
 @media(max-width:430px){.heads{font-size:30px}}
@@ -94,11 +83,12 @@ a.big{display:flex;align-items:center;justify-content:center;text-decoration:non
 .cc.lock{opacity:.45;filter:grayscale(.8)}.cc .lk{position:absolute;top:6px;inset-inline-end:8px;font-size:20px}.cc{position:relative}
 #over .card{animation:cardIn .35s cubic-bezier(.2,1.4,.4,1)}@keyframes cardIn{from{transform:scale(.4);opacity:0}}
 #overS{animation:pulse3 1.1s infinite alternate}@keyframes pulse3{to{transform:scale(1.08)}}
-@media (hover:hover) and (pointer:fine) and (min-width:1600px) and (min-height:930px){#menu,#pick,#lobby{zoom:1.4}}
+@media (hover:hover) and (pointer:fine) and (min-width:1600px) and (min-height:930px){#menu,#pick{zoom:1.4}}
 </style>
 <!--pwa--><link rel="manifest" href="manifests/thunderkittens.webmanifest"><meta name="theme-color" content="#1b1633"><link rel="icon" type="image/png" sizes="192x192" href="icons/thunderkittens-192.png"><meta name="apple-mobile-web-app-title" content="לוחמי הברק"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="icons/thunderkittens-apple-180.png"><script src="pwa.js" data-app="thunderkittens" data-slots='[["#langs", "append"]]' defer></script><script src="nav.js" data-menuslot="#langs" data-pauseslot="#overNav" data-pausemenu="1" data-menu="toMenu" data-relabel="#menuBtn" defer></script><script src="share.js" data-slot="#langs" defer></script><!--/pwa-->
 <script src="desktop.js"></script>
 <script src="rewards.js" defer></script>
+<script src="net1v1.js"></script>
 </head>
 <body>
 <button class="iconbtn corner" id="muteBtn" aria-label="sound">🔊</button>
@@ -119,17 +109,8 @@ a.big{display:flex;align-items:center;justify-content:center;text-decoration:non
   <div class="cards" id="cards"></div>
   <div class="row" style="margin-top:8px"><button class="big g" id="bGo"></button><button class="big s" id="bBack"></button></div>
 </section>
-<section class="screen" id="lobby">
-  <h1 id="lobT"></h1>
-  <div class="heads">📱⚡📱</div>
-  <div class="row" id="lobMain"><button class="big" id="bCreate"></button><button class="big p" id="bJoin"></button></div>
-  <div class="lobpane" id="lobCreate"><div style="font-weight:800" id="lobCodeL"></div><div id="lobCode"></div><a class="big" id="lobWa" target="_blank" rel="noopener"></a><div id="lobWait"></div><div id="lobCd"></div></div>
-  <div class="lobpane" id="lobJoin"><div style="font-weight:800" id="lobInL"></div><input id="lobIn" type="text" inputmode="numeric" maxlength="6" autocomplete="off"><button class="big" id="bConn"></button></div>
-  <div id="lobStatus"></div>
-  <button class="big g" id="lobBack"></button>
-</section>
 <section class="screen" id="game">
-  <div class="bar"><button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button><div class="sp"></div><i id="netDot" aria-hidden="true"></i><button class="iconbtn" id="padBtn" aria-label="pad">🎮</button><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><div style="width:48px;flex:0 0 auto"></div></div>
+  <div class="bar"><button class="iconbtn" id="menuBtn" aria-label="menu">🏠</button><div class="sp"></div><button class="iconbtn" id="padBtn" aria-label="pad">🎮</button><button class="iconbtn" id="pauseBtn" aria-label="pause">⏸</button><div style="width:48px;flex:0 0 auto"></div></div>
   <div id="wrap"><canvas id="cv"></canvas></div>
   <div id="pad">
     <div id="stick"><span class="arr" style="top:4px;left:50%;margin-left:-6px">▲</span><span class="arr" style="bottom:4px;left:50%;margin-left:-6px">▼</span><span class="arr" style="left:6px;top:50%;margin-top:-9px">◀</span><span class="arr" style="right:6px;top:50%;margin-top:-9px">▶</span><div id="thumb"></div></div>
@@ -138,11 +119,9 @@ a.big{display:flex;align-items:center;justify-content:center;text-decoration:non
 </section>
 <button class="big g" id="fin"></button>
 <div id="over"><div class="card"><h2 id="overT"></h2><div id="overS" style="font-size:44px"></div><div id="overD" style="font-weight:700"></div><button class="big g" id="againBtn"></button><div id="overNav"></div></div></div>
-<div id="npause"><div class="card"><div style="font-size:54px" class="dance">🔌</div><h2 id="npauseT"></h2><div id="npauseS" style="font-weight:700"></div><button class="big g" id="npauseLeave"></button></div></div>
-<div id="appr"><div class="card"><h2 id="apprT"></h2><div id="apprN"></div><div id="apprS" style="font-weight:700"></div><div class="row"><button class="big g" id="apprYes"></button><button class="big s" id="apprNo"></button></div></div></div>
-<div id="weak"></div><div id="hint"></div>
+<div id="hint"></div>
 <canvas id="conf" style="position:fixed;inset:0;pointer-events:none;z-index:21"></canvas>
-<script>document.addEventListener("visibilitychange",()=>{if(document.hidden)window.__hidAt=Date.now()});
+<script>
 "use strict";
 const $=id=>document.getElementById(id);
 const TX={
@@ -265,7 +244,7 @@ let padOn=(()=>{const v=ls.get("annabelle-tk-pad");return v===null?coarse:v==="1
 function drawMenu(){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="he"?"rtl":"ltr";
  $("tTitle").textContent=t("title");document.title=t("title");$("tSub").textContent=t("sub");$("rules").innerHTML=t("rules").concat([t("guardTip")]).map(r=>"<p>"+r+"</p>").join("");
- $("tDiff").textContent=t("diff");$("b1p").textContent=t("one");$("b2p").textContent=t("two");$("b2p").style.display=coarse?"none":"";$("bOnline").textContent=t("onlineB");{const sv=svGet();$("bSurv").textContent=t("surv")+(sv.length?" · 🏆"+sv[0].w:"")}onlineLang();
+ $("tDiff").textContent=t("diff");$("b1p").textContent=t("one");$("b2p").textContent=t("two");$("b2p").style.display=coarse?"none":"";$("bOnline").textContent=t("onlineB");{const sv=svGet();$("bSurv").textContent=t("surv")+(sv.length?" · 🏆"+sv[0].w:"")}if(NV)NV.drawLang();
  $("diffRow").innerHTML=["easy","normal","hard"].map(k=>`<button class="lang ${k===diff?"sel":""}" data-diff="${k}">${t(k)}</button>`).join("");
  {const cp=cupGet();$("bCup").textContent=cp.done>=5?t("cupAgain"):t("cup")+(cp.done?" "+(cp.done+1)+"/5":"");$("cupBar").innerHTML=[0,1,2,3,4].map(i=>`<span title="${t("cupN")[i]}" style="opacity:${i<cp.done?1:.35}">${i<cp.done?(cp.stars[i]>=3?"🥇":"🏅"):i===4?"🏆":"⚡"}</span>`).join("")+(cp.cups?` <span style="font-size:14px;align-self:center">×${cp.cups}</span>`:"")}
  $("flags").innerHTML=LANGS.map(([k,n])=>`<button class="lang ${k===lang?"sel":""}" data-lang="${k}">${n}</button>`).join("");
@@ -276,7 +255,7 @@ document.addEventListener("click",e=>{
  if(L){lang=L.dataset.lang;ls.set("annabelle-lang",lang);SFX.click();drawMenu();if(G)setHint();if(!$("pick").classList.contains("active")===false)drawPick()}
  if(D){diff=D.dataset.diff;if(diff==="hard")ls.set("annabelle-tk-hard","1");else{ls.set("annabelle-tk-diff",diff);ls.set("annabelle-tk-hard","0")}SFX.click();drawMenu()}
 });
-window.toMenu=function(){cupPick=survPick=false;musicStop();if(G&&G.online)netLeave();else netClose();G=null;cancelAnimationFrame(raf);$("over").classList.remove("on");$("fin").classList.remove("on");show("menu");drawMenu();$("hint").innerHTML=""};
+window.toMenu=function(){cupPick=survPick=false;musicStop();if(NV)NV.leaveToMenu();G=null;cancelAnimationFrame(raf);$("over").classList.remove("on");$("fin").classList.remove("on");show("menu");drawMenu();$("hint").innerHTML=""};
 function startPick(m){mode=m;sel=[null,null];pickStep=0;show("pick");drawPick()}
 function drawPick(){
  $("tPick").textContent=survPick?t("svPick"):mode===3?t("pick"):mode===2?t(pickStep===0?"pick1":"pick2"):t("pick1");$("tPickSub").textContent=survPick?t("svSub"):mode===1?t("pickCpu"):"";
@@ -290,7 +269,7 @@ $("bOnline").onclick=()=>{ac();SFX.click();cupPick=survPick=false;startPick(3)};
 $("bCup").onclick=()=>{ac();SFX.click();cupPick=true;survPick=false;startPick(1)};
 $("bSurv").onclick=()=>{ac();SFX.click();cupPick=false;survPick=true;startPick(1)};
 $("bBack").onclick=()=>{SFX.click();toMenu()};
-$("bGo").onclick=()=>{if($("bGo").disabled)return;ac();SFX.click();if(cupPick&&mode===1){const c=cupGet();startCup(c.done>=5?0:c.done);return}if(survPick&&mode===1){startFight(undefined,undefined,undefined,true);return}if(mode===3){if(NET.pendingLink){const l=NET.pendingLink;NET.pendingLink=null;showLobby();joinRoom(l.code,l.sec)}else showLobby();return}startFight()};
+$("bGo").onclick=()=>{if($("bGo").disabled)return;ac();SFX.click();if(cupPick&&mode===1){const c=cupGet();startCup(c.done>=5?0:c.done);return}if(survPick&&mode===1){startFight(undefined,undefined,undefined,true);return}if(mode===3){if(NS.link){const l=NS.link;NS.link=null;try{history.replaceState(null,"","?room="+l.code+(l.sec?"&s="+l.sec:""))}catch(e){}mkNet()}else if(mkNet())NV.showLobby();return}startFight()};
 /* ---------- arena ---------- */
 const W=800,H=450,GY=372,cv=$("cv"),cx=cv.getContext("2d");let scale=1,dpr=1,Wc=800;     // W = world width, Wc = visible canvas width
 function fit(){const w=$("wrap");if(!w.clientWidth)return;
@@ -338,7 +317,7 @@ function step(dt){
  if(g.state==="fight"){
   g.time-=dt;
   if(g.mode===1)ai(b,a,dt);
-  else if(g.mode===3&&performance.now()-NET.inT>1500)Object.keys(b.inp).forEach(k=>b.inp[k]=0);   // the friend's line went quiet: the kitten lets go of everything
+  else if(g.mode===3&&performance.now()-NS.inT>1500)Object.keys(b.inp).forEach(k=>b.inp[k]=0);   // the friend's line went quiet: the kitten lets go of everything
   for(const f of g.fs){control(f,f===a?b:a,dt);physics(f,dt,false);Object.assign(f.prev,f.inp)}
   for(const f of g.fs){const o=f===a?b:a;combat(f,o,dt)}
   projectiles(dt);
@@ -428,7 +407,7 @@ function yarnStep(dt){const y=G.yarn;y.vy+=1500*dt;y.x+=y.vx*dt;y.y+=y.vy*dt;y.r
 function endMatch(){const g=G;if(g.over)return;g.finAvail=0;$("fin").classList.remove("on");g.state="finish";g.st=2.6;finalCard()}
 function finalCard(){const g=G;if(g.over)return;g.over=true;$("fin").classList.remove("on");
  const [a,b]=g.fs,w=a.wins>b.wins?a:b.wins>a.wins?b:null;
- if(g.online)netSend({t:"over",w:w?w.id:-1,a:a.wins,b:b.wins});
+ if(g.online){netSend({t:"over",w:w?w.id:-1,a:a.wins,b:b.wins});if(NV)NV.setOver(true)}
  showFinal(g,w?w.id:-1,a.wins,b.wins)}
 function showFinal(g,wi,wa,wb){
  const [a,b]=g.fs,w=wi<0?null:g.fs[wi],mine=g.guest?b:a;
@@ -687,7 +666,7 @@ function render(dt){
 const KEY1={KeyA:"l",KeyD:"r",KeyW:"u",KeyJ:"punch",KeyK:"kick",KeyL:"block",KeyS:"block",KeyU:"sp"};
 const KEY1B={ArrowLeft:"l",ArrowRight:"r",ArrowUp:"u",Space:"punch",KeyZ:"punch",KeyX:"kick",KeyC:"block",ArrowDown:"block",KeyV:"sp"};
 const KEY2={ArrowLeft:"l",ArrowRight:"r",ArrowUp:"u",Comma:"punch",Period:"kick",Slash:"block",Semicolon:"sp",ArrowDown:"block"};
-function setIn(f,k,v){if(!f||!f.inp)return;if(v&&!f.inp[k]){f.edge[k]=performance.now();if(G&&G.guest&&f===G.fs[1])NET.ie|=BIT[k]||0}f.inp[k]=v?1:0}
+function setIn(f,k,v){if(!f||!f.inp)return;if(v&&!f.inp[k]){f.edge[k]=performance.now();if(G&&G.guest&&f===G.fs[1])NS.ie|=BIT[k]||0}f.inp[k]=v?1:0}
 const BIT={l:1,r:2,u:4,punch:8,kick:16,block:32,sp:64};   // remember the press time: a quick tap between two frames must still count
 addEventListener("keydown",e=>{
  if(e.ctrlKey||e.metaKey||e.altKey||(window.AnnabelleDesk&&AnnabelleDesk.typing(e)))return;
@@ -729,7 +708,7 @@ $("padBtn").onclick=()=>{SFX.click();padOn=!padOn;ls.set("annabelle-tk-pad",padO
 function doPause(on){if(!G||G.over)return;if(G.guest){netSend({t:"pause",on:!!on});return}G.pause=on;paintPause(on)}
 function paintPause(on){if(on){$("overT").textContent=t("paused");$("overS").textContent="⏸";$("overD").textContent="";$("againBtn").textContent=t("resume");$("againBtn").dataset.mode="resume";$("over").classList.add("on")}else{$("over").classList.remove("on");$("againBtn").textContent=t("again");$("againBtn").dataset.mode="";last=performance.now()}}
 $("pauseBtn").onclick=()=>{SFX.click();doPause(!G.pause)};
-$("againBtn").onclick=()=>{SFX.click();if($("againBtn").dataset.mode==="resume"){doPause(false);return}if(G&&G.online){if(!G.over||NET.myRe)return;NET.myRe=true;$("againBtn").textContent=t("waitRe");if(NET.host)maybeRematch();else netSend({t:"rematch"});return}$("over").classList.remove("on");stopConf();$("overD").style.whiteSpace="";const dm=$("againBtn").dataset.mode,cr=G&&G.cup;if(dm==="cupnext"){const c=cupGet();startCup(c.done>=5?0:c.done);return}if(dm==="cupretry"){startCup(cr);return}if(dm==="survagain"){startFight(undefined,undefined,undefined,true);return}startFight()};
+$("againBtn").onclick=()=>{SFX.click();if($("againBtn").dataset.mode==="resume"){doPause(false);return}if(G&&G.online){if(!G.over||!NV||NV.myRe||!NV.gameOn)return;NV.rematch();$("againBtn").textContent=t("waitRe");return}$("over").classList.remove("on");stopConf();$("overD").style.whiteSpace="";const dm=$("againBtn").dataset.mode,cr=G&&G.cup;if(dm==="cupnext"){const c=cupGet();startCup(c.done>=5?0:c.done);return}if(dm==="cupretry"){startCup(cr);return}if(dm==="survagain"){startFight(undefined,undefined,undefined,true);return}startFight()};
 function startCup(r){if(r>=5){const c=cupGet();c.done=0;cupSave(c);r=0}mode=1;startFight(undefined,undefined,r)}
 $("menuBtn").onclick=()=>{SFX.click();toMenu()};
 $("fin").onclick=()=>{if(G&&G.guest){$("fin").classList.remove("on");netSend({t:"fin"})}else doFinish()};
@@ -738,172 +717,22 @@ document.addEventListener("click",e=>{if(e.detail>0&&window.AnnabelleDesk&&Annab
 /* ---------- confetti ---------- */
 let cfR=0;function confetti(){const c=$("conf"),x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const COL=["#e23b3b","#f5973a","#ffe14d","#2fb36a","#2a8fd0","#d6479a"];const P=Array.from({length:120},(_,i)=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*6,c:COL[i%6],a:Math.random()*6}));const end=Date.now()+2800;cancelAnimationFrame(cfR);(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=.15;x.fillStyle=p.c;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillRect(-p.r,-p.r/2,p.r*2,p.r);x.restore()});if(Date.now()<end)cfR=requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
 function stopConf(){cancelAnimationFrame(cfR);const c=$("conf");c.getContext("2d").clearRect(0,0,c.width,c.height)}
-/* ---------- online 1-vs-1 (WebRTC via PeerJS, the same secure module as the online football) ---------- */
-const ROOM_SECS=300,DELAY=110;
-const NET={gch:null,pendingLink:null,lm:0,ie:0,inT:0,waitCode:null,rs:null,cand:null,joinSec:null,key:null,pend:new Set(),cd:null,peer:null,conn:null,host:false,code:"",myRe:false,oppRe:false,gen:0,tm:null,rt:null,paused:false,last:0,
- t0:0,lastSnap:0,sn:0,lx:0,ly:0,lt:0,dashCool:0,rinT:0,rinN:0,pauseT:0,tok:200,tokT:0,rec:false,rinQ:-1,iq:0,wt:null,wi:-1};
-const SOFT=4000,HARD=20000;   // quiet for 4 s: "weak connection" pill (the match keeps going); quiet for 20 s: hard pause with a Leave button
-const PEER_SRC="vendor/peerjs.min.js";
-/* ICE servers. STUN finds a direct route; TURN relays the game when there is none (two phones on mobile data / strict Wi-Fi).
-   The free public relay below is shared and best-effort: for a rock-solid game put your own TURN credentials in
-   localStorage["annabelle-turn"] as a JSON array of ICE servers (e.g. from a free metered.ca / Cloudflare TURN account). */
-function iceServers(){
- let own=null;try{own=JSON.parse(localStorage.getItem("annabelle-turn")||"null")}catch(e){}
- const base=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:global.stun.twilio.com:3478"},
-  {urls:["turn:openrelay.metered.ca:80","turn:openrelay.metered.ca:80?transport=tcp","turn:openrelay.metered.ca:443","turn:openrelay.metered.ca:443?transport=tcp","turns:openrelay.metered.ca:443?transport=tcp"],username:"openrelayproject",credential:"openrelayproject"}];
- return Array.isArray(own)&&own.length?[...own,...base]:base}
-const PEER_CFG={config:{iceServers:iceServers(),iceCandidatePoolSize:2}};
-const PID="annabelle-tk-";
-function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement("script");s.src=PEER_SRC;s.onload=()=>window.Peer?res():rej();s.onerror=()=>rej();document.head.appendChild(s);setTimeout(rej,12000)})}
+/* ---------- online 1-vs-1: the shared module net1v1.js does the connection (room code + secret link, host approval, HMAC reconnect, lobby) ----------
+   The HOST runs the whole fight (host-authoritative). The friend's phone only sends its held buttons and draws the snapshots it gets back.
+   The friend's kitten is chosen on the friend's phone before connecting; it reaches the host in a {t:"pick"} message right after the start
+   (the host swaps the friend's fighter during the intro, before any blow), because the shared lobby has no room for game data in the join.
+   Everything from the network is untrusted: it is validated and rebuilt, never used as-is. */
+const DELAY=110;var NV=null;
+const NS={gch:null,link:null,lm:0,ie:0,inT:0,t0:0,lastSnap:0,sn:0,lt:0,rinT:0,rinN:0,pauseT:0,tok:200,tokT:0,rinQ:-1,iq:0};   // this page's own counters for snapshots / input
+function netSend(o){if(NV)NV.send(o)}
 // --- validation: every number / array from the network is checked and rebuilt ---
 const int=(x,lo,hi)=>Number.isInteger(x)&&x>=lo&&x<=hi;
 const num=(x,lo,hi)=>typeof x==="number"&&x>=lo&&x<=hi;          // NaN and Infinity fail
 function lims(a,L){if(!Array.isArray(a)||a.length!==L.length)return null;const o=[];for(let i=0;i<L.length;i++){if(!num(a[i],L[i][0],L[i][1]))return null;o.push(a[i])}return o}
-const rnd=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>b.toString(16).padStart(2,"0")).join("");
-async function hmac(key,msg){const e=new TextEncoder(),k=await crypto.subtle.importKey("raw",e.encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC",k,e.encode(msg))),b=>b.toString(16).padStart(2,"0")).join("")}
-function onlineLang(){
- const set=(id,k)=>{const e=$(id);if(e)e.textContent=t(k)};
- set("lobT","lobT");set("bCreate","create");set("bJoin","join");set("lobCodeL","codeIs");set("lobInL","enter");set("bConn","goC");set("lobBack","back");set("npauseLeave","leave");
- set("apprT","apprT");set("apprS","apprS");set("apprYes","apprYes");set("apprNo","apprNo");set("lobWa","share");set("lobWait","waitF");
- if(NET.paused&&G&&G.online){$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
-}
-function setPaused(on){ // connection lost (on) / back (off): the match is frozen on both sides
- if(on!==NET.paused&&G&&G.online)on?SFX.drop():SFX.back();
- NET.paused=on;if(G)G.netp=on;$("npause").classList.toggle("on",on);
- if(on){$("npauseT").textContent=t(NET.host?"npaused":"reconn");$("npauseS").textContent=t("npausedS")}
- else{clearTimeout(NET.rt);NET.rt=null;last=performance.now()}
-}
-// --- connection plumbing (same as the online checkers: secret in the invitation link, host approval for typed codes, HMAC for reconnects) ---
-function stopCd(){clearInterval(NET.cd);NET.cd=null;$("lobCd").textContent="";$("lobCd").classList.remove("low")}
-function startCd(gen){
- stopCd();const end=Date.now()+ROOM_SECS*1000;
- const tick=()=>{if(gen!==NET.gen){stopCd();return}const left=Math.max(0,Math.round((end-Date.now())/1000));
-  $("lobCd").textContent=t("roomLeft")+" "+Math.floor(left/60)+":"+String(left%60).padStart(2,"0");$("lobCd").classList.toggle("low",left<=30);
-  if(left<=0){lobFail();$("lobStatus").textContent=t("expired")}};
- tick();NET.cd=setInterval(tick,500);
-}
-function netClose(){stopCd();NET.gen++;clearTimeout(NET.tm);clearTimeout(NET.rt);const c=NET.conn,p=NET.peer;NET.conn=null;NET.peer=null;NET.myRe=NET.oppRe=false;NET.paused=false;NET.rec=false;weakHide();NET.key=null;NET.waitCode=null;NET.rs=null;NET.cand=null;NET.joinSec=null;$("appr").classList.remove("on");$("npause").classList.remove("on");NET.pend.forEach(x=>{try{x.close()}catch(e){}});NET.pend.clear();try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}}
-function netLeave(){ // leaving on purpose: tell the friend (so they don't wait)
- const c=NET.conn,p=NET.peer;if(G&&G.online)netSend({t:"bye"});NET.conn=null;NET.peer=null;netClose();if(G)G.netp=false;
- setTimeout(()=>{try{c&&c.close()}catch(e){}try{p&&p.destroy()}catch(e){}},400);
-}
-function netSend(o){try{if(NET.conn&&NET.conn.open)NET.conn.send(o)}catch(e){}}
-function lobPane(w){["lobMain","lobCreate","lobJoin"].forEach(id=>{const e=$(id);if(id==="lobMain")e.style.display=w==="main"?"":"none";else e.classList.toggle("on",id===w)})}
-function showLobby(){netClose();$("lobStatus").textContent="";lobPane("main");show("lobby")}
-function lobFail(){netClose();$("lobStatus").textContent=t("failC");lobPane("main")}
-function hostPeer(code,gen,resume){
- const p=new Peer(PID+code,PEER_CFG);NET.peer=p;
- p.on("open",()=>{if(gen!==NET.gen)return;NET.host=true;NET.code=code;
-  if(resume==="wait"){$("lobStatus").textContent="";return}     // same room (same code and secret), just back online
-  if(resume)return;
-  NET.rs=rnd(16);NET.waitCode=code;
-  $("lobCode").textContent=code;const url=location.origin+location.pathname+"?room="+code+"&s="+NET.rs;$("lobWa").href="https://wa.me/?text="+encodeURIComponent(t("shareTxt")+" "+url);
-  $("lobStatus").textContent="";lobPane("lobCreate");startCd(gen)});
- p.on("disconnected",()=>{if(gen!==NET.gen||p.destroyed)return;if(NET.waitCode&&!(G&&G.online))hostRecover();else try{p.reconnect()}catch(e){}});
- p.on("connection",c=>{if(gen!==NET.gen)return;
-  if(!NET.key){ // fresh room: the first friend in is accepted (the room code is the secret, valid only for the countdown)
-   if(NET.conn||(G&&G.online)||NET.pend.size>=4){try{c.close()}catch(e){}return}
-   c.fresh=true;attach(c,gen,true);
-  }else{ // a game exists: only someone who proves they know the game secret can (re)connect
-   if(NET.pend.size>=3){try{c.close()}catch(e){}return}
-   attach(c,gen,true);
-  }});
- p.on("error",e=>{if(gen!==NET.gen)return;
-  if(NET.waitCode&&!(G&&G.online)){ // the room is open and waiting for the friend: never throw it away because the connection hiccupped
-   if(e&&e.type==="unavailable-id"){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online)){try{p.destroy()}catch(x){}hostPeer(NET.waitCode,gen,"wait")}},2000)}
-   else hostRecover();
-   return}
-  if(G&&G.online){ // mid-match: a signalling hiccup never ends the match (the friend is connected peer-to-peer); only a lost id is retried
-   if(e&&e.type==="unavailable-id"&&NET.rec){clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.rec){try{p.destroy()}catch(x){}hostPeer(NET.code,gen,true)}},3000)}
-   return}
-  if(e&&e.type==="unavailable-id")createRoom(); else lobFail()});
-}
-function hostRecover(force){ // phone was in the background (WhatsApp, lock screen...): get the same room back online
- if(!NET.waitCode||(G&&G.online))return;const gen=NET.gen,p=NET.peer;
- if(!force&&p&&!p.destroyed&&p.open&&!p.disconnected)return;   // healthy
- try{p&&p.destroy()}catch(e){}                        // a half-dead peer: start a fresh one with the SAME id
- $("lobStatus").textContent=t("reconn");
- clearTimeout(NET.rt);NET.rt=setTimeout(()=>{if(gen===NET.gen&&NET.waitCode&&!(G&&G.online))hostPeer(NET.waitCode,gen,"wait")},1200);
-}
-function createRoom(){
- netClose();const gen=NET.gen;$("lobStatus").textContent=t("conn");lobPane("none");
- loadPeer().then(()=>{if(gen!==NET.gen)return;hostPeer(String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000),gen,false)}).catch(()=>{if(gen===NET.gen)lobFail()});
-}
-function joinRoom(code,sec){
- netClose();const gen=NET.gen;NET.code=code;NET.joinSec=sec||null;$("lobStatus").textContent=t("conn");lobPane("none");show("lobby");
- loadPeer().then(()=>{if(gen!==NET.gen)return;
-  const p=new Peer(undefined,PEER_CFG);NET.peer=p;let cur=null,attempt=0;
-  const joined=()=>NET.conn&&NET.conn.open;
-  const go=()=>{if(gen!==NET.gen||joined())return;attempt++;
-   if(attempt>4){lobFail();return}
-   $("lobStatus").textContent=t("conn")+(attempt>1?" ("+attempt+"/4)":"");
-   if(cur){try{cur.close()}catch(e){}}
-   NET.host=false;cur=p.connect(PID+code,{reliable:true});attach(cur,gen);
-   clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!joined())go()},13000)};
-  p.on("open",()=>{if(gen===NET.gen)go()});
-  p.on("error",e=>{if(gen!==NET.gen||(G&&G.online))return;const ty=e&&e.type;
-   if(ty==="peer-unavailable"||ty==="webrtc"||ty==="negotiation"||ty==="socket-error"||ty==="socket-closed"){clearTimeout(NET.tm);NET.tm=setTimeout(go,3000)}   // host may just be waking up: try again shortly
-   else lobFail()});
- }).catch(()=>{if(gen===NET.gen)lobFail()});
-}
-function admit(c){ // host: this connection is the friend
- if(NET.cand&&NET.cand!==c){try{NET.cand.close()}catch(e){}}NET.cand=null;$("appr").classList.remove("on");
- if(NET.conn||!c.open)return;NET.gch=c.gch||CK[0];c.authed=true;NET.pend.delete(c);clearTimeout(c.to);c.fin()}
-function askApproval(c){
- c.pair=String(10+crypto.getRandomValues(new Uint32Array(1))[0]%90);clearTimeout(c.to);c.to=setTimeout(()=>{if(NET.cand===c){try{c.close()}catch(e){}}},60000);
- try{c.send({t:"pair",n:c.pair})}catch(e){}
- $("apprN").textContent=c.pair;$("appr").classList.add("on");SFX.join();
- $("apprYes").onclick=()=>{SFX.click();if(NET.cand===c)admit(c)};
- $("apprNo").onclick=()=>{SFX.click();NET.cand=null;$("appr").classList.remove("on");try{c.close()}catch(e){}};
-}
-function attach(c,gen,pending){
- c.myN=rnd(16);if(c.authed===undefined)c.authed=false;
- if(pending)NET.pend.add(c);else NET.conn=c;
- let opened=false;
- const finish=()=>{if(gen!==NET.gen)return;NET.pend.delete(c);clearTimeout(c.to);
-  if(NET.conn&&NET.conn!==c){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
-  NET.conn=c;NET.last=Date.now();clearTimeout(NET.tm);NET.rec=false;NET.rinQ=-1;
-  if(NET.host){if(G&&G.online&&!G.guest)hostResume();else startOnlineHost()}else netSend({t:"hello"})};
- const op=()=>{if(opened||gen!==NET.gen)return;opened=true;
-  c.to=setTimeout(()=>{if(!c.authed){NET.pend.delete(c);try{c.close()}catch(e){}}},10000);
-  if(NET.key){try{c.send({t:"ch",n:c.myN})}catch(e){}}   // mutual challenge-response (HMAC with the game secret)
-  else if(!NET.host){try{c.send({t:"join",s:NET.joinSec,c:sel[0]})}catch(e){}}};
- c.fin=finish;
- const watchIce=()=>{const pc=c.peerConnection;if(!pc||c._w)return;c._w=1;
-  pc.addEventListener("iceconnectionstatechange",()=>{const st=pc.iceConnectionState;clearTimeout(c.iceT);
-   if(st==="failed"||st==="closed"){gone()}
-   else if(st==="disconnected"){c.iceT=setTimeout(()=>{const x=pc.iceConnectionState;if(x!=="connected"&&x!=="completed")gone()},15000)}})};
- setTimeout(watchIce,0);setTimeout(watchIce,800);
- c.on("open",()=>{watchIce();op()});
- c.on("data",async d=>{
-  try{
-  if(gen!==NET.gen||!d||typeof d!=="object")return;
-  if(d.t==="ch"&&NET.key&&typeof d.n==="string"&&/^[0-9a-f]{32}$/.test(d.n)){const h=await hmac(NET.key,"R"+(NET.host?"h":"g")+d.n);try{c.send({t:"pr",h})}catch(e){}return}
-  if(d.t==="pr"&&NET.key&&typeof d.h==="string"){if(c.authed)return;const want=await hmac(NET.key,"R"+(NET.host?"g":"h")+c.myN);if(gen!==NET.gen)return;if(d.h===want){c.authed=true;finish()}else{NET.pend.delete(c);try{c.close()}catch(e){}}return}
-  if(c.fresh&&NET.host&&!NET.key){ // room still open: invitation link (secret) joins directly, a typed code needs the host's approval
-   if(d.t!=="join")return;c.gch=typeof d.c==="string"&&CK.includes(d.c)?d.c:CK[0];
-   const sec=typeof d.s==="string"&&/^[0-9a-f]{32}$/.test(d.s)?d.s:null;
-   if(NET.conn){try{c.close()}catch(e){}return}
-   if(sec&&NET.rs&&sec===NET.rs){admit(c)}
-   else if(!sec&&!NET.cand){NET.cand=c;askApproval(c)}
-   else{try{c.close()}catch(e){}}
-   return}
-  if(!c.authed&&!NET.host&&d.t==="pair"&&!NET.key&&typeof d.n==="string"&&/^\d{2}$/.test(d.n)){$("lobStatus").textContent=t("pairMsg").replace("N",d.n);clearTimeout(NET.tm);NET.tm=setTimeout(()=>{if(gen===NET.gen&&!NET.key)lobFail()},70000);return}
-  if(!c.authed){ // first contact of a joining friend: take the game secret from the host's first "start"
-   if(d.t==="start"&&!NET.host&&!NET.key&&typeof d.k==="string"&&/^[0-9a-f]{32}$/.test(d.k)&&cleanCfg(d)){NET.key=d.k;c.authed=true;clearTimeout(c.to);NET.last=Date.now();onNetData(d)}
-   return}
-  if(NET.conn!==c)return;
-  NET.last=Date.now();onNetData(d)
-  }catch(e){}});
- const gone=()=>{NET.pend.delete(c);if(NET.cand===c){NET.cand=null;$("appr").classList.remove("on")}if(gen===NET.gen&&NET.conn===c)onNetClose()};
- c.on("close",gone);c.on("error",gone);
- if(c.open)op();
-}
 // --- validation of what comes from the network: everything is checked and rebuilt, never used as-is ---
 const STC=["idle","walk","jump","atk","sp","block","hurt","ko","win","yarn"],STATES=["intro","fight","ko","finish"];
 const L_F=[[-100,900],[-500,500],[-3000,3000],[-1,1],[0,9],[0,100],[0,2],[0,400],[0,100],[0,2],[0,1],[0,1],[0,2]];
 const MKS=/^(|round:[1-9]|fight|ko|timeUp|perfect)$/,COLR=/^#[0-9a-fA-F]{3,6}$/;
-function lims(a,L){if(!Array.isArray(a)||a.length!==L.length)return null;const o=[];for(let i=0;i<L.length;i++){if(!num(a[i],L[i][0],L[i][1]))return null;o.push(a[i])}return o}
 function cleanCfg(d){if(!d||typeof d!=="object"||typeof d.c0!=="string"||typeof d.c1!=="string"||!CK.includes(d.c0)||!CK.includes(d.c1)||!int(d.st,0,STAGES.length-1))return null;return {c0:d.c0,c1:d.c1,st:d.st}}
 function cleanSnap(d){
  if(!d||typeof d!=="object"||!int(d.n,0,1e9)||!num(d.h,0,1e10)||!int(d.st,0,3)||!int(d.r,1,9)||!num(d.tm,0,300)||typeof d.mk!=="string"||!MKS.test(d.mk)||!num(d.mt,0,10)||!num(d.sk,0,5)||!num(d.fl,0,5)||!int(d.p,0,1)||!int(d.fa,0,1))return null;
@@ -918,11 +747,6 @@ function cleanSnap(d){
   else return null}
  return {n:d.n,ht:d.h,st:d.st,r:d.r,tm:d.tm,mk:d.mk,mt:d.mt,sk:d.sk,fl:d.fl,p:d.p,fa:d.fa,f,pr,y,e,fired:false};
 }
-// --- match start / resume ---
-const startMsg=r=>({t:"start",k:NET.key,c0:G.fs[0].ch,c1:G.fs[1].ch,st:G.stageI,r});
-function startOnlineHost(){stopCd();NET.waitCode=null;SFX.join();if(!NET.key)NET.key=rnd(16);NET.sn=0;NET.rinQ=-1;NET.inT=performance.now();startFight("host",{c0:sel[0]||CK[0],c1:NET.gch||CK[1],st:Math.random()*STAGES.length|0});netSend(startMsg(0))}
-function hostResume(){weakHide();setPaused(false);NET.lastSnap=0;NET.inT=performance.now();netSend(startMsg(1));hostSnapNow()}
-function maybeRematch(){if(NET.host&&NET.myRe&&NET.oppRe&&NET.conn){NET.myRe=NET.oppRe=false;startOnlineHost()}}
 // --- host: snapshots out, the friend's input in ---
 function sendSnap(){
  const g=G,q=v=>Math.round(v*10)/10,q2=v=>Math.round(v*100)/100;
@@ -930,25 +754,24 @@ function sendSnap(){
  const pr=g.proj.slice(0,6).map(p=>[q(p.x),q(p.y),p.r]);
  const y=g.yarn?[q(g.yarn.x),q(g.yarn.y),q2(g.yarn.rot),g.yarn.f===g.fs[0]?0:1]:null;
  const e=g.ev;g.ev=[];
- netSend({t:"snap",n:++NET.sn,h:Math.round(performance.now()-NET.t0),f,pr,y,st:STATES.indexOf(g.state),r:g.round,tm:q2(Math.max(0,g.time)),mk:g.mk||"",mt:q2(Math.max(0,g.msgT)),sk:q2(Math.min(5,g.shake)),fl:q2(Math.min(5,g.flash)),p:g.pause?1:0,fa:(g.finAvail>0&&g.last&&g.last.id===1&&g.last.wins>=2)?1:0,e});
+ netSend({t:"snap",n:++NS.sn,h:Math.round(performance.now()-NS.t0),f,pr,y,st:STATES.indexOf(g.state),r:g.round,tm:q2(Math.max(0,g.time)),mk:g.mk||"",mt:q2(Math.max(0,g.msgT)),sk:q2(Math.min(5,g.shake)),fl:q2(Math.min(5,g.flash)),p:g.pause?1:0,fa:(g.finAvail>0&&g.last&&g.last.id===1&&g.last.wins>=2)?1:0,e});
 }
-function clogged(){const dc=NET.conn&&NET.conn.dataChannel;return !!(dc&&dc.bufferedAmount>60000)}
-function hostSnapNow(){if(G&&G.online&&!G.guest&&NET.conn&&NET.conn.open&&!NET.paused&&!G.over&&!clogged()){NET.lastSnap=performance.now();sendSnap()}}
-function hostSnapTick(now){if(!NET.conn||!NET.conn.open||NET.paused||G.over)return;if(now-NET.lastSnap<(G.pause?100:48))return;NET.lastSnap=now;if(!clogged())sendSnap()}
+function clogged(){const dc=NV.NET.conn&&NV.NET.conn.dataChannel;return !!(dc&&dc.bufferedAmount>60000)}
+function hostSnapNow(){if(G&&G.online&&!G.guest&&NV.NET.conn&&NV.NET.conn.open&&!NV.paused&&!G.over&&!clogged()){NS.lastSnap=performance.now();sendSnap()}}
+function hostSnapTick(now){if(!NV.NET.conn||!NV.NET.conn.open||NV.paused||G.over)return;if(now-NS.lastSnap<(G.pause?100:48))return;NS.lastSnap=now;if(!clogged())sendSnap()}
 const BITK=Object.keys(BIT);
 function onInput(d){ // the friend's held buttons (bit mask) + the presses since the last message (so a quick tap is never lost)
- const n=performance.now();if(n-NET.rinT>1000){NET.rinT=n;NET.rinN=0}if(++NET.rinN>90)return;
- if(!int(d.m,0,127)||!int(d.e,0,127)||!int(d.q,0,1e9)||d.q<=NET.rinQ)return;NET.rinQ=d.q;
- NET.inT=n;if(G.weak)weakHide();if(NET.paused&&NET.conn)netResume();
+ const n=performance.now();if(n-NS.rinT>1000){NS.rinT=n;NS.rinN=0}if(++NS.rinN>90)return;
+ if(!int(d.m,0,127)||!int(d.e,0,127)||!int(d.q,0,1e9)||d.q<=NS.rinQ)return;NS.rinQ=d.q;
+ NS.inT=n;
  const f=G.fs[1];for(const k of BITK){f.inp[k]=d.m&BIT[k]?1:0;if(d.e&BIT[k])f.edge[k]=n}
 }
 // --- guest: snapshots in -> interpolated render; input out ---
 const L1=(p,q,f)=>p+(q-p)*f;
 function rxSnap(cs){
  const g=G,now=performance.now();
- NET.tok=Math.min(200,NET.tok+(now-NET.tokT)*.04);NET.tokT=now;if(NET.tok<1)return;NET.tok--;
+ NS.tok=Math.min(200,NS.tok+(now-NS.tokT)*.04);NS.tokT=now;if(NS.tok<1)return;NS.tok--;
  if(cs.n<=g.lastN)return;g.lastN=cs.n;
- if(G.weak)weakHide();
  const smp=now-cs.ht;if(g.off===null||smp<g.off)g.off=smp;else g.off+=(smp-g.off)*.02;
  if(g.lastRx!==undefined){const j=Math.abs((now-g.lastRx)-(cs.ht-g.lastHt));g.jit=Math.max(j,g.jit*.985)}
  g.lastRx=now;g.lastHt=cs.ht;
@@ -967,7 +790,7 @@ function applyDiscrete(s,late){
 function guestStep(now,dt){
  const g=G,sb=g.sb;
  g.shake=Math.max(0,g.shake-dt*3);g.flash=Math.max(0,g.flash-dt*2);g.msgT-=dt;g.bolt-=dt;if(Math.random()<dt*.18)g.bolt=.18;
- if(!NET.paused&&sb.length&&g.off!==null){
+ if(!NV.paused&&sb.length&&g.off!==null){
   const tgt=Math.max(DELAY,Math.min(220,DELAY+g.jit*1.3));g.dly+=Math.max(-dt*20,Math.min(dt*80,tgt-g.dly));
   const rt=now-g.off-g.dly;let ai=0;
   for(let i=0;i<sb.length;i++){if(sb[i].ht<=rt)ai=i;else break}
@@ -987,103 +810,48 @@ function guestStep(now,dt){
  fx(dt);guestInput(now);
 }
 function guestInput(now){ // my held buttons -> a bit mask (+ the presses since the last message); a keep-alive every 200 ms
- if(!NET.conn||!NET.conn.open||NET.paused||G.over)return;
+ if(!NV.NET.conn||!NV.NET.conn.open||NV.paused||G.over)return;
  const f=G.fs[1];let m=0;for(const k of BITK)if(f.inp[k])m|=BIT[k];
- if(((m!==NET.lm||NET.ie)&&now-NET.lt>=30)||now-NET.lt>=200){
-  const dc=NET.conn.dataChannel;if(dc&&dc.bufferedAmount>20000)return;
-  netSend({t:"in",m,e:NET.ie,q:++NET.iq});NET.lm=m;NET.ie=0;NET.lt=now}
+ if(((m!==NS.lm||NS.ie)&&now-NS.lt>=30)||now-NS.lt>=200){
+  const dc=NV.NET.conn.dataChannel;if(dc&&dc.bufferedAmount>20000)return;
+  netSend({t:"in",m,e:NS.ie,q:++NS.iq});NS.lm=m;NS.ie=0;NS.lt=now}
 }
-function showLeft(){
- if(!G)return;G.over=true;setPaused(false);$("fin").classList.remove("on");
+function showLeft(){ // the friend left on purpose
+ if(!G)return;G.over=true;G.netp=false;$("fin").classList.remove("on");
  $("overT").textContent=t("left");$("overS").textContent="👋";$("overD").textContent="";$("againBtn").style.display="none";delete $("againBtn").dataset.mode;$("over").classList.add("on");
 }
-function onNetData(d){
- if(!d||typeof d!=="object")return;
- if(d.t==="start"&&!NET.host){
-  const c=cleanCfg(d);if(!c||d.k!==NET.key)return;
-  if(d.r===1&&G&&G.guest&&!G.over){G.sb=[];G.off=null;G.lastN=0;weakHide();setPaused(false)}
-  else{SFX.join();setPaused(false);startFight("guest",c)}
- }
- else if(d.t==="snap"&&!NET.host&&G&&G.guest&&!G.over){const cs=cleanSnap(d);if(cs){if(NET.paused&&NET.conn)netResume();rxSnap(cs)}}
- else if(d.t==="in"&&NET.host&&G&&G.online&&!G.guest&&!G.over)onInput(d);
- else if(d.t==="pause"&&NET.host&&G&&G.online&&!G.guest&&!G.over&&typeof d.on==="boolean"){const n=performance.now();if(n-NET.pauseT>250){NET.pauseT=n;doPause(d.on)}}
- else if(d.t==="fin"&&NET.host&&G&&G.online&&!G.guest&&!G.over)doFinish(true);
- else if(d.t==="over"&&!NET.host&&G&&G.guest&&!G.over&&int(d.w,-1,1)&&int(d.a,0,2)&&int(d.b,0,2)){
-  G.over=true;G.fs[0].wins=d.a;G.fs[1].wins=d.b;if(G.pause){G.pause=false;paintPause(false)}$("fin").classList.remove("on");showFinal(G,d.w,d.a,d.b)}
- else if(d.t==="rematch"&&NET.host&&G&&G.online&&G.over){SFX.click();NET.oppRe=true;maybeRematch()}
- else if(d.t==="bye"){const had=G&&G.online;if(had)SFX.drop();netClose();setPaused(false);if(had)showLeft();else lobFail()}
+const CKS=c=>typeof c==="string"&&CK.includes(c);
+function onNetData(d){ // only after net1v1 authenticated the friend; still treated as hostile: types, ranges, order, who is the host
+ if(!d||typeof d!=="object"||!G||!G.online)return;const host=NV.host;
+ if(d.t==="snap"&&host===false&&G.guest&&!G.over){const cs=cleanSnap(d);if(cs)rxSnap(cs)}
+ else if(d.t==="in"&&host&&!G.guest&&!G.over)onInput(d);
+ else if(d.t==="pause"&&host&&!G.guest&&!G.over&&typeof d.on==="boolean"){const n=performance.now();if(n-NS.pauseT>250){NS.pauseT=n;doPause(d.on)}}
+ else if(d.t==="fin"&&host&&!G.guest&&!G.over)doFinish(true);
+ else if(d.t==="pick"&&host&&!G.guest&&CKS(d.c)){ // the friend's kitten: used for this fight when it still is the intro of round 1, and for the next ones
+  NS.gch=d.c;if(!G.over&&G.state==="intro"&&G.round===1&&G.fs[1].ch!==d.c){G.fs[1]=mkF(1,d.c,true);netSend({t:"pc",c:d.c})}}
+ else if(d.t==="pc"&&host===false&&G.guest&&!G.over&&CKS(d.c)&&G.state==="intro"&&G.round===1)G.fs[1]=mkF(1,d.c,true);
+ else if(d.t==="over"&&host===false&&G.guest&&!G.over&&int(d.w,-1,1)&&int(d.a,0,2)&&int(d.b,0,2)){
+  G.over=true;NV.setOver(true);G.fs[0].wins=d.a;G.fs[1].wins=d.b;if(G.pause){G.pause=false;paintPause(false)}$("fin").classList.remove("on");showFinal(G,d.w,d.a,d.b)}
 }
-// --- connection trouble: forgiving tiers. 0-4 s quiet: nothing visible. 4-20 s: "weak connection" pill, the match keeps running (host: the friend's kitten keeps its last input, then stops; guest: last snapshot is extrapolated a little).
-//     20 s+: hard pause with a Leave button. Meanwhile we reconnect quietly; any valid data / a re-authenticated connection clears everything at once.
-function onNetClose(){ // the connection itself is gone (closed / ICE failed): reconnect quietly; the clock decides when it becomes a hard pause
- if(!G||!G.online){if(NET.conn||NET.peer)lobFail();return}
- const c=NET.conn;NET.conn=null;try{c&&c.close()}catch(e){}
- if(G.over){netClose();showLeft();return}
- startRecover();
-}
-function startRecover(){if(!G||!G.online||G.over)return;NET.rec=true;if(NET.host)hostLoop();else guestLoop()}
-function hardLost(){setPaused(true);weakHide(true);if(NET.conn)onNetClose();else if(!NET.rec)startRecover()}
-function netResume(){ // data is flowing again after a hard pause that never closed the connection
- if(!NET.paused)return;setPaused(false);NET.rec=false;weakHide(true);
- if(G.guest){G.sb=[];G.off=null;G.lastN=0}else{NET.lastSnap=0;hostSnapNow()}
-}
-function weakLine(){const L=t("weakL");NET.wi=(NET.wi+1+Math.random()*(L.length-1)|0)%L.length;const e=$("weak"),r=cv.getBoundingClientRect();e.textContent=L[NET.wi];
- if(r.width>0){e.style.top=(r.top+r.height*.075)+"px";e.style.left=(r.left+r.width/2)+"px"}e.style.maxWidth=Math.max(160,(r.width||innerWidth)-16)+"px"}
-function weakSet(on){if(!G||on===!!G.weak)return;G.weak=on;if(on){weakLine();$("weak").classList.add("on");clearInterval(NET.wt);NET.wt=setInterval(weakLine,3500);SFX.huh()}else weakHide()}
-function weakHide(keepFlag){clearInterval(NET.wt);NET.wt=null;$("weak").classList.remove("on");if(G)G.weak=false}
-function guestLoop(){
- clearTimeout(NET.rt);if(!NET.rec||NET.host||!G||!G.online)return;const gen=NET.gen;
- function tryConnect(){if(gen!==NET.gen||!NET.rec||!NET.peer)return;if(NET.conn&&NET.conn.open)return;
-  if(NET.conn){const o=NET.conn;NET.conn=null;try{o.close()}catch(e){}}
-  try{attach(NET.peer.connect(PID+NET.code,{reliable:true}),gen)}catch(e){}}
- function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
-  if(!p||p.destroyed||p.disconnected||!p.open){
-   try{p&&p.destroy()}catch(e){}
-   loadPeer().then(()=>{if(gen!==NET.gen||!NET.rec)return;const np=new Peer(undefined,PEER_CFG);NET.peer=np;
-    np.on("open",()=>{if(gen===NET.gen&&NET.rec)tryConnect()});np.on("error",()=>{})}).catch(()=>{});
-  }else tryConnect();
-  NET.rt=setTimeout(go,4500)}
- go();
-}
-function hostLoop(){ // keep the room's peer alive so the friend can come back with the secret
- clearTimeout(NET.rt);if(!NET.rec||!NET.host||!G||!G.online)return;const gen=NET.gen;
- (function go(){if(gen!==NET.gen||!NET.rec)return;const p=NET.peer;
-  if(!p||p.destroyed){loadPeer().then(()=>{if(gen===NET.gen&&NET.rec&&(!NET.peer||NET.peer.destroyed))hostPeer(NET.code,gen,true)}).catch(()=>{})}
-  else if(p.disconnected){try{p.reconnect()}catch(e){}}
-  NET.rt=setTimeout(go,4500)})();
-}
-function netKick(){ // phone woke up / network is back: retry right away
- if(NET.waitCode&&!(G&&G.online)){const lg=Date.now()-(window.__hidAt||Date.now())>2500;window.__hidAt=0;hostRecover(lg);return}
- if(!G||!G.online)return;
- if(NET.rec){if(NET.host){const p=NET.peer;if(p&&p.disconnected&&!p.destroyed)try{p.reconnect()}catch(e){}}else guestLoop()}
- else netSend({t:"ping"});
-}
-function netQ(){ // connection quality dot: green = data flowing, amber = quiet for a few seconds, red = hard pause
- const d=$("netDot");if(!d)return;if(!G||!G.online){d.style.display="none";return}
- const a=NET.paused?9e9:Date.now()-NET.last;d.style.display="";d.style.background=a<SOFT?"#2fb36a":a<HARD?"#f2c94c":"#e23b3b";d.title=a<SOFT?"🟢":a<HARD?"🟡":"🔴"}
-let hbN=0;
-setInterval(()=>{const now=Date.now();
- if(NET.tickAt&&now-NET.tickAt>3000)NET.last=now;                   // OUR timers were frozen (phone asleep / app in background): that says nothing about the friend
- NET.tickAt=now;netQ();
- if(!G||!G.online){weakHide();return}
- if(++hbN%4===0)netSend({t:"ping"});
- if(document.hidden||G.over)return;
- const q=now-NET.last;
- if(NET.paused){if(NET.conn&&NET.conn.open&&q<2500)netResume();return}
- if(q>HARD)hardLost();else weakSet(q>SOFT);
-},500);
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){NET.last=Date.now();NET.tickAt=Date.now();netKick()}});addEventListener("online",netKick);addEventListener("pageshow",netKick);addEventListener("focus",netKick);
-$("npauseLeave").addEventListener("click",()=>{SFX.click();toMenu()});
-$("bCreate").addEventListener("click",()=>{SFX.click();createRoom()});
-$("bJoin").addEventListener("click",()=>{SFX.click();lobPane("lobJoin");$("lobStatus").textContent="";$("lobIn").value="";$("lobIn").focus()});
-$("bConn").addEventListener("click",()=>{const c=$("lobIn").value.replace(/\D/g,"");if(c.length===6){SFX.click();joinRoom(c)}});
-$("lobIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,6)});
-$("lobBack").addEventListener("click",()=>{SFX.click();toMenu()});
+function netFresh(){ // the line is back: the guest forgets its old snapshots, the host sends a fresh one at once
+ if(!G||!G.online||G.over)return;if(G.guest){G.sb=[];G.off=null;G.lastN=0}else{NS.lastSnap=0;hostSnapNow()}}
+function mkNet(){ // built when the friend has chosen a kitten (an invitation link is read by the module when it is built)
+ if(NV||!window.Net1v1)return NV;
+ NV=Net1v1({pid:"annabelle-tk-",shareTxt:{he:TX.he.shareTxt,fr:TX.fr.shareTxt,en:TX.en.shareTxt},
+ sfx:{join:()=>SFX.join(),click:()=>SFX.click(),drop:()=>SFX.drop(),back:()=>SFX.back(),huh:()=>SFX.huh()},
+ hideMenu(){},showMenu(){toMenu()},
+ makeStart(){return {c0:G.fs[0].ch,c1:G.fs[1].ch,st:G.stageI}},cleanStart:cleanCfg,
+ onHostStart(){NS.sn=0;NS.rinQ=-1;NS.inT=performance.now();startFight("host",{c0:sel[0]||CK[0],c1:NS.gch||CK[1],st:Math.random()*STAGES.length|0})},
+ onGuestStart(c){startFight("guest",c);netSend({t:"pick",c:sel[0]||CK[0]})},
+ onResume(){if(G&&G.online&&!G.guest){NS.rinQ=-1;NS.inT=performance.now()}netFresh()},   // the same match, the connection is back (after the mutual HMAC proof)
+ onData:onNetData,onLeft:showLeft,
+ onPause(on){if(G)G.netp=!!on;if(!on){last=performance.now();netFresh()}}});
+ return NV}
 {const U=new URLSearchParams(location.search),q=U.get("room")||"",sc=/^[0-9a-f]{32}$/.test(U.get("s")||"")?U.get("s"):null;
- if(q||U.has("s"))try{history.replaceState(null,"",location.pathname)}catch(e){}
- if(/^\d{6}$/.test(q))setTimeout(()=>{NET.pendingLink={code:q,sec:sc};startPick(3)},0)}
-
-window.__tk={NET,cleanSnap,get G(){return G},CHARS,PRE,startFight,step,get sel(){return sel},set sel(v){sel=v}};
+ if(q||U.has("s"))try{history.replaceState(null,"",location.pathname)}catch(e){}   // the invitation leaves the address bar at once; it is given to the module only after the kitten is chosen
+ if(/^\d{6}$/.test(q))setTimeout(()=>{NS.link={code:q,sec:sc};startPick(3)},0)}
+/* debug hooks for automated tests */
+window.__tk={get NET(){return NV&&NV.NET},get NT(){return NV},NS,cleanSnap,get G(){return G},CHARS,PRE,startFight,step,get sel(){return sel},set sel(v){sel=v}};
 updMute();drawMenu();
 </script>
 </body>
