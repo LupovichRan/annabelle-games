@@ -43,9 +43,10 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
 #pop{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);pointer-events:none;font-weight:900;font-size:clamp(30px,10vw,58px);color:#ffe14d;text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,0 0 18px #ff6fb5;opacity:0;white-space:nowrap;z-index:5}
 #pop.go{animation:popA .95s ease-out forwards}
 @keyframes popA{0%{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}18%{transform:translate(-50%,-50%) scale(1.3) rotate(4deg);opacity:1}35%{transform:translate(-50%,-50%) scale(1) rotate(0)}75%{opacity:1}100%{transform:translate(-50%,-120%) scale(1);opacity:0}}
-#dpad{flex:none;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,62px);gap:6px;justify-content:center;margin:6px auto 4px;direction:ltr}
+#dpad{position:relative;flex:none;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,62px);gap:6px;justify-content:center;margin:6px auto 4px;direction:ltr}
 #dpad button{background:var(--cream);color:var(--ink);border:3px solid #000;box-shadow:0 5px 0 #000;border-radius:10px;font-size:28px;font-weight:900;display:flex;align-items:center;justify-content:center;touch-action:none;transition:transform .05s}
 #dpad button:active,#dpad button.dn{transform:translateY(4px) scale(.95,.9);box-shadow:0 1px 0 #000;background:#ffd36b}
+#dpad::before{content:"";position:absolute;inset:-8px -18px -6px -18px}
 #dU{grid-column:2;grid-row:1}#dL{grid-column:1;grid-row:2}#dD{grid-column:2;grid-row:2}#dR{grid-column:3;grid-row:2}
 .desk #dpad{display:none}
 @media (orientation:landscape) and (max-height:520px){html:not(.desk) #app{max-width:none}html:not(.desk) #dpad{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:10px;margin:0;opacity:.8;z-index:2}}
@@ -104,7 +105,7 @@ button,a{font-family:inherit;color:inherit;cursor:pointer;border:none;touch-acti
 .rv>*:not(.rays){position:relative}
 .rvE{font-size:clamp(96px,32vw,150px);line-height:1.15;animation:pop .6s,bob 1.4s .6s ease-in-out infinite;filter:drop-shadow(0 6px 0 #0003)}
 .rvt{font-weight:900;font-size:clamp(18px,5.4vw,24px)!important;color:#c8590a}
-#emoBar{display:none;gap:6px;justify-content:center;flex:none;direction:ltr;margin:4px 0 0}
+#emoBar{display:none;gap:6px;justify-content:center;flex:none;direction:ltr;margin:0 0 5px}
 body.net #emoBar{display:flex}
 body.net #pauseBtn{display:none}
 #emoBar .ib{flex:1 1 0;width:auto;max-width:92px;height:44px;font-size:24px}
@@ -127,8 +128,8 @@ body.net #pauseBtn{display:none}
   <div id="stats">
     <div class="pill" id="sHearts"></div><div class="pill" id="sFood"></div><div class="pill" id="sBab"></div><div class="pill" id="sScore"></div>
   </div>
+  <div id="emoBar"><!-- at the TOP, away from the thumbs: below the arrows it sat 6px above the up arrow, so a slightly high tap sent an emote instead of turning --><button class="ib" data-e="0" aria-label="emote">😄</button><button class="ib" data-e="1" aria-label="emote">😮</button><button class="ib" data-e="2" aria-label="emote">😭</button><button class="ib" data-e="3" aria-label="emote">👏</button></div>
   <div id="stage"><canvas id="cv"></canvas><div id="toast"></div><div id="banner"></div><div id="pop"></div></div>
-  <div id="emoBar"><button class="ib" data-e="0" aria-label="emote">😄</button><button class="ib" data-e="1" aria-label="emote">😮</button><button class="ib" data-e="2" aria-label="emote">😭</button><button class="ib" data-e="3" aria-label="emote">👏</button></div>
   <div id="dpad"><button id="dU" aria-label="up">▲</button><button id="dL" aria-label="left">◀</button><button id="dD" aria-label="down">▼</button><button id="dR" aria-label="right">▶</button></div>
 </div>
 <div class="ov" id="ovMenu"><div class="card" id="cMenu"></div></div>
@@ -387,7 +388,21 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyP'||e.code==='Space'||e.code==='Escape'){if(G.mode==='play'||G.mode==='ready'){e.preventDefault();pause()}else if(G.mode==='paused'){e.preventDefault();resume()}return}
   if(e.code==='KeyM'){toggleMute()}
 });
-[['dU','up'],['dD','down'],['dL','left'],['dR','right']].forEach(([id,n])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();ac();setDir(DIRS[n])})});
+/* the whole pad is one touch surface: a press anywhere on it (gaps, the two empty corners, the margin around it) picks the NEAREST arrow, and sliding the thumb to another arrow turns too */
+const PADN=[['dU','up'],['dD','down'],['dL','left'],['dR','right']],pad=$('dpad'),padP=new Map(),padLog=[];
+function padGo(n){padLog.push(n);if(padLog.length>40)padLog.shift();setDir(DIRS[n])}
+function padDist(e,id){const r=$(id).getBoundingClientRect();return Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2))}
+function padNearest(e){let best='up',bd=1e9;for(const [id,n] of PADN){const d=padDist(e,id);if(d<bd){bd=d;best=n}}return best}
+function padMark(){const on=Array.from(padP.values());PADN.forEach(([id,n])=>$(id).classList.toggle('dn',on.includes(n)))}
+pad.addEventListener('pointerdown',e=>{e.preventDefault();ac();const n=padNearest(e);padP.set(e.pointerId,n);padMark();padGo(n);try{pad.setPointerCapture(e.pointerId)}catch(_){}});
+pad.addEventListener('pointermove',e=>{
+  const cur=padP.get(e.pointerId);if(cur===undefined)return;
+  const n=padNearest(e);if(n===cur)return;
+  const id=PADN.find(a=>a[1]===n)[0],cid=PADN.find(a=>a[1]===cur)[0];
+  if(padDist(e,id)+14<padDist(e,cid)){padP.set(e.pointerId,n);padMark();padGo(n)} // a little hysteresis so a wobbling thumb does not flip back and forth
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>pad.addEventListener(ev,e=>{if(padP.delete(e.pointerId))padMark()}));
+PADN.forEach(([id,n])=>$(id).addEventListener('click',e=>{if(e.detail===0)padGo(n)})); // keyboard / screen-reader activation
 let sw=null;
 const stage=$('stage');
 stage.addEventListener('pointerdown',e=>{ac();sw={x:e.clientX,y:e.clientY}});
@@ -831,7 +846,7 @@ Object.assign(TX.en,{net:'Online with a friend',netSub:'Each on your own phone',
 /* the [[girl|boy|neutral]] forms of the texts are resolved once, for the current kid (playtime.js has already loaded kid.js) */
 (function w(o){for(var k in o){var v=o[k];if(typeof v==='string'){if(v.indexOf('[[')>=0)o[k]=kidG(v)}else if(v&&typeof v==='object')w(v)}})(TX);
 const int=(v,a,b)=>Number.isInteger(v)&&v>=a&&v<=b;
-const ONH=16,NCELL=W*ONH,DIZ=2000,STARMS=6000,MAXLEN=60,NFOOD=3,NBAB=2,CDMS=3000;
+const ONH=16,NCELL=W*ONH,DIZ=2000,STARMS=6000,MAXLEN=60,NFOOD=3,NBAB=2,CDMS=3000,INVMS=1400,WAKEMS=1000;
 let ROUNDMS=90000;
 const DV=[[0,-1],[1,0],[0,1],[-1,0]];
 const FE=['🐟','🍓','🥕'],BN=['rabbit','hedgehog','turtle','fox','panda','koala','deer','owl'];
@@ -839,9 +854,12 @@ const COLS=[{c:'#ff9a2e',f:'#ffc46b',n:'🟠'},{c:'#b57bff',f:'#e3cdff',n:'🟣'
 const ARTOP=["............","..#.....~~..","..#.....~~..","............","....##......","............","..~~....#...","..~~....#..."];
 const ARENA=ARTOP.concat(ARTOP.slice().reverse().map(r=>r.split('').reverse().join('')));
 const EMO4=['😄','😮','😭','👏'];
-const NG={on:false,arena:false,role:0,mid:0,fin:false,netp:false,seq:0,lastQ:0,sendAt:0,dq:[],dSent:0,dN:0,dT:0,emo:[],emT:0,emRx:0,want:-1,wantAt:0,lastPh:-1,cdN:0,paid:-1,playPaid:-1,tscale:1,rxCount:0};
+const NG={on:false,arena:false,role:0,mid:0,fin:false,netp:false,seq:0,lastQ:0,sendAt:0,dq:[],dSent:0,dN:0,dT:0,gr:0,sn:0,sent:[],pgT:0,pgAt:0,emo:[],emT:0,emRx:0,want:-1,wantAt:0,lastPh:-1,cdN:0,paid:-1,playPaid:-1,tscale:1,rxCount:0};
 let D=null; // host simulation
 const V={ph:0,rd:0,ct:CDMS,tl:ROUNDMS,tm:145,S:[{c:[],p:null,bids:[],diz:0,pw:0,sc:0},{c:[],p:null,bids:[],diz:0,pw:0,sc:0}],foods:[],babs:[],star:null,rw:[0,0],ts:[0,0],w:0,rxAt:0,got:false,acc:0};
+/* guest-side prediction of the guest's OWN cub: the host stays the only authority, the guest just shows where its cub will be
+   (snapshot state + the turns it already sent) so a tap turns the cub at once instead of one round trip later. Everything is rebuilt from every snapshot. */
+const LP={off:null,ok:false,rd:-1,tk:0,dir:0,hq:[],gr:0,rtt:-1,rs:[],c:null,p:null,on:false,tap:[],lag:[],bumps:0,rep:0,lastTap:0,lastTapD:-1,taps:0,tel:-1};
 const cellOf=p=>p.x+p.y*W;
 const ofCell=n=>({x:n%W,y:(n/W)|0});
 const vx=x=>NG.role?W-1-x:x,vy=y=>NG.role?ONH-1-y:y;
@@ -865,7 +883,7 @@ function netExit(){
   $('lvName').textContent=t('title');void was;
 }
 /* ----- host simulation ----- */
-function mkSnake(i){return {c:i?[{x:6,y:12},{x:7,y:12},{x:8,y:12}]:[{x:5,y:3},{x:4,y:3},{x:3,y:3}],dir:i?3:1,q:[],diz:0,pw:0,sc:0,bids:[]}}
+function mkSnake(i){return {c:i?[{x:6,y:12},{x:7,y:12},{x:8,y:12}]:[{x:5,y:3},{x:4,y:3},{x:3,y:3}],dir:i?3:1,q:[],diz:0,pw:0,sc:0,bids:[],inv:INVMS}}
 function tickMs(){return Math.round(145-35*Math.max(0,Math.min(1,D.simT/ROUNDMS)))}
 function cellFree(x,y){
   if(x<0||y<0||x>=W||y>=H||G.obst[y*W+x])return false;
@@ -889,7 +907,12 @@ function startRound(){
 }
 function hostInput(i,abs){
   if(!D||D.ph>1||!int(abs,0,3))return;
-  const s=D.s[i],last=s.q.length?s.q[s.q.length-1]:s.dir;
+  const s=D.s[i];
+  if(s.diz>0){ // dizzy: only the latest press that does not crash at once counts (a pile of stale presses used to be played back at wake-up, straight into the wall again)
+    const h=s.c[0];if(blockedD(i,h.x+DV[abs][0],h.y+DV[abs][1]))return;
+    s.q=abs===s.dir?[]:[abs];return;
+  }
+  const last=s.q.length?s.q[s.q.length-1]:s.dir;
   if(abs===last||abs===((last+2)&3))return;
   if(s.q.length<2)s.q.push(abs);
 }
@@ -907,10 +930,13 @@ function blockedD(i,x,y){
 }
 function hostTick(){
   const tm=tickMs(),S=D.s;D.simT+=tm;D.tkN++;D.dirty=true;
-  S.forEach(s=>{s.diz=Math.max(0,s.diz-tm);s.pw=Math.max(0,s.pw-tm)});
+  S.forEach(s=>{const z=s.diz>0;s.diz=Math.max(0,s.diz-tm);s.pw=Math.max(0,s.pw-tm);s.inv=Math.max(0,s.inv-tm);if(z&&s.diz<=0)s.inv=WAKEMS});
   if(D.star<0&&S[0].pw<=0&&S[1].pw<=0){D.starT-=tm;if(D.starT<=0){const p=freeCellD(3);if(p)D.star=cellOf(p);D.starT=12000}}
   const cand=[null,null];
-  for(let i=0;i<2;i++){const s=S[i];if(s.diz>0)continue;if(s.q.length)s.dir=s.q.shift();const h=s.c[0];cand[i]={x:h.x+DV[s.dir][0],y:h.y+DV[s.dir][1]}}
+  for(let i=0;i<2;i++){const s=S[i];if(s.diz>0)continue;
+    if(s.q.length){const nd=s.q.shift(),h0=s.c[0]; // a turn straight into a wall or body, while going on would be free, is ignored (mashing the arrow at a wall cost 2 s of dizziness each time)
+      if(!(blockedD(i,h0.x+DV[nd][0],h0.y+DV[nd][1])&&!blockedD(i,h0.x+DV[s.dir][0],h0.y+DV[s.dir][1])))s.dir=nd}
+    const h=s.c[0];cand[i]={x:h.x+DV[s.dir][0],y:h.y+DV[s.dir][1]}}
   const bump=[false,false],chomp=[false,false],hh=cand[0]&&cand[1]&&cand[0].x===cand[1].x&&cand[0].y===cand[1].y;
   for(let i=0;i<2;i++){
     const c=cand[i];if(!c)continue;const s=S[i],o=S[1-i];
@@ -920,10 +946,16 @@ function hostTick(){
     if(!bl){const lim=cand[1-i]?o.c.length-1:o.c.length;for(let j=0;j<lim;j++)if(o.c[j].x===c.x&&o.c[j].y===c.y){if(j>0&&s.pw>0&&o.pw<=0)chomp[i]=true;else bl=true;break}}
     if(bl)bump[i]=true;
   }
-  if(hh)dEv(6,0,cellOf(cand[0]));
   for(let i=0;i<2;i++)if(cand[i]&&!bump[i]){S[i].c.unshift(cand[i]);S[i].c.pop()}
+  let hard=false;
   for(let i=0;i<2;i++)if(bump[i]){
-    const s=S[i];s.diz=DIZ;s.sc=Math.max(0,s.sc-2);cutTo(s,s.c.length-3);s.q=[];
+    const s=S[i];
+    if(s.inv>0){ // brief protection (start of a round, right after waking up): the cub just turns away instead of getting dizzy
+      let ok=false;for(const d of [(s.dir+1)&3,(s.dir+3)&3].sort(()=>Math.random()-.5)){if(!blockedD(i,s.c[0].x+DV[d][0],s.c[0].y+DV[d][1])){s.dir=d;ok=true;break}}
+      if(ok)continue;
+    }
+    if(hh&&!hard){hard=true;dEv(6,0,cellOf(cand[0]))}
+    s.diz=DIZ;s.sc=Math.max(0,s.sc-2);cutTo(s,s.c.length-3);s.q=[];
     const opts=[(s.dir+1)&3,(s.dir+3)&3].sort(()=>Math.random()-.5);
     for(const d of opts){if(!blockedD(i,s.c[0].x+DV[d][0],s.c[0].y+DV[d][1])){s.dir=d;break}}
     if(!hh)dEv(3,i,cellOf(s.c[0]));
@@ -982,7 +1014,7 @@ function hostStep(dtMs){
 function snapMsg(){
   const S=D.s;
   return {t:'s',m:NG.mid,q:++NG.seq,ph:D.ph,rd:D.rd,ct:Math.max(0,D.ct|0),tl:Math.max(0,Math.min(ROUNDMS,ROUNDMS-D.simT))|0,tm:tickMs(),
-    a:S[0].c.map(cellOf),b:S[1].c.map(cellOf),ba:S[0].bids.slice(),bb:S[1].bids.slice(),sa:S[0].sc,sb:S[1].sc,da:S[0].diz|0,db:S[1].diz|0,pa:S[0].pw|0,pb:S[1].pw|0,
+    a:S[0].c.map(cellOf),b:S[1].c.map(cellOf),ba:S[0].bids.slice(),bb:S[1].bids.slice(),sa:S[0].sc,sb:S[1].sc,da:S[0].diz|0,db:S[1].diz|0,pa:S[0].pw|0,pb:S[1].pw|0,tk:D.tkN,gr:NG.gr,gq:S[1].q.slice(),dr:[S[0].dir,S[1].dir],
     f:D.foods.map(f=>[cellOf(f),f.e]),by:D.babs.map(b=>[cellOf(b),b.id]),st:D.star,rw:D.rw.slice(),ts:D.ts.slice(),w:D.w,ev:D.evOut.splice(0)};
 }
 /* ----- guest: validate everything, then show exactly what the host says ----- */
@@ -990,9 +1022,12 @@ function netData(d){
   const ty=d.t,now=performance.now();
   if(!NG.arena||!NG.on)return;
   if(ty==='em'){if(int(d.i,0,3)&&now-NG.emRx>700){NG.emRx=now;showEmo(d.i,'o')}return}
+  if(ty==='pg'){if(NG.role===0&&typeof d.s==='number'&&isFinite(d.s)&&now-NG.pgT>300){NG.pgT=now;if(NT)NT.send({t:'po',s:d.s})}return} // round-trip probe, answered at once
+  if(ty==='po'){if(NG.role===1&&typeof d.s==='number'&&isFinite(d.s)){const r=now-d.s;if(r>=0&&r<5000){LP.rs.push(r);if(LP.rs.length>5)LP.rs.shift();LP.rtt=LP.rs.slice().sort((a,b)=>a-b)[LP.rs.length>>1]}}return}
   if(NG.role===0){
     if(ty!=='d'||!int(d.d,0,3))return;
     if(now-NG.dT>1000){NG.dT=now;NG.dN=0}if(++NG.dN>30)return;
+    if(d.n!==undefined){if(!int(d.n,1,1e9)||d.n<=NG.gr)return;NG.gr=d.n} // numbered taps: a repeated or old one changes nothing
     hostInput(1,d.d);return;
   }
   if(ty==='s')snapIn(d,now);
@@ -1009,14 +1044,51 @@ function snapIn(d,now){
   if(!Array.isArray(d.ev)||d.ev.length>8||!d.ev.every(e=>Array.isArray(e)&&e.length===3&&int(e[0],1,6)&&int(e[1],0,1)&&int(e[2],0,NCELL-1)))return;
   if(d.ph===3&&d.w===0)return;
   NG.lastQ=d.q;NG.rxCount++;
+  const b0=NG.role===1&&V.ph===1?lpHead(now):null;
+  const px=int(d.tk,0,1e9)&&int(d.gr,0,1e9)&&Array.isArray(d.gq)&&d.gq.length<=2&&d.gq.every(v=>int(v,0,3))&&Array.isArray(d.dr)&&d.dr.length===2&&d.dr.every(v=>int(v,0,3)); // optional (older hosts send none)
   const cs=[d.a,d.b],bs=[d.ba,d.bb],sc=[d.sa,d.sb],dz=[d.da,d.db],pw=[d.pa,d.pb];
   for(let i=0;i<2;i++){const v=V.S[i];v.p=v.c.length?v.c:null;v.c=cs[i].map(ofCell);v.bids=bs[i].slice();v.sc=sc[i];v.diz=dz[i];v.pw=pw[i]}
   V.ph=d.ph;V.rd=d.rd;V.ct=d.ct;V.tl=d.tl;V.tm=d.tm;V.rxAt=now;V.got=true;
   V.foods=d.f.map(f=>{const p=ofCell(f[0]);return {x:p.x,y:p.y,e:f[1]}});V.babs=d.by.map(f=>{const p=ofCell(f[0]);return {x:p.x,y:p.y,id:f[1]}});
   V.star=d.st>=0?ofCell(d.st):null;V.rw=d.rw.slice();V.ts=d.ts.slice();V.w=d.w;
+  if(px){if(d.rd!==LP.rd){LP.rd=d.rd;NG.sent=[]}LP.ok=true;LP.tk=d.tk;LP.gr=d.gr;LP.hq=d.gq.slice();LP.dir=d.dr[1];NG.sent=NG.sent.filter(m=>m.n>d.gr)}else{LP.ok=false;NG.sent=[]}
+  lpBuild();lpSmooth(b0,now);
   applyEv(d.ev);
   if(d.ph===3)netFin();
 }
+/* ----- guest prediction ----- */
+const hdir=c=>{if(!c||c.length<2)return -1;const dx=c[0].x-c[1].x,dy=c[0].y-c[1].y;return dy<0?0:dx>0?1:dy>0?2:dx<0?3:-1};
+function lpBlocked(c,x,y){
+  if(x<0||y<0||x>=W||y>=H||G.obst[y*W+x])return true;
+  for(let j=0;j<c.length-1;j++)if(c[j].x===x&&c[j].y===y)return true;
+  for(const p of V.S[0].c)if(p.x===x&&p.y===y)return true;
+  return false;
+}
+function lpLead(){const tm=Math.max(60,V.tm);return LP.rtt<0?1:Math.max(1,Math.min(3,Math.round(1+LP.rtt/(2*tm))))}
+function lpBuild(){
+  LP.on=false;
+  const A=V.S[1];
+  if(NG.role!==1||!LP.ok||V.ph!==1||A.diz>0||A.c.length<3)return;
+  const tkA=LP.tk,L=lpLead(),ev=[];
+  let last=LP.hq.length?LP.hq[LP.hq.length-1]:LP.dir,qn=LP.hq.length,nextT=tkA+1+qn;
+  LP.hq.forEach((dd,i)=>ev.push({d:dd,T:tkA+1+i}));
+  for(const m of NG.sent){if(m.d===last||m.d===((last+2)&3)||qn>=2)continue;const T=Math.max(m.T,nextT);ev.push({d:m.d,T});nextT=T+1;last=m.d;qn++}
+  let c=A.c.map(p=>({x:p.x,y:p.y})),dir=LP.dir,prev=null;
+  for(let t=tkA+1;t<=tkA+L;t++){
+    const e=ev.find(x=>x.T===t),h=c[0];
+    if(e&&!(lpBlocked(c,h.x+DV[e.d][0],h.y+DV[e.d][1])&&!lpBlocked(c,h.x+DV[dir][0],h.y+DV[dir][1])))dir=e.d;
+    const nx=h.x+DV[dir][0],ny=h.y+DV[dir][1];
+    if(lpBlocked(c,nx,ny))break; // a bump is the host's call: wait for its snapshot
+    prev=c;c=[{x:nx,y:ny}].concat(c.slice(0,-1));
+  }
+  LP.c=c;LP.p=prev||(A.p&&A.p.length===c.length?A.p:c);LP.on=true;
+}
+function lpHead(now){const sh=shown(NG.role);if(!sh.c.length)return null;const k=V.ph===1&&V.rxAt?Math.min(1,(now-V.rxAt)/Math.max(60,V.tm)):1,p=lerpP((sh.p&&sh.p[0])||sh.c[0],sh.c[0],k);return {x:p.x,y:p.y}}
+function lpSmooth(b,now){ // the displayed cub never jumps: a correction glides in over 100 ms
+  if(!b||!LP.on)return;const a=lpHead(now);if(!a)return;const dx=b.x-a.x,dy=b.y-a.y;
+  if(Math.hypot(dx,dy)>0.12&&Math.hypot(dx,dy)<3)LP.off={x:dx,y:dy,t:now};
+}
+function shown(i){return i===NG.role&&LP.on?{c:LP.c,p:LP.p}:{c:V.S[i].c,p:V.S[i].p}}
 /* ----- effects shared by both sides ----- */
 function evPos(cell){const p=ofCell(cell);return {x:vx(p.x)*C+C/2,y:vy(p.y)*C+C/2}}
 function applyEv(list){
@@ -1024,7 +1096,7 @@ function applyEv(list){
     const k=e[0],mine=e[1]===NG.role,q=evPos(e[2]);
     if(k===1){burst(q.x,q.y,'✨',5);floatTxt(q.x,q.y,'+1',mine?'#fff':'#e8d6ff');if(mine)SFX.eat(0)}
     else if(k===2){burst(q.x,q.y,'💖',8);floatTxt(q.x,q.y,'+3','#ff9ec4');if(mine){SFX.rescue();flash(.25)}else tone(700,.1,'triangle',.05)}
-    else if(k===3){burst(q.x,q.y,'💫',6);floatTxt(q.x,q.y,'-2','#ff8a8a');SFX.bump();if(mine){G.shake=.3;flash(.3,'255,60,60')}}
+    else if(k===3){burst(q.x,q.y,'💫',6);floatTxt(q.x,q.y,'-2','#ff8a8a');SFX.bump();if(mine){LP.bumps++;G.shake=.3;flash(.3,'255,60,60')}}
     else if(k===4){burst(q.x,q.y,'⭐',8);SFX.star();if(mine)flash(.3,'255,225,77')}
     else if(k===5){burst(q.x,q.y,'💥',9);floatTxt(q.x,q.y-10,'CHOMP!','#ffe14d');SFX.bonk();G.shake=.25;if(mine)flash(.3,'255,225,77')}
     else if(k===6){burst(q.x,q.y,'💥',8);SFX.bump();G.shake=.3;flash(.3,'255,60,60')}
@@ -1040,19 +1112,33 @@ function sendEmo(i){
 function dirCode(d){return d.y<0?0:d.x>0?1:d.y>0?2:3}
 function netDir(d){
   if(!NG.on||NG.fin)return;
-  const c=dirCode(d),abs=NG.role?(c+2)&3:c;
-  NG.want=c;NG.wantAt=performance.now();
-  if(NG.role===0)hostInput(0,abs);
-  else if(NG.dq.length<4)NG.dq.push(abs);
+  const c=dirCode(d),abs=NG.role?(c+2)&3:c,now=performance.now();
+  NG.want=c;NG.wantAt=now;
+  LP.taps++;if(now-LP.lastTap<600&&c===LP.lastTapD)LP.rep++;LP.lastTap=now;LP.lastTapD=c;
+  const sh=shown(NG.role).c,hd=hdir(sh);
+  if(NG.role===0){if(hd>=0&&abs!==hd&&abs!==((hd+2)&3)&&LP.tap.length<6)LP.tap.push({d:abs,t0:now});hostInput(0,abs);return}
+  // guest: sent at once (no waiting for the next frame), numbered, and shown at once as far as the prediction reaches
+  const last=NG.sent.length?NG.sent[NG.sent.length-1].d:LP.ok?(LP.hq.length?LP.hq[LP.hq.length-1]:LP.dir):-1;
+  if(LP.ok&&(abs===last||abs===((last+2)&3)))return;
+  const tm=Math.max(60,V.tm),e=V.rxAt?Math.max(0,Math.min(tm,now-V.rxAt)):0,T=LP.tk+Math.max(1,Math.ceil(((LP.rtt>0?LP.rtt:0)+e)/tm));
+  const m={n:++NG.sn,d:abs,T};
+  NG.sent.push(m);if(NG.sent.length>8)NG.sent.shift();
+  if(NG.dq.length<8)NG.dq.push(m);
+  if(hd>=0&&abs!==hd&&abs!==((hd+2)&3)&&LP.tap.length<6)LP.tap.push({d:abs,t0:now});
+  flushDq();
+  if(LP.ok&&T<=LP.tk+lpLead()){const b0=LP.on?lpHead(now):null;lpBuild();lpSmooth(b0,now)}
 }
+function flushDq(){while(NG.dq.length&&netBuf()){const m=NG.dq.shift();NT.send({t:'d',d:m.d,n:m.n})}}
 /* ----- per frame ----- */
 function netStep(dt){
   if(!NG.on)return;
   const now=performance.now();
   for(const e of NG.emo)e.t+=dt;while(NG.emo.length&&NG.emo[0].t>2.2)NG.emo.shift();
   if(NG.role===0)hostStep(dt*1000);
-  else{
-    if(NG.dq.length&&now-NG.dSent>=35&&netBuf()){NG.dSent=now;NT.send({t:'d',d:NG.dq.shift()})}
+  {const hs=hdir(shown(NG.role).c);for(let i=LP.tap.length-1;i>=0;i--){const t=LP.tap[i];if(hs===t.d){if(LP.lag.length<400)LP.lag.push(now-t.t0);LP.tap.splice(i,1)}else if(now-t.t0>1500)LP.tap.splice(i,1)}}
+  if(NG.role!==0){
+    flushDq();
+    if(now-NG.pgAt>1000&&netBuf()){NG.pgAt=now;NT.send({t:'pg',s:now})}
     V.acc=V.ph===1&&!NG.netp&&V.rxAt&&now-V.rxAt<400?now-V.rxAt:1e9;
   }
   if(V.ph!==NG.lastPh){
@@ -1074,9 +1160,10 @@ function netHud(){
 /* ----- drawing ----- */
 function ctext(s,x,y,size,col){cx.font='900 '+size+'px Rubik,"Varela Round",Arial,sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.lineWidth=Math.max(4,size/6);cx.lineJoin='round';cx.strokeStyle='#000';cx.strokeText(s,x,y);cx.fillStyle=col||'#fff';cx.fillText(s,x,y)}
 function drawCub(i,k,T){
-  const S=V.S[i],n=S.c.length;if(!n)return;
+  const S=V.S[i],sh=shown(i),n=sh.c.length;if(!n)return;
   const col=COLS[i],isMe=i===NG.role,pts=[];
-  for(let j=0;j<n;j++){const to=S.c[j],p=lerpP((S.p&&S.p[j])||to,to,k);pts.push({x:vx(p.x)*C+C/2,y:vy(p.y)*C+C/2+(j?Math.sin(T*9-j*.9)*1.3:0)})}
+  const of=isMe&&LP.off?LP.off:null,fo=of?Math.max(0,1-(performance.now()-of.t)/100):0,ox=of?(NG.role?-1:1)*of.x*fo*C:0,oy=of?(NG.role?-1:1)*of.y*fo*C:0;
+  for(let j=0;j<n;j++){const to=sh.c[j],p=lerpP((sh.p&&sh.p[j])||to,to,k);pts.push({x:vx(p.x)*C+C/2+ox,y:vy(p.y)*C+C/2+oy+(j?Math.sin(T*9-j*.9)*1.3:0)})}
   const tn=Math.max(0,n-1-S.bids.length),rad=j=>C*(0.15+0.25*(1-(j-1)/Math.max(1,tn)));
   const near=(a,b)=>Math.abs(a.x-b.x)<C*1.5&&Math.abs(a.y-b.y)<C*1.5;
   cx.save();if(S.diz>0)cx.globalAlpha=.8;
@@ -1121,7 +1208,7 @@ function renderNet(){
   G.parts.forEach(p=>{if(p.e){cx.globalAlpha=Math.min(1,p.life*2);emo(p.e,p.x,p.y,18);cx.globalAlpha=1}else{cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.s,p.s)}});
   cx.direction='ltr';cx.textAlign='center';cx.textBaseline='middle';cx.font='900 20px "Courier New",monospace';cx.lineWidth=4;cx.lineJoin='round';
   G.fl.forEach(p=>{cx.globalAlpha=Math.min(1,p.life*2.5);cx.strokeStyle='#000';cx.strokeText(p.s,p.x,p.y);cx.fillStyle=p.c;cx.fillText(p.s,p.x,p.y)});cx.globalAlpha=1;
-  for(const e of NG.emo){const own=e.side==='p',S=V.S[own?NG.role:1-NG.role],h=S.c[0];if(!h)continue;const u=e.t,sc=u<.15?u/.15*1.2:1+.2*Math.max(0,1-(u-.15)/.12);
+  for(const e of NG.emo){const own=e.side==='p',h=shown(own?NG.role:1-NG.role).c[0];if(!h)continue;const u=e.t,sc=u<.15?u/.15*1.2:1+.2*Math.max(0,1-(u-.15)/.12);
     cx.save();cx.globalAlpha=Math.max(0,Math.min(1,(2.2-u)/.35));cx.translate(Math.max(30,Math.min(W*C-30,vx(h.x)*C+C/2)),Math.max(34,vy(h.y)*C-34-u*14));cx.scale(sc,sc);cx.fillStyle='#fff';cx.strokeStyle='#000';cx.lineWidth=3;cx.beginPath();cx.arc(0,0,25,0,6.29);cx.fill();cx.stroke();emo(EMO4[e.i],0,1,30);cx.restore()}
   const mx=W*C/2,my=H*C/2;
   if(!V.got){ctext('…',mx,my,56,'#ffd23f')}
@@ -1140,7 +1227,8 @@ function renderNet(){
 /* ----- match flow ----- */
 function netStart(role){
   closeAll();killBanner();toastOff();G.mode='net';
-  Object.assign(NG,{on:true,role,fin:false,netp:false,seq:0,lastQ:0,sendAt:0,dq:[],dSent:0,dN:0,dT:0,emo:[],emRx:0,want:-1,wantAt:0,lastPh:-1,cdN:0,rxCount:0});
+  Object.assign(NG,{on:true,role,fin:false,netp:false,seq:0,lastQ:0,sendAt:0,dq:[],dSent:0,dN:0,dT:0,gr:0,sn:0,sent:[],pgT:0,pgAt:0,emo:[],emRx:0,want:-1,wantAt:0,lastPh:-1,cdN:0,rxCount:0});
+  Object.assign(LP,{off:null,ok:false,rd:-1,tk:0,dir:0,hq:[],gr:0,rtt:-1,rs:[],c:null,p:null,on:false,tap:[],lag:[],bumps:0,rep:0,lastTap:0,lastTapD:-1,taps:0});
   hudCache='';
   arenaLoad();
   V.S.forEach(s=>{s.c=[];s.p=null;s.bids=[];s.diz=0;s.pw=0;s.sc=0});V.foods=[];V.babs=[];V.star=null;V.rw=[0,0];V.ts=[0,0];V.w=0;V.ph=0;V.rd=0;V.ct=CDMS;V.tl=ROUNDMS;V.got=false;V.acc=0;V.rxAt=0;
@@ -1155,6 +1243,9 @@ function netFin(){
   if(NG.paid!==NG.mid){
     NG.paid=NG.mid;
     try{const R=window.AnnabelleRewards;if(R){if(won)R.award({game:'snake',event:'win'});R.award({game:'snake',event:'score',score:Math.max(0,Math.min(300,V.ts[me]|0))});R.flush&&R.flush()}}catch(e){}
+    try{ // anonymous numbers only: median tap-to-turn ms, own bumps, repeated same-arrow taps
+      if(window.KidApp&&KidApp.track&&LP.tel!==NG.mid){LP.tel=NG.mid;const l=LP.lag.slice().sort((a,b)=>a-b);KidApp.track('snake_net',{lag:l.length?Math.round(l[l.length>>1]):-1,deaths:Math.min(999,LP.bumps),mashes:Math.min(999,LP.rep),taps:Math.min(999,LP.taps),rtt:LP.rtt>=0?Math.round(LP.rtt):-1,role:me})}
+    }catch(e){}
   }
   if(won)SFX.win();else if(!draw)SFX.lose();else SFX.click();
   $('cRes').className='card';
@@ -1195,7 +1286,9 @@ addEventListener('pagehide',()=>{if(NT&&NG.on)try{NT.send({t:'bye'})}catch(e){}}
 function netInfo(){
   const me=NG.role,mp=p=>({x:vx(p.x),y:vy(p.y)});
   return {on:NG.on,arena:NG.arena,role:me,mid:NG.mid,fin:NG.fin,netp:NG.netp,ph:V.ph,rd:V.rd,ct:V.ct,tl:V.tl,got:V.got,rx:NG.rxCount,seq:NG.seq,lastQ:NG.lastQ,w:V.w,rw:V.rw.slice(),ts:V.ts.slice(),H,W,
-    me:{c:V.S[me].c.map(mp),sc:V.S[me].sc,diz:V.S[me].diz,pw:V.S[me].pw,bids:V.S[me].bids.length},fr:{c:V.S[1-me].c.map(mp),sc:V.S[1-me].sc,diz:V.S[1-me].diz,pw:V.S[1-me].pw,bids:V.S[1-me].bids.length},
+    me:{c:shown(me).c.map(mp),sc:V.S[me].sc,diz:V.S[me].diz,pw:V.S[me].pw,bids:V.S[me].bids.length},fr:{c:V.S[1-me].c.map(mp),sc:V.S[1-me].sc,diz:V.S[1-me].diz,pw:V.S[1-me].pw,bids:V.S[1-me].bids.length},
+    hp:(()=>{const sh=shown(me);if(!sh.c.length)return null;const k=V.ph===1?Math.min(1,V.acc/Math.max(60,V.tm)):1,p=lerpP((sh.p&&sh.p[0])||sh.c[0],sh.c[0],k);const of=LP.off,fo=of&&me===NG.role?Math.max(0,1-(performance.now()-of.t)/100):0,sg=NG.role?-1:1;return {x:vx(p.x)+(of?sg*of.x*fo:0),y:vy(p.y)+(of?sg*of.y*fo:0)}})(),
+    gr:NG.gr,lp:{on:LP.on,ok:LP.ok,rtt:LP.rtt,lead:lpLead(),tk:LP.tk,lag:LP.lag.slice(),bumps:LP.bumps,rep:LP.rep,taps:LP.taps,sent:NG.sent.length},
     abs:{a:V.S[0].c.map(p=>({x:p.x,y:p.y})),b:V.S[1].c.map(p=>({x:p.x,y:p.y})),sa:V.S[0].sc,sb:V.S[1].sc},
     foods:V.foods.map(mp),babs:V.babs.map(mp),star:V.star?mp(V.star):null,emo:NG.emo.map(e=>({i:e.i,side:e.side})),obst:Array.from(G.obst),simT:D?D.simT:null,tscale:NG.tscale};
 }
@@ -1210,7 +1303,7 @@ window.__snake={
   lose(){if(G.mode==='ready')G.mode='play';G.hearts=0;softLose()},
   hurt(){G.inv=0;hurt()},
   pause,resume,menu:showMenu,
-  NT,net:netInfo,emote:sendEmo,setRound(ms){ROUNDMS=ms|0},setScale(x){NG.tscale=+x||1},_D:()=>D,
+  NT,net:netInfo,emote:sendEmo,padLog:()=>padLog.slice(),hin:hostInput,hostStart:()=>netStart(0),setRound(ms){ROUNDMS=ms|0},setScale(x){NG.tscale=+x||1},_D:()=>D,
   setPower(s){G.power=s},
   speed(ms){G.speed=ms||0;if(ms)G.tickMs=ms},
   LV:LV.map(l=>l.map),save:()=>JSON.parse(JSON.stringify(SV))
