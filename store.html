@@ -15,7 +15,7 @@
 :root{--bg:#f5f2ec;--card:#fff;--ink:#2b3140;--soft:#5a6272;--line:#e3ded4;--acc:#34639f;--acc-d:#284f82;--tint:#e8eef7;--ok:#2c6e52;--r:16px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
-html{background:var(--bg)}
+html{background:var(--bg);scroll-padding-bottom:150px}
 body{font-family:"Rubik","Varela Round","Arial Rounded MT Bold","Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.45;color:var(--ink);background:var(--bg);
   padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));overflow-x:hidden;-webkit-user-select:none;user-select:none}
 button,input{font:inherit;color:inherit}
@@ -88,6 +88,15 @@ button.row:active{background:var(--tint)}
 @media (max-width:379px){.chips:not(.fl) .cc{font-size:14px;gap:3px;padding:4px 3px}} /* narrow phones: the three category columns stay equal and inside the screen */
 .lbl{color:var(--soft);font-size:14px;font-weight:600;margin-bottom:-10px}
 .empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.offer{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+/* "choose my games": a checklist; nothing is saved until Done. The bar with the count and Done stays in view */
+.row.ck[aria-checked=true]{background:var(--tint);border-color:var(--acc)}
+.box{width:34px;height:34px;border-radius:10px;border:2px solid #8b93a3;background:#fff;color:transparent;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:21px;line-height:1;flex:none}
+.row.ck[aria-checked=true] .box{background:var(--acc);border-color:var(--acc);color:#fff}
+.chips.qs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.done{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:5;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 10px #2b31401f}
+.done .count{font-size:17px}
+.done .acts{flex-wrap:nowrap}.done .acts .btn{flex:1 1 0;min-width:0}
 /* footer: calm mode */
 .foot{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;display:flex;align-items:center;gap:12px}
 .foot .tx b{font-weight:600}
@@ -160,6 +169,8 @@ button.row:active{background:var(--tint)}
   .chips{grid-template-columns:repeat(6,minmax(0,1fr))}
   .fl{grid-template-columns:repeat(4,minmax(0,1fr))}
   .acts .btn{flex:0 1 240px}
+  .done{flex-direction:row;align-items:center;justify-content:space-between}
+  .done .acts{flex:0 0 440px}
   .back{align-items:center}
   .sheet{border-radius:24px;max-height:calc(100dvh - 32px)}
   /* with pictures the sheet has two columns: the pictures at the start side (right in Hebrew, left in French / English), the text beside them */
@@ -223,6 +234,9 @@ var TX={he:function(){return {
  pics:'תמונות מתוך המשחק',picA:'{g}: תמונה {n} מתוך {m} מהמשחק',about:'על המשחק',created:'נוצר ב{d}',ver:'גרסה {v}',updated:'עודכן ב־{d}',
  whatsNew:'מה השתנה',lmore:'להראות עוד {n}',lmore1:'להראות עוד אחד',asked:'מי ביקש את המשחק',ideas:'רעיונות ותוספות',addName:'רוצים להוסיף כאן שם? ספרו לנו בכפתור 🐞.',
  prev:'הקודמת',next:'הבאה',vOf:'\u2066{n} / {m}\u2069',vT:'תמונות מתוך {g}',
+ choose:'בחירת המשחקים שלי',chGuide:'נוגעים במשחק כדי לסמן אותו. שום דבר לא משתנה עד שלוחצים ״סיימתי״. ההתקדמות נשמרת.',chDone:'סיימתי',chCancel:'לא לשנות',
+ sets:'בחירה מהירה',set:{top:'הכי שיחקתי',calm:'משחקים רגועים',learn:'למידה + קצת כיף'},chAll:'להראות את כל המשחקים',chMine:'המשחקים שלי',kept:'ההתקדמות נשמרת.',
+ offer:G('יש הרבה משחקים במסך הבית שלך. רוצה לבחור את האהובים עלייך?','יש הרבה משחקים במסך הבית שלך. רוצה לבחור את האהובים עליך?','יש הרבה משחקים במסך הבית. רוצים לבחור את האהובים?'),offerYes:'לבחור את האהובים',offerNo:'לא, תודה',
  calm:'🍃 מצב רגוע',calmOn:'פועל – פחות תנועה ופחות רעש בכל האתר.',calmOff:'כבוי – יותר תנועה ואפקטים.'}},
 fr:function(){return {
  title:'La boutique de jeux',sub:'Tout est gratuit',home:'Accueil',tabs:{mine:'Mes jeux',you:'Pour toi',all:'Tous les jeux'},
@@ -240,6 +254,9 @@ fr:function(){return {
  pics:'Images du jeu',picA:'{g} : image {n} sur {m} du jeu',about:'À propos du jeu',created:'Créé en {d}',ver:'Version {v}',updated:'Mis à jour le {d}',
  whatsNew:'Ce qui a changé',lmore:'Voir les {n} autres',lmore1:'Voir 1 de plus',asked:'Qui a demandé ce jeu',ideas:'Idées et ajouts',addName:'Envie d’ajouter un nom ici ? Dites-le-nous avec le bouton 🐞.',
  prev:'Précédente',next:'Suivante',vOf:'{n} / {m}',vT:'Images de {g}',
+ choose:'Choisir mes jeux',chGuide:'Touche un jeu pour le cocher. Rien ne change avant « J’ai fini ». Ta progression est gardée.',chDone:'J’ai fini',chCancel:'Ne rien changer',
+ sets:'Choix rapides',set:{top:'Mes plus joués',calm:'Jeux calmes',learn:'Apprendre + un peu de fun'},chAll:'Montrer tous les jeux',chMine:'Mes jeux',kept:'Ta progression est gardée.',
+ offer:'Ça fait beaucoup de jeux sur ton écran d’accueil. Tu veux choisir tes préférés ?',offerYes:'Choisir mes préférés',offerNo:'Non merci',
  calm:'🍃 Mode calme',calmOn:'Activé – moins de mouvement et de bruit sur tout le site.',calmOff:'Désactivé – plus de mouvement et d’effets.'}},
 en:function(){return {
  title:'Game Shop',sub:'Everything is free',home:'Home',tabs:{mine:'My games',you:'For you',all:'All games'},
@@ -257,18 +274,23 @@ en:function(){return {
  pics:'Pictures from the game',picA:'{g}: picture {n} of {m} from the game',about:'About the game',created:'Created {d}',ver:'Version {v}',updated:'Updated {d}',
  whatsNew:'What’s new',lmore:'Show {n} more',lmore1:'Show 1 more',asked:'Who asked for it',ideas:'Ideas and additions',addName:'Want to add a name here? Tell us with the 🐞 button.',
  prev:'Previous',next:'Next',vOf:'{n} / {m}',vT:'Pictures from {g}',
+ choose:'Choose my games',chGuide:'Tap a game to tick it. Nothing changes until you tap Done. Your progress is kept.',chDone:'Done',chCancel:'Don’t change',
+ sets:'Quick sets',set:{top:'My most played',calm:'Calm games',learn:'Learning + a few fun'},chAll:'Show all games',chMine:'My games',kept:'Your progress is kept.',
+ offer:'That’s a lot of games on your home screen. Want to pick your favourites?',offerYes:'Pick my favourites',offerNo:'No thanks',
  calm:'🍃 Calm mode',calmOn:'On – less motion and noise across the site.',calmOff:'Off – more motion and effects.'}}}[LG]();
 function F(s,o){return String(s).replace(/\{(\w+)\}/g,function(m,k){return o[k]!=null?o[k]:''})}
 function el(tag,cls,text){var e=D.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function btn(cls,text){var b=el('button',cls,text);b.type='button';return b}
 function track(act,id){try{var d={act:act};if(id)d.id=id;if(KA.track)KA.track('store',d);else if(W.KidApp&&W.KidApp.track)W.KidApp.track('store',d)}catch(e){}}
+function trackN(act,n){/* counts only; telemetry.js may attach a moment after the first paint, so an early event waits for it (a few tries, then dropped) */
+ (function go(k){try{var K=W.KidApp;if(K&&K.track){K.track('store',{act:act,n:n});return}}catch(e){return}if(k<6)setTimeout(function(){go(k+1)},500)})(0)}
 function tint(hex){var m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex||'');if(!m)return '#eef1f5';var k=.8;
  return 'rgb('+[1,2,3].map(function(i){return Math.round(parseInt(m[i],16)*(1-k)+255*k)}).join(',')+')'}
 function reduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 
 /* ---------- state: the last tab / category / filters are remembered (not the search text) ---------- */
 var UK='annabelle-store-ui',TABS=['mine','you','all'],FILTERS=['calm','learn','together','short'];
-var S={tab:'mine',cat:C.cats[0].id,f:{},q:'',arr:false,sheet:null,undo:null,open:{},told:{},all:false,msg:''};
+var S={tab:'mine',cat:C.cats[0].id,f:{},q:'',arr:false,ch:null,sheet:null,undo:null,open:{},told:{},all:false,msg:''};
 try{var u=JSON.parse(localStorage.getItem(UK)||'null');if(u&&typeof u==='object'){if(TABS.indexOf(u.tab)>=0)S.tab=u.tab;
  if(C.cats.some(function(c){return c.id===u.cat}))S.cat=u.cat;if(u.f&&typeof u.f==='object')FILTERS.forEach(function(k){if(u.f[k]===1)S.f[k]=1})}}catch(e){}
 function remember(){try{localStorage.setItem(UK,JSON.stringify({tab:S.tab,cat:S.cat,f:S.f}))}catch(e){}}
@@ -290,14 +312,20 @@ function paceMeta(g){var f=D.createDocumentFragment();f.appendChild(leaves(g));f
 function drawTabs(){tabsEl.textContent='';TABS.forEach(function(t){var b=btn('tab',TX.tabs[t]);b.setAttribute('role','tab');b.id='tab-'+t;b.dataset.tab=t;b.setAttribute('aria-selected',S.tab===t?'true':'false');b.tabIndex=S.tab===t?0:-1;
  b.onclick=function(){setTab(t,true)};tabsEl.appendChild(b)});view.setAttribute('aria-labelledby','tab-'+S.tab)}
 tabsEl.addEventListener('keydown',function(e){var i=TABS.indexOf(S.tab),d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;if(LG==='he')d=-d;e.preventDefault();setTab(TABS[(i+d+TABS.length)%TABS.length],true)});
-function setTab(t,focus){if(TABS.indexOf(t)<0)return;S.tab=t;S.arr=false;remember();draw();if(focus){var b=D.getElementById('tab-'+t);if(b)b.focus()}try{W.scrollTo(0,0)}catch(e){}}
+function setTab(t,focus){if(TABS.indexOf(t)<0)return;S.tab=t;S.arr=false;S.ch=null;remember();draw();if(focus){var b=D.getElementById('tab-'+t);if(b)b.focus()}try{W.scrollTo(0,0)}catch(e){}}
 
 /* ---------- "my games" ---------- */
 function drawMine(){var ids=C.lib(),n=ids.length;
- var head=el('div');head.appendChild(el('p','count',n===0?TX.count0:n===1?TX.count1:F(TX.count,{n:n})));head.appendChild(el('p','guide',n>9?TX.gMany:n<6?TX.gFew:TX.gOk));view.appendChild(head);
+ var head=el('div');head.appendChild(el('p','count',n===0?TX.count0:n===1?TX.count1:F(TX.count,{n:n})));var off=n>TRIM_AT&&!trimSeen();
+ if(!off)head.appendChild(el('p','guide',n>9?TX.gMany:n<6?TX.gFew:TX.gOk));view.appendChild(head);
  var acts=el('div','acts'),more=btn('btn pri','＋ '+TX.more);more.id='more';more.onclick=function(){setTab('you',true)};acts.appendChild(more);
  if(n>0){var ar=btn('btn sec',S.arr?'✓ '+TX.arrDone:'↕ '+TX.arr);ar.id='arr';ar.setAttribute('aria-pressed',S.arr?'true':'false');ar.onclick=function(){S.arr=!S.arr;draw();var b=D.getElementById('arr');if(b)b.focus()};acts.appendChild(ar)}
+ if(n>=CH_MIN&&!off){/* while the offer card is there, its own button is the way in: never five buttons at once */var cb=btn('btn sec','☑ '+TX.choose);cb.id='choose';cb.onclick=function(){openChoose(false)};acts.appendChild(cb)}
  view.appendChild(acts);
+ if(off){/* one gentle offer for a crowded home screen: a plain card, two answers, gone for good after either */
+  var oc=el('div','offer');oc.id='offer';oc.appendChild(el('p',null,TX.offer));var oa=el('div','acts'),oy=btn('btn sec',TX.offerYes),on=btn('btn sec',TX.offerNo);oy.id='offYes';on.id='offNo';
+  oy.onclick=function(){trimDone();openChoose(true)};on.onclick=function(){trimDone();trackN('trim_dismiss',n);draw();var b=D.getElementById('choose')||D.getElementById('more');if(b)b.focus()};
+  oa.appendChild(oy);oa.appendChild(on);oc.appendChild(oa);view.appendChild(oc);if(!S.offered){S.offered=true;trackN('trim_offer',n)}}
  var ul=el('ul','list');ul.id='mine';
  ids.forEach(function(id,i){var g=C.byId(id),li=el('li');
   if(!S.arr){li.appendChild(gameRow(g))}
@@ -311,6 +339,48 @@ function drawMine(){var ids=C.lib(),n=ids.length;
  view.appendChild(ul)}
 function moveBy(id,d,cls){var ids=C.lib(),i=ids.indexOf(id);if(i<0)return;C.move(id,i+d);draw();
  var r=view.querySelector('.row[data-id="'+id+'"]'),b=r&&r.querySelector('.'+cls);if(b&&b.disabled)b=r.querySelector(cls==='up'?'.dn':'.up');if(b)b.focus()}
+
+/* ---------- "choose my games": tick the games for the home screen, then Done. Nothing is written before Done; one undo after it ---------- */
+var TK='annabelle-store-trim',TRIM_AT=9,CH_MIN=7,TOP_N=8;
+function trimSeen(){try{return localStorage.getItem(TK)==='1'}catch(e){return true}}
+function trimDone(){try{localStorage.setItem(TK,'1')}catch(e){}}
+function chIds(){return C.visible().map(function(g){return g.id}).filter(function(id){return S.ch.sel[id]})}
+function chText(){var n=chIds().length;return n===0?TX.count0:n===1?TX.count1:F(TX.count,{n:n})}
+function preset(k){var age=KA.kid().age,mine=C.mostPlayed(99),inLib={};mine.forEach(function(id){inLib[id]=1});
+ var rest=C.starter(6).concat(C.visible().map(function(g){return g.id})).filter(function(id,i,a){return !inLib[id]&&a.indexOf(id)===i});
+ function take(test,want,max){var a=mine.filter(function(id){return test(C.byId(id))&&C.fits(id,age)}).slice(0,max);
+  rest.forEach(function(id){if(a.length<want&&test(C.byId(id))&&C.fits(id,age))a.push(id)});return a}
+ if(k==='calm')return take(function(g){return g.calm===1},6,TOP_N);
+ if(k==='learn')return take(function(g){return g.learn},3,4).concat(take(function(g){return !g.learn},3,3));
+ return mine.slice(0,TOP_N)}
+function setSel(k){var ch=S.ch,mine=C.lib();ch.sel={};ch.set=k;preset(k).forEach(function(id){ch.sel[id]=1;if(mine.indexOf(id)<0&&ch.extra.indexOf(id)<0)ch.extra.push(id)})}
+function openChoose(top){hideBar();S.arr=false;S.ch={sel:{},extra:[],all:false,set:''};if(top)setSel('top');else C.lib().forEach(function(id){S.ch.sel[id]=1});
+ trackN('choose_open',C.lib().length);draw();var h=D.getElementById('chH');if(h)h.focus();try{W.scrollTo(0,0)}catch(e){}}
+function closeChoose(){if(!S.ch)return;S.ch=null;draw();var b=D.getElementById('choose')||D.getElementById('more');if(b)b.focus();try{W.scrollTo(0,0)}catch(e){}}
+function doneChoose(){var ch=S.ch;if(!ch)return;var mine=C.lib(),keep=mine.filter(function(id){return ch.sel[id]}),add=ch.extra.concat(chIds()).filter(function(id,i,a){return ch.sel[id]&&mine.indexOf(id)<0&&a.indexOf(id)===i});
+ var want=keep.concat(add),before=C.set(want);S.ch=null;trackN('choose_done',want.length);
+ if(before){if(add.length)C.precache(add);var n=want.length;showBar((n===0?TX.count0:n===1?TX.count1:F(TX.count,{n:n}))+'.'+(keep.length<mine.length?' '+TX.kept:''),function(){C.set(before);trackN('choose_undo',C.lib().length)})}
+ draw();var b=D.getElementById('choose')||D.getElementById('more');if(b)b.focus();try{W.scrollTo(0,0)}catch(e){}}
+function ckRow(g){var r=btn('row ck');r.dataset.id=g.id;r.setAttribute('role','checkbox');r.setAttribute('aria-checked',S.ch.sel[g.id]?'true':'false');r.appendChild(chip(g));
+ var tx=el('span','tx');tx.appendChild(el('span','nm',C.name(g.id,LG)));r.appendChild(tx);var bx=el('span','box','✓');bx.setAttribute('aria-hidden','true');r.appendChild(bx);
+ r.onclick=function(){var ch=S.ch;if(!ch)return;if(ch.sel[g.id])delete ch.sel[g.id];else ch.sel[g.id]=1;r.setAttribute('aria-checked',ch.sel[g.id]?'true':'false');
+  if(ch.set){ch.set='';[].forEach.call(view.querySelectorAll('#sets .cc'),function(b){b.setAttribute('aria-pressed','false')})}
+  var c=D.getElementById('chN');if(c)c.textContent=chText()};return r}
+function ckList(ids,id){var ul=el('ul','list');ul.id=id;ids.forEach(function(x){var li=el('li');li.appendChild(ckRow(C.byId(x)));ul.appendChild(li)});return ul}
+function drawChoose(){var ch=S.ch,first=C.lib().concat(ch.extra.filter(function(id){return !C.has(id)})),inFirst={};first.forEach(function(id){inFirst[id]=1});
+ var head=el('div'),h=el('h2',null,TX.choose);h.id='chH';h.tabIndex=-1;h.style.marginTop='0';head.appendChild(h);head.appendChild(el('p','guide',TX.chGuide));view.appendChild(head);
+ var sl=el('p','lbl',TX.sets);sl.id='setsL';view.appendChild(sl);
+ var sw=el('div','chips qs');sw.id='sets';sw.setAttribute('role','group');sw.setAttribute('aria-labelledby','setsL');
+ ['top','calm','learn'].forEach(function(k){var b=btn('cc',TX.set[k]);b.dataset.set=k;b.setAttribute('aria-pressed',ch.set===k?'true':'false');
+  b.onclick=function(){setSel(k);draw();var nb=view.querySelector('#sets [data-set="'+k+'"]');if(nb)nb.focus()};sw.appendChild(b)});view.appendChild(sw);
+ var box=el('div');box.id='chBox';box.setAttribute('role','group');box.setAttribute('aria-labelledby','chH');box.style.cssText='display:flex;flex-direction:column;gap:10px';
+ box.appendChild(ckList(first,'chMine'));
+ var ab=btn('btn sec',TX.chAll);ab.id='chAll';ab.setAttribute('aria-pressed',ch.all?'true':'false');ab.onclick=function(){ch.all=!ch.all;draw();var nb=D.getElementById('chAll');if(nb)nb.focus()};box.appendChild(ab);
+ if(ch.all)C.cats.forEach(function(c){var ids=C.visible().filter(function(g){return g.cat===c.id&&!inFirst[g.id]}).map(function(g){return g.id});if(!ids.length)return;
+  box.appendChild(el('h2',null,c.emo+' '+c.n[LG]));box.appendChild(ckList(ids,'chCat-'+c.id))});
+ view.appendChild(box);
+ var dn=el('div','done');dn.id='chBar';var cn=el('p','count',chText());cn.id='chN';cn.setAttribute('role','status');cn.setAttribute('aria-live','polite');dn.appendChild(cn);
+ var da=el('div','acts'),cx=btn('btn sec',TX.chCancel),ok=btn('btn pri','✓ '+TX.chDone);cx.id='chX';ok.id='chOk';cx.onclick=closeChoose;ok.onclick=doneChoose;da.appendChild(cx);da.appendChild(ok);dn.appendChild(da);view.appendChild(dn)}
 
 /* ---------- "for you": at most 3 ideas + the packs ---------- */
 function drawYou(){var sg=C.suggest(3),age=KA.kid().age;
@@ -466,6 +536,7 @@ D.addEventListener('keydown',function(e){var vw=!viewer.hidden;
  if(vw&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();stepViewer((e.key==='ArrowRight'?1:-1)*(LG==='he'?-1:1));return}
  if(e.key==='Escape'&&vw){e.preventDefault();closeViewer();return}
  if(e.key==='Escape'&&S.sheet){e.preventDefault();closeSheet();return}
+ if(e.key==='Escape'&&S.ch){e.preventDefault();closeChoose();return}
  if(e.key==='Tab'&&S.sheet){var box=vw?viewer:sheet,f=[].filter.call(box.querySelectorAll('button:not([disabled]),a[href]'),function(b){return !b.hidden&&!b.closest('[hidden]')});if(!f.length)return;var a=f[0],z=f[f.length-1];
   if(e.shiftKey&&(D.activeElement===a||!box.contains(D.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&(D.activeElement===z||!box.contains(D.activeElement))){e.preventDefault();a.focus()}}});
 
@@ -476,7 +547,7 @@ function drawCalm(){var on=C.calm();calmB.setAttribute('aria-checked',on?'true':
 calmB.onclick=function(){C.setCalm(!C.calm());drawCalm();vibe();track('calm',C.calm()?'on':'off')};
 D.addEventListener('DOMContentLoaded',vibe);W.addEventListener('load',vibe);
 
-function draw(){drawTabs();view.textContent='';if(S.tab==='mine')drawMine();else if(S.tab==='you')drawYou();else drawAll()}
+function draw(){drawTabs();view.textContent='';if(S.tab==='mine'){if(S.ch)drawChoose();else drawMine()}else if(S.tab==='you')drawYou();else drawAll()}
 C.onchange(function(why){if(why==='storage'){if(S.sheet)drawSheet('');else draw()}else if(why==='calm')drawCalm()});
 W.addEventListener('pageshow',function(e){if(e.persisted){if(S.sheet)drawSheet('');else draw()}});
 draw();drawCalm();
@@ -485,7 +556,8 @@ draw();drawCalm();
  if(D.readyState==='complete')go();else W.addEventListener('load',go)})();
 
 /* test hook */
-W.__store={state:function(){return {tab:S.tab,cat:S.cat,filters:Object.keys(S.f),searching:!!norm(S.q),arrange:S.arr,sheet:S.sheet,undo:!!S.undo,lib:C.lib(),count:C.lib().length,calm:C.calm(),lang:LG}},
+W.__store={state:function(){return {tab:S.tab,cat:S.cat,filters:Object.keys(S.f),searching:!!norm(S.q),arrange:S.arr,sheet:S.sheet,undo:!!S.undo,lib:C.lib(),count:C.lib().length,calm:C.calm(),lang:LG,choose:S.ch?{sel:chIds(),all:S.ch.all,set:S.ch.set}:null,trimSeen:trimSeen()}},
+ choose:function(top){openChoose(!!top)},chooseDone:doneChoose,chooseCancel:closeChoose,preset:function(k){return preset(k)},
  add:function(id){return doAdd(id)},remove:function(id){return doRemove(id)},pack:function(n){return doPack(n)},open:function(id){return openSheet(id)},close:closeSheet,tab:function(t){setTab(t)},
  info:function(){return {ready:!!GI,viewer:viewer.hidden?null:{id:V.id,n:V.n,of:V.list.length},open:Object.keys(S.open)}},loadInfo:loadInfo,view:function(n){return openViewer(S.sheet,n)},step:stepViewer,closeView:function(){closeViewer()}};
 })();

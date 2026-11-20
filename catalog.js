@@ -13,6 +13,9 @@
      LIBRARY (per profile; localStorage 'annabelle-library' = {v:1, on:[ids in the kid's order], off:[ids the kid removed], t:{id:installDay}, ob:1, a?:age, u?:1})
      lib() -> installed ids in order (runs ensure() the first time)     has(id)   add(id) -> bool   remove(id) -> bool   move(id, index) -> bool
      addMany(ids) -> the ids that were really added (for undo)          removeMany(ids)
+     set(ids) -> makes the library exactly these ids in this order, in ONE write (the shop's "choose my games"); returns a snapshot of
+                 the library from before, or null when nothing changed.  set(snapshot) puts that library back (undo: same games, same order).
+     mostPlayed(n?, ids?) -> ids (default: the library) by plays in 'annabelle-rewards' stats.plays, ties by recency (its 'rec' list), then by their order
      ensure()        first-run migration: an existing player keeps every game ever played + favourites (topped up to 6);
                      a brand-new player gets a starter pack of 6 (2 learning, 2 calm, 2 fun) for the age band. Never installs everything.
      starter(n?)     the starter picks for the current kid               suggest(n?) -> [{id, why:'like'|'learn'|'calm'|'age'}]
@@ -289,6 +292,35 @@
     shown.splice(from, 1); shown.splice(index, 0, id);
     var rest = L.on.filter(function (x) { return shown.indexOf(x) < 0; }); L.on = shown.concat(rest); touch(); write(); fire('move'); return true;
   }
+  /* the whole library in one step (one write, one event). Games that are hidden right now keep their place at the end. */
+  function snapshot() { var t = {}; Object.keys(L.t).forEach(function (k) { t[k] = L.t[k]; }); return {on: L.on.slice(), off: L.off.slice(), t: t}; }
+  function setLib(x) {
+    ensure(); var before = snapshot();
+    if (Array.isArray(x)) {
+      var want = (cleanIds(x) || []).filter(listable), hid = L.on.filter(function (id) { return !listable(id); }), d = today();
+      L.on.forEach(function (id) { if (listable(id) && want.indexOf(id) < 0) { delete L.t[id]; if (L.off.indexOf(id) < 0) L.off.push(id); } });
+      want.forEach(function (id) { if (typeof L.t[id] !== 'number') L.t[id] = d; var i = L.off.indexOf(id); if (i >= 0) L.off.splice(i, 1); });
+      L.on = want.concat(hid);
+    } else if (x && typeof x === 'object' && Array.isArray(x.on)) {
+      var on = (cleanIds(x.on) || []).filter(function (id) { return !!BY[id]; }), t = {};
+      on.forEach(function (id) { var v = x.t && x.t[id]; t[id] = typeof v === 'number' && isFinite(v) && v >= 0 && v < 1e6 ? Math.floor(v) : today(); });
+      L.on = on; L.t = t; L.off = (cleanIds(x.off) || []).filter(function (id) { return on.indexOf(id) < 0; });
+    } else return null;
+    if (L.on.join() === before.on.join()) return null;
+    touch(); write(); fire('set'); return before;
+  }
+  function recents() { // most recent first, from the rewards save (read-only)
+    var out = []; try { var r = JSON.parse(ls('annabelle-rewards') || 'null'), a = r && r.rec;
+      if (Array.isArray(a)) a.forEach(function (x) { if (typeof x === 'string' && BY[x]) { var t = top(x); if (out.indexOf(t) < 0) out.push(t); } }); } catch (e) {}
+    return out;
+  }
+  function mostPlayed(n, from) {
+    var p = plays(), cnt = {}, rc = recents(), ix = {}; Object.keys(p).forEach(function (id) { var t = top(id); cnt[t] = (cnt[t] || 0) + p[id]; });
+    var ids = uniq((Array.isArray(from) ? from : lib()).filter(listable)); ids.forEach(function (id, i) { ix[id] = i; });
+    function r(id) { var i = rc.indexOf(id); return i < 0 ? 99 : i; }
+    ids.sort(function (a, b) { return (cnt[b] || 0) - (cnt[a] || 0) || r(a) - r(b) || ix[a] - ix[b]; });
+    n = Math.floor(+n); return isFinite(n) && n >= 0 ? ids.slice(0, n) : ids;
+  }
   function packIds(pid) { var p = PACKS.filter(function (x) { return x.id === pid; })[0]; if (!p) return [];
     return (p.id === 'starter' ? starter(6) : p.ids).filter(listable); }
 
@@ -337,7 +369,7 @@
   W.GameCatalog = {
     list: LIST, cats: CATS, packs: PACKS, tags: TAGS, PENDING: PENDING,
     byId: byId, name: name, desc: desc, href: href, tagName: tagName, fits: fits, available: available, visible: visible, packIds: packIds,
-    lib: lib, has: has, add: add, remove: remove, move: move, addMany: addMany, removeMany: removeMany, ensure: function () { ensure(); return lib(); },
+    lib: lib, has: has, add: add, remove: remove, move: move, addMany: addMany, removeMany: removeMany, set: setLib, mostPlayed: mostPlayed, ensure: function () { ensure(); return lib(); },
     starter: function (n) { return starter(n || 6); }, suggest: suggest, onchange: function (f) { if (typeof f === 'function') listeners.push(f); },
     precache: precache, calm: calm, setCalm: setCalm, KEY: KEY, CALM_KEY: CALM_KEY
   };
