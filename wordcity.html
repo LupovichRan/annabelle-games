@@ -109,6 +109,16 @@ p{margin:5px 0;font-size:clamp(14px,4vw,18px);line-height:1.35;font-weight:700}
 .tile{min-width:54px;min-height:56px;border:3px solid var(--ink);border-radius:14px;box-shadow:0 5px 0 var(--ink);background:#ffe9a8;font-weight:900;font-size:28px;padding:2px 12px;transition:transform .06s;font-family:"Nunito","Trebuchet MS",Arial,sans-serif;touch-action:none}
 .tile.wd{font-size:clamp(18px,5.2vw,24px);background:#d9ecff}
 .tile.used{visibility:hidden}.tile.bad{animation:shk .35s;background:#ffc3a8}.tile.drag{z-index:30;box-shadow:0 12px 14px #0004;transition:none}
+/* spaced review: memory pips, "what you can do" rows, the choice of what comes next */
+.pips{display:inline-flex;gap:2px;direction:ltr;vertical-align:middle;flex:none}.pips i{width:8px;height:8px;border-radius:50%;background:#d9d4ea;display:block}.pips i.on{background:#3ecf7a}
+.bld .pips{margin-top:3px}.bld .pips i{width:6px;height:6px}
+.crs{display:flex;flex-direction:column;gap:5px;margin:6px 0 2px}.crT{font-weight:900;font-size:14px;opacity:.75}
+.cr{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center;text-align:start;background:#fff;border-radius:12px;padding:4px 10px;font-weight:900;font-size:14.5px}
+.cr small{grid-column:1/3;font-weight:700;font-size:12.5px;opacity:.8}.cr .upm{color:#12924a}
+.nx{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.nx .btn{margin:0;font-size:15.5px;padding:4px 8px;min-height:48px;line-height:1.15}
+.nx .btn:first-child{grid-column:1/3;font-size:clamp(18px,5vw,21px);min-height:52px}.nx .btn:last-child:nth-child(even){grid-column:1/3}
+.ask small{display:block;font-size:.72em;font-weight:800;color:var(--pk,#e0457b)}
+#pSkip{background:#fff;border-radius:999px;padding:4px 14px;font-weight:900;font-size:15px;box-shadow:0 3px 0 #0003;min-height:40px;display:inline-flex;align-items:center;flex:none}
 .hintb{align-self:center;background:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);font-weight:900;font-size:16px;min-height:46px;padding:4px 16px;flex:none}
 .pairs{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(58px,96px);gap:10px 14px;flex:1;min-height:0;align-content:center;direction:ltr}
 .pr{min-height:58px;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);background:#fff;font-weight:900;font-size:clamp(18px,5.2vw,24px);padding:2px 6px;transition:transform .06s,opacity .3s;min-width:0;overflow-wrap:anywhere;line-height:1.1}
@@ -443,14 +453,23 @@ const NODES=[];PACKS.forEach((p,i)=>{NODES.push({t:'p',p:i,id:p.id});if(i%4===3)
 const TX={
 he:{title:'עיר המילים',sub:'בונים את העיר עם מילים באנגלית!',hi:'שלום {n}!',mCity:'העיר',mDaily:'10 יומי',mSpeed:'ריצת מהירות',mBook:'המילים שלי',sec:'60 שניות',doneT:'הושלם היום',lvl:'רמה',dist:'שכונה',boss:'בולע האותיות',bossB:'בולע האותיות בלבל את המילים!',locked:'קודם בונים את הבניין הקודם',
  pic2word:'איזו מילה מתאימה?',word2pic:'מה פירוש המילה?',listen:'מה שמעת?',first:'באיזו אות המילה מתחילה?',missing:'איזו אות חסרה?',spell:['בני את המילה','בנה את המילה','בנו את המילה'],listenSpell:['הקשיבי ובני את המילה','הקשב ובנה את המילה','הקשיבו ובנו את המילה'],type:['הקלידי את המילה באנגלית','הקלד את המילה באנגלית','הקלידו את המילה באנגלית'],pairs:['חברי זוגות','חבר זוגות','חברו זוגות'],sentence:['סדרי את המשפט','סדר את המשפט','סדרו את המשפט'],grammar:'מה המילה הנכונה?',opposite:'מה ההפך?',
+ wT:'חימום קצר 🧠',wS:['{n} מילים שכבר פגשת. בלי שעון ובלי ניקוד.','{n} מילים שכבר פגשת. בלי שעון ובלי ניקוד.','{n} מילים שכבר פגשתם. בלי שעון ובלי ניקוד.'],wS1:['מילה אחת שכבר פגשת. בלי שעון ובלי ניקוד.','מילה אחת שכבר פגשת. בלי שעון ובלי ניקוד.','מילה אחת שכבר פגשתם. בלי שעון ובלי ניקוד.'],wGo:'▶ יאללה',wSkip:['⏭ דלגי','⏭ דלג','⏭ דלגו'],fromB:'🕰️ מפעם קודמת',revTag:'🔁 חזרה',wDone:'החימום הושלם!',
+ wRem:['עדיין זוכרת {n} מתוך {m} {w} 💪','עדיין זוכר {n} מתוך {m} {w} 💪','עדיין זוכרים {n} מתוך {m} {w} 💪'],wW0:'מאתמול',wW1:'מלפני כמה ימים',wW2:'מהשבוע שעבר',wNone:'אלה עוד צריכות קצת תרגול. נחזור אליהן מחר 🙂',
+ canDo:['מה את כבר יודעת:','מה אתה כבר יודע:','מה אתם כבר יודעים:'],stSolid:'יושב חזק 💪',stNear:'בדרך הנכונה · עוד {k} כדי לנעול',stNew:'עוד חדש · נחזור לזה בקרוב',nxWeak:'💪 לחזק: {s}',nxCity:'🏙️ להמשיך לבנות',nxFree:'🎲 בחירה חופשית',
  teach:'כמעט! זו התשובה:',gotit:'הבנתי ➜',hint:'רמז',check:'בדיקה',praise:['יפה!','מעולה!','וואו!','מדהים!!',['אלופה!','אלוף!','אלופים!']],
  r3:'מושלם!',r2:'כל הכבוד!',r1:'יפה מאוד!',r0:'כמעט! עוד ניסיון קטן?',of:'{a} מתוך {b}',nw:'מילים חדשות: {n}',built:'הבניין נבנה!',bossWin:'בולע האותיות ברח! השכונה ניצלה!',next:'לבניין הבא ➜',again:'שוב',map:'למפה',menu:'לתפריט',timeUp:'נגמר הזמן!',score:'ניקוד',hiT:'שיאים',newRec:'שיא חדש!',dailyDone:'10 יומי הושלם!',streak:'{n} ימים ברצף',paused:'הפסקה',resume:'להמשיך',quit:'לצאת לתפריט',bookC:'{a} מתוך {b} מילים',noVoice:'אין קול אנגלי במכשיר הזה – משחקי ההאזנה מוסתרים',go:'יאללה!',cityAll:'כל העיר נבנתה!',daily:'10 יומי',speed:'ריצת מהירות'},
 fr:{title:'La Ville des Mots',sub:'Reconstruis la ville avec des mots anglais !',hi:'Salut {n} !',mCity:'La ville',mDaily:'10 du jour',mSpeed:'Course éclair',mBook:'Mes mots',sec:'60 secondes',doneT:'fait aujourd’hui',lvl:'Niveau',dist:'Quartier',boss:'Le Gobe-Lettres',bossB:'Le Gobe-Lettres a mélangé les mots !',locked:'Construis d’abord le bâtiment précédent',
  pic2word:'Quel est le bon mot ?',word2pic:'Que veut dire ce mot ?',listen:'Qu’as-tu entendu ?',first:'Par quelle lettre ça commence ?',missing:'Quelle lettre manque ?',spell:'Écris le mot',listenSpell:'Écoute et écris le mot',type:'Tape le mot en anglais',pairs:'Relie les paires',sentence:'Remets la phrase en ordre',grammar:'Quel est le bon mot ?',opposite:'Quel est le contraire ?',
+ wT:'Petit échauffement 🧠',wS:'{n} petits mots que tu connais déjà. Sans chrono, sans points.',wS1:'Un petit mot que tu connais déjà. Sans chrono, sans points.',wGo:'▶ C’est parti',wSkip:'⏭ Passer',fromB:'🕰️ Déjà vu',revTag:'🔁 Révision',wDone:'Échauffement terminé !',
+ wRem:'Tu te souviens encore de {n} sur {m} {w} 💪',wW0:'d’hier',wW1:'d’il y a quelques jours',wW2:'de la semaine dernière',wNone:'Ceux-ci demandent encore un peu d’entraînement. On y reviendra demain 🙂',
+ canDo:'Ce que tu sais faire maintenant :',stSolid:'solide 💪',stNear:'ça vient · encore {k} pour le fixer',stNew:'encore nouveau · on y reviendra bientôt',nxWeak:'💪 Renforcer : {s}',nxCity:'🏙️ Continuer la ville',nxFree:'🎲 Choix libre',
  teach:'Presque ! Voici la réponse :',gotit:'Compris ➜',hint:'Indice',check:'Vérifier',praise:['Bien !','Super !','Waouh !','Génial !!','Incroyable !'],
  r3:'Parfait !',r2:'Bravo !',r1:'Bien joué !',r0:'Presque ! On réessaie ?',of:'{a} sur {b}',nw:'Nouveaux mots : {n}',built:'Bâtiment reconstruit !',bossWin:'Le Gobe-Lettres s’est enfui ! Le quartier est sauvé !',next:'Bâtiment suivant ➜',again:'Rejouer',map:'La carte',menu:'Menu',timeUp:'Temps écoulé !',score:'Score',hiT:'MEILLEURS SCORES',newRec:'NOUVEAU RECORD !',dailyDone:'10 du jour terminé !',streak:'{n} jours de suite',paused:'Pause',resume:'Continuer',quit:'Quitter',bookC:'{a} mots sur {b}',noVoice:'Pas de voix anglaise sur cet appareil : jeux d’écoute masqués',go:'C’est parti !',cityAll:'Toute la ville est reconstruite !',daily:'10 du jour',speed:'Course éclair'},
 en:{title:'Word City',sub:'Rebuild the city, one word at a time!',hi:'Hi {n}!',mCity:'City',mDaily:'Daily 10',mSpeed:'Speed Run',mBook:'My Words',sec:'60 seconds',doneT:'done today',lvl:'Level',dist:'District',boss:'The Letter Gobbler',bossB:'The Letter Gobbler mixed up the words!',locked:'Build the one before it first',
  pic2word:'Which word is it?',word2pic:'Find the right one',listen:'What did you hear?',first:'Which letter does it start with?',missing:'Which letter is missing?',spell:'Spell the word',listenSpell:'Listen and spell',type:'Type the word',pairs:'Match the pairs',sentence:'Build the sentence',grammar:'Choose the right word',opposite:'What is the opposite?',
+ wT:'Quick warm-up 🧠',wS:'{n} quick words from before. No clock, no points.',wS1:'One quick word from before. No clock, no points.',wGo:'▶ Let’s go',wSkip:'⏭ Skip',fromB:'🕰️ From before',revTag:'🔁 Review',wDone:'Warm-up done!',
+ wRem:'You still remember {n} of {m} from {w} 💪',wW0:'yesterday',wW1:'a few days ago',wW2:'last week',wNone:'These need a little more practice. We’ll bring them back tomorrow 🙂',
+ canDo:'What you can do now:',stSolid:'solid 💪',stNear:'getting there · {k} more to lock it in',stNew:'still new · we’ll come back to it soon',nxWeak:'💪 Strengthen: {s}',nxCity:'🏙️ Keep building',nxFree:'🎲 Free choice',
  teach:'Almost! Here it is:',gotit:'Got it ➜',hint:'Hint',check:'Check',praise:['Nice!','Great!','Wow!','Amazing!!','Unstoppable!'],
  r3:'Perfect!',r2:'Well done!',r1:'Good job!',r0:'Almost! One more try?',of:'{a} out of {b}',nw:'New words: {n}',built:'Building rebuilt!',bossWin:'The Letter Gobbler ran away! The district is saved!',next:'Next building ➜',again:'Again',map:'Map',menu:'Menu',timeUp:'Time’s up!',score:'Score',hiT:'HIGH SCORES',newRec:'NEW RECORD!',dailyDone:'Daily 10 complete!',streak:'{n} days in a row',paused:'Paused',resume:'Resume',quit:'Quit to menu',bookC:'{a} of {b} words',noVoice:'No English voice on this device – listening games are hidden',go:'Let’s go!',cityAll:'The whole city is rebuilt!',daily:'Daily 10',speed:'Speed Run'}};
 let lang=ls.get('annabelle-lang')||'he';if(!TX[lang])lang='he';
@@ -466,14 +485,55 @@ function t(k,o){let s=TX[lang][k];if(s==null)s=TX.en[k];if(Array.isArray(s)&&k!=
 function setLang(l){lang=TX[l]?l:'he';ls.set('annabelle-lang',lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';document.title=t('title')}
 const pname=p=>p.n[LI[lang]];
 
-/* ---- save ---- */
-function load(){let s=null;try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}if(!s||typeof s!=='object'||Array.isArray(s))s={};s.v=1;if(!s.stars||typeof s.stars!=='object')s.stars={};if(!s.m||typeof s.m!=='object')s.m={};s.best=+s.best||0;if(!Array.isArray(s.hi))s.hi=[];if(!Array.isArray(s.streak)||s.streak.length<2)s.streak=[0,0];s.ad=clamp(+s.ad||0,-1.5,1.5);return s}
+/*LEITNER*/
+/* ============ spaced review memory (Leitner boxes; pure, no DOM; the same block lives in mathquest, thinking and sciencelab) ============
+   map: {unitId:{b:box 1..5, d:day it is due, r:right, w:wrong, l:last day seen}}.  A right answer on a DUE unit moves it up one box and
+   schedules it IV[box] days ahead; a right answer that is not due yet only counts (no cramming up the boxes in one sitting);
+   a miss sends it back to box 1, due tomorrow. */
+const Leitner=(function(){
+ const IV=[1,2,4,8,16],MAXB=5,ok=v=>typeof v==='number'&&isFinite(v),ci=(v,a,b,d)=>ok(v)?Math.max(a,Math.min(b,Math.floor(v))):d;
+ function clean(raw,valid,day,cap){const o={};if(!raw||typeof raw!=='object'||Array.isArray(raw)||!ok(day))return o;let n=0;
+  for(const id of Object.keys(raw)){if(n>=(cap||400))break;let v=false;try{v=!!valid(id)}catch(e){}if(!v)continue;const r=raw[id];if(!r||typeof r!=='object'||Array.isArray(r))continue;
+   const b=ci(r.b,1,MAXB,1);o[id]={b:b,d:ci(r.d,0,day+IV[b-1],day+1),r:ci(r.r,0,1e6,0),w:ci(r.w,0,1e6,0),l:ci(r.l,0,day,day)};n++}
+  return o}
+ function answer(map,id,right,day){let r=map[id];const fresh=!r;if(!r)r=map[id]={b:1,d:day+1,r:0,w:0,l:day};const from=fresh?0:r.b,wasDue=!fresh&&r.d<=day,gap=fresh?0:Math.max(0,day-r.l);
+  if(right){r.r++;if(wasDue){r.b=Math.min(MAXB,r.b+1);r.d=day+IV[r.b-1]}}else{r.w++;r.b=1;r.d=day+1}
+  r.l=day;return{id:id,ok:!!right,fresh:fresh,from:from,to:r.b,up:!fresh&&r.b>from,due:wasDue,gap:gap,retry:!right}}
+ function due(map,day){return Object.keys(map).filter(id=>map[id].d<=day).sort((a,b)=>map[a].d-map[b].d||map[a].l-map[b].l||map[a].b-map[b].b||(a<b?-1:a>b?1:0))}
+ /* up to n (never more than 5) due units, oldest first, but never two of one topic in a row while another topic is waiting (interleaving) */
+ function pick(map,day,n,topic,fit){n=Math.max(0,Math.min(5,Math.floor(n)||0));const pool=due(map,day).filter(id=>!fit||fit(id)),out=[];let last=null;
+  while(out.length<n&&pool.length){let i=pool.findIndex(id=>topic(id)!==last);if(i<0)i=0;const id=pool.splice(i,1)[0];out.push(id);last=topic(id)}return out}
+ /* the unit that most needs practice: lowest box, then most misses, then seen longest ago (null when everything is in the top box) */
+ function weakest(map,fit){let best=null;for(const id of Object.keys(map)){if(fit&&!fit(id))continue;const r=map[id];if(r.b>=MAXB)continue;
+   if(!best||r.b<map[best].b||(r.b===map[best].b&&(r.w-r.r>map[best].w-map[best].r||(r.w-r.r===map[best].w-map[best].r&&r.l<map[best].l))))best=id}return best}
+ return{IV:IV,MAXB:MAXB,clean:clean,answer:answer,due:due,pick:pick,weakest:weakest}})();
+/*/LEITNER*/
+/* test clock: only honoured on a QA device (localStorage kidapp-qa=1); production always uses the real local day */
+let QADAY=null;try{if(ls.get('kidapp-qa')==='1'){const v=+sessionStorage.getItem('kidapp-qa-day');if(v>0)QADAY=Math.floor(v)}}catch(e){}
+function today(){if(QADAY!==null)return QADAY;const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)-20000}
+/* ---- save ----
+   The word memory keeps its original format: m[word]=[box 0..4, due day], now optionally followed by [right, wrong, last day seen, mastery reported].
+   It is ONE memory, driven by the shared scheduler above: box 0..4 here = Leitner box 1..5 there (see learn()).
+   Malformed entries are dropped or repaired; valid ones are left exactly as they were saved.  wd = day of the last warm-up offer, sd = where Speed Run left the level. */
+function cleanM(m){const td=today(),I=(v,a,b,d)=>typeof v==='number'&&isFinite(v)?Math.max(a,Math.min(b,Math.floor(v))):d;let n=0;
+ Object.keys(m).forEach(k=>{const r=m[k];if(!Array.isArray(r)||++n>1500){delete m[k];return}
+  const a=[I(r[0],0,4,0),I(r[1],0,1e7,td+1)];if(r.length>2){a.push(I(r[2],0,1e6,0),I(r[3],0,1e6,0),I(r[4],0,td,td));if(r[5])a.push(1)}m[k]=a})}
+function load(){let s=null;try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}if(!s||typeof s!=='object'||Array.isArray(s))s={};s.v=1;if(!s.stars||typeof s.stars!=='object')s.stars={};if(!s.m||typeof s.m!=='object'||Array.isArray(s.m))s.m={};cleanM(s.m);s.wd=Math.max(0,Math.floor(+s.wd)||0);s.sd=clamp(+s.sd||0,-1.5,1.5);s.best=+s.best||0;if(!Array.isArray(s.hi))s.hi=[];if(!Array.isArray(s.streak)||s.streak.length<2)s.streak=[0,0];s.ad=clamp(+s.ad||0,-1.5,1.5);return s}
 let SV=load();
 function save(){ls.set(KEY,JSON.stringify(SV))}
-const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)-20000};
 const dstr=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
-const INTV=[0,1,3,7,21];
-function learn(w,ok){let r=SV.m[w.w];const nw=!r;if(!r)r=SV.m[w.w]=[0,today()];if(ok){r[0]=Math.min(4,r[0]+1);r[1]=today()+INTV[r[0]]}else{r[0]=Math.max(0,r[0]-2);r[1]=today()}return nw}
+/* One word = one review unit. The stored entry is converted to the scheduler's record, answered there, and written back: intervals 1/2/4/8/16 days,
+   a right answer on a word that is not due only counts, a miss goes back to the first box and is due tomorrow (plus one retry later in the session).
+   An entry saved by the old code has no "last seen" day: it is estimated from the old interval table. */
+const OLDIV=[0,1,3,7,21],isW=k=>Object.prototype.hasOwnProperty.call(WMAP,k);
+const mrec=r=>({b:r[0]+1,d:r[1],r:r[2]|0,w:r[3]|0,l:r.length>4?r[4]:Math.max(0,Math.min(today(),r[1]-OLDIV[r[0]]))});
+function memMap(){const M={};Object.keys(SV.m).forEach(k=>{if(isW(k))M[k]=mrec(SV.m[k])});return M}
+const slug=w=>w.k.replace(/[^a-z0-9]+/g,'-').slice(0,24)||'w';
+let LR=null,RQ=[],RV=[]; /* last scheduler result; retries waiting for the next round; the "from before" words of the round being built */
+function learn(w,ok){const k=w.w,old=SV.m[k],M={};if(old)M[k]=mrec(old);const lr=Leitner.answer(M,k,ok,today()),x=M[k],a=[x.b-1,x.d,x.r,x.w,x.l];
+ /* mastery signal for the platform: the word reached box 4 (of 5) for the first time */
+ if(old&&old[5])a[5]=1;else if(x.b>=4){a[5]=1;award({event:'mastery',skill:slug(w),level:w.l<=2?1:w.l<=4?2:3})}
+ SV.m[k]=a;LR=lr;return !old}
 const starOf=id=>+SV.stars[id]||0;
 const unlocked=i=>i<=0||starOf(NODES[i-1].id)>0;
 const streakNow=()=>SV.streak[1]>=today()-1?SV.streak[0]:0;
@@ -578,50 +638,92 @@ function nodePool(nd){if(nd.t==='p')return PACKS[nd.p].words;let a=[];for(let i=
 function openPool(){let a=[];NODES.forEach((nd,i)=>{if(nd.t==='p'&&(unlocked(i)||nd.p<2))a=a.concat(PACKS[nd.p].words)});return a}
 function pickWords(pool,n,ctx){const L=Math.round(EL()),td=today();let up=L,c=pool.filter(w=>w.l<=up&&usable(w,ctx));while(c.length<Math.min(6,n)&&up<5){up++;c=pool.filter(w=>w.l<=up&&usable(w,ctx))}
  if(!c.length)c=pool.slice();
- const due=[],fresh=[],rest=[];c.forEach(w=>{const r=SV.m[w.w];if(!r)fresh.push([Math.abs(w.l-L)*2+Math.random()*1.5,w]);else if(r[0]<4&&r[1]<=td)due.push([r[0]+Math.random(),w]);else rest.push([r[0]+Math.random()*3,w])});
- const so=a=>a.sort((x,y)=>x[0]-y[0]).map(x=>x[1]),D=so(due),F=so(fresh),Rr=so(rest),out=D.slice(0,Math.ceil(n*.6));
- [F,D,Rr].forEach(l=>l.forEach(w=>{if(out.length<n&&out.indexOf(w)<0)out.push(w)}));
+ /* due = its day has come, whatever the box (oldest first) */
+ const due=[],fresh=[],rest=[];c.forEach(w=>{const r=SV.m[w.w];if(!r)fresh.push([Math.abs(w.l-L)*2+Math.random()*1.5,w]);else if(r[1]<=td)due.push([r[1]+Math.random()*.9,w]);else rest.push([r[0]+Math.random()*3,w])});
+ const so=a=>a.sort((x,y)=>x[0]-y[0]).map(x=>x[1]),D=so(due),F=so(fresh),Rr=so(rest),M=memMap(),weak=!!(ctx&&ctx.weak);
+ /* spaced review woven in: about one item in five (the round also has a pairs and a sentence item) is a due word "from before" (oldest first, mixed over everything already met, not only this building);
+    it takes a slot, the round is not longer. Not in Speed Run. */
+ RV=weak?[]:Leitner.pick(M,td,Math.max(1,Math.round(n/4.5)),id=>WMAP[id].p,id=>usable(WMAP[id],ctx)).map(id=>WMAP[id]);
+ const out=RV.slice(),byBox=so(due.concat(rest).map(x=>[SV.m[x[1].w][0]+Math.random(),x[1]]));
+ (weak?[byBox,F]:[F,D,Rr]).forEach(l=>l.forEach(w=>{if(out.length<n&&out.indexOf(w)<0)out.push(w)}));
  const b=out.slice();let i=0;while(out.length<n&&b.length)out.push(b[i++%b.length]);return shuffle(out)}
-function startRound(mode,ni){closeAll();TTS.stop();
- R={mode:mode,ni:ni,node:mode==='city'?NODES[ni]:null,T:[],i:0,base:0,first:0,ok:0,combo:0,maxC:0,score:0,dif:0,run:0,nreq:0,time:60000,nw:0,usedS:{},last:null,paused:false,done:false,ctx:{},t0:Date.now()};
+function startRound(mode,ni){if(mode==='warm')return startWarm();closeAll();TTS.stop();
+ R={mode:mode,ni:ni,node:mode==='city'?NODES[ni]:null,T:[],i:0,base:0,first:0,ok:0,combo:0,maxC:0,score:0,dif:0,run:0,nreq:0,time:60000,nw:0,usedS:{},last:null,paused:false,done:false,ctx:{},t0:Date.now(),sk:{},wres:[],due:0};
+ const tgw=w=>({w:w,rev:RV.indexOf(w)>=0?1:0});
  const y=isYoung(),sg=()=>({s:(Math.random()<.5&&Math.round(EL())>=2)?'gram':'sent'});let title='';
  if(mode==='city'){const nd=R.node,pool=nodePool(nd),boss=nd.t==='b';R.pool=pool;R.ctx={opp:!boss&&PACKS[nd.p].id==='opposites'};
-  const nW=boss?(y?10:8):(y?7:6),ws=pickWords(pool,nW,R.ctx);R.T=ws.map(w=>({w:w}));
+  const nW=boss?(y?10:8):(y?7:6),ws=pickWords(pool,nW,R.ctx);R.T=ws.map(tgw);
   R.T.splice(3,0,{s:'pairs',pool:pool,words:ws});if(boss)R.T.splice(8,0,{s:'pairs',pool:pool});
   if(!y){R.T.splice(R.T.length-1,0,sg());if(boss)R.T.splice(5,0,sg())}
   title=boss?'👾 '+t('bossB'):PACKS[nd.p].e+' '+pname(PACKS[nd.p])}
- else if(mode==='daily'){const pool=openPool();R.pool=pool;const ws=pickWords(pool,y?9:7,R.ctx);R.T=ws.map(w=>({w:w}));R.T.splice(4,0,{s:'pairs',pool:pool,words:ws});if(!y){R.T.splice(2,0,sg());R.T.push(sg())}title='📅 '+t('daily')}
- else{R.ctx={speed:1};R.pool=openPool().filter(w=>usable(w,R.ctx));fillSpeed();title='⚡ '+t('speed')}
+ else if(mode==='daily'){const pool=openPool();R.pool=pool;const ws=pickWords(pool,y?9:7,R.ctx);R.T=ws.map(tgw);R.T.splice(4,0,{s:'pairs',pool:pool,words:ws});if(!y){R.T.splice(2,0,sg());R.T.push(sg())}title='📅 '+t('daily')}
+ /* "strengthen": one word group, weakest words first, no stars */
+ else if(mode==='prac'){const pk=PACKS[ni]||PACKS[0];R.ni=PACKS.indexOf(pk);R.pool=pk.words;R.ctx={weak:1,opp:pk.id==='opposites'};const ws=pickWords(pk.words,y?7:6,R.ctx);R.T=ws.map(w=>({w:w}));R.T.splice(3,0,{s:'pairs',pool:pk.words,words:ws});title='💪 '+pk.e+' '+pname(pk)}
+ /* R7: Speed Run keeps adapting from where its last run ended (it used to restart from the base level every time) */
+ else{R.mode='speed';R.ctx={speed:1};R.dif=clamp(+SV.sd||0,-1.5,1.5);R.pool=openPool().filter(w=>usable(w,R.ctx));fillSpeed();title='⚡ '+t('speed')}
+ /* a retry that did not fit in the last round opens this one (third item) */
+ if(R.mode!=='speed'&&RQ.length&&R.T.length>2)R.T.splice(2,0,{w:RQ.shift(),re:true,easy:true});
  R.n0=R.T.length;award({event:'play'});track('game_start',{mode:mode});
  show('scPlay');banner(title);nextQ()}
 function fillSpeed(){const L=Math.round(EL());let c=R.pool.filter(w=>w.l<=L);if(c.length<12)c=R.pool.filter(w=>w.l<=L+1);if(!c.length)c=R.pool.length?R.pool:W.filter(w=>!w.hint);shuffle(c.slice()).slice(0,12).forEach(w=>R.T.push({w:w}))}
 function nextQ(){clearTimeout(pendT);pendT=0;if(!R||R.done)return;closeTeach();
  if(R.mode==='speed'){if(R.time<=0)return finish();if(R.i>=R.T.length)fillSpeed()}else if(R.i>=R.T.length)return finish();
- Q=build(R.T[R.i]);Q.t0=performance.now();Q.done=false;Q.wrong=0;Q.hints=0;R.last=Q.skill;renderQ();hud();
+ Q=build(R.T[R.i]);Q.rev=R.T[R.i].rev?1:R.T[R.i].re?2:0;Q.t0=performance.now();Q.done=false;Q.wrong=0;Q.hints=0;R.last=Q.skill;renderQ();hud();
  if(/^listen/.test(Q.skill)||(Q.w&&isYoung()&&(Q.skill==='word2pic'||Q.skill==='first')))TTS.say(Q.w.w)}
-function resolve(ok){if(!Q||Q.done||!R)return;Q.done=true;ok=!!ok;const tg=R.T[R.i],sp=R.mode==='speed';
- track('answer',{skill:Q.skill,ok:ok,ms:Math.min(6e5,Math.round(performance.now()-Q.t0)),level:Q.level||Math.round(EL())});
- if(Q.w&&learn(Q.w,ok))R.nw++;
+function resolve(ok){if(!Q||Q.done||!R)return;Q.done=true;ok=!!ok;const tg=R.T[R.i],sp=R.mode==='speed',warm=R.mode==='warm',ad=!warm&&!tg.rev,a={skill:Q.skill,ok:ok,ms:Math.min(6e5,Math.round(performance.now()-Q.t0)),level:Q.level||Math.round(EL())};if(Q.rev)a.rev=1;
+ track('answer',a);
+ if(Q.w){LR=null;if(learn(Q.w,ok))R.nw++;if(warm&&LR)R.wres.push(LR);const k=R.sk[Q.w.p]||(R.sk[Q.w.p]={n:0,ok:0,up:0});k.n++;if(ok)k.ok++;if(LR&&LR.up)k.up=1}
  if(!tg.re){R.base++;if(ok)R.first++}
  let said=false;
- if(ok){R.ok++;R.combo++;R.maxC=Math.max(R.maxC,R.combo);R.run++;if(R.run>=3){R.run=0;R.dif=Math.min(1.5,R.dif+.5)}R.score+=10+Math.min(R.combo,6)*2;
+ if(ok){R.ok++;R.combo++;R.maxC=Math.max(R.maxC,R.combo);if(ad){R.run++;if(R.run>=3){R.run=0;R.dif=Math.min(1.5,R.dif+.5)}}R.score+=10+Math.min(R.combo,6)*2;
   SFX.good();const pr=document.querySelector('#stage .prompt,#stage .pairs'),b=pr?pr.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/2,width:0,height:0};burst(b.left+b.width/2,b.top+b.height/2,8,['⭐','✨','💛']);
   if(R.combo===3||R.combo===5||R.combo===8||(R.combo>8&&R.combo%4===0)){const pz=TX[lang].praise,i=Math.min(pz.length-1,R.combo<5?rnd(2):R.combo<8?2:R.combo<12?3:4);let s=pz[i];if(Array.isArray(s))s=gen3(s[0],s[1],s[2]);pop(s);SFX.combo(R.combo)}
   if(R.node&&R.node.t==='b'){const br=$('bossRow');if(br){br.classList.remove('hit');void br.offsetWidth;br.classList.add('hit')}SFX.bonk()}
   if(!sp&&Q.kind!=='pairs'&&(lang!=='en'||isYoung()))said=TTS.say(Q.w?Q.w.w:Q.sent?Q.sent.en:Q.g.en)}
- else{R.combo=0;R.run=0;R.dif=Math.max(-1.5,R.dif-.5);
-  if(Q.w&&!tg.re&&R.nreq<3){R.T.splice(Math.min(R.T.length,R.i+3),0,{w:Q.w,re:true,easy:true});R.nreq++}}
+ else{R.combo=0;if(ad){R.run=0;R.dif=Math.max(-1.5,R.dif-.5)}
+  /* one retry of a missed word later in the same session, never right away: two items later; when the round ends before that (or in the warm-up) it opens the next round */
+  if(Q.w&&!tg.re){if(!warm&&R.i+3<=R.T.length){if(R.nreq<3){R.T.splice(R.i+3,0,{w:Q.w,re:true,easy:true});R.nreq++}}else{if(RQ.indexOf(Q.w)<0)RQ.push(Q.w);if(RQ.length>3)RQ.shift()}}}
  save();R.i++;hud();
  if(ok||Q.kind==='pairs'){if(!ok)SFX.bad();pendT=setTimeout(nextQ,sp?420:said?(Q.sent||Q.g?1900:1150):760)}
  else{SFX.bad();teach()}}
-function finish(){if(!R||R.done)return;R.done=true;clearTimeout(pendT);closeTeach();Q=null;TTS.stop();
+function pips(b){const e=h('span',{cls:'pips','data-box':b|0});for(let i=1;i<=5;i++)e.appendChild(h('i',{cls:i<=b?'on':''}));return e}
+/* a word group: how many of its words were met, their average box (1..5), and how many are still below box 3 */
+function packStat(pi){let seen=0,sum=0,low=0;PACKS[pi].words.forEach(w=>{const r=SV.m[w.w];if(r){seen++;sum+=r[0]+1;if(r[0]<2)low++}});return{seen:seen,box:seen?Math.max(1,Math.round(sum/seen)):0,low:low}}
+/* R5: what the kid can do now, per word group (round result + memory) */
+function compRows(ids){const max=innerHeight<700?2:3,w=h('div',{cls:'crs',id:'crs'},h('div',{cls:'crT',text:t('canDo')}));
+ ids.slice(0,max).forEach(pi=>{const s=packStat(pi),k=(R&&R.sk&&R.sk[pi])||{n:0,ok:0},pk=PACKS[pi];
+  w.appendChild(h('div',{cls:'cr','data-unit':pk.id},[h('span',null,[pk.e+' '+pname(pk),k.up?h('span',{cls:'upm',text:' ⬆'}):null]),pips(s.box),
+   h('small',{text:((s.seen&&!s.low)||(k.n>=2&&k.ok===k.n))?t('stSolid'):k.ok>0?t('stNear',{k:Math.max(1,s.low)}):t('stNew')})]))});return w}
+function roundPacks(){return Object.keys(R.sk).map(Number).sort((a,b)=>R.sk[b].n-R.sk[a].n)}
+/* R5: the choice of what comes next: "strengthen" = a no-stars round on the word group of the word that most needs it */
+function weakBtn(){const id=Leitner.weakest(memMap());if(!id)return null;const pi=WMAP[id].p,pk=PACKS[pi];
+ return h('button',{cls:'btn w',id:'rWeak','data-nx':'weak','data-unit':pk.id,text:t('nxWeak',{s:pk.e+' '+pname(pk)}),click:()=>{SFX.click();startRound('prac',pi)}})}
+/* ---- warm-up: up to 3 due words (never more than 5), oldest first, mixed word groups; offered once a day, always skippable; no clock, no score, no level change ---- */
+function warmIds(){return Leitner.pick(memMap(),today(),3,id=>WMAP[id].p,id=>usable(WMAP[id],{}))}
+function startWarm(){const ids=warmIds();if(!ids.length){if(cur!=='scMenu')toMenu();return false}closeAll();TTS.stop();SV.wd=today();save();
+ R={mode:'warm',ni:0,node:null,T:ids.map(id=>({w:WMAP[id],rev:1})),i:0,base:0,first:0,ok:0,combo:0,maxC:0,score:0,dif:0,run:0,nreq:0,time:60000,nw:0,usedS:{},last:null,paused:false,done:false,ctx:{},t0:Date.now(),sk:{},wres:[],due:Leitner.due(memMap(),today()).length};
+ R.pool=R.T.map(x=>x.w);R.n0=R.T.length;track('game_start',{mode:'warm'});show('scPlay');nextQ();return true}
+function offerWarm(){const n=warmIds().length;if(!n||cur!=='scMenu')return false;const c=$('cRes');c.textContent='';c.setAttribute('data-kind','warm');
+ c.appendChild(h('div',{cls:'huge',text:'🧠'}));c.appendChild(h('h2',{id:'wT',text:t('wT')}));c.appendChild(h('p',{id:'wS',text:n===1?t('wS1'):t('wS',{n:n})}));
+ c.appendChild(h('button',{cls:'btn g',id:'wGo',text:t('wGo'),click:()=>{gest=true;SFX.click();startWarm()}}));
+ c.appendChild(h('button',{cls:'btn w',id:'wSkip',text:t('wSkip'),click:()=>{gest=true;SFX.click();SV.wd=today();save();closeAll()}}));$('ovRes').classList.add('on');return true}
+function warmEnd(){const Wr=R.wres,n=Wr.length,ok=Wr.filter(x=>x.ok).length,gap=Wr.reduce((m,x)=>Math.max(m,x.gap),0),c=$('cRes');c.textContent='';c.setAttribute('data-kind','warmEnd');
+ R.res={st:0,first:ok,n:n,nw:0,mode:'warm'};save();track('review',{game:'wordcity',n:n,ok:ok,due:R.due});track('game_end',{sec:Math.round((Date.now()-R.t0)/1000),score:0,win:true,mode:'warm'});
+ c.appendChild(h('div',{cls:'huge',text:'🧠'}));c.appendChild(h('h2',{text:t('wDone')}));
+ c.appendChild(h('p',{id:'wSum',text:ok?t('wRem',{n:ok,m:n,w:t(gap>=6?'wW2':gap>=2?'wW1':'wW0')}):t('wNone')}));
+ c.appendChild(compRows(roundPacks()));
+ c.appendChild(h('div',{cls:'nx',id:'nx'},[h('button',{cls:'btn g',id:'rCity','data-nx':'city',text:t('nxCity'),click:()=>{SFX.click();closeAll();openMap()}}),weakBtn(),
+  h('button',{cls:'btn w',id:'rMenu','data-nx':'free',text:t('nxFree'),click:()=>{SFX.click();toMenu()}})]));
+ $('ovRes').classList.add('on');if(ok)SFX.win();else SFX.click()}
+function finish(){if(!R||R.done)return;R.done=true;clearTimeout(pendT);closeTeach();Q=null;TTS.stop();if(R.mode==='warm'){warmEnd();return}
  const n=Math.max(1,R.base),acc=R.first/n;let st=acc>=.9?3:acc>=.7?2:acc>=.45?1:0;const res={st:st,first:R.first,n:R.base,nw:R.nw,mode:R.mode};
  if(R.mode!=='speed')SV.ad=clamp(SV.ad+(acc>=.9?.25:acc<.5?-.25:0),-1.5,1.5);
  if(R.maxC>=2)award({event:'combo',score:R.maxC});
  if(R.mode==='city'){const id=R.node.id,prev=starOf(id);res.firstClear=prev===0&&st>0;if(st>prev)SV.stars[id]=st;
   if(st>0){award({event:'levelClear',level:R.ni+1});award({event:'star',stars:st,level:R.ni+1});if(R.node.t==='b')award({event:'win',level:R.ni+1});track('level',{level:R.ni+1,stars:st})}}
  else if(R.mode==='daily'){if(st>0){const td=today();if(SV.streak[1]!==td){SV.streak=[SV.streak[1]===td-1?SV.streak[0]+1:1,td];res.streakUp=true}award({event:'star',stars:st});award({event:'win'})}}
- else{const s=R.score;res.score=s;res.rec=s>0&&s>SV.best;if(s>0){SV.hi.push({s:s,d:dstr()});SV.hi.sort((a,b)=>b.s-a.s);SV.hi=SV.hi.slice(0,5)}SV.best=Math.max(SV.best,s);award({event:'score',score:s});if(s>=100)award({event:'win',score:s});res.st=-1}
+ else if(R.mode==='prac'){if(st>0)award({event:'levelClear'})}
+ else{SV.sd=clamp(R.dif,-1.5,1.5);const s=R.score;res.score=s;res.rec=s>0&&s>SV.best;if(s>0){SV.hi.push({s:s,d:dstr()});SV.hi.sort((a,b)=>b.s-a.s);SV.hi=SV.hi.slice(0,5)}SV.best=Math.max(SV.best,s);award({event:'score',score:s});if(s>=100)award({event:'win',score:s});res.st=-1}
  save();track('game_end',{sec:Math.round((Date.now()-R.t0)/1000),score:R.score,win:st>0||R.mode==='speed',mode:R.mode});
  R.res=res;renderRes(res);flushR()}
 
@@ -630,7 +732,7 @@ function picEl(w){const num=/^[0-9=½]+$/.test(w.e);return h('div',{cls:'pic'+(n
 function trEl(tx){return h('div',{cls:'trl tr',dir:lang==='he'?'rtl':'ltr',lang:lang,text:tx})}
 function spkBtn(txt,cls){return h('button',{cls:'spk '+(cls||''),'aria-label':'listen',text:'🔊',click:ev=>{ev.stopPropagation();gest=true;TTS.say(txt,true)}})}
 function askText(s){return t(s==='listenPic'||s==='listenWord'?'listen':s)}
-function renderQ(){const st=$('stage'),s=Q.skill,w=Q.w;st.textContent='';st.appendChild(h('div',{cls:'ask',text:askText(s)}));
+function renderQ(){const st=$('stage'),s=Q.skill,w=Q.w;st.textContent='';st.appendChild(h('div',{cls:'ask',id:'ask',text:askText(s)},Q.rev&&Q.kind!=='pairs'?h('small',{id:'qRev',text:t(Q.rev===2?'revTag':'fromB')}):null));
  if(Q.kind==='pairs'){renderPairs(st);return}
  const pr=h('div',{cls:'prompt'});st.appendChild(pr);const L=lang!=='en';
  if(s==='pic2word'){pr.appendChild(picEl(w));if(L&&w.hint)pr.appendChild(trEl(w[lang]))}
@@ -690,7 +792,7 @@ function hud(){const m=$('tMid');m.textContent='';const bb=$('bBack');bb.classLi
  if(cur==='scBook')m.appendChild(h('span',{cls:'pill',dir:lang==='he'?'rtl':'ltr',text:'📖 '+t('mBook')}));
  if(cur!=='scPlay'||!R)return;
  if(R.mode==='speed'){m.appendChild(h('span',{cls:'pill'+(R.time<=10000?' low':''),id:'pTime',text:'⏱ '+Math.max(0,Math.ceil(R.time/1000))}));m.appendChild(h('span',{cls:'pill',id:'pScore',text:'⭐ '+R.score}))}
- else{const boss=R.node&&R.node.t==='b';if(boss)m.appendChild(h('span',{id:'bossRow'},h('b',{text:'👾'})));const p=h('div',{id:'prog',cls:boss?'boss':''},h('b'));p.firstChild.style.width=Math.round(100*R.i/Math.max(1,R.T.length))+'%';m.appendChild(p);m.appendChild(h('span',{cls:'pill',text:Math.min(R.i+1,R.T.length)+'/'+R.T.length}))}
+ else{const boss=R.node&&R.node.t==='b';if(R.mode==='warm'){const p=h('div',{id:'prog'},h('b'));p.firstChild.style.width=Math.round(100*R.i/Math.max(1,R.T.length))+'%';m.appendChild(p);m.appendChild(h('button',{id:'pSkip',type:'button',text:t('wSkip'),click:()=>{gest=true;SFX.click();toMenu()}}));return}if(boss)m.appendChild(h('span',{id:'bossRow'},h('b',{text:'👾'})));const p=h('div',{id:'prog',cls:boss?'boss':''},h('b'));p.firstChild.style.width=Math.round(100*R.i/Math.max(1,R.T.length))+'%';m.appendChild(p);m.appendChild(h('span',{cls:'pill',text:Math.min(R.i+1,R.T.length)+'/'+R.T.length}))}
  if(R.combo>=2)m.appendChild(h('span',{cls:'pill pop',text:'🔥'+R.combo}))}
 function show(id){cur=id;['scMenu','scMap','scPlay','scBook'].forEach(s=>$(s).classList.toggle('on',s===id));hud()}
 const totalStars=()=>NODES.reduce((a,n)=>a+starOf(n.id),0);
@@ -716,32 +818,34 @@ window.toMenu=toMenu;
 function openMap(){const g=$('mapGrid');g.textContent='';let curSet=false;
  for(let d=0;d<4;d++){const ids=NODES.filter(n=>(n.t==='p'&&(n.p/4|0)===d)||(n.t==='b'&&n.d===d)),sum=ids.reduce((a,n)=>a+starOf(n.id),0);
   const bl=h('div',{cls:'blds'});ids.forEach(nd=>{const i=NODES.indexOf(nd),un=unlocked(i),st=starOf(nd.id),boss=nd.t==='b',pk=boss?null:PACKS[nd.p];let cl='bld'+(boss?' boss':'')+(!un?' lock':st?' done':' todo');if(un&&!st&&!curSet){cl+=' cur';curSet=true}
-   const stars=h('i',null,st?['★'.repeat(st),h('u',{text:'★'.repeat(3-st)})]:[un?'🚧':'🔒']);
-   bl.appendChild(h('button',{cls:cl,'data-node':i,'aria-label':boss?t('boss'):pname(pk),click:()=>{gest=true;if(!un){SFX.bad();pop('🔒');banner(t('locked'));return}SFX.click();startRound('city',i)}},[h('b',{text:boss?(st?'🏆':'👾'):pk.e}),h('span',{text:boss?t('boss'):pname(pk)}),stars]))});
+   const stars=h('i',null,st?['★'.repeat(st),h('u',{text:'★'.repeat(3-st)})]:[un?'🚧':'🔒']),bx=boss||!un?0:packStat(nd.p).box;
+   bl.appendChild(h('button',{cls:cl,'data-node':i,'aria-label':boss?t('boss'):pname(pk),click:()=>{gest=true;if(!un){SFX.bad();pop('🔒');banner(t('locked'));return}SFX.click();startRound('city',i)}},[h('b',{text:boss?(st?'🏆':'👾'):pk.e}),h('span',{text:boss?t('boss'):pname(pk)}),stars,bx?pips(bx):null]))});
   g.appendChild(h('div',{cls:'dist'},[h('h3',null,[h('span',{text:t('dist')+' '+(d+1)}),h('span',{dir:'ltr',text:'⭐ '+sum+'/15'})]),bl]))}
  show('scMap');const c=g.querySelector('.cur');if(c&&c.scrollIntoView)try{c.scrollIntoView({block:'center'})}catch(e){}}
 function openBook(){const l=$('bookList');l.textContent='';$('bookHead').textContent=t('bookC',{a:seenCount(),b:W.length});
- PACKS.forEach(pk=>{const n=pk.words.filter(w=>SV.m[w.w]).length,g=h('div',{cls:'wgrid'});
+ PACKS.forEach((pk,pi)=>{const n=pk.words.filter(w=>SV.m[w.w]).length,g=h('div',{cls:'wgrid'}),bx=packStat(pi).box;
   pk.words.forEach(w=>{const r=SV.m[w.w],num=/^[0-9=½]+$/.test(w.e);if(!r){g.appendChild(h('div',{cls:'wchip un'},[h('b',{text:'❔'}),h('span',{text:'· · ·'})]));return}
    const b=h('button',{cls:'wchip',click:()=>{gest=true;TTS.say(w.w,true);[].forEach.call(l.querySelectorAll('.wchip.say'),x=>x.classList.remove('say'));b.classList.add('say');if(lang!=='en'&&!b.querySelector('small'))b.appendChild(h('small',{cls:'tr',dir:lang==='he'?'rtl':'ltr',text:w[lang]}))}},[h('b',{cls:num?'num':'',text:w.e}),en(w.w),h('i',null,['●'.repeat(r[0]+1),h('u',{text:'●'.repeat(4-r[0])})])]);g.appendChild(b)});
-  l.appendChild(h('div',{cls:'bk'},[h('h3',null,[h('span',{text:pk.e+' '+pname(pk)}),h('span',{dir:'ltr',text:n+'/'+pk.words.length})]),g]))});
+  l.appendChild(h('div',{cls:'bk'},[h('h3',null,[h('span',null,[pk.e+' '+pname(pk)+' ',bx?pips(bx):null]),h('span',{dir:'ltr',text:n+'/'+pk.words.length})]),g]))});
  show('scBook');l.scrollTop=0}
-function renderRes(res){const c=$('cRes');c.textContent='';const sp=res.mode==='speed',boss=R.node&&R.node.t==='b';let next=-1;
+function renderRes(res){const c=$('cRes');c.textContent='';c.setAttribute('data-kind','result');const sp=res.mode==='speed',boss=R.node&&R.node.t==='b';let next=-1;
  if(sp){c.appendChild(h('div',{cls:'huge',text:'⚡'}));c.appendChild(h('h2',{text:t('timeUp')}));const sc=h('p',{cls:'scl'});c.appendChild(sc);countUp(sc,res.score,'⭐ ');
   if(res.rec){c.appendChild(h('div',{cls:'rec',text:'★ '+t('newRec')+' ★'}))}
   let mark=false;c.appendChild(h('div',{cls:'hs'},[h('div',{cls:'hsT',text:t('hiT')})].concat(SV.hi.map((x,i)=>{const me=!mark&&x.s===res.score&&res.score>0;if(me)mark=true;return h('div',{cls:'hsR'+(me?' cur':'')},[h('span',{text:(i+1)+'.'}),h('span',{text:String(x.s)}),h('span',{text:x.d})])}))));
   if(res.rec||res.score>=100){SFX.win();confetti();flash()}}
- else{const st=res.st;c.appendChild(h('div',{cls:'huge',text:st<=0?'💪':boss?'🏆':res.mode==='daily'?'📅':PACKS[R.node.p].e}));
+ else{const st=res.st;c.appendChild(h('div',{cls:'huge',text:st<=0?'💪':boss?'🏆':res.mode==='daily'?'📅':(R.node?PACKS[R.node.p]:PACKS[R.ni]||PACKS[0]).e}));
   c.appendChild(h('h2',{text:st<=0?t('r0'):t('r'+st)}));
   const sr=h('div',{cls:'stars'});for(let i=0;i<3;i++){const s=h('span',{cls:i<st?'':'off',text:'⭐'});s.style.animationDelay=(.25+i*.3)+'s';sr.appendChild(s);if(i<st)setTimeout(()=>SFX.star(i),250+i*300)}c.appendChild(sr);
   c.appendChild(h('p',{text:t('of',{a:res.first,b:res.n})+(res.nw?' · '+t('nw',{n:res.nw}):'')}));
   if(st>0){if(res.mode==='daily'){c.appendChild(h('p',{text:t('dailyDone')}));c.appendChild(h('p',{text:'🔥 '+(streakNow()>1?t('streak',{n:streakNow()}):'1')}))}else c.appendChild(h('p',{text:boss?t('bossWin'):res.firstClear?'🏗️ '+t('built'):''}));
    setTimeout(()=>{SFX.win();confetti();if(st===3||boss)flash()},350)}
   if(res.mode==='city'&&st>0&&R.ni+1<NODES.length)next=R.ni+1}
- if(next>=0)c.appendChild(h('button',{cls:'btn g',id:'rNext',text:t('next'),click:()=>{SFX.click();startRound('city',next)}}));
- c.appendChild(h('button',{cls:'btn'+(next>=0?' w':' g'),id:'rAgain',text:'↻ '+t('again'),click:()=>{SFX.click();startRound(R.mode,R.ni)}}));
- if(res.mode==='city')c.appendChild(h('button',{cls:'btn w',id:'rMap',text:'🏙️ '+t('map'),click:()=>{SFX.click();closeAll();openMap()}}));
- c.appendChild(h('button',{cls:'btn w',id:'rMenu',text:'☰ '+t('menu'),click:()=>{SFX.click();toMenu()}}));
+ if(!sp&&Object.keys(R.sk).length)c.appendChild(compRows(roundPacks()));const nx=h('div',{cls:'nx',id:'nx'});
+ if(next>=0)nx.appendChild(h('button',{cls:'btn g',id:'rNext','data-nx':'next',text:t('next'),click:()=>{SFX.click();startRound('city',next)}}));
+ nx.appendChild(h('button',{cls:'btn'+(next>=0?' w':' g'),id:'rAgain','data-nx':'again',text:'↻ '+t('again'),click:()=>{SFX.click();startRound(R.mode,R.ni)}}));
+ {const wb=weakBtn();if(wb)nx.appendChild(wb)}
+ if(res.mode==='city')nx.appendChild(h('button',{cls:'btn w',id:'rMap','data-nx':'map',text:'🏙️ '+t('map'),click:()=>{SFX.click();closeAll();openMap()}}));
+ nx.appendChild(h('button',{cls:'btn w',id:'rMenu','data-nx':'free',text:'☰ '+t('menu'),click:()=>{SFX.click();toMenu()}}));c.appendChild(nx);
  $('ovRes').classList.add('on')}
 function pause(){if(!R||R.done||R.paused||cur!=='scPlay')return;R.paused=true;TTS.stop();const c=$('cPause');c.textContent='';c.appendChild(h('h2',{text:'⏸ '+t('paused')}));
  c.appendChild(h('button',{cls:'btn g',id:'pRes',text:'▶ '+t('resume'),click:()=>{SFX.click();resume()}}));c.appendChild(h('button',{cls:'btn w',id:'pQuit',text:'☰ '+t('quit'),click:()=>{SFX.click();toMenu()}}));c.appendChild(h('div',{id:'navSlot'}));$('ovPause').classList.add('on')}
@@ -769,9 +873,9 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=
 /* ---- test hook ---- */
 function flushPend(){if(teachOpen||pendT){nextQ()}}
 window.__wordcity={
- state(){return{screen:cur,lang:lang,level:EL(),base:baseLevel(),young:isYoung(),tts:TTS.ok,said:TTS.log,mode:R?R.mode:null,done:R?R.done:true,paused:R?R.paused:false,i:R?R.i:0,total:R?R.T.length:0,ok:R?R.ok:0,first:R?R.first:0,combo:R?R.combo:0,score:R?R.score:0,time:R?R.time:0,dif:R?R.dif:0,teach:teachOpen,res:R?R.res||null:null,stars:JSON.parse(JSON.stringify(SV.stars)),best:SV.best,hi:SV.hi.slice(),streak:SV.streak.slice(),words:Object.keys(SV.m).length}},
- start(mode,node){gest=true;if(mode==='city')startRound('city',node||0);else startRound(mode==='daily'?'daily':'speed');return true},
- item(){if(!Q)return null;const o={skill:Q.skill,kind:Q.kind,word:Q.w?Q.w.w:null,answer:Q.answer,level:Q.level,done:Q.done};if(Q.opts){o.options=Q.opts.map(x=>x.label);o.correct=Q.opts.findIndex(x=>x.ok)}if(Q.kind==='tiles'){o.units=Q.units.slice();o.tiles=Q.tiles.slice();o.pos=Q.pos}if(Q.kind==='pairs')o.pairs=Q.pairs.map(p=>[p.w.w,p.label]);if(Q.sent)o.sentence=Q.sent.en;return o},
+ state(){return{screen:cur,lang:lang,level:EL(),base:baseLevel(),young:isYoung(),tts:TTS.ok,said:TTS.log,mode:R?R.mode:null,done:R?R.done:true,paused:R?R.paused:false,i:R?R.i:0,total:R?R.T.length:0,ok:R?R.ok:0,first:R?R.first:0,combo:R?R.combo:0,score:R?R.score:0,time:R?R.time:0,dif:R?R.dif:0,teach:teachOpen,res:R?R.res||null:null,stars:JSON.parse(JSON.stringify(SV.stars)),best:SV.best,hi:SV.hi.slice(),streak:SV.streak.slice(),words:Object.keys(SV.m).length,wd:SV.wd,sd:SV.sd,card:$('ovRes').classList.contains('on')?$('cRes').getAttribute('data-kind'):null}},
+ start(mode,node){gest=true;if(mode==='city')startRound('city',node||0);else if(mode==='prac')startRound('prac',node||0);else startRound(mode==='daily'?'daily':'speed');return true},
+ item(){if(!Q)return null;const o={skill:Q.skill,kind:Q.kind,word:Q.w?Q.w.w:null,answer:Q.answer,level:Q.level,done:Q.done,rev:Q.rev|0};if(Q.opts){o.options=Q.opts.map(x=>x.label);o.correct=Q.opts.findIndex(x=>x.ok)}if(Q.kind==='tiles'){o.units=Q.units.slice();o.tiles=Q.tiles.slice();o.pos=Q.pos}if(Q.kind==='pairs')o.pairs=Q.pairs.map(p=>[p.w.w,p.label]);if(Q.sent)o.sentence=Q.sent.en;return o},
  answer(ok){flushPend();if(!Q||Q.done||!R||R.done)return false;if(Q.kind==='choice'){const i=Q.opts.findIndex(x=>!!x.ok===!!ok);choose(i<0?0:i)}else{if(Q.kind==='pairs'&&ok!==false)Q.pairs.forEach(p=>{if(learn(p.w,true))R.nw++});resolve(!!ok)}return true},
  next(){flushPend()},
  win(){let g=0;while(R&&!R.done&&g++<300){flushPend();if(!R||R.done)break;if(R.mode==='speed'&&g>12){R.time=0;finish();break}this.answer(true)}flushPend();return R?R.res:null},
@@ -781,10 +885,17 @@ window.__wordcity={
  gen(word,skill){const w=WMAP[word];return w?makeWordQ(w,{},skill):null},skills(word,ctx){const w=WMAP[word];return w?skillsFor(w,ctx||{}).map(x=>x[0]):[]},
  genPairs(pi){return makePairsQ(PACKS[pi].words)},genSent(i){return makeSentQ(SENT[i])},genGram(i){return makeGramQ(GRAM[i])},
  save(){return SV},reload(){SV=load();renderMenu()},
+ /* spaced review: due list, the word memory as scheduler records, test clock, warm-up */
+ review(){const M=memMap();return Leitner.due(M,today()).map(id=>({id:id,box:M[id].b,due:M[id].d}))},memory(){return memMap()},leitner:Leitner,retries(){return RQ.map(w=>w.w)},
+ plan(){return R?R.T.map(x=>({w:x.w?x.w.w:null,s:x.s||null,rev:x.rev|0,re:!!x.re})):[]},
+ day(){return today()},setDay(n){QADAY=typeof n==='number'&&isFinite(n)&&n>0?Math.floor(n):null;try{if(QADAY===null)sessionStorage.removeItem('kidapp-qa-day');else if(ls.get('kidapp-qa')==='1')sessionStorage.setItem('kidapp-qa-day',String(QADAY))}catch(e){}return today()},
+ warmup(){gest=true;return startWarm()},warmOffer(){return offerWarm()},
  data:{W:W,PACKS:PACKS,SENT:SENT,GRAM:GRAM,OPP:OPP,NODES:NODES}};
 
 /* ---- boot ---- */
 setLang(lang);applyMute();renderMenu();show('scMenu');
+/* first visit of the day with something due: offer the warm-up once (skippable; the menu is right behind it) */
+if(SV.wd!==today()&&warmIds().length)offerWarm();
 addEventListener('load',()=>{TTS.scan();if(cur==='scMenu')renderMenu()});
 })();
 </script>

@@ -135,6 +135,15 @@ html[lang=he] .story{line-height:1.75}
 #pop.on{animation:popA .9s both}@keyframes popA{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.25) rotate(-4deg);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:translateY(-40px);opacity:0}}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
 #fx i{position:absolute;font-style:normal;font-size:24px;will-change:transform}
+/* spaced review: memory pips, "what you can do" rows, the choice of what comes next */
+.pips{display:inline-flex;gap:2px;direction:ltr;vertical-align:middle;flex:none}.pips i{width:8px;height:8px;border-radius:50%;background:#d9d4ea;display:block}.pips i.on{background:#3ecf7a}
+.crs{display:flex;flex-direction:column;gap:5px;margin:6px 0 2px}.crT{font-weight:900;font-size:14px;opacity:.75}
+.cr{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center;text-align:start;background:#fff;border-radius:12px;padding:4px 10px;font-weight:900;font-size:14.5px}
+.cr small{grid-column:1/3;font-weight:700;font-size:12.5px;opacity:.8}.cr .upm{color:#12924a}
+.nx{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.nx .btn{margin:0;font-size:15.5px;padding:4px 8px;min-height:48px;line-height:1.15}
+.nx .btn:first-child{grid-column:1/3;font-size:clamp(18px,5vw,21px);min-height:52px}.nx .btn:last-child:nth-child(even){grid-column:1/3}
+.ask small{display:block;font-size:.72em;font-weight:800;color:var(--pk)}
+#pSkip{background:#fff;border-radius:999px;padding:4px 14px;font-weight:900;font-size:15px;box-shadow:0 3px 0 #0003;min-height:40px;display:inline-flex;align-items:center;flex:none}
 /* desktop */
 .desk #cMenu{max-width:760px;display:grid;grid-template-columns:1fr 1fr;gap:0 18px;align-items:center}
 @media (min-width:700px){.opts.col{grid-template-columns:1fr 1fr 1fr}.opts.col.w4{grid-template-columns:1fr 1fr}}
@@ -645,7 +654,11 @@ Object.keys(RAW).forEach(lang=>{const r=RAW[lang],d=D[lang]={lang:lang,abc:Array
 /* ---- helpers ---- */
 const disp=(lang,x,L)=>lang==='he'&&L>=3?x.p:x.w;
 const pform=(lang,o,L)=>lang==='he'&&L>=3?o.p:o.w;
-function words(lang,L,f){const all=D[lang].W,ok=x=>!f||f(x);let a=all.filter(x=>x.l===L&&ok(x));const b=all.filter(x=>x.l===L-1&&ok(x));if(b.length&&(!a.length||Math.random()<.3))a=b;if(!a.length)a=all.filter(x=>x.l<=L&&ok(x));if(!a.length)a=all.filter(ok);return a}
+/* spaced review can ask for ONE bank item again (hint {id}): a word by its emoji, a sentence / story question by hid(text).
+   WANT is only set while gen() runs with such a hint; a generator that cannot use it simply makes a fresh item. */
+let WANT=null;
+function hid(s){let x=2166136261;s=String(s);for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return 'h'+(x>>>0).toString(36)}
+function words(lang,L,f){const all=D[lang].W,ok=x=>!f||f(x);if(WANT){const m=all.filter(x=>x.e===WANT&&ok(x));if(m.length)return m}let a=all.filter(x=>x.l===L&&ok(x));const b=all.filter(x=>x.l===L-1&&ok(x));if(b.length&&(!a.length||Math.random()<.3))a=b;if(!a.length)a=all.filter(x=>x.l<=L&&ok(x));if(!a.length)a=all.filter(ok);return a}
 const poolOf=(lang,L)=>D[lang].W.filter(x=>x.l<=Math.max(2,L));
 function confused(a,b){if(a===b)return true;for(const g of CONFUSE)if(g.indexOf(a)>=0&&g.indexOf(b)>=0)return true;return false}
 function near(lang,x,pool,L,n){const k=norm(x.p);return shuffle(pool.filter(y=>y!==x).map(y=>[y,lev(k,norm(y.p))+(y.p[0]===x.p[0]?-.6:0)+Math.random()*.9]).sort((a,b)=>a[1]-b[1]).slice(0,n+2).map(a=>a[0])).slice(0,n)}
@@ -666,7 +679,7 @@ const LV={
   const x=pick(words(lang,L,ok)),f=x.p.toLowerCase()[0],form=disp(lang,x,L);
   const bad={};d.W.forEach(y=>{if(y!==x&&confused(x.e,y.e))bad[y.p.toLowerCase()[0]]=1});
   const ds=shuffle(A.filter(y=>y!==f&&!bad[y]&&(lang==='he'?!sameSound(y,f):(CONF[f]||'').indexOf(y)<0&&'hxyq'.indexOf(y)<0)));
-  return mk({ask:'first',emoji:x.e,text:show?form:null,optT:'let',explain:form+' '+x.e,say:form},f,ds)},
+  return mk({ask:'first',iid:x.e,emoji:x.e,text:show?form:null,optT:'let',explain:form+' '+x.e,say:form},f,ds)},
  syl(lang,L){const d=D.he,P=d.W.filter(x=>x.l<=2&&x.s.length>=2),x=pick(P),a=x.s[0],f=strip(a)[0];
   const ds=shuffle(P).filter(y=>!sameSound(strip(y.s[0])[0],f)&&!confused(x.e,y.e)).map(y=>y.s[0]);
   return mk({ask:'syl',emoji:x.e,optT:'let',explain:x.s.join('־')+' '+x.e,say:x.w},a,ds)},
@@ -693,14 +706,14 @@ function gBuild(lang,L){const d=D[lang],nd=[0,1,2,3][L-1],maxLen=[4,5,7,14][L-1]
   if(lang==='he'){const pri=[];Array.from(x.p).forEach(c=>{Array.from(grp(SOUND,c)).concat(Array.from(grp(LOOK,c))).forEach(y=>{if(!has[FIN[y]||y]&&!FIN[y]&&pri.indexOf(y)<0)pri.push(y)})});cand=shuffle(pri).concat(shuffle(cand.filter(c=>pri.indexOf(c)<0)))}else cand=shuffle(cand);
   extra=cand.slice(0,nd)}
  const form=disp(lang,x,L);
- return mkTiles({ask:mode==='syl'?'buildSyl':'build',mode:mode,emoji:x.e,answer:form,explain:form+' '+x.e,say:form},units,extra,'')}
+ return mkTiles({ask:mode==='syl'?'buildSyl':'build',iid:x.e,mode:mode,emoji:x.e,answer:form,explain:form+' '+x.e,say:form},units,extra,'')}
 
 /* ---- rung 3: word <-> picture ---- */
 function gPic(lang,L){const x=pick(words(lang,L)),form=disp(lang,x,L),P=poolOf(lang,L).filter(y=>y!==x&&!confused(x.e,y.e));
  if(Math.random()<[.7,.5,.4,.4][L-1]){const ds=(L>=3?shuffle(P.filter(y=>y.c===x.c)).concat(shuffle(P)):shuffle(P.filter(y=>y.c!==x.c)).concat(shuffle(P))).map(y=>y.e);
-  const q=mk({ask:'w2p',big:form,bigT:'word',optT:'emo',explain:form+' '+x.e,say:form},x.e,ds);if(q)q.variant='w2p';return q}
+  const q=mk({ask:'w2p',iid:x.e,big:form,bigT:'word',optT:'emo',explain:form+' '+x.e,say:form},x.e,ds);if(q)q.variant='w2p';return q}
  const ds=(L>=3?near(lang,x,P,L,3):L===2?shuffle(P.filter(y=>y.p[0]===x.p[0])).concat(shuffle(P)):shuffle(P)).map(y=>disp(lang,y,L));
- const q=mk({ask:'p2w',emoji:x.e,optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,ds);if(q)q.variant='p2w';return q}
+ const q=mk({ask:'p2w',iid:x.e,emoji:x.e,optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,ds);if(q)q.variant='p2w';return q}
 
 /* ---- rung 4: missing letter ---- */
 function gMissing(lang,L){const d=D[lang],x=pick(words(lang,L,w=>/^[^ '\-]+$/.test(w.p)));let pre,post,a,ds;const form=disp(lang,x,L);
@@ -715,7 +728,7 @@ function gMissing(lang,L){const d=D[lang],x=pick(words(lang,L,w=>/^[^ '\-]+$/.te
   const i=pick(cand);a=ch[i];pre=ch.slice(0,i).join('');post=ch.slice(i+1).join('');
   const acc=lang==='fr'&&L>=3?Array.from(ACC[a]||''):[];const cls=d.abc.filter(y=>y!==a&&isV(y)===isV(a)&&(CONF[a]||'').indexOf(y)<0);
   ds=shuffle(acc).slice(0,2).concat(shuffle(cls),shuffle(d.abc.filter(y=>y!==a)))}
- return mk({ask:'missing',emoji:x.e,pre:pre,post:post,optT:'let',explain:form+' '+x.e,say:form},a,ds)}
+ return mk({ask:'missing',iid:x.e,emoji:x.e,pre:pre,post:post,optT:'let',explain:form+' '+x.e,say:form},a,ds)}
 
 /* ---- rung 5: rhymes ---- */
 function gRhyme(lang,L){const d=D[lang],G=d.RH.filter(g=>L>=3||g.l===1),g=pick(G),f=o=>pform(lang,o,L),O=G.filter(h=>h.fam!==g.fam);
@@ -725,21 +738,22 @@ function gRhyme(lang,L){const d=D[lang],G=d.RH.filter(g=>L>=3||g.l===1),g=pick(G
  const q=mk({ask:'rhyme',big:two[0],bigT:'word',optT:'word',explain:two[0]+' – '+two[1],say:two[0]},two[1],ds);if(q)q.variant='rhyme';return q}
 
 /* ---- rung 6: sentence with a missing word ---- */
-function sents(lang,L,f){const S=D[lang].S,ok=s=>!f||f(s);let a=S.filter(s=>s.l===L&&ok(s));const b=S.filter(s=>s.l===L-1&&ok(s));if(b.length&&(!a.length||Math.random()<.25))a=b;if(!a.length)a=S.filter(s=>s.l<=L&&ok(s));return a}
-function gCloze(lang,L){const s=pick(sents(lang,L));return mk({ask:'cloze',pre:s.pre,post:s.post,sent:true,optT:'word',explain:s.full,say:s.pre+' … '+s.post,key:'c'+s.full},s.opts[0],shuffle(s.opts.slice(1)))}
+function sents(lang,L,f){const S=D[lang].S,ok=s=>!f||f(s);if(WANT){const m=S.filter(s=>hid(s.full)===WANT&&ok(s));if(m.length)return m}let a=S.filter(s=>s.l===L&&ok(s));const b=S.filter(s=>s.l===L-1&&ok(s));if(b.length&&(!a.length||Math.random()<.25))a=b;if(!a.length)a=S.filter(s=>s.l<=L&&ok(s));return a}
+function gCloze(lang,L){const s=pick(sents(lang,L));return mk({ask:'cloze',pre:s.pre,post:s.post,sent:true,optT:'word',explain:s.full,say:s.pre+' … '+s.post,key:'c'+s.full,iid:hid(s.full)},s.opts[0],shuffle(s.opts.slice(1)))}
 
 /* ---- rung 7: scrambled sentence ---- */
 function gOrder(lang,L){const mx=[5,7,9,11][L-1],P=sents(lang,L,s=>s.ord&&s.tok.length>=3&&s.tok.length<=mx);if(!P.length)return null;const s=pick(P);
- return mkTiles({ask:'order',mode:'word',answer:s.full,explain:s.full,say:null,sayAfter:s.full,key:'o'+s.full},s.tok.slice(),[],' ')}
+ return mkTiles({ask:'order',mode:'word',answer:s.full,explain:s.full,say:null,sayAfter:s.full,key:'o'+s.full,iid:hid(s.full)},s.tok.slice(),[],' ')}
 
 /* ---- rung 8: short story + questions ---- */
 function storyIds(lang,L){const T=D[lang].T,a=[];T.forEach((s,i)=>{if(s.l===L)a.push(i)});const b=[];T.forEach((s,i)=>{if(s.l===L-1||(L===1&&s.l===2))b.push(i)});return shuffle(a).concat(shuffle(b))}
-function gStory(lang,L,h){const T=D[lang].T;let si=h&&h.story!=null?h.story:storyIds(lang,L)[0];const s=T[si],qi=h&&h.qi!=null?h.qi%s.q.length:rnd(s.q.length),r=s.q[qi];
- const q=mk({ask:'story',story:s.t,question:r[0],optT:'text',explain:r[1],say:s.t,key:'s'+si+'.'+qi,si:si,qi:qi},r[1],shuffle(r.slice(2)),3);return q}
+function gStory(lang,L,h){const T=D[lang].T;if(WANT&&h&&h.story==null){h=null;T.forEach((s,i)=>s.q.forEach((r,j)=>{if(!h&&hid(r[0])===WANT)h={story:i,qi:j}}))}
+ let si=h&&h.story!=null?h.story:storyIds(lang,L)[0];const s=T[si],qi=h&&h.qi!=null?h.qi%s.q.length:rnd(s.q.length),r=s.q[qi];
+ const q=mk({ask:'story',story:s.t,question:r[0],optT:'text',explain:r[1],say:s.t,key:'s'+si+'.'+qi,si:si,qi:qi,iid:hid(r[0])},r[1],shuffle(r.slice(2)),3);return q}
 
 /* ---- rung 9: flash reading ---- */
 function gFlash(lang,L){const x=pick(words(lang,L)),form=disp(lang,x,L),P=D[lang].W.filter(y=>y.l<=L+1&&y!==x);
- return mk({ask:'flash',big:form,bigT:'word',flash:[1700,1200,850,550][L-1],optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,near(lang,x,P,L,3).map(y=>disp(lang,y,L)))}
+ return mk({ask:'flash',iid:x.e,big:form,bigT:'word',flash:[1700,1200,850,550][L-1],optT:'word',explain:form+' '+x.e,say:null,sayAfter:form},form,near(lang,x,P,L,3).map(y=>disp(lang,y,L)))}
 
 /* ---- rung 10: opposites, synonyms, word families ---- */
 const RV={
@@ -758,11 +772,12 @@ function gRelate(lang,L){const v=pick([['opp','oddcat'],['opp','opp','oddcat'],[
 
 const GEN={letters:gLetters,build:gBuild,picture:gPic,missing:gMissing,rhyme:gRhyme,cloze:gCloze,order:gOrder,story:gStory,flash:gFlash,relate:gRelate};
 function gen(rung,level,lang,hint){const id=typeof rung==='number'?RUNGS[rung-1]:rung,n=RUNGS.indexOf(id)+1;if(!n||!D[lang])return null;const L=Math.max(1,Math.min(4,Math.round(+level)||1));
- for(let g=0;g<60;g++){let q=null;try{q=GEN[id](lang,L,hint)}catch(e){q=null}if(!q)continue;q.rung=id;q.n=n;q.skill='read_'+id;q.level=L;q.lang=lang;
-  if(!q.key)q.key=id+'|'+(q.variant||'')+'|'+(q.big||'')+'|'+(q.emoji||'')+'|'+(q.answer||(q.opts?q.opts[q.correct]:''));return q}
+ WANT=hint&&typeof hint.id==='string'&&hint.id?hint.id:null;
+ try{for(let g=0;g<60;g++){let q=null;try{q=GEN[id](lang,L,hint)}catch(e){q=null}if(!q)continue;q.rung=id;q.n=n;q.skill='read_'+id;q.level=L;q.lang=lang;q.iid=q.iid||null;
+  if(!q.key)q.key=id+'|'+(q.variant||'')+'|'+(q.big||'')+'|'+(q.emoji||'')+'|'+(q.answer||(q.opts?q.opts[q.correct]:''));return q}}finally{WANT=null}
  return null}
 function counts(lang){const d=D[lang];return{words:d.W.length,sentences:d.S.length,stories:d.T.length,questions:d.T.reduce((a,s)=>a+s.q.length,0),rhymeGroups:d.RH.length,rhymeWords:d.RH.reduce((a,g)=>a+g.w.length,0),opposites:d.OPP.length,synonyms:d.SYN.length,families:d.FAM.length,spell:d.SPELL.length}}
-return{D:D,RUNGS:RUNGS,gen:gen,voc:voc,storyIds:storyIds,counts:counts,strip:strip,norm:norm,clusters:clusters,confused:confused,LNAME:LNAME,SOUND:SOUND,FIN:FIN};
+return{D:D,RUNGS:RUNGS,gen:gen,hid:hid,voc:voc,storyIds:storyIds,counts:counts,strip:strip,norm:norm,clusters:clusters,confused:confused,LNAME:LNAME,SOUND:SOUND,FIN:FIN};
 })();
 </script>
 <script>
@@ -783,18 +798,27 @@ he:{title:'סולם הקריאה',sub:'מטפסים שלב אחרי שלב – �
  q_same:['מצאי את אותה האות','מצא את אותה האות','מצאו את אותה האות'],q_first:'באיזו אות המילה מתחילה?',q_syl:'באיזו הברה המילה מתחילה?',q_final:'איזו אות חסרה בסוף המילה?',q_name:'איזו אות זו?',q_after:'איזו אות באה מיד אחרי האות הזאת?',q_before:'איזו אות באה מיד לפני האות הזאת?',q_spell:'איזו מילה כתובה נכון?',
  q_build:['בני את המילה','בנה את המילה','בנו את המילה'],q_buildSyl:['בני את המילה מההברות','בנה את המילה מההברות','בנו את המילה מההברות'],q_w2p:'איזו תמונה מתאימה למילה?',q_p2w:'איזו מילה מתאימה לתמונה?',q_missing:'איזו אות חסרה?',q_rhyme:'איזו מילה מתחרזת עם המילה הזאת?',q_rhymeOdd:'איזו מילה לא מתחרזת עם האחרות?',q_cloze:'איזו מילה חסרה במשפט?',
  q_order:['סדרי את המילים למשפט','סדר את המילים למשפט','סדרו את המילים למשפט'],q_story:['קראי את הסיפור ועני','קרא את הסיפור וענה','קראו את הסיפור וענו'],q_flash:['הסתכלי טוב! איזו מילה הופיעה?','הסתכל טוב! איזו מילה הופיעה?','הסתכלו טוב! איזו מילה הופיעה?'],q_opp:'מה ההפך?',q_syn:'איזו מילה דומה במשמעות?',q_fam:'איזו מילה שייכת לאותה משפחת מילים?',q_oddcat:'איזו מילה לא שייכת לקבוצה?',
+ wT:'חימום קצר 🧠',wS:['{n} שאלות קצרות ממה שכבר למדת. בלי שעון ובלי ניקוד.','{n} שאלות קצרות ממה שכבר למדת. בלי שעון ובלי ניקוד.','{n} שאלות קצרות ממה שכבר למדתם. בלי שעון ובלי ניקוד.'],wS1:['שאלה קצרה אחת ממה שכבר למדת. בלי שעון ובלי ניקוד.','שאלה קצרה אחת ממה שכבר למדת. בלי שעון ובלי ניקוד.','שאלה קצרה אחת ממה שכבר למדתם. בלי שעון ובלי ניקוד.'],wGo:'▶ יאללה',wSkip:['⏭ דלגי','⏭ דלג','⏭ דלגו'],fromB:'🕰️ מפעם קודמת',revTag:'🔁 חזרה',wDone:'החימום הושלם!',
+ wRem:['עדיין זוכרת {n} מתוך {m} {w} 💪','עדיין זוכר {n} מתוך {m} {w} 💪','עדיין זוכרים {n} מתוך {m} {w} 💪'],wW0:'מאתמול',wW1:'מלפני כמה ימים',wW2:'מהשבוע שעבר',wNone:'אלה עוד צריכות קצת תרגול. נחזור אליהן מחר 🙂',
+ canDo:['מה את כבר יודעת:','מה אתה כבר יודע:','מה אתם כבר יודעים:'],stSolid:'יושב חזק 💪',stNear:'בדרך הנכונה · עוד {k} כדי לנעול',stNew:'עוד חדש · נחזור לזה בקרוב',nxWeak:'💪 לחזק: {s}',nxLad:'🧗 להמשיך בסולם',nxFree:'🎲 בחירה חופשית',
  teach:'כמעט! זו התשובה:',gotit:'הבנתי ➜',praise:['יפה!','מעולה!','וואו!','מדהים!',['אלופה!','אלוף!','אלופים!']],again:'שוב',next:'לשלב הבא ➜',ladder:'לסולם',menu:'לתפריט',r3:'מושלם!',r2:'כל הכבוד!',r1:'יפה מאוד!',r0:'כמעט! עוד ניסיון קטן?',of:'{a} מתוך {b}',dailyDone:'10 יומי הושלם!',streak:'{n} ימים ברצף',paused:'הפסקה',resume:'להמשיך',quit:'לצאת לתפריט',lvUp:'רמה {n} נפתחה!',lvDown:'נתרגל קצת ברמה {n} ונחזור',look:'להציץ שוב',listen:'הקראה',voice:'קול ההקראה',top:['הגעת לראש הסולם!','הגעת לראש הסולם!','הגעתם לראש הסולם!'],go:'יאללה!'},
 fr:{title:'L’échelle de lecture',sub:['Grimpe barreau après barreau et lis comme une grande !','Grimpe barreau après barreau et lis comme un grand !','Grimpe barreau après barreau : lire, c’est gagné !'],hi:'Salut {n} !',mLadder:'L’échelle',mDaily:'10 du jour',mFree:'Entraînement libre',mFreeS:'sans étoiles, sans pression',doneT:'fait aujourd’hui',mix:'un peu de tout',lvl:'Niveau',rung:'Barreau',
  locked:'Termine d’abord le barreau du dessous',lockedLv:'Ce niveau est encore fermé : continue de grimper !',freeT:'Choisis ce que tu veux travailler',ladT:'On grimpe de bas en haut',
  q_case:'Trouve la même lettre',q_first:'Par quelle lettre commence le mot ?',q_after:'Quelle lettre vient juste après ?',q_before:'Quelle lettre vient juste avant ?',q_spell:'Quel mot est bien écrit ?',q_digraph:'Dans quel mot vois-tu ces lettres ?',
  q_build:'Écris le mot avec les lettres',q_buildSyl:'Forme le mot avec les syllabes',q_w2p:'Quelle image va avec le mot ?',q_p2w:'Quel mot va avec l’image ?',q_missing:'Quelle lettre manque ?',q_rhyme:'Quel mot rime avec celui-ci ?',q_rhymeOdd:'Quel mot ne rime pas avec les autres ?',q_cloze:'Quel mot manque dans la phrase ?',
  q_order:'Remets les mots dans l’ordre',q_story:'Lis l’histoire et réponds',q_flash:'Regarde bien ! Quel mot as-tu vu ?',q_opp:'Quel est le contraire ?',q_syn:'Quel mot veut dire la même chose ?',q_fam:'Quel mot est de la même famille ?',q_oddcat:'Quel est l’intrus ?',
+ wT:'Petit échauffement 🧠',wS:'{n} petites questions sur ce que tu connais déjà. Sans chrono, sans points.',wS1:'Une petite question sur ce que tu connais déjà. Sans chrono, sans points.',wGo:'▶ C’est parti',wSkip:'⏭ Passer',fromB:'🕰️ Déjà vu',revTag:'🔁 Révision',wDone:'Échauffement terminé !',
+ wRem:'Tu te souviens encore de {n} sur {m} {w} 💪',wW0:'d’hier',wW1:'d’il y a quelques jours',wW2:'de la semaine dernière',wNone:'Celles-ci demandent encore un peu d’entraînement. On y reviendra demain 🙂',
+ canDo:'Ce que tu sais faire maintenant :',stSolid:'solide 💪',stNear:'ça vient · encore {k} pour le fixer',stNew:'encore nouveau · on y reviendra bientôt',nxWeak:'💪 Renforcer : {s}',nxLad:'🧗 Continuer l’échelle',nxFree:'🎲 Choix libre',
  teach:'Presque ! Voici la réponse :',gotit:'Compris ➜',praise:['Bien !','Super !','Waouh !','Génial !','Bravo !'],again:'Rejouer',next:'Barreau suivant ➜',ladder:'L’échelle',menu:'Menu',r3:'Parfait !',r2:'Bravo !',r1:'Bien joué !',r0:'Presque ! On réessaie ?',of:'{a} sur {b}',dailyDone:'10 du jour terminé !',streak:'{n} jours de suite',paused:'Pause',resume:'Continuer',quit:'Quitter',lvUp:'Niveau {n} débloqué !',lvDown:'On s’entraîne un peu au niveau {n}',look:'Revoir',listen:'Écouter',voice:'Voix de lecture',top:'Tu es tout en haut de l’échelle !',go:'C’est parti !'},
 en:{title:'Reading Ladder',sub:'Climb rung by rung and read like a pro!',hi:'Hi {n}!',mLadder:'Ladder',mDaily:'Daily 10',mFree:'Free practice',mFreeS:'no stars, no pressure',doneT:'done today',mix:'a bit of everything',lvl:'Level',rung:'Rung',
  locked:'Finish the rung below first',lockedLv:'This level is still locked – keep climbing!',freeT:'Pick what you want to practice',ladT:'Climb from the bottom to the top',
  q_case:'Find the matching letter',q_first:'Which letter does the word start with?',q_after:'Which letter comes right after this one?',q_before:'Which letter comes right before this one?',q_spell:'Which one is spelled correctly?',q_digraph:'Which word has these letters in it?',
  q_build:'Spell the word',q_buildSyl:'Build the word from its parts',q_w2p:'Which picture matches the word?',q_p2w:'Which word matches the picture?',q_missing:'Which letter is missing?',q_rhyme:'Which word rhymes with this one?',q_rhymeOdd:'Which word does NOT rhyme with the others?',q_cloze:'Which word is missing?',
  q_order:'Put the words in order',q_story:'Read the story and answer',q_flash:'Look closely! Which word did you see?',q_opp:'What is the opposite?',q_syn:'Which word means the same?',q_fam:'Which word is from the same word family?',q_oddcat:'Which one does not belong?',
+ wT:'Quick warm-up 🧠',wS:'{n} quick ones from before. No clock, no points.',wS1:'One quick one from before. No clock, no points.',wGo:'▶ Let’s go',wSkip:'⏭ Skip',fromB:'🕰️ From before',revTag:'🔁 Review',wDone:'Warm-up done!',
+ wRem:'You still remember {n} of {m} from {w} 💪',wW0:'yesterday',wW1:'a few days ago',wW2:'last week',wNone:'These need a little more practice. We’ll bring them back tomorrow 🙂',
+ canDo:'What you can do now:',stSolid:'solid 💪',stNear:'getting there · {k} more to lock it in',stNew:'still new · we’ll come back to it soon',nxWeak:'💪 Strengthen: {s}',nxLad:'🧗 Continue the ladder',nxFree:'🎲 Free choice',
  teach:'Almost! Here is the answer:',gotit:'Got it ➜',praise:['Nice!','Great!','Wow!','Amazing!','Super reader!'],again:'Again',next:'Next rung ➜',ladder:'Ladder',menu:'Menu',r3:'Perfect!',r2:'Well done!',r1:'Good job!',r0:'Almost! One more try?',of:'{a} out of {b}',dailyDone:'Daily 10 complete!',streak:'{n} days in a row',paused:'Paused',resume:'Resume',quit:'Quit to menu',lvUp:'Level {n} unlocked!',lvDown:'Let’s practice level {n} for a bit',look:'Look again',listen:'Read aloud',voice:'Read-aloud voice',top:'You reached the top of the ladder!',go:'Let’s go!'}};
 let lang=ls.get('annabelle-lang')||'he';if(!TX[lang])lang='he';
 const LI={he:1,fr:2,en:3},VOICE={he:['he-IL',/^(he|iw)([-_]|$)/i],fr:['fr-FR',/^fr([-_]|$)/i],en:['en-US',/^en([-_]|$)/i]};
@@ -810,14 +834,46 @@ function t(k,o){let s=TX[lang][k];if(s==null)s=TX.en[k];if(s==null)return'';if(A
 function setLang(l){lang=TX[l]?l:'he';ls.set('annabelle-lang',lang);document.documentElement.lang=lang;document.documentElement.dir=lang==='he'?'rtl':'ltr';document.title=t('title');refreshSpk()}
 const rname=r=>RI[r-1][LI[lang]];
 
-/* ---- save: {v, L:{he|fr|en:{st:{'rung.level':stars}, lv, mx, ad}}, streak:[n,day]} ---- */
-function load(){let s=null;try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}if(!s||typeof s!=='object'||Array.isArray(s))s={};s.v=1;if(!s.L||typeof s.L!=='object'||Array.isArray(s.L))s.L={};if(!Array.isArray(s.streak)||s.streak.length<2)s.streak=[0,0];s.streak=[+s.streak[0]||0,+s.streak[1]||0];return s}
+/*LEITNER*/
+/* ============ spaced review memory (Leitner boxes; pure, no DOM; the same block lives in mathquest, thinking and sciencelab) ============
+   map: {unitId:{b:box 1..5, d:day it is due, r:right, w:wrong, l:last day seen}}.  A right answer on a DUE unit moves it up one box and
+   schedules it IV[box] days ahead; a right answer that is not due yet only counts (no cramming up the boxes in one sitting);
+   a miss sends it back to box 1, due tomorrow. */
+const Leitner=(function(){
+ const IV=[1,2,4,8,16],MAXB=5,ok=v=>typeof v==='number'&&isFinite(v),ci=(v,a,b,d)=>ok(v)?Math.max(a,Math.min(b,Math.floor(v))):d;
+ function clean(raw,valid,day,cap){const o={};if(!raw||typeof raw!=='object'||Array.isArray(raw)||!ok(day))return o;let n=0;
+  for(const id of Object.keys(raw)){if(n>=(cap||400))break;let v=false;try{v=!!valid(id)}catch(e){}if(!v)continue;const r=raw[id];if(!r||typeof r!=='object'||Array.isArray(r))continue;
+   const b=ci(r.b,1,MAXB,1);o[id]={b:b,d:ci(r.d,0,day+IV[b-1],day+1),r:ci(r.r,0,1e6,0),w:ci(r.w,0,1e6,0),l:ci(r.l,0,day,day)};n++}
+  return o}
+ function answer(map,id,right,day){let r=map[id];const fresh=!r;if(!r)r=map[id]={b:1,d:day+1,r:0,w:0,l:day};const from=fresh?0:r.b,wasDue=!fresh&&r.d<=day,gap=fresh?0:Math.max(0,day-r.l);
+  if(right){r.r++;if(wasDue){r.b=Math.min(MAXB,r.b+1);r.d=day+IV[r.b-1]}}else{r.w++;r.b=1;r.d=day+1}
+  r.l=day;return{id:id,ok:!!right,fresh:fresh,from:from,to:r.b,up:!fresh&&r.b>from,due:wasDue,gap:gap,retry:!right}}
+ function due(map,day){return Object.keys(map).filter(id=>map[id].d<=day).sort((a,b)=>map[a].d-map[b].d||map[a].l-map[b].l||map[a].b-map[b].b||(a<b?-1:a>b?1:0))}
+ /* up to n (never more than 5) due units, oldest first, but never two of one topic in a row while another topic is waiting (interleaving) */
+ function pick(map,day,n,topic,fit){n=Math.max(0,Math.min(5,Math.floor(n)||0));const pool=due(map,day).filter(id=>!fit||fit(id)),out=[];let last=null;
+  while(out.length<n&&pool.length){let i=pool.findIndex(id=>topic(id)!==last);if(i<0)i=0;const id=pool.splice(i,1)[0];out.push(id);last=topic(id)}return out}
+ /* the unit that most needs practice: lowest box, then most misses, then seen longest ago (null when everything is in the top box) */
+ function weakest(map,fit){let best=null;for(const id of Object.keys(map)){if(fit&&!fit(id))continue;const r=map[id];if(r.b>=MAXB)continue;
+   if(!best||r.b<map[best].b||(r.b===map[best].b&&(r.w-r.r>map[best].w-map[best].r||(r.w-r.r===map[best].w-map[best].r&&r.l<map[best].l))))best=id}return best}
+ return{IV:IV,MAXB:MAXB,clean:clean,answer:answer,due:due,pick:pick,weakest:weakest}})();
+/*/LEITNER*/
+/* test clock: only honoured on a QA device (localStorage kidapp-qa=1); production always uses the real local day */
+let QADAY=null;try{if(ls.get('kidapp-qa')==='1'){const v=+sessionStorage.getItem('kidapp-qa-day');if(v>0)QADAY=Math.floor(v)}}catch(e){}
+/* a review unit = rung:level of the current reading language ("3:2"); rung 9 (flash) is timed by nature, so it is never woven in or warmed up */
+const uid=(r,l)=>r+':'+l,uR=id=>+String(id).split(':')[0],uL=id=>+String(id).split(':')[1],validU=id=>/^([1-9]|10):[1-4]$/.test(id),FLASH=9;
+let RQ=[]; /* same-session retries that did not fit in the round where the miss happened */
+function cleanMap(raw,val){const o={};if(!raw||typeof raw!=='object'||Array.isArray(raw))return o;Object.keys(raw).slice(0,200).forEach(id=>{if(!validU(id))return;const v=val(raw[id]);if(v)o[id]=v});return o}
+/* ---- save: {v, L:{he|fr|en:{st:{'rung.level':stars}, lv, mx, ad, rev, rm, ms}}, streak:[n,day], wd} ----
+   added for spaced review (older saves simply lack them): rev = review memory per unit, rm = the bank item last missed in a unit
+   (so that word / sentence itself comes back), ms = units whose mastery was already reported, wd = day of the last warm-up offer */
+function load(){let s=null;try{s=JSON.parse(ls.get(KEY)||'null')}catch(e){}if(!s||typeof s!=='object'||Array.isArray(s))s={};s.v=1;if(!s.L||typeof s.L!=='object'||Array.isArray(s.L))s.L={};if(!Array.isArray(s.streak)||s.streak.length<2)s.streak=[0,0];s.streak=[+s.streak[0]||0,+s.streak[1]||0];s.wd=Math.max(0,Math.floor(+s.wd)||0);
+ Object.keys(s.L).forEach(l=>{const p=s.L[l];if(!p||typeof p!=='object'||Array.isArray(p))return;p.rev=Leitner.clean(p.rev,validU,today(),40);p.rm=cleanMap(p.rm,v=>typeof v==='string'&&v&&v.length<=40?v:0);p.ms=cleanMap(p.ms,v=>v?1:0)});return s}
+function today(){if(QADAY!==null)return QADAY;const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)-20000}
 let SV=load();
 function save(){ls.set(KEY,JSON.stringify(SV))}
-const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)-20000};
 function startLevel(){const p=prof(),sk=p.lv>=1&&p.lv<=4?Math.round(p.lv):0;let L;if(p.age>=3){L=p.age<=6?1:p.age<=8?2:3;if(p.age>6){if(sk===1)L--;if(sk===4&&p.age>=10)L++}}else L=sk?Math.min(3,sk):2;return clamp(L,1,4)}
 function P(){let p=SV.L[lang];if(!p||typeof p!=='object'||Array.isArray(p))p=SV.L[lang]={};if(!p.st||typeof p.st!=='object'||Array.isArray(p.st))p.st={};
- p.lv=clamp(Math.round(+p.lv)||0,0,4);if(!p.lv){p.lv=startLevel();p.mx=p.lv}p.mx=clamp(Math.max(Math.round(+p.mx)||0,p.lv),1,4);p.ad=clamp(+p.ad||0,-1.5,1.5);return p}
+ p.lv=clamp(Math.round(+p.lv)||0,0,4);if(!p.lv){p.lv=startLevel();p.mx=p.lv}p.mx=clamp(Math.max(Math.round(+p.mx)||0,p.lv),1,4);p.ad=clamp(+p.ad||0,-1.5,1.5);if(!p.rev)p.rev={};if(!p.rm)p.rm={};if(!p.ms)p.ms={};return p}
 const star=(r,k)=>clamp(Math.round(+P().st[r+'.'+k])||0,0,3);
 function starsAll(){let s=0;for(let k=1;k<=4;k++)for(let r=1;r<=NR;r++)s+=star(r,k);return s}
 const lvStars=k=>{let s=0;for(let r=1;r<=NR;r++)s+=star(r,k);return s};
@@ -853,7 +909,7 @@ const TTS={v:null,log:0,
  stop(){const S=SAY();if(S){S.stop();return}try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}};
 function refreshSpk(){const has=TTS.has(),ok=TTS.ok;[].forEach.call(document.querySelectorAll('.spk'),b=>{b.hidden=!has;b.classList.toggle('off',!ok)})}
 /* one friendly "how to add a voice" card (once per device) when the reading language cannot be spoken here */
-function voiceCheck(){const S=SAY();if(!S||CFG.tts!=null||cur!=='scMenu'||document.hidden)return;try{if(S.state(lang).settled&&!S.can(lang))S.hint(lang,{once:true})}catch(e){}}
+function voiceCheck(){const S=SAY();if(!S||CFG.tts!=null||cur!=='scMenu'||document.hidden||$('ovRes').classList.contains('on'))return;try{if(S.state(lang).settled&&!S.can(lang))S.hint(lang,{once:true})}catch(e){}}
 if(SAY()){Say.onchange(()=>{refreshSpk();voiceCheck()})}
 else try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',refreshSpk)}catch(e){}
 /* words of a text as <span class=w>, in the same order say.js counts them, so the spoken word can be highlighted */
@@ -880,24 +936,33 @@ function closeTeach(){teachOpen=false;$('ovTeach').classList.remove('on')}
 function closeAll(){closeTeach();$('ovPause').classList.remove('on');$('ovRes').classList.remove('on')}
 function hud(){const m=$('tMid');m.textContent='';
  if(cur==='scPlay'&&R){const pr=h('div',{id:'prog'},h('b'));pr.firstChild.style.width=Math.round(100*R.i/Math.max(1,R.plan.length))+'%';m.appendChild(pr);
+  if(R.mode==='warm'){m.appendChild(h('button',{id:'pSkip',type:'button',text:t('wSkip'),click:()=>{gest=true;SFX.click();toMenu()}}));return}
   m.appendChild(h('div',{cls:'pill',id:'pOk',text:'⭐ '+R.ok}));m.appendChild(h('div',{cls:'pill',id:'pLv',text:(R.mode==='ladder'?RI[R.rung-1][0]+' ':'')+t('lvl')+' '+(Q?Q.level:R.level)}))}
  else m.appendChild(h('div',{cls:'pill',text:'📚 '+t('title')}))}
 function buildPlan(mode,r,L){const a=[];
  if(mode==='daily')shuffle([1,2,3,4,5,6,7,8,9,10]).forEach(n=>a.push({r:n}));
  else if(r===8)C.storyIds(lang,L).slice(0,4).forEach(si=>{const n=C.D[lang].T[si].q.length,qs=shuffle(Array.from({length:n},(x,i)=>i)).slice(0,2).sort();qs.forEach(qi=>a.push({r:8,h:{story:si,qi:qi}}))});
  else for(let i=0;i<8;i++)a.push({r:r});return a}
-function startRound(mode,r,L){clearTimeout(pendT);clearTimeout(flT);closeAll();TTS.stop();$('fx').textContent='';const p=P();
- mode=mode==='daily'||mode==='free'?mode:'ladder';r=clamp(Math.round(+r)||1,1,NR);
- L=mode==='ladder'?clamp(Math.round(+L)||selLv||p.lv,1,4):baseLevel();
- R={mode:mode,rung:mode==='daily'?0:r,level:L,plan:buildPlan(mode,r,L),i:0,ok:0,combo:0,maxC:0,dif:0,run:0,miss:0,keys:{},t0:Date.now(),done:false,paused:false,res:null};
- award({event:'play'});track('game_start',{mode:mode,rung:R.rung,level:L});show('scPlay');nextQ()}
-const itemLevel=()=>R.mode==='ladder'?R.level:clamp(R.level+R.dif,1,4);
+const slot=id=>{const hn=P().rm[id];return{r:uR(id),L:uL(id),h:hn?{id:hn}:null,rev:1}};
+/* spaced review woven in: about one due unit per 5 items, REPLACING a slot (the round is not longer), plus a retry that was left over from the last round.
+   Never in a flash round (rung 9) and never a flash unit. The due unit keeps its own level and does not move the in-round difficulty. */
+function weave(){const pl=R.plan;if(R.rung===FLASH||pl.length<5)return;const cur=R.mode==='ladder'?uid(R.rung,R.level):'';
+ const ri=RQ.findIndex(x=>x.lang===lang);if(ri>=0){const x=RQ.splice(ri,1)[0];pl[2]={r:x.r,L:x.L,h:x.h,rev:2,avoid:x.avoid}}
+ Leitner.pick(P().rev,today(),R.mode==='daily'?2:1,uR,id=>id!==cur&&uR(id)!==FLASH).forEach((id,k)=>{const at=k?8:4;if(at<pl.length)pl[at]=slot(id)})}
+function startRound(mode,r,L,fix){if(mode==='warm')return startWarm();clearTimeout(pendT);clearTimeout(flT);closeAll();TTS.stop();$('fx').textContent='';const p=P();
+ mode=mode==='daily'||mode==='free'?mode:'ladder';r=clamp(Math.round(+r)||1,1,NR);fix=mode==='free'&&!!fix&&+L>=1;
+ L=mode==='ladder'?clamp(Math.round(+L)||selLv||p.lv,1,4):fix?clamp(Math.round(+L),1,4):baseLevel(); /* fix = "strengthen this unit": free practice at the unit's own level */
+ R={mode:mode,rung:mode==='daily'?0:r,level:L,plan:buildPlan(mode,r,L),i:0,ok:0,combo:0,maxC:0,dif:0,run:0,miss:0,keys:{},t0:Date.now(),done:false,paused:false,res:null,sk:{},wres:[],fix:fix,due:0};
+ weave();award({event:'play'});track('game_start',{mode:mode,rung:R.rung,level:L});show('scPlay');nextQ()}
+const itemLevel=()=>R.mode==='ladder'||R.fix?R.level:clamp(R.level+R.dif,1,4);
 function nextQ(){clearTimeout(pendT);pendT=0;clearTimeout(flT);closeTeach();if(!R||R.done)return;if(R.i>=R.plan.length){finish();return}
- const e=R.plan[R.i],L=itemLevel();let q=null;for(let g=0;g<10;g++){q=C.gen(e.r,L,lang,e.h);if(!q||!R.keys[q.key])break}
+ const e=R.plan[R.i],L=e.L||itemLevel(),want=e.h&&e.h.id;let q=null;if(e.avoid)R.keys[e.avoid]=1;
+ /* a review slot that asks for one bank item takes it even if it was seen in this round; everything else must be new to the round */
+ for(let g=0;g<10;g++){q=C.gen(e.r,L,lang,e.h);if(!q||(want?q.iid===want:!R.keys[q.key]))break}
  if(!q){R.plan.splice(R.i,1);nextQ();return}
- R.keys[q.key]=1;Q=q;Q.t0=performance.now();Q.pos=0;Q.slips=0;Q.done=false;renderQ();hud()}
+ q.rev=e.rev|0;R.keys[q.key]=1;Q=q;Q.t0=performance.now();Q.pos=0;Q.slips=0;Q.done=false;renderQ();hud()}
 function renderQ(){const s=$('stage'),q=Q;s.textContent='';s.setAttribute('data-rung',q.rung);
- s.appendChild(h('div',{cls:'ask',id:'ask',text:t('q_'+q.ask)}));
+ s.appendChild(h('div',{cls:'ask',id:'ask',text:t('q_'+q.ask)},q.rev?h('small',{id:'qRev',text:t(q.rev===2?'revTag':'fromB')}):null));
  const pr=h('div',{cls:'prompt'+(q.story?' st':''),id:'prompt'});
  let sayEls=null;
  if(q.story){const st=wspans(h('div',{cls:'story scroll',id:'story'}),q.story);sayEls=st._w;pr.appendChild(st);pr.appendChild(h('div',{cls:'quest',id:'quest',text:fx(q.question)}))}
@@ -932,10 +997,20 @@ function tapTile(b){if(!Q||Q.done||!R||R.done||R.paused||Q.kind!=='tiles'||teach
  else{Q.slips++;b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');
   if(Q.slips>=2){for(let i=Q.pos;i<Q.units.length;i++){const sl=Q.slotEls[i];sl.textContent=fx(Q.units[i]);sl.classList.remove('next');sl.classList.add('rev')}Q.tileEls.forEach(x=>x.disabled=true);resolve(false)}
   else{SFX.bad();const hb=Q.tileEls.filter(x=>!x.classList.contains('used')&&x._tx===want)[0];if(hb)hb.classList.add('hintT')}}}
-function resolve(ok,el){if(!Q||Q.done)return;Q.done=true;ok=!!ok;
- track('answer',{skill:Q.skill,ok:ok,ms:Math.min(6e5,Math.round(performance.now()-Q.t0)),level:Q.level});
- if(ok){R.ok++;R.combo++;R.maxC=Math.max(R.maxC,R.combo);R.run++;R.miss=0;if(R.run>=3&&R.dif<1){R.dif++;R.run=0}}else{R.combo=0;R.run=0;R.miss++;if(R.miss>=2&&R.dif>-1){R.dif--;R.miss=0}}
- R.i++;hud();const pk=$('pOk');if(ok&&pk)pk.classList.add('pop');
+/* every answer feeds the unit's review memory; a miss remembers WHICH bank item it was; box 4 reached for the first time = mastery signal for the platform */
+function note(q,ok){const p=P(),u=uid(q.n,q.level),lr=Leitner.answer(p.rev,u,ok,today()),k=R.sk[u]||(R.sk[u]={n:0,ok:0,up:0});k.n++;if(ok)k.ok++;if(lr.up)k.up=1;
+ if(!ok){if(q.iid)p.rm[u]=String(q.iid).slice(0,40)}else if(lr.due)delete p.rm[u];
+ if(lr.to>=4&&!p.ms[u]){p.ms[u]=1;award({event:'mastery',skill:lang+'.'+C.RUNGS[q.n-1]+'.'+q.level,level:q.level})}
+ return lr}
+function resolve(ok,el){if(!Q||Q.done)return;Q.done=true;ok=!!ok;const warm=R.mode==='warm',ad=!warm&&!Q.rev,a={skill:Q.skill,ok:ok,ms:Math.min(6e5,Math.round(performance.now()-Q.t0)),level:Q.level};if(Q.rev)a.rev=1;
+ track('answer',a);const lr=note(Q,ok);if(warm)R.wres.push(lr);
+ if(ok){R.ok++;R.combo++;R.maxC=Math.max(R.maxC,R.combo);if(ad){R.run++;R.miss=0;if(R.run>=3&&R.dif<1){R.dif++;R.run=0}}}else{R.combo=0;if(ad){R.run=0;R.miss++;if(R.miss>=2&&R.dif>-1){R.dif--;R.miss=0}}}
+ R.i++;
+ /* one same-session retry of a miss, never right away: it takes the slot two items later (the same word / sentence when it comes from a bank, else a
+    fresh sibling); when the round has no such slot it opens the next round instead */
+ if(!ok&&Q.rev!==2){const x={r:Q.n,L:Q.level,h:Q.iid?{id:Q.iid}:null,rev:2,avoid:Q.key,lang:lang},at=R.i+2;
+  if(!warm&&at<R.plan.length&&!R.plan[at].rev)R.plan[at]=x;else if(Q.n!==FLASH){RQ.push(x);if(RQ.length>3)RQ.shift()}}
+ save();hud();const pk=$('pOk');if(ok&&pk)pk.classList.add('pop');
  if(ok){SFX.good();const pr=TX[lang].praise,w=pr[Math.min(pr.length-1,rnd(3)+(R.combo>=5?2:R.combo>=3?1:0))];pop(Array.isArray(w)?gen3(w[0],w[1],w[2]):w);
   if(el&&el.getBoundingClientRect){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,8,['⭐','✨','💛','🐾'])}
   const q=Q,sent=q.rung==='order',spoke=!!q.sayAfter&&TTS.say(q.sayAfter,{auto:true,kind:sent?'sentence':'word',els:sent?q.slotEls:null,onend:()=>{if(Q===q&&q.waitSay){q.waitSay=false;clearTimeout(pendT);pendT=setTimeout(nextQ,300)}}});
@@ -948,14 +1023,43 @@ function openTeach(){pendT=0;if(!Q||!R||R.done)return;teachOpen=true;const c=$('
  c.appendChild(h('div',{cls:'teachw'},[ex,say?spkBtn(sent?q.explain:say,'tw',{kind:sent?'sentence':q.sayK||'word',els:sent?ex._w:null}):null]));
  c.appendChild(h('button',{cls:'btn g',id:'tOk',text:t('gotit'),click:()=>{gest=true;SFX.click();nextQ()}}));
  $('ovTeach').classList.add('on')}
-function finish(){if(!R||R.done)return;R.done=true;Q=null;clearTimeout(pendT);clearTimeout(flT);closeTeach();const n=R.plan.length,pct=R.ok/Math.max(1,n),st=pct>=.85?3:pct>=.6?2:pct>=.35?1:0,p=P(),res={mode:R.mode,st:st,ok:R.ok,n:n,rung:R.rung,level:R.level};
+function pips(b){const e=h('span',{cls:'pips','data-box':b|0});for(let i=1;i<=5;i++)e.appendChild(h('i',{cls:i<=b?'on':''}));return e}
+/* memory box of a rung at a level (free practice list: the best box over the levels) */
+function rgBox(r,L){const m=P().rev,x=m[uid(r,L)];if(x)return x.b;let b=0;if(!L)for(let l=1;l<=4;l++){const y=m[uid(r,l)];if(y)b=Math.max(b,y.b)}return b}
+/* R5: what the kid can do now, in rung terms (round result + memory box) */
+function compRows(ids){const p=P(),max=innerHeight<700?2:3,w=h('div',{cls:'crs',id:'crs'},h('div',{cls:'crT',text:t('canDo')}));
+ ids.slice(0,max).forEach(id=>{const r=p.rev[id]||{b:0},k=(R&&R.sk&&R.sk[id])||{n:0,ok:0},rg=uR(id);
+  w.appendChild(h('div',{cls:'cr','data-unit':id},[h('span',null,[RI[rg-1][0]+' '+rname(rg)+' · '+t('lvl')+' '+uL(id),k.up?h('span',{cls:'upm',text:' ⬆'}):null]),pips(r.b),
+   h('small',{text:(r.b>=3||(k.n>=2&&k.ok===k.n))?t('stSolid'):k.ok>0?t('stNear',{k:Math.max(1,3-r.b)}):t('stNew')})]))});return w}
+function roundUnits(){const m=P().rev;return Object.keys(R.sk).sort((a,b)=>R.sk[b].n-R.sk[a].n||(m[a]?m[a].b:0)-(m[b]?m[b].b:0))}
+/* R5: the choice of what comes next: "strengthen" = free practice (no stars) of the unit that most needs it, at that unit's own level */
+function weakBtn(){const id=Leitner.weakest(P().rev);if(!id)return null;const r=uR(id),l=uL(id);
+ return h('button',{cls:'btn w',id:'rWeak','data-nx':'weak','data-unit':id,text:t('nxWeak',{s:RI[r-1][0]+' '+rname(r)}),click:()=>{SFX.click();startRound('free',r,l,true)}})}
+/* ---- warm-up: up to 3 due units (never more than 5), oldest first, mixed rungs; offered once a day, always skippable; no stars, no level change ---- */
+function warmIds(){return Leitner.pick(P().rev,today(),3,uR,id=>uR(id)!==FLASH)}
+function startWarm(){const ids=warmIds();if(!ids.length){if(cur!=='scMenu')toMenu();return false}clearTimeout(pendT);clearTimeout(flT);closeAll();TTS.stop();$('fx').textContent='';SV.wd=today();save();
+ R={mode:'warm',rung:0,level:uL(ids[0]),plan:ids.map(slot),i:0,ok:0,combo:0,maxC:0,dif:0,run:0,miss:0,keys:{},t0:Date.now(),done:false,paused:false,res:null,sk:{},wres:[],fix:false,due:Leitner.due(P().rev,today()).length};
+ track('game_start',{mode:'warm',rung:0,level:0});show('scPlay');nextQ();return true}
+function offerWarm(){const n=warmIds().length;if(!n||cur!=='scMenu')return false;const c=$('cRes');c.textContent='';c.setAttribute('data-kind','warm');
+ c.appendChild(h('div',{cls:'huge',text:'🧠'}));c.appendChild(h('h2',{id:'wT',text:t('wT')}));c.appendChild(h('p',{id:'wS',text:n===1?t('wS1'):t('wS',{n:n})}));
+ c.appendChild(h('button',{cls:'btn g',id:'wGo',text:t('wGo'),click:()=>{gest=true;SFX.click();startWarm()}}));
+ c.appendChild(h('button',{cls:'btn w',id:'wSkip',text:t('wSkip'),click:()=>{gest=true;SFX.click();SV.wd=today();save();closeAll()}}));$('ovRes').classList.add('on');return true}
+function warmEnd(){const W=R.wres,n=W.length,ok=W.filter(x=>x.ok).length,gap=W.reduce((m,x)=>Math.max(m,x.gap),0),c=$('cRes');c.textContent='';c.setAttribute('data-kind','warmEnd');
+ R.res={mode:'warm',st:0,ok:ok,n:n,rung:0,level:0};save();track('review',{game:'reading',n:n,ok:ok,due:R.due});track('game_end',{sec:Math.round((Date.now()-R.t0)/1000),score:0,win:true,mode:'warm'});
+ c.appendChild(h('div',{cls:'huge',text:'🧠'}));c.appendChild(h('h2',{id:'rT',text:t('wDone')}));
+ c.appendChild(h('p',{id:'wSum',text:ok?t('wRem',{n:ok,m:n,w:t(gap>=6?'wW2':gap>=2?'wW1':'wW0')}):t('wNone')}));
+ c.appendChild(compRows(W.map(x=>x.id).filter((x,i,a)=>a.indexOf(x)===i)));
+ c.appendChild(h('div',{cls:'nx',id:'nx'},[h('button',{cls:'btn g',id:'rLad','data-nx':'ladder',text:t('nxLad'),click:()=>{SFX.click();closeAll();openMap(false)}}),weakBtn(),
+  h('button',{cls:'btn w',id:'rMenu','data-nx':'free',text:t('nxFree'),click:()=>{SFX.click();toMenu()}})]));
+ $('ovRes').classList.add('on');if(ok)SFX.win();else SFX.click()}
+function finish(){if(!R||R.done)return;R.done=true;Q=null;clearTimeout(pendT);clearTimeout(flT);closeTeach();if(R.mode==='warm'){warmEnd();return}const n=R.plan.length,pct=R.ok/Math.max(1,n),st=pct>=.85?3:pct>=.6?2:pct>=.35?1:0,p=P(),res={mode:R.mode,st:st,ok:R.ok,n:n,rung:R.rung,level:R.level};
  if(R.maxC>=3)award({event:'combo',score:R.maxC});
  if(R.mode==='ladder'){const k=R.rung+'.'+R.level,old=star(R.rung,R.level);if(st>old){p.st[k]=st;res.gain=st-old}
   if(st>0){award({event:'levelClear',level:R.rung});if(res.gain)award({event:'star',stars:res.gain,level:R.rung});if(st===3)award({event:'win',level:R.rung});track('level',{level:R.level,rung:R.rung,stars:st})}
   if(R.level===p.mx&&p.mx<4){let c=0;for(let r=1;r<=NR;r++)if(star(r,R.level)>0)c++;if(c>=6){p.mx++;p.lv=p.mx;res.lvUp=p.mx}}
   if(st===0&&R.level>1&&R.level===p.lv){p.lv=R.level-1;res.lvDown=p.lv}
   res.top=st>0&&R.rung===NR}
- else{if(pct>=.9)p.ad=clamp(p.ad+.5,-1.5,1.5);else if(pct<.5)p.ad=clamp(p.ad-.5,-1.5,1.5);
+ else{if(R.fix){}else if(pct>=.9)p.ad=clamp(p.ad+.5,-1.5,1.5);else if(pct<.5)p.ad=clamp(p.ad-.5,-1.5,1.5);
   if(R.mode==='daily'&&st>0){const td=today();if(SV.streak[1]!==td){SV.streak=[SV.streak[1]===td-1?SV.streak[0]+1:1,td];res.streakUp=true}award({event:'star',stars:st});award({event:'win'})}
   else if(st>0)award({event:'levelClear'})}
  save();track('game_end',{sec:Math.round((Date.now()-R.t0)/1000),score:R.ok,win:st>0,mode:R.mode,rung:R.rung,level:R.level});
@@ -984,12 +1088,12 @@ function openMap(free){mapFree=!!free;const p=P(),hd=$('mapHead'),g=$('lad');hd.
  let top=0;for(let r=1;r<=NR;r++)if(rungOpen(r,selLv))top=r;else break;let curEl=null;
  for(let r=NR;r>=1;r--){const un=free||rungOpen(r,selLv),st=free?0:star(r,selLv),isCur=!free&&r===top;
   const kids=[h('span',{cls:'no',text:String(r)}),h('b',{text:RI[r-1][0]}),h('span',{cls:'nm',text:rname(r)})];
-  if(isCur)kids.push(h('span',{cls:'cat',text:'🐱'}));
+  if(isCur)kids.push(h('span',{cls:'cat',text:'🐱'}));{const bx=un?rgBox(r,free?0:selLv):0;if(bx)kids.push(pips(bx))}
   if(!free)kids.push(h('i',null,un?['★'.repeat(st),h('u',{text:'★'.repeat(3-st)})]:['🔒']));
   const b=h('button',{cls:'rg'+(!un?' lock':st?' done':'')+(isCur?' cur':''),'data-rung':r,'aria-label':t('rung')+' '+r+': '+rname(r),click:()=>{gest=true;if(!un){SFX.bad();pop('🔒');banner(t('locked'));return}SFX.click();startRound(free?'free':'ladder',r,selLv)}},kids);
   if(isCur)curEl=b;g.appendChild(b)}
  show('scMap');const w=$('ladWrap');w.scrollTop=0;if(curEl){const a=curEl.offsetTop-w.offsetTop-(w.clientHeight-curEl.offsetHeight)/2;w.scrollTop=Math.max(0,a)}}
-function renderRes(res){const c=$('cRes'),st=res.st,lad=res.mode==='ladder';c.textContent='';let next=0;
+function renderRes(res){const c=$('cRes'),st=res.st,lad=res.mode==='ladder',fixed=!!(R&&R.fix);c.textContent='';c.setAttribute('data-kind','result');let next=0;
  c.appendChild(h('div',{cls:'huge',text:st<=0?'💪':res.top?'🏆':res.mode==='daily'?'📅':lad?RI[res.rung-1][0]:'🎯'}));
  c.appendChild(h('h2',{id:'rT',text:t('r'+Math.max(0,st))}));
  const sr=h('div',{cls:'stars',id:'rStars'});for(let i=0;i<3;i++){const s=h('span',{cls:i<st?'':'off',text:'⭐'});s.style.animationDelay=(.25+i*.3)+'s';sr.appendChild(s);if(i<st)setTimeout(()=>SFX.star(i),250+i*300)}c.appendChild(sr);
@@ -1000,10 +1104,12 @@ function renderRes(res){const c=$('cRes'),st=res.st,lad=res.mode==='ladder';c.te
  if(res.lvDown)c.appendChild(h('p',{id:'rDown',text:'🐾 '+t('lvDown',{n:res.lvDown})}));
  if(st>0)setTimeout(()=>{SFX.win();confetti()},350);
  if(lad&&st>0&&res.rung<NR)next=res.rung+1;
- if(next)c.appendChild(h('button',{cls:'btn g',id:'rNext',text:t('next'),click:()=>{SFX.click();startRound('ladder',next,res.level)}}));
- c.appendChild(h('button',{cls:'btn'+(next?' w':' g'),id:'rAgain',text:'↻ '+t('again'),click:()=>{SFX.click();startRound(res.mode,res.rung||1,res.lvDown||res.level)}}));
- if(res.mode!=='daily')c.appendChild(h('button',{cls:'btn w',id:'rMap',text:(lad?'🧗 ':'🎯 ')+(lad?t('ladder'):t('mFree')),click:()=>{SFX.click();closeAll();selLv=lad?(res.lvUp||res.lvDown||res.level):selLv;openMap(!lad)}}));
- c.appendChild(h('button',{cls:'btn w',id:'rMenu',text:'☰ '+t('menu'),click:()=>{SFX.click();toMenu()}}));
+ c.appendChild(compRows(roundUnits()));const nx=h('div',{cls:'nx',id:'nx'});
+ if(next)nx.appendChild(h('button',{cls:'btn g',id:'rNext','data-nx':'next',text:t('next'),click:()=>{SFX.click();startRound('ladder',next,res.level)}}));
+ nx.appendChild(h('button',{cls:'btn'+(next?' w':' g'),id:'rAgain','data-nx':'again',text:'↻ '+t('again'),click:()=>{SFX.click();startRound(res.mode,res.rung||1,res.lvDown||res.level,fixed)}}));
+ {const wb=weakBtn();if(wb)nx.appendChild(wb)}
+ if(res.mode!=='daily')nx.appendChild(h('button',{cls:'btn w',id:'rMap','data-nx':'map',text:(lad?'🧗 ':'🎯 ')+(lad?t('ladder'):t('mFree')),click:()=>{SFX.click();closeAll();selLv=lad?(res.lvUp||res.lvDown||res.level):selLv;openMap(!lad)}}));
+ nx.appendChild(h('button',{cls:'btn w',id:'rMenu','data-nx':'free',text:'☰ '+t('menu'),click:()=>{SFX.click();toMenu()}}));c.appendChild(nx);
  $('ovRes').classList.add('on')}
 function pause(){if(!R||R.done||R.paused||cur!=='scPlay')return;R.paused=true;TTS.stop();const c=$('cPause');c.textContent='';c.appendChild(h('h2',{text:'⏸ '+t('paused')}));
  c.appendChild(h('button',{cls:'btn g',id:'pRes',text:'▶ '+t('resume'),click:()=>{SFX.click();resume()}}));c.appendChild(h('button',{cls:'btn w',id:'pQuit',text:'☰ '+t('quit'),click:()=>{SFX.click();toMenu()}}));{const vb=voiceBtn('pVoice');if(vb)c.appendChild(h('div',{id:'voiceRow'},vb))}c.appendChild(h('div',{id:'navSlot'}));$('ovPause').classList.add('on')}
@@ -1026,11 +1132,11 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=
 
 /* ---- test hook ---- */
 function flushPend(){if(teachOpen||pendT)nextQ()}
-function pub(q){if(!q)return null;const o={};['rung','n','skill','variant','level','lang','kind','ask','emoji','big','text','pre','post','story','question','opts','correct','units','tiles','join','answer','explain','say','sayAfter','sayK','flash','key'].forEach(k=>{if(q[k]!==undefined)o[k]=Array.isArray(q[k])?q[k].slice():q[k]});
+function pub(q){if(!q)return null;const o={};['rung','n','skill','variant','level','lang','kind','ask','emoji','big','text','pre','post','story','question','opts','correct','units','tiles','join','answer','explain','say','sayAfter','sayK','flash','key','iid','rev'].forEach(k=>{if(q[k]!==undefined)o[k]=Array.isArray(q[k])?q[k].slice():q[k]});
  if(q.kind==='tiles'&&q.tileEls){const used={};o.order=q.units.map(u=>{for(let i=0;i<q.tiles.length;i++)if(!used[i]&&q.tiles[i]===u){used[i]=1;return i}return -1});o.pos=q.pos}o.done=!!q.done;return o}
 window.__reading={
  state(){const p=P();return{screen:cur,lang:lang,mode:R?R.mode:null,rung:R?R.rung:0,level:R?R.level:0,itemLevel:R&&!R.done?itemLevel():0,i:R?R.i:0,total:R?R.plan.length:0,ok:R?R.ok:0,done:R?R.done:true,paused:R?R.paused:false,teach:teachOpen,res:R?R.res||null:null,
-  lv:p.lv,mx:p.mx,ad:p.ad,start:startLevel(),stars:JSON.parse(JSON.stringify(p.st)),starsAll:starsAll(),streak:SV.streak.slice(),dailyDone:dailyDone(),tts:TTS.ok,ttsOn:TTS.on(),said:TTS.log,muted:muted}},
+  lv:p.lv,mx:p.mx,ad:p.ad,wd:SV.wd,fix:!!(R&&R.fix),card:$('ovRes').classList.contains('on')?$('cRes').getAttribute('data-kind'):null,start:startLevel(),stars:JSON.parse(JSON.stringify(p.st)),starsAll:starsAll(),streak:SV.streak.slice(),dailyDone:dailyDone(),tts:TTS.ok,ttsOn:TTS.on(),said:TTS.log,muted:muted}},
  voc:NK,
  gen(rung,level,lang2,hint){return pub(C.gen(rung,level,lang2||lang,hint))},
  item(){return pub(Q)},
@@ -1040,10 +1146,17 @@ window.__reading={
  win(){let g=0;while(R&&!R.done&&g++<400){flushPend();if(!R||R.done)break;this.answer()}flushPend();return R?R.res:null},
  pause:pause,resume:resume,toMenu:toMenu,openMap:openMap,setLang(l){setLang(l);renderMenu();hud()},
  cfg(o){for(const k in o)CFG[k]=o[k];refreshSpk();return CFG},
- save(){return SV},reload(){SV=load();selLv=0;renderMenu()},core:C};
+ save(){return SV},reload(){SV=load();selLv=0;renderMenu()},core:C,
+ /* spaced review: due list, full memory (current language), test clock, warm-up */
+ review(){const m=P().rev;return Leitner.due(m,today()).map(id=>({id:id,box:m[id].b,due:m[id].d}))},memory(){return JSON.parse(JSON.stringify(P().rev))},missed(){return JSON.parse(JSON.stringify(P().rm))},mastered(){return Object.keys(P().ms)},
+ leitner:Leitner,retries(){return RQ.slice()},plan(){return R?JSON.parse(JSON.stringify(R.plan)):[]},
+ day(){return today()},setDay(n){QADAY=typeof n==='number'&&isFinite(n)&&n>0?Math.floor(n):null;try{if(QADAY===null)sessionStorage.removeItem('kidapp-qa-day');else if(ls.get('kidapp-qa')==='1')sessionStorage.setItem('kidapp-qa-day',String(QADAY))}catch(e){}return today()},
+ warmup(){gest=true;return startWarm()},warmOffer(){return offerWarm()}};
 
 /* ---- boot ---- */
 setLang(lang);applyMute();renderMenu();show('scMenu');
+/* first visit of the day with something due: offer the warm-up once (skippable; the menu is right behind it) */
+if(SV.wd!==today()&&warmIds().length)offerWarm();
 addEventListener('load',()=>{refreshSpk();if(cur==='scMenu')renderMenu();setTimeout(voiceCheck,3200)});
 })();
 </script>
