@@ -189,6 +189,11 @@ R.funrun = async (p, t) => {
   await t.ev(() => __funrun.start('cup', 1, 1)); await t.wait(900); await t.ev(() => { __funrun.skipCd(); __funrun.auto(true); }); await t.wait(6500); await t.shot(2);
   await t.ev(() => __funrun.win()); await t.wait(3500); await t.shot(3);
 };
+R.dogrun = async (p, t) => {
+  await t.ev(() => __dogrun.start('quick', {seed: 7, diff: 'normal', track: 'park', auto: true})); await t.wait(600); await t.ev(() => { const e = document.getElementById('tips'); if (e) e.style.display = 'none'; __dogrun.step(420); }); await t.wait(500); await t.shot(1);
+  await t.ev(() => __dogrun.start('quick', {seed: 11, diff: 'normal', track: 'beach', auto: true})); await t.wait(600); await t.ev(() => { __dogrun.step(500); }); await t.wait(500); await t.shot(2);
+  await t.ev(() => __dogrun.start('rush', {seed: 5, diff: 'normal', track: 'snow', auto: true})); await t.wait(600); await t.ev(() => { __dogrun.step(700); }); await t.wait(500); await t.shot(3);
+};
 R.carrace = async (p, t) => {
   await t.ev(() => __carrace.start({mode: 'single', ti: 0})); await t.wait(1500); await t.ev(() => { const e = document.getElementById('tip'); if (e) e.style.display = 'none'; __carrace.auto(true, true); __carrace.step(9); }); await t.wait(1500); await t.shot(1);
   await t.ev(() => __carrace.start({mode: 'single', ti: 2})); await t.wait(1500); await t.ev(() => { const e = document.getElementById('tip'); if (e) e.style.display = 'none'; __carrace.auto(true, true); __carrace.step(12); }); await t.wait(1500); await t.shot(2);
