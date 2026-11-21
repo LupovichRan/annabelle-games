@@ -54,7 +54,7 @@
     cooking: ['בישול', 'cuisine', 'cooking'], classic: ['קלאסיקה', 'classique', 'classic'], music: ['מוזיקה', 'musique', 'music'],
     magic: ['קסמים', 'magie', 'magic'], board: ['משחק לוח', 'jeu de plateau', 'board game'], build: ['בנייה', 'construction', 'building'],
     fishing: ['דיג', 'pêche', 'fishing'], story: ['סיפור', 'histoire', 'story'], reflex: ['תגובה מהירה', 'réflexes', 'reflexes'],
-    exam: ['בגרות', 'examen', 'exam'], search: ['חיפוש', 'cherche et trouve', 'seek and find']
+    dogs: ['כלבים', 'chiens', 'dogs'], exam: ['בגרות', 'examen', 'exam'], search: ['חיפוש', 'cherche et trouve', 'seek and find']
   };
 
   /* g(id, emoji, category, ages, calm, minutes, size, flags, gradient, names, one calm sentence, tags)
@@ -116,6 +116,8 @@
     ['רצים, קופצים ועושים תעלולים מצחיקים במרוץ.', 'On court, on saute et on fait des farces pendant la course.', 'Run, jump and play funny pranks in a race.'], ['race', 'reflex']);
   g('carrace', '🏎️', 'sport', [6, 18], 3, 3, 'M', 'o', ['#ff5a5a', '#b3206a'], ['מרוץ מכוניות החתולים', 'Course de karts des chats', 'Kitty Kart Race'],
     ['מרוץ קארטינג מהיר עם סיבובים וטורבו.', 'Une course de karts rapide avec des virages et du turbo.', 'A fast kart race with drifts and turbo.'], ['race', 'cats', 'reflex']);
+  g('dogrun', '🐕', 'sport', [5, 16], 3, 1, 'S', '2n', ['#f29a2e', '#e8872a'], ['מרוץ הכדור של הכלבים', 'La course de balle des chiens', 'Dog Ball Dash'],
+    ['רצים אחרי הכדור עם כלבים חמודים ותופסים אותו ראשונים, מהר ובכיף.', 'On court après la balle avec de adorables chiens et on l’attrape en premier, vite et fun.', 'Sprint after the ball with cute dogs and grab it first, fast and fun.'], ['race', 'dogs', 'reflex']);
   g('football', '⚽', 'sport', [6, 18], 3, 3, 'M', 'o', ['#6fe08a', '#1f9a46'], ['כדורגל חתולים', 'Foot des chats', 'Cat Football'],
     ['משחק כדורגל קצר של חתולים.', 'Un petit match de foot entre chats.', 'A short football match between cats.'], ['ball', 'cats']);
   g('thunderkittens', '⚡', 'sport', [7, 16], 3, 3, 'M', 'o', ['#7c5cff', '#2a1a6e'], ['לוחמי הברק', 'Guerriers de la Foudre', 'Lightning Kittens'],

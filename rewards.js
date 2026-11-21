@@ -123,6 +123,7 @@
     mathquest: ['🧮', 'מסע החשבון', 'La quête des maths', 'Math Quest'],
     wordcity: ['🔤', 'עיר המילים', 'La ville des mots', 'Word City'],
     sciencelab: ['🔬', 'מעבדת המדע', 'Le labo des sciences', 'Science Lab'],
+    dogrun: ['🐕', 'מרוץ הכדור של הכלבים', "La course de balle des chiens", 'Dog Ball Dash'],
     critters: ['🐾', 'עולם היצורים', "Le monde des créatures", 'Critter World'],
     bagrut: ['🎓', 'מסלול הבגרות', "Objectif Bagrout", 'Bagrut Track'],
     reading: ['📖', 'סולם הקריאה', "L'échelle de lecture", 'Reading Ladder'],
@@ -264,7 +265,7 @@
   }
   function escH(x) { return String(x).replace(/[&<>"]/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
   var RETRO = {invaders: 1, tetris: 1, breakout: 1, snake: 1, crossing: 1, pong: 1, safari: 1, simon: 1};
-  var MIND = {critters: 1, bagrut: 1, reading: 1, city: 1, mathquest: 1, wordcity: 1, sciencelab: 1, thinking: 1, magic: 1, magic2: 1, cups: 1, tictactoe: 1, minesweeper: 1, checkers: 1, cats: 1, hiddencats: 1, escape: 1, towerdefense: 1, tetris: 1, simon: 1};
+  var MIND = {dogrun: 1, critters: 1, bagrut: 1, reading: 1, city: 1, mathquest: 1, wordcity: 1, sciencelab: 1, thinking: 1, magic: 1, magic2: 1, cups: 1, tictactoe: 1, minesweeper: 1, checkers: 1, cats: 1, hiddencats: 1, escape: 1, towerdefense: 1, tetris: 1, simon: 1};
   var SPORT = {funrun: 1, carrace: 1, football: 1, bowling: 1, pong: 1, thunderkittens: 1, runner: 1, runner3d: 1, pacman: 1, lionking: 1};
   var HIDDEN = {retro: 1, runner3d: 1}; // no tile of their own on the home page
   var QUEST_COINS = 15, QUEST_BONUS = 25;
@@ -398,7 +399,7 @@
   }
   // 1) first play of each game (26)
   // names: a plain string is the same for everybody; [feminine, masculine, neutral] describes the player
-  var GS = {critters: ['חברה של יצורים', 'חבר של יצורים', 'חברים של יצורים'], bagrut: ['מוכנה לבגרות', 'מוכן לבגרות', 'מוכנים לבגרות'], reading: 'תולעת ספרים', city: ['בעלת בית', 'בעל בית', 'בעלי בית'], thinking: 'מוח על',
+  var GS = {dogrun: ['אלופת הכדור', 'אלוף הכדור', 'אלופי הכדור'], critters: ['חברה של יצורים', 'חבר של יצורים', 'חברים של יצורים'], bagrut: ['מוכנה לבגרות', 'מוכן לבגרות', 'מוכנים לבגרות'], reading: 'תולעת ספרים', city: ['בעלת בית', 'בעל בית', 'בעלי בית'], thinking: 'מוח על',
     mathquest: ['אלופת החשבון', 'אלוף החשבון', 'אלופי החשבון'], wordcity: ['אלופת המילים', 'אלוף המילים', 'אלופי המילים'], sciencelab: ['מדענית צעירה', 'מדען צעיר', 'מדענים צעירים'],
     funrun: ['אלופת התעלולים', 'אלוף התעלולים', 'אלופי התעלולים'], carrace: ['נהגת מרוצים', 'נהג מרוצים', 'נהגי מרוצים'], bubbles: ['מגלת בועות', 'מגלה בועות', 'מגלי בועות'], cats: ['מלכת הזוגות', 'מלך הזוגות', 'אלופי הזוגות'],
     checkers: ['מלכת הדמקה', 'מלך הדמקה', 'אלופי הדמקה'], cups: 'עין הנץ', digrod: ['חופרת בשריר', 'חופר בשריר', 'חופרים בשריר'], escape: ['בורחת מהעץ', 'בורח מהעץ', 'בורחים מהעץ'],
@@ -410,7 +411,7 @@
     kitchen: ['שפית חתולית', 'שף חתולי', 'שפים חתוליים'], invaders: ['מצילה בחלל', 'מציל בחלל', 'מצילים בחלל'], tetris: ['מלכת הקוביות', 'מלך הקוביות', 'אלופי הקוביות'],
     breakout: ['פותחת הכלובים', 'פותח הכלובים', 'פותחי הכלובים'], snake: 'זנב הנמר', crossing: ['שומרת המעבר', 'שומר המעבר', 'שומרי המעבר'], pong: ['אלופת הפינג־פונג', 'אלוף הפינג־פונג', 'אלופי הפינג־פונג'],
     safari: ['צלמת ספארי', 'צלם ספארי', 'צלמי ספארי'], simon: ['מנצחת המקהלה', 'מנצח המקהלה', 'מנצחי המקהלה'], retro: ['מבקרת בפינת הרטרו', 'מבקר בפינת הרטרו', 'מבקרים בפינת הרטרו']};
-  var GSF = {critters: ['Amie des créatures', 'Ami des créatures', 'Ami·e des créatures'], bagrut: ['Prête pour le Bagrout', 'Prêt pour le Bagrout', 'Cap sur le Bagrout'], reading: 'Rat de bibliothèque', city: 'Jeune propriétaire', thinking: 'Super cerveau',
+  var GSF = {dogrun: ['Reine de la balle', 'Roi de la balle', 'As de la balle'], critters: ['Amie des créatures', 'Ami des créatures', 'Ami·e des créatures'], bagrut: ['Prête pour le Bagrout', 'Prêt pour le Bagrout', 'Cap sur le Bagrout'], reading: 'Rat de bibliothèque', city: 'Jeune propriétaire', thinking: 'Super cerveau',
     mathquest: 'As des maths', wordcity: 'As des mots', sciencelab: 'Jeune scientifique', funrun: ['Reine des farces', 'Roi des farces', 'As des farces'], carrace: 'Pilote de course',
     bubbles: ['Reine des bulles', 'Roi des bulles', 'As des bulles'], cats: ['Reine des paires', 'Roi des paires', 'As des paires'], checkers: ['Reine des dames', 'Roi des dames', 'As des dames'], cups: 'Œil de lynx', digrod: 'Super muscles',
     escape: ['Évadée', 'Évadé', 'Évasion réussie'], fishing: ['Jeune pêcheuse', 'Jeune pêcheur', 'As de la pêche'], football: 'Star du foot', hiddencats: 'Détective', lionking: 'Petit lion',
@@ -420,7 +421,7 @@
     hole: 'Gouffre gourmand', fishy: 'Gros poisson', kitchen: ['Cheffe chat', 'Chef chat', 'Chef·fe chat'], invaders: ["Sauveteuse de l'espace", "Sauveteur de l'espace", "Secours de l'espace"],
     tetris: ['Reine des blocs', 'Roi des blocs', 'As des blocs'], breakout: 'Ouvre-cages', snake: 'Queue de tigre', crossing: ['Gardienne du passage', 'Gardien du passage', 'Garde du passage'],
     pong: ['Championne de ping-pong', 'Champion de ping-pong', 'As du ping-pong'], safari: 'Photographe safari', simon: ['Cheffe de chorale', 'Chef de chorale', 'Chef·fe de chorale'], retro: ['Visiteuse rétro', 'Visiteur rétro', 'Visite rétro']};
-  var GSE = {critters: 'Critter Friend', bagrut: 'Exam Ready', reading: 'Bookworm', city: 'City Builder', thinking: 'Master Mind', mathquest: 'Math Champion', wordcity: 'Word Champion', sciencelab: 'Young Scientist', funrun: 'Prank Champion', carrace: 'Race Driver',
+  var GSE = {dogrun: 'Ball Champion', critters: 'Critter Friend', bagrut: 'Exam Ready', reading: 'Bookworm', city: 'City Builder', thinking: 'Master Mind', mathquest: 'Math Champion', wordcity: 'Word Champion', sciencelab: 'Young Scientist', funrun: 'Prank Champion', carrace: 'Race Driver',
     bubbles: ['Bubble Queen', 'Bubble King', 'Bubble Champion'], cats: 'Memory Master', checkers: ['Checkers Queen', 'Checkers King', 'Checkers Champion'], cups: 'Eagle Eye', digrod: 'Super Muscles', escape: 'Escape Artist', fishing: 'Young Angler',
     football: 'Football Star', hiddencats: 'Cat Detective', lionking: 'Little Lion', magic: 'Card Magician', magic2: 'Cat Magician', minesweeper: 'Garden Hero', pacman: 'Hungry Tiger', runner: 'Savanna Runner', runner3d: '3D Runner',
     soya: 'Soya\'s Friend', soyahome: 'Soya\'s Home', streetcats: 'Street Cat', thunderkittens: 'Lightning Fighter', towerdefense: 'Den Guardian', bowling: 'Bowling Star', tictactoe: ['Tic-Tac-Queen', 'Tic-Tac-King', 'Tic-Tac-Champ'],
