@@ -240,7 +240,7 @@ const RM=window.matchMedia?matchMedia('(prefers-reduced-motion: reduce)'):{match
 /* ================= data ================= */
 const L=5,TL=80,DT=1/60,GR=24;
 const DIFFS=['easy','normal','expert'];
-const DIFF={easy:{gap:4.7,gv:2.4,dbl:0,mul:.976,react:.45,err:.3,dash:.55},normal:{gap:3.7,gv:2.1,dbl:.25,mul:.985,react:.28,err:.12,dash:.8},expert:{gap:2.9,gv:1.8,dbl:.45,mul:1.005,react:.2,err:.05,dash:1}};
+const DIFF={easy:{gap:5.2,gv:2.5,dbl:0,mul:.93,react:.5,err:.35,dash:.5},normal:{gap:4.2,gv:2.2,dbl:.15,mul:.95,react:.36,err:.2,dash:.7},expert:{gap:3.1,gv:1.9,dbl:.4,mul:.99,react:.22,err:.07,dash:1}};
 const AUTO={react:.25,err:.06,dash:1,mul:1};
 /* breeds: c body, c2 secondary, c3 dark/ears, st [speed,agility,stamina] */
 const BREEDS=[
@@ -282,7 +282,7 @@ function load(){const d=defSave();let o=null;try{o=JSON.parse(ls.get(KEY)||'null
  BREEDS.forEach(b=>{if(d.stars>=b.need&&!d.dogs.includes(b.id))d.dogs.push(b.id)});ACCS.forEach(a=>{if(d.stars>=a.need&&!d.accs.includes(a.id))d.accs.push(a.id)});
  return d}
 function save(){ls.set(KEY,JSON.stringify(S))}
-function curDiff(){if(S.sel.diff)return S.sel.diff;const l=kidLevel();return l<=2?'easy':l===3?'normal':'expert'}
+function curDiff(){if(S.sel.diff)return S.sel.diff;const l=kidLevel();return l<=3?'easy':l===4?'normal':'expert'}
 function todayKey(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
 function brd(id){return BREEDS[BID.indexOf(id)]||BREEDS[0]}
 /* ================= audio ================= */
@@ -324,7 +324,7 @@ function genWorld(r){
 function fold(x){const W=L-.5;let u=(x-.25)%(2*W);if(u<0)u+=2*W;if(u>W)u=2*W-u;return .25+u}
 let LX=0,LZ=0;
 function landing(){const b=G.ball;if(b.h<=.02&&b.vh<=.01)return false;const tt=(b.vh+Math.sqrt(b.vh*b.vh+2*GR*b.h))/GR;LZ=b.z+b.vz*tt;LX=fold(b.x+b.vx*tt);return true}
-function applyBreed(d,b,mul){d.b=b;const s=b.st;d.top=8.4*(.965+.025*s[0])*mul;d.lr=8+1.3*s[1];d.stunT=.72-.06*s[1];d.drain=.52-.06*(s[2]-3);d.regen=.17+.03*s[2]}
+function applyBreed(d,b,mul){d.b=b;const s=b.st;d.top=8.4*(.965+.025*s[0])*mul;d.lr=8+1.3*s[1];d.stunT=.5-.04*s[1];d.drain=.52-.06*(s[2]-3);d.regen=.17+.03*s[2]}
 function resetDog(d,lane){d.x=lane+.5;d.tx=lane;d.lane0=lane;d.z=0;d.vz=0;d.jt=0;d.jh=0;d.jcd=0;d.jbuf=0;d.stun=0;d.boost=0;d.stam=1;d.dcd=0;d.dashIn=false;d.lastHit=-1;d.lastPad=-1;d.think=.1;d.skipJ=false;d.wetT=0;d.wob=0;d.ang=0}
 function setBall(){const b=G.ball;b.x=G.lv.x;b.z=3;b.h=.55;b.vx=b.vz=b.vh=0;b.bn=0}
 function launch(){const b=G.ball,v=G.lv;b.x=v.x;b.z=Math.max(3,b.z);b.h=.1;b.vx=v.vx;b.vz=v.vz;b.vh=v.vh;b.bn=0;SFX.go()}
@@ -340,7 +340,7 @@ function startGame(mode,o){
  G.date=o.date||todayKey();
  G.seed=o.seed!=null?(o.seed>>>0):mode==='daily'?hashStr('dogrun-'+G.date):(Math.random()*4294967296)>>>0;
  G.tk=Number.isInteger(o.track)?clamp(o.track,0,4):mode==='daily'?G.seed%5:S.sel.track;
- G.nd=mode==='rush'?1:4;G.goal=mode==='daily'||mode==='quick'||mode==='two'?3:99;if(o.goal)G.goal=o.goal;
+ G.nd=mode==='rush'?1:4;G.goal=mode==='daily'||mode==='quick'||mode==='two'?(G.diff==='easy'&&mode!=='two'?2:3):99;if(o.goal)G.goal=o.goal;
  G.round=-1;G.zoff=0;G.clock=0;G.sec=0;G.done=false;G.res=null;G.catches=0;G.score=0;G.streak=0;G.ramp=1;G.catchBy=null;G.unl=[];G.paused=false;G.auto=!!o.auto;
  G.rA=mulberry((G.seed^0xA1CE)>>>0);const rS=mulberry((G.seed^0xD06)>>>0);
  const my=brd(o.dog||S.sel.dog);const pool=BREEDS.filter(b=>b!==my);for(let i=pool.length-1;i>0;i--){const j=(rS()*(i+1))|0;const q=pool[i];pool[i]=pool[j];pool[j]=q}
@@ -350,7 +350,7 @@ function startGame(mode,o){
   else if(i===1&&G.nh===2){d.hd=1;const b2=pool[pi++];applyBreed(d,b2,1);d.acc='';d.name=t('p2')}
   else {const b2=pool[pi++%pool.length];applyBreed(d,b2,dm.mul);d.acc='';d.name=tl('breed',BREEDS.indexOf(b2))}
   if(G.nh===1&&i===0)d.ap=AUTO;if(i===0&&G.nh===2)d.ap=AUTO}
- if(mode==='rush'){const e=G.diff==='easy'?[30,7]:G.diff==='expert'?[20,5]:[25,6];G.maxT=e[0];G.timeLeft=e[0];G.bonus=e[1]}
+ if(mode==='rush'){const e=G.diff==='easy'?[40,9]:G.diff==='expert'?[24,6]:[32,8];G.maxT=e[0];G.timeLeft=e[0];G.bonus=e[1]}
  if(!G.bench){hideAll();document.body.classList.add('play');document.body.classList.toggle('rush',mode==='rush');document.body.classList.toggle('duo',G.nh===2);layout();buildPads();buildHud()}
  newRound(false);
  if(!G.bench){award([{event:'play',level:G.tk+1}]);track('game_start',{game:GAME,mode,diff:G.diff});ac();setMusic();showHint();try{document.activeElement&&document.activeElement.blur()}catch(e){}}
@@ -410,7 +410,7 @@ function ballStep(dt){const b=G.ball;
  b.z+=b.vz*dt;b.x+=b.vx*dt;
  if(b.x<.25){b.x=.25;b.vx=Math.abs(b.vx)*.92}else if(b.x>L-.25){b.x=L-.25;b.vx=-Math.abs(b.vx)*.92}
  if(b.z>TL-1){b.z=TL-1;b.vz=-Math.abs(b.vz)*.6}else if(b.z<.5&&b.vz<0){b.z=.5;b.vz=Math.abs(b.vz)*.6}}
-function reach(d){return .62+d.jh*.95}
+function reach(d){return (d.hd>=0?.85:.62)+d.jh*.95}
 function step(dt){
  if(G.phase==='menu'||G.phase==='over'||G.paused)return;
  if(G.phase==='cd'){G.cd-=dt;if(!G.bench){const n=Math.ceil(G.cd/.5);if(n!==G.tick&&G.cd>0){G.tick=n;if(n===2)SFX.tick()}}
